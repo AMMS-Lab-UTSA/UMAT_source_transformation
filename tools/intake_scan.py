@@ -698,9 +698,14 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
         props_count = 0
 
     if names:
+        unnamed = [i for i in range(1, props_count + 1) if i not in names]
         add(Item("props_names", "Constants (names)", FOUND,
                  {f"PROPS({i})": n for i, (n, _l, _t) in sorted(names.items())},
-                 [_quote(name, l, t) for i, (n, l, t) in sorted(names.items())][:4]))
+                 [_quote(name, l, t) for i, (n, l, t) in sorted(names.items())][:4],
+                 note=(f"{len(names)} of the {props_count} constants have a name; "
+                       f"constants {', '.join(map(str, unnamed))} are used without a plain NAME = PROPS(k) line "
+                       "(for example as a switch inside an expression), so they are listed by number"
+                       if unnamed else "")))
     else:
         slots = (f"its {props_count} constants (read from the material definition)" if props_count > 1 else
                  "its constant (read from the material definition)" if props_count else "its constants (read from the material definition)")
@@ -739,7 +744,12 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
         slots = (f"its {props_count} constants" if props_count > 1
                  else "its constant" if props_count else "its constants")
         if names:
-            slots += ": " + ", ".join(f"{n}" for _i, (n, _l, _t) in sorted(names.items()))
+            # every slot, in order: a constant the routine uses without a plain NAME = PROPS(k) line (for
+            # example a switch read as NINT(PROPS(5))) has no name, and leaving it out of the list while
+            # the count says 34 would be a silent mismatch
+            slots += ": " + ", ".join(
+                names[i][0] if i in names else f"constant {i}"
+                for i in range(1, max(props_count, max(names)) + 1))
         slots += " (read from the material definition)"
         why = ""
         if parsed is not None and parsed["problems"]:

@@ -137,14 +137,14 @@ def print_card(state: str, reason: str, *, header: Optional[str] = None) -> None
     bar = "=" * 70
     elsewhere = _RUN.get("elsewhere")
     if state == "unsupported_formulation" and elsewhere and header is None:
-        banner, colour = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS QUICK CHECK", "amber"
-        print(f"\n{bar}\n{banner}\n{bar}")
-        print("Next: Nothing to do: the corpus result stands for this exact file. For a quick check of this "
-              "material, set it up as a small-deformation 3D solid and run again.")
-        print("This quick check covers small-deformation solid models only; the full corpus run verified "
-              f"this exact file another way (run {elsewhere}).")
+        from umat_oti.app.verdict_page import ELSEWHERE_BANNER, elsewhere_texts
+
+        what, nxt = elsewhere_texts(elsewhere, _RUN.get("other_deck"), abaqus_command())
+        print(f"\n{bar}\n{ELSEWHERE_BANNER}\n{bar}")
+        print(f"Next: {nxt}")
+        print(what)
         print("Whose move: nobody (nothing is broken).")
-        _record_final(colour, "this quick check covers small-deformation solid models only")
+        _record_final("amber", "this check command covers small-deformation solid models only")
         return
     banner = header or banner_for_card(state, card.whose_move)
     print(f"\n{bar}\n{banner}\n{bar}")
@@ -279,11 +279,11 @@ def deck_note(deck: Path) -> tuple:
 
 
 def say_unsupported_up_front(found) -> None:
-    """Before anything else: this quick check cannot take this kind of model, though the corpus verified the file.
+    """Before anything else: this check command cannot take this kind of model, though the corpus verified the file.
 
     Said when the files themselves show a large-deformation model, a number of stress values per
-    point other than six, or an element kind this check cannot run -- and the exact files are
-    fully verified in the corpus record.
+    point other than six, or an element kind this check cannot run -- and the record has these files
+    (or this UMAT with another deck) fully verified.
     """
     elsewhere = _RUN.get("elsewhere")
     if not elsewhere:
@@ -292,9 +292,12 @@ def say_unsupported_up_front(found) -> None:
     element = found.item("element")
     if (facts.get("kinematics") == "finite" or facts.get("ntens") not in (None, 6)
             or (element is not None and element.status == "MISSING")):
-        print("Note: this quick check covers small-deformation solid models only (a large-deformation "
-              "(finite-strain) model, a plane-stress or shell model, or another number of stress values per "
-              f"point is outside it); the full corpus run verified this file another way (run {elsewhere}).")
+        other = _RUN.get("other_deck")
+        print("Note: this check command (which does not run Abaqus) covers small-deformation solid "
+              "models only (a large-deformation (finite-strain) model, a plane-stress or shell model, or another "
+              "number of stress values per point is outside it); the full corpus run verified "
+              + (f"this file with a different deck ({other}; run {elsewhere}), not yours." if other
+                 else f"this file another way (run {elsewhere})."))
 
 
 def prepare_corpus_record(source: Path, deck: Optional[Path], *, suppress: bool) -> None:
@@ -303,8 +306,7 @@ def prepare_corpus_record(source: Path, deck: Optional[Path], *, suppress: bool)
     ``suppress``: the deck is empty or has no *USER MATERIAL block, so a corpus result for the UMAT
     alone would describe a different job; nothing from the record is shown then.
     """
-    _RUN["match"] = None
-    _RUN["elsewhere"] = None
+    _RUN.update(match=None, elsewhere=None, other_deck=None, source=source, deck=deck)
     if suppress:
         return
     try:
@@ -313,20 +315,49 @@ def prepare_corpus_record(source: Path, deck: Optional[Path], *, suppress: bool)
         match = verified_lookup.lookup(source, deck)
         _RUN["match"] = match
         _RUN["elsewhere"] = verified_lookup.verified_elsewhere(match)
+        other = verified_lookup.verified_with_other_deck(match)
+        if other is not None:
+            _RUN["elsewhere"], _RUN["other_deck"] = other[0], ", ".join(other[1]) or "another deck"
     except Exception:                                   # a lookup must never stop a check
-        _RUN["match"], _RUN["elsewhere"] = None, None
+        _RUN["match"], _RUN["elsewhere"], _RUN["other_deck"] = None, None, None
+
+
+def abaqus_command() -> str:
+    """The command a user with Abaqus runs to get the Abaqus comparison GREEN needs, for THESE files."""
+    source, deck = _RUN.get("source"), _RUN.get("deck")
+    if source is None:
+        return ""
+    parts = [f"umat-oti all {source}"]
+    if _RUN.get("material_config"):
+        parts.append(f"--material-config {_RUN['material_config']}")
+    elif deck is not None:
+        parts.append(f"--material-discovery-root {Path(deck).parent}")
+    out = _RUN.get("out")
+    parts.append(f"--out {out}_abaqus" if out else "--out NEW_FOLDER")
+    parts.append("--abaqus")
+    return " ".join(parts)
 
 
 def print_corpus_record() -> None:
-    """The record line, AFTER the final verdict, in words that carry no colour and never read as the verdict."""
-    match, final = _RUN.get("match"), _RUN.get("final")
-    if match is None or final is None:
+    """The record line, AFTER the final verdict, in words that carry no colour and never read as the verdict.
+
+    Then, when the verdict is amber and nothing on record covers these files, how GREEN is reached.
+    """
+    final = _RUN.get("final")
+    if final is None:
         return
     try:
-        from umat_oti.app import verified_lookup
+        match = _RUN.get("match")
+        if match is not None:
+            from umat_oti.app import verified_lookup
 
-        for line in verified_lookup.render(match, final=final, why=_RUN.get("why", "")):
-            print(line)
+            deck = _RUN.get("deck")
+            for line in verified_lookup.render(match, final=final, why=_RUN.get("why", ""),
+                                               deck_name=Path(deck).name if deck else ""):
+                print(line)
+        if final == "amber" and not _RUN.get("elsewhere") and abaqus_command():
+            print("GREEN needs the Abaqus comparison, which this check command does not run. If you have Abaqus, run:  "
+                  + abaqus_command())
     except Exception:                                   # a lookup must never stop a check
         return
 
@@ -339,8 +370,16 @@ def blocking_items(found, *, constants_supplied: bool) -> list:
                 if i.status == "MISSING" and not (i.key == "props_values" and constants_supplied)]
     # The routine before the material (Nico, B11): a helper or module nobody supplied is why
     # the material question is moot, so it is asked first; the constants come last.
-    order = ("routine", "element", "helpers", "includes", "modules", "ntens")
+    from umat_oti.app.check_compact import ASK_ORDER as order
+
     return sorted(blocking, key=lambda i: order.index(i.key) if i.key in order else len(order))
+
+
+class SimpleNext:
+    """The two texts of an amber 'verified another way' request, shaped like a scanner item."""
+
+    def __init__(self, ask: str, nxt: str):
+        self.ask, self.default, self.whose, self.key = ask, nxt, "nobody (nothing is broken)", "element"
 
 
 def print_need(item, *, extra: str = "") -> None:
@@ -348,15 +387,19 @@ def print_need(item, *, extra: str = "") -> None:
     mine = item.whose in ("you", "")
     elsewhere = _RUN.get("elsewhere")
     if item.key == "element" and elsewhere:
-        header, colour = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS QUICK CHECK", "amber"
-        item_ask = ("This quick check covers small-deformation solid models only; the full corpus run verified "
-                    f"this exact file another way (run {elsewhere}).")
+        from umat_oti.app.verdict_page import ELSEWHERE_BANNER, elsewhere_texts
+
+        header, colour = ELSEWHERE_BANNER, "amber"
+        item_ask, extra = elsewhere_texts(elsewhere, _RUN.get("other_deck"), abaqus_command())
+        item = SimpleNext(item_ask, extra)
     else:
         header, colour = ("BLUE: I NEED ONE THING FROM YOU", "blue") if mine else ("RED: REFUSED", "red")
         item_ask = item.ask
     bar = "=" * 70
     print(f"\n{bar}\n{header}\n{bar}")
     default = str(item.default)
+    if colour == "amber":
+        extra = ""
     if extra and extra in default:
         extra = ""
     print(f"Next: {default}" + (f" {extra}" if extra else ""))
@@ -400,6 +443,7 @@ def _check(argv: Optional[Sequence[str]] = None) -> int:
     inputs = out.with_name(out.name + "_input")
     inputs.mkdir(parents=True, exist_ok=True)
     print(f"Results go to: {out}   (what was read from your files: {inputs})")
+    _RUN["out"] = out
     roots = [d.expanduser().resolve() for d in args.dependency_root]
 
     deck, how, candidates = resolve_deck(source, args.target, args.deck)
@@ -541,6 +585,7 @@ def _check(argv: Optional[Sequence[str]] = None) -> int:
         print('Or type the constants:  umat-oti check ' + source.name + ' --props "<name>=<value> ..."')
         return 3
 
+    _RUN["material_config"] = material_config
     print(TEXT["working"])
     from umat_oti.services.complete_workflow import run_complete_workflow
 
@@ -590,19 +635,21 @@ def finish(summary: dict, out: Path) -> int:
     code = int(summary.get("exit_code", 1))
     elsewhere = _RUN.get("elsewhere")
     if code == 0:
-        text = check_summary.render(summary, out, elsewhere=elsewhere)
+        text = check_summary.render(summary, out, elsewhere=elsewhere, command=abaqus_command(),
+                                    other_deck=_RUN.get("other_deck"))
         record = dict(summary)
     else:
         state, reason = failure_state(summary)
         text = check_summary.render({k: v for k, v in summary.items() if k not in ("error", "stages")},
                                     out, state=state, reason=reason,
-                                    stage=str(summary.get("failed_stage") or ""), elsewhere=elsewhere)
+                                    stage=str(summary.get("failed_stage") or ""), elsewhere=elsewhere,
+                                    command=abaqus_command(), other_deck=_RUN.get("other_deck"))
         record = {**{k: v for k, v in summary.items() if k not in ("error", "stages")},
                   "terminal_state": state, "reason": reason}
     try:
         from umat_oti.app.verdict_page import verdict_for
 
-        verdict = verdict_for(record, elsewhere)
+        verdict = verdict_for(record, elsewhere, abaqus_command(), _RUN.get("other_deck"))
         _record_final(verdict["colour"], verdict["sentence"])
     except Exception:
         pass

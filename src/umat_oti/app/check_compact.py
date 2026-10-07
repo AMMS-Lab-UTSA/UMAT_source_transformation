@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["compact_intake", "amber_notes", "DETAILS_HINT"]
+__all__ = ["compact_intake", "amber_notes", "DETAILS_HINT", "ASK_ORDER"]
 
 DETAILS_HINT = ("The full list, with the lines quoted: add --details, or read "
                 "intake.md in the input folder.")
@@ -26,6 +26,10 @@ _ASSUMED_KEYS = ("ntens", "element", "kinematics", "nstatv", "temperature")
 _SHORT = {"ntens": "stress values per point", "element": "element",
           "kinematics": "small strain", "nstatv": "state variables",
           "temperature": "temperature", "quantity": "differentiate"}
+
+
+#: The routine before the material: the order in which a blocking item is asked, one at a time.
+ASK_ORDER = ("routine", "element", "helpers", "includes", "modules", "ntens")
 
 
 def _item(found: Any, key: str):
@@ -123,6 +127,8 @@ def compact_intake(found: Any) -> str:
             if key == "kinematics":
                 value = "small strain" if value.startswith("no") else "finite strain"
                 assumed.append(value)
+            elif key == "ntens":
+                assumed.append(f"{value.split(' (')[0]} stress values per point (a 3D solid has 6: three normal, three shear)")
             else:
                 assumed.append(f"{_SHORT[key]} {value.split(' (')[0]}")
     missing = _unwritten(found)
@@ -132,7 +138,18 @@ def compact_intake(found: Any) -> str:
     if assumed:
         lines.append("Assumed, not stated in your files (change if wrong): " + "; ".join(assumed) + ".")
     needed = found.needs_user()
-    if needed:
+    blocking = sorted([i for i in needed if i.status == "MISSING"],
+                      key=lambda i: ASK_ORDER.index(i.key) if i.key in ASK_ORDER else len(ASK_ORDER))
+    if blocking:
+        # ONE thing at a time: the first blocking item, then a line that names what comes after it
+        item = blocking[0]
+        lines.append("Needs you (one thing first):")
+        lines.append(f"  - {item.ask}")
+        lines.append(f"    If you say nothing: {item.default}")
+        later = [i.label for i in blocking[1:]]
+        if later:
+            lines.append("    After that I will also need: " + "; ".join(later) + ".")
+    elif needed:
         lines.append("Needs you:")
         for item in needed:
             lines.append(f"  - {item.ask}")

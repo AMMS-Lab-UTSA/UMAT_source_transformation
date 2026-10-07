@@ -106,26 +106,30 @@ def test_the_six_checks_are_named_and_a_run_that_made_none_does_not_contradict_i
     from umat_oti.app.plain_language import GATE_PLAIN
     rec = {"terminal_state": "tangent_not_verified"}
     text = render_verdict(rec)
-    line = [ln for ln in text.splitlines() if ln.startswith("None of the checks the word")]
+    line = [ln for ln in text.splitlines() if ln.startswith("The six checks the word")]
     assert len(line) == 1, text
-    for plain in GATE_PLAIN.values():
-        assert plain in line[0]
-    assert "0 of 6" not in text and "never measured: 6" not in text
-    assert "the numerical check made without Abaqus" in line[0]
-    assert "In the numerical check the stresses agreed" in text
+    from umat_oti.app.verdict_page import CHECK_QUESTION
+    for question in CHECK_QUESTION.values():
+        assert question in line[0]
+    assert "held: none. Failed: none. Not run here (they need Abaqus" in line[0], line[0]
+    assert "0 of 6" not in text and "never measured: 6" not in text and "None of the checks" not in text
+    assert any(ln.startswith("What is said above about the stresses and the derivatives comes from the numerical check") for ln in text.splitlines())
+    assert "the stresses agreed and no derivative disagreed" in text
 
 
 def test_a_partly_measured_record_names_the_checks_that_held_and_those_that_did_not():
     rec = {"terminal_state": "primal_disagreed",
            "evidence": {"abaqus_job_completed": True, "primal_agreed": False}}
     text = render_verdict(rec)
-    assert "Checks that held: 1 of 6 (the test ran to the end)" in text
-    assert "did not hold: 1 (both versions computed the same stresses)" in text
-    assert "never measured: 4 (" in text
+    line = [ln for ln in text.splitlines() if ln.startswith("The six checks the word")][0]
+    assert "held: did the Abaqus job run to the end?." in line
+    assert "Failed: did both versions compute the same stresses?." in line
+    assert "Not run here (they need Abaqus, which this check command does not run): did every step report results?" in line
+    assert "None of the checks" not in text, "never says none ran when one did"
 
 
 def test_the_recorded_reason_is_shown_in_plain_words():
     text = render_verdict({"terminal_state": "missing_material_data",
                            "reason": "Automatic material configuration failed: Discovered model is not supported by the small-strain NTENS=6 sensitivity provider."})
     recorded = text.split("What the run recorded: ", 1)[1].splitlines()[0]
-    assert "NTENS" not in recorded and "provider" not in recorded and "this quick check" in recorded and "six stress values per point" not in recorded or "this quick check" in recorded
+    assert "NTENS" not in recorded and "provider" not in recorded and "this check command" in recorded and "six stress values per point" not in recorded or "this check command" in recorded

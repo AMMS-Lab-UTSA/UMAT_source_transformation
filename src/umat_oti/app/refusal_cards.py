@@ -407,7 +407,8 @@ def _undefined(text, state):
 
 #: The constants WERE read from the deck, and the model they belong to cannot be checked here.
 DISCOVERED_UNSUPPORTED = re.compile(
-    r"Discovered (model is not supported|settings cannot be represented|loading is not a prescribed)")
+    r"Discovered (model is not supported|settings cannot be represented|loading is not a prescribed)"
+    r"|Experiment the number of stress components must match")
 
 
 def state_after_reading(state: str, reason: Optional[str]) -> str:
@@ -423,7 +424,10 @@ def state_after_reading(state: str, reason: Optional[str]) -> str:
 
 def _discovered(text, state):
     t = str(text or "")
-    if "model is not supported" in t:
+    if "number of stress components must match" in t:
+        what = ("this file is written for elements with a different number of stress values per point than "
+                "the 3D element this check command runs (for example plane-stress elements have three, a 3D solid six)")
+    elif "model is not supported" in t:
         what = ("it is a large-deformation (finite-strain) model, a plane-stress or shell model, "
                 "or one with another number of stress values per point than six")
     elif "settings cannot be represented" in t:
@@ -436,12 +440,13 @@ def _discovered(text, state):
     else:
         what = "its setup is outside what this check can represent"
     return (
-        f"Your constants were read from the deck, but this program cannot check this kind of model yet: {what}. "
-        "It checks small-deformation three-dimensional solid models with six stress values per point.",
+        f"Your constants were read from the deck, but this check command (it does not run Abaqus) cannot check this kind of model yet: {what}. "
+        "It checks small-deformation three-dimensional solid models (strains of a few percent at most) with six stress values per point "
+        "(three normal and three shear).",
         PROGRAM,
-        "Nothing is missing from your files. To get a check now, set the model up as a small-deformation "
-        "three-dimensional solid in the deck; otherwise send the file to the maintainers so it is recorded "
-        "as not supported yet.")
+        "Nothing is missing from your files and there is nothing to fix on your side: send the file to the "
+        "maintainers so it is recorded as not supported by the check command yet. (Only if you can rewrite the "
+        "model as a small-deformation 3D solid can this check command run it.)")
 
 
 RULES: tuple = (
@@ -609,7 +614,8 @@ STATE_CARDS: dict = {
     "tangent_not_verified": _c(
         "The numerical check of the stiffness derivatives did not settle.",
         YOU,
-        "In the numerical check the stresses agreed and no derivative disagreed; too few load states "
+        "In the numerical check (each constant is nudged a little and the change in stress is compared) the stresses "
+        "agreed and no derivative disagreed; too few load states "
         "could be judged. Run your command again over other strain ranges: "
         "add --peak 0.005, then --peak 0.05 (--peak is how far the test strains "
         "the material, 0.02 meaning 2 %; it goes with --props and your constants), "

@@ -95,14 +95,20 @@ def test_the_exact_files_match_and_one_changed_byte_does_not(tmp_path):
     assert vl.lookup(umat, deck, table=table) is None, "one extra space in the UMAT"
     umat.write_text("      SUBROUTINE UMAT\n      END\n")
     deck.write_text("*USER MATERIAL, CONSTANTS=1\n2.\n")
-    assert vl.lookup(umat, deck, table=table) is None, "one changed digit in the deck"
+    other = vl.lookup(umat, deck, table=table)
+    assert other is not None and other.deck_differs and other.colour != "green", "one changed digit in the deck"
+    assert vl.verified_elsewhere(other) is None, "a result for another deck is not this run's result"
+    assert vl.verified_with_other_deck(other) == ("pass23", ["d.inp"])
+    text = " ".join(vl.render(other, final="amber", table=table, deck_name="mine.inp"))
+    assert "this file was verified with a different deck: d.inp" in text and "Your deck mine.inp is not that one" in text
+    assert not any(w in text for w in ("GREEN", "AMBER", "BLUE", "RED"))
 
 
 def test_a_row_that_is_not_verified_shows_its_state_and_its_card_in_the_colour_of_that_card(tmp_path):
     umat, deck = _files(tmp_path, "      SUBROUTINE UMAT\n      END\n", "*USER MATERIAL, CONSTANTS=1\n1.\n")
     table = _table_for(umat, deck, state="tangent_not_verified", gates="no_evidence_block")
     lines = vl.render(vl.lookup(umat, deck, table=table), final="blue", table=table)
-    assert lines[0].startswith("On record: this exact file ended as tangent_not_verified in run pass23 (2026-10-06), not as verified.")
+    assert lines[0].startswith("On record: this exact file ended as tangent_not_verified (run pass23, 2026-10-06), not as verified.")
     assert not any(w in " ".join(lines) for w in ("GREEN", "AMBER", "BLUE", "RED"))
 
 

@@ -34,7 +34,8 @@ from umat_oti.app.plain_language import (GATE_PLAIN, _verdict, may_say_verified,
                                          plain_sentence, verified_summary)
 from umat_oti.app.refusal_cards import card_for, state_after_reading
 
-__all__ = ["verdict_for", "render_verdict", "VERIFIED_SENTENCE", "banner_for_card", "card_colour", "main"]
+__all__ = ["verdict_for", "render_verdict", "VERIFIED_SENTENCE", "banner_for_card", "card_colour",
+           "elsewhere_texts", "ELSEWHERE_BANNER", "main"]
 
 VERIFIED_SENTENCE = (
     "Both versions of your material ran and agreed on the stresses, and the "
@@ -56,6 +57,17 @@ _COLOUR_WORD = {"green": "GREEN: VERIFIED",
                 "amber": "AMBER: PARTLY CHECKED",
                 "blue": "BLUE: I NEED ONE THING FROM YOU",
                 "red": "RED: CANNOT BE VERIFIED"}
+
+
+#: The six checks as yes-or-no questions, so that a list of them never reads as a list of passes.
+CHECK_QUESTION = {
+    "abaqus_job_completed": "did the Abaqus job run to the end?",
+    "all_requested_outputs_present": "did every step report results?",
+    "complete_history_finite": "are all the results real numbers?",
+    "primal_agreed": "did both versions compute the same stresses?",
+    "derivatives_verified": "did the derivatives match a numerical check?",
+    "mechanically_informative": "did the test make the material act?",
+}
 
 
 def _n(x) -> int:
@@ -118,6 +130,31 @@ def _reason_of(record: Any) -> str:
     return ""
 
 
+ELSEWHERE_BANNER = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS CHECK COMMAND"
+
+
+def elsewhere_texts(elsewhere: str, other_deck: Optional[str] = None, command: Optional[str] = None) -> tuple:
+    """(what happened, next step) for a file this check command cannot take but the corpus record verified.
+
+    ``other_deck``: the record verified the same UMAT with that other deck, not the one given.
+    ``command``: the Abaqus comparison a user with Abaqus can run on their own version of the files.
+    """
+    what = ("This check command (it does not run Abaqus) covers small-deformation solid models (strains of a few "
+            "percent at most) only. ")
+    if other_deck:
+        what += (f"The full corpus run verified this file with a different deck ({other_deck}; run {elsewhere}), "
+                 "not with yours.")
+    else:
+        what += f"The full corpus run verified this exact file another way (run {elsewhere})."
+    nxt = ("Nothing to do for this exact file: the corpus result stands."
+           if not other_deck else
+           "Nothing is broken. To verify it with your deck, run the Abaqus comparison (GREEN needs it).")
+    if command:
+        nxt += (" If you change the file or the deck, GREEN for your version needs the Abaqus comparison; "
+                f"if you have Abaqus, run:  {command}")
+    return what, nxt
+
+
 def card_colour(state: str, whose: str) -> str:
     """amber where a result exists and was partly checked; blue where it is the user's move; else red."""
     if state in AMBER_STATES:
@@ -133,7 +170,8 @@ def banner_for_card(state: str, whose: str) -> str:
     return _CARD_BANNER[card_colour(state, whose)]
 
 
-def verdict_for(record: Any, elsewhere: Optional[str] = None) -> dict:
+def verdict_for(record: Any, elsewhere: Optional[str] = None, command: Optional[str] = None,
+                other_deck: Optional[str] = None) -> dict:
     """The verdict as data: colour, headline, lines and the one next action."""
     flat = _record_for_gates(record)
     summary = verified_summary(flat)
@@ -172,16 +210,18 @@ def verdict_for(record: Any, elsewhere: Optional[str] = None) -> dict:
                 sentence = ("The numerical derivative check passed; the "
                             "Abaqus checks were not run.")
                 action = ("Run the Abaqus check to verify the translated "
-                          "routine against your original. Until then call "
-                          "this 'derivatives checked numerically', not "
+                          "routine against your original"
+                          + (f" (GREEN needs it; if you have Abaqus: {command})" if command else "")
+                          + ". Until then call this 'derivatives checked numerically', not "
                           "'verified'.")
             else:
                 why = summary["why not"] or "the checks the word 'verified' needs were not all measured"
                 sentence = ("A result was produced, but it cannot be called "
                             f"verified: {why}")
                 action = ("Run the full check (with Abaqus) before quoting "
-                          "this as verified; until then call it "
-                          "'derivatives checked numerically'.")
+                          "this as verified"
+                          + (f" (GREEN needs it; if you have Abaqus: {command})" if command else "")
+                          + "; until then call it 'derivatives checked numerically'.")
         else:
             sentence, whose, action = (card.sentence, card.whose_move,
                                        card.next_action)
@@ -189,14 +229,11 @@ def verdict_for(record: Any, elsewhere: Optional[str] = None) -> dict:
 
     headline = None
     if state == "unsupported_formulation" and elsewhere and colour != "green":
-        # The file is not broken: this quick check cannot take its kind of model, and the full
+        # The file is not broken: this check command cannot take its kind of model, and the full
         # corpus run verified the exact file another way. Not red (red is a real failure).
         colour, whose = "amber", "nobody (nothing is broken)"
-        sentence = ("This quick check covers small-deformation solid models only; the full corpus run "
-                    f"verified this exact file another way (run {elsewhere}).")
-        action = ("Nothing to do: the corpus result stands for this exact file. For a quick check of "
-                  "this material, set it up as a small-deformation 3D solid and run again.")
-        headline = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS QUICK CHECK"
+        sentence, action = elsewhere_texts(elsewhere, other_deck, command)
+        headline = ELSEWHERE_BANNER
     assert colour != "green" or (may_say_verified(flat) and state in ("", "fully_verified"))
     return {
         "colour": colour,
@@ -215,9 +252,10 @@ def verdict_for(record: Any, elsewhere: Optional[str] = None) -> dict:
     }
 
 
-def render_verdict(record: Any, elsewhere: Optional[str] = None) -> str:
+def render_verdict(record: Any, elsewhere: Optional[str] = None, command: Optional[str] = None,
+                   other_deck: Optional[str] = None) -> str:
     """The one-page verdict as plain text."""
-    v = verdict_for(record, elsewhere)
+    v = verdict_for(record, elsewhere, command, other_deck)
     bar = "=" * 70
     if v["colour"] == "green":
         out = [bar, v["headline"], bar, v["sentence"]] + v["caution"] + [f"Next: {v['next action']}"]
@@ -230,20 +268,17 @@ def render_verdict(record: Any, elsewhere: Optional[str] = None) -> str:
         out.append('The word "verified" needs all the Abaqus checks: ' + VERIFIED_SENTENCE)
         return "\n".join(out)
     def names(items) -> str:
-        return "; ".join(GATE_PLAIN.get(x, str(x).replace("_", " ")) for x in items)
+        return "; ".join(CHECK_QUESTION.get(x, str(x).replace("_", " ")) for x in items) or "none"
 
-    six = list(GATE_PLAIN)
     held, broke, never = v["gates that hold"], v["gates that did not hold"], v["gates never established"]
-    if _n(never) == 6 and not _n(held) and not _n(broke):
-        out.append("None of the checks the word 'verified' needs was run here (they all need Abaqus): "
-                   + names(six) + "."
-                   + (" What is said above about the stresses and the derivatives comes from the numerical "
-                      "check made without Abaqus, so it does not contradict this line."
-                      if v["terminal state"] in NUMERICAL_CHECK_STATES else ""))
-    else:
-        out.append(f"Checks that held: {_n(held)} of 6" + (f" ({names(held)})" if _n(held) else "")
-                   + (f"; did not hold: {_n(broke)} ({names(broke)})" if _n(broke) else "")
-                   + (f"; never measured: {_n(never)} ({names(never)})" if _n(never) else "") + ".")
+    out.append("The six checks the word 'verified' needs, each a yes-or-no question about the Abaqus runs: "
+               f"held: {names(held)}. Failed: {names(broke)}. "
+               + (f"Not run here (they need Abaqus, which this check command does not run): {names(never)}."
+                  if _n(never) else "Not run here: none."))
+    if _n(never) and not _n(held) and not _n(broke) and v["terminal state"] in NUMERICAL_CHECK_STATES:
+        out.append("What is said above about the stresses and the derivatives comes from the numerical check "
+                   "made without Abaqus (each constant is nudged a little and the change in stress is compared), "
+                   "so it does not contradict the line above.")
     if v["reason recorded"] and v["colour"] != "green":
         out.append("What the run recorded: " + plain_sentence(v["reason recorded"])[:400])
     out.append('"Verified" means: ' + VERIFIED_SENTENCE)

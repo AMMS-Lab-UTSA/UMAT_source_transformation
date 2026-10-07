@@ -34,7 +34,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.s",
-   "run": "",
+   "run": "pass23",
    "sha256": "01e6d90838d87b054373e9db9395b7b7f3a5df8ac5a561c4e50aada82fa5a103",
    "source_id": "zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90",
    "state": "not_a_umat"
@@ -70,7 +70,7 @@
     "primal_agreed": ""
    },
    "reason": "IP_COUNT is a variable of module GLOBALVARIABLES (globalvariables.f), and the stress path reads it as IP_COUNT(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the st",
-   "run": "",
+   "run": "pass23",
    "sha256": "04263112e3256042a74a1318758b4bac08518eab8e0db3a3b57c62ba29098cc2",
    "source_id": "Shi2oon__DIC2ABAQUS/OXFORD-UMAT/Example - Residual deformation/OXFORD-UMAT.f",
    "state": "transform_refused"
@@ -88,7 +88,7 @@
     "primal_agreed": ""
    },
    "reason": "DGETRF/DGETRS use built-in unblocked OTI LU routines with primal pivot selection; callers must check INFO and only solve with nonsingular factors.; COMP_TIME_OTI is passed to CPU_TIME, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply CPU_TIME's source with this file (or in dependency_roots) so i",
-   "run": "",
+   "run": "pass23",
    "sha256": "0496e1cc56b5f3745a868b8ac2fd6877221f8ac5fdf103bd0cf8c4d90cd24c58",
    "source_id": "bennifuchs__TsaiWu-Fortran/umat.f90",
    "state": "transform_refused"
@@ -124,7 +124,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 137, first stress expression at line 141, last stress update at line 288, STRESS extraction at line 291, DDSDDE extraction at line 296). What to do: check that STATEV is read and written inside the selected stress regions.",
-   "run": "",
+   "run": "pass23",
    "sha256": "05950d293364cca35118efca869e045ef1c37c2fa8193fc758b4697e7edc41ca",
    "source_id": "awhelanUCD__Lemaitre-damage-UMAT-Public/HETVAL_nonLocalLemaitre/HETVAL_lemaitreDamageNonLocal.f",
    "state": "transform_refused"
@@ -160,7 +160,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_um",
-   "run": "",
+   "run": "pass23",
    "sha256": "08277533516f56037abfeb7a263d8cc5eb652f1c054590ca8cc956465e154146",
    "source_id": "zorkzou__UniMoVib/src/math.f90",
    "state": "not_a_umat"
@@ -178,7 +178,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (SIGMA, SV, C, SSE, DELTA_W_P, SCD, Q_DOT_P, DSIGMA_DT, DQ_DEPS, DQ_DT, EPS, DELTA_EPS, T, DELTA_T, T_N, DELTA_TEMP, PFV, DELTA_PFV, CMNAME, N_DIR, N_SHR, N_TOTAL, N_SV, PROPS, N_PROPS, COORDS, DELTA_R, PNEWDT, L_ELEMENT, F_N, F, I_EL, I_IP, I_LAYER, I_SP, I_STEP, I_INCREMENT), so neither STRESS nor DDSDDE appears among them. This is t",
-   "run": "",
+   "run": "pass23",
    "sha256": "09c2d3c86583c0a195ad5ce37c4c76d712cd5d65bef4b7ae75d006f9fca65caf",
    "source_id": "sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Strain-based Return Mapping - Semi-Implicit/umat_subroutine.for",
    "state": "transform_refused"
@@ -358,7 +358,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 557, first stress expression at line 563, last stress update at line 563, STRESS extraction at line 567, DDSDDE extraction at line 572). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co",
-   "run": "",
+   "run": "pass23",
    "sha256": "12b6a149ba5f023e3dc28cf99352f8dea570d178d8bf13e44cfae31d1e8c94b4",
    "source_id": "BBahtiri__ABAQUS-Multiphysics-Diffusion-UEL/Diffusion_3D.for",
    "state": "external_dependency_unavailable"
@@ -376,7 +376,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['GET_ROTATION_MATRICES', 'ROTATE_INPUT', 'ROTATE_OUTPUT', 'UMAT_LOCAL_ORIENTATION']. The completed JSON rewrites those calls, so pass-through is unsafe. (GET_ROTATION_MATRICES is first called at line 86.) What to do: put the file that defines GET_ROTATION_MATRICES, ROTATE_INPUT, ROTATE_OUTPUT, UMAT_LOCAL_ORIENTATION beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that",
-   "run": "",
+   "run": "pass23",
    "sha256": "12bc1551b007958ebc55bf8483f381dd4a1258006b9becc4ef00d3de45772bae",
    "source_id": "KnutAM__MaterialModels/models/CrystalPlasticity/src/taylor_model.f90",
    "state": "transform_refused"
@@ -394,7 +394,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS (*), STATEV (*), DDSDDE (*), SSE, SPD, SCD, RPL, DDSDDT (*), DRPLDE (*), DRPLDT, STRAN (*), DSTRAN (*), TIME (*), DTIME, TEMP, DTEMP, PREDEF (*), DPRED (*), CMNAME, NDI, NSHR, NTENS, NSTATV, NPROPS, PROPS (*), COORDS (*), DROT (*), PNEWDT, CELENT, DFGRD0 (*), DFGRD1 (*), NOEL, NPT, LAYER, KSPT, KSTEP, KINC), so neither STRESS n",
-   "run": "",
+   "run": "pass23",
    "sha256": "12f89da76d47e7eaa0fd27df263251616fca1fe7b99d03882254ef223554992f",
    "source_id": "zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90",
    "state": "external_dependency_unavailable"
@@ -412,7 +412,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
-   "run": "",
+   "run": "pass23",
    "sha256": "166bfef1351048ed957c6a056907cf5389a3af12530187eb9903acfb3582ea44",
    "source_id": "mrkearden__abaqus_umat/ElasticSolve.F90",
    "state": "external_dependency_unavailable"
@@ -448,7 +448,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "170a0349477a27639b320ecfdbd79a38ac255d1acb64879661a76219a5ddbe0d",
    "source_id": "InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f",
    "state": "external_dependency_unavailable"
@@ -646,7 +646,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "1cfa7f246db671eadb479dd86f55e7411fe252231795b7b2f8a82ec4f16e531d",
    "source_id": "CAEAssistant-Group__Abaqus-UEL-Subroutine/Abaqus_UEL_Subroutine.f",
    "state": "incomplete_or_corrupt_source"
@@ -772,7 +772,7 @@
     "primal_agreed": ""
    },
    "reason": "MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2STRAN is an array to promote or a call into i",
-   "run": "",
+   "run": "pass23",
    "sha256": "22ce574342a81c0a50e48512e0fb36aed525b5b53791ec4ffab9b5acaad73962",
    "source_id": "laufogh__fe-large-displacement/constitutive/hypoplasticity-staubach/HPP_Staubach_implicit.f",
    "state": "transform_refused"
@@ -808,7 +808,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
-   "run": "",
+   "run": "pass23",
    "sha256": "2344f0e6c76e9fa9ebd17055ada1f506666ce0ce698d3868531b357695e03ba4",
    "source_id": "ElmerCSC__elmerfem/fem/src/modules/ElasticSolve.F90",
    "state": "not_a_umat"
@@ -862,7 +862,7 @@
     "primal_agreed": ""
    },
    "reason": "GRAINDIA is a variable of module MATERIALDATA (mod_materialdata.f), and the stress path reads it as GRAINDIA(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the stre",
-   "run": "",
+   "run": "pass23",
    "sha256": "26186c04375cde9c50f1537164528e38851222da2772d0c8c49671b3d144c54a",
    "source_id": "ibf-RWTH__GA-Calibration/subroutine/Umat_CP.for",
    "state": "transform_refused"
@@ -934,7 +934,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so ",
-   "run": "",
+   "run": "pass23",
    "sha256": "2c162231170c2f83e2d988ee1df1a76a880aa6d824126c37631bfc5d4b509fd7",
    "source_id": "Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/plasticity_xx15.F90",
    "state": "not_a_umat"
@@ -970,7 +970,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['FAILURECRITERIONFIBER2D', 'STIFFNESMATRIX2D']. The completed JSON rewrites those calls, so pass-through is unsafe. (FAILURECRITERIONFIBER2D is first called at line 216.) What to do: put the file that defines FAILURECRITERIONFIBER2D, STIFFNESMATRIX2D beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "2d32b45c71ee79ce33b7ccbd548afb4f042602b63c42064dfe0c2606180cfe5e",
    "source_id": "CAEAssistant-Group__Abaqus-CAE-UMAT-subroutine-for-Composite-fatigue-simulation/CAE_ASSISTANT_UMAT_Subroutine_ABAQUS_COMPOSITE_FATIGUE.for",
    "state": "incomplete_or_corrupt_source"
@@ -988,7 +988,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
-   "run": "",
+   "run": "pass23",
    "sha256": "2d84d7d2845b2a1c2901243be7a7ee7226521c8fc2ef9b266c6d6fa96c6442a6",
    "source_id": "HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for",
    "state": "not_a_umat"
@@ -1024,7 +1024,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What ",
-   "run": "",
+   "run": "pass23",
    "sha256": "2dcf61cd90c1699e7035badb8d71f3f312ad4380237dad5dc25e55af552f28ce",
    "source_id": "adtzlr__ttb/docs/examples/script_umat.f",
    "state": "not_a_umat"
@@ -1240,7 +1240,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do:",
-   "run": "",
+   "run": "pass23",
    "sha256": "32e0308ac51cfcac23558722638ebc0baad53953153e9bdbfe9499e3cee70a9f",
    "source_id": "zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90",
    "state": "not_a_umat"
@@ -1258,7 +1258,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
-   "run": "",
+   "run": "pass23",
    "sha256": "3487b2dd0f8be0571c3b300e6a53cad6098c43498e043f400aa742b3ea2d1432",
    "source_id": "jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90",
    "state": "external_dependency_unavailable"
@@ -1330,7 +1330,7 @@
     "primal_agreed": ""
    },
    "reason": "NVBS_OTI is passed to JANCAE_DEBUGMODE_OTI at position 1, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; NVBS0_OTI is passed to JANCAE_DEBUGMODE_OTI at position 2, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; NVBS_OTI is passed to",
-   "run": "",
+   "run": "pass23",
    "sha256": "36f558b2272b439eecbc45196c17a0b001c55f89780537d00805379d64cdf022",
    "source_id": "ReachOptimum__mlpcp-interp-dic/abaqus/UMMDp_FLC.f",
    "state": "transform_refused"
@@ -1348,7 +1348,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for ELPLASTDO reached external or undefined callee ASET (called at line 3094). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines ASET beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "381f540546f314719ab17d8b7a75d7618e44d545b07719a5c110f55547d1b1d4",
    "source_id": "samanseifi__Tahoe/development/src/elements/solid/materials/ABAQUS_BCJ/bcj_iso.f",
    "state": "incomplete_or_corrupt_source"
@@ -1492,7 +1492,7 @@
     "primal_agreed": ""
    },
    "reason": "ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
-   "run": "",
+   "run": "pass23",
    "sha256": "3d989868b80ff356ff8788ef5ecea91c8661743018096d8ef7715ee9ae9d7ab9",
    "source_id": "peer-open-source__xara/SRC/domain/peri/umat.for",
    "state": "external_dependency_unavailable"
@@ -1510,7 +1510,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['INITIALIZEPLY']. The completed JSON rewrites those calls, so pass-through is unsafe. (INITIALIZEPLY is first called at line 210.) What to do: put the file that defines INITIALIZEPLY beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "3dc06ece7d6a1f8b94247721b0060325194f28d2fbcf1ff50c08ada55f07a1fa",
    "source_id": "swayli94__AbaqusTools/LaRC05/umat.f90",
    "state": "transform_refused"
@@ -1546,7 +1546,7 @@
     "primal_agreed": ""
    },
    "reason": "DGETRF/DGETRS use built-in unblocked OTI LU routines with primal pivot selection; callers must check INFO and only solve with nonsingular factors.; Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 226, first stress expression at line 232, last stress update at line 419, STRESS extraction at line 452, D",
-   "run": "",
+   "run": "pass23",
    "sha256": "4073479022732281453ae1993d12527f22764f4cec51c2e476d036823ed96a58",
    "source_id": "JuliaFEM__UMAT.jl/umat_models/gurson_porous_plasticity.f90",
    "state": "transform_refused"
@@ -1582,7 +1582,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). Wha",
-   "run": "",
+   "run": "pass23",
    "sha256": "40f1e346cd0bf9be6cdf395543fb5fe58e4b21b1963e919f7e6e54b6e2eabe11",
    "source_id": "rhdodds__warp3d/src/user_routines_umat.f",
    "state": "not_a_umat"
@@ -1690,7 +1690,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (SIGMA, SV, C, SSE, DELTA_W_P, SCD, Q_DOT_P, DSIGMA_DT, DQ_DEPS, DQ_DT, EPS, DELTA_EPS, T, DELTA_T, T_N, DELTA_TEMP, PFV, DELTA_PFV, CMNAME, N_DIR, N_SHR, N_TOTAL, N_SV, PROPS, N_PROPS, COORDS, DELTA_R, PNEWDT, L_ELEMENT, F_N, F, I_EL, I_IP, I_LAYER, I_SP, I_STEP, I_INCREMENT), so neither STRESS nor DDSDDE appears among them. This is t",
-   "run": "",
+   "run": "pass23",
    "sha256": "43216cc30860b43e7775ed2f471c1703e81f9d2109905e2b80efa4aea244015a",
    "source_id": "sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Stress-based Return Mapping - Semi-Implicit/umat_subroutine.for",
    "state": "transform_refused"
@@ -1852,7 +1852,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 281, first stress expression at line 290, last stress update at line 290, STRESS extraction at line 310, DDSDDE extraction at line 319). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co",
-   "run": "",
+   "run": "pass23",
    "sha256": "48112e58d05d1e7a9302b09802f7afcdb9bbcb7c8a12c9bb5548e34067110cb1",
    "source_id": "ekurth__NEML/util/abaqus/nemlumat.f",
    "state": "transform_refused"
@@ -1888,7 +1888,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for UMAT_MAT3 reached external or undefined callee STIFFNESMATRIX (called at line 255). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines STIFFNESMATRIX beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "4a6f9130fbabbf4b514349264e6a2254f511213d48b2cdec4a2db884f55c46ea",
    "source_id": "CAEAssistant-Group__Abaqus-CAE-UMAT-subroutine-for-3D-Composite-fatigue-simulation/Abaqus-CAE-UMAT-subroutine-for-3D-Composite-fatigue-simulation-Fortran-Code.for",
    "state": "incomplete_or_corrupt_source"
@@ -1906,7 +1906,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 165, first stress expression at line 199, last stress update at line 296, STRESS extraction at line 307, DDSDDE extraction at line 316). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co",
-   "run": "",
+   "run": "pass23",
    "sha256": "4ac0d6564cdae38ac3d3f0aa2a09cbaa12ff3793886feedb2b99c6a88e7dc717",
    "source_id": "CriticalSoilModels__critical-soil-models/src/models/bingham/umat_bingham.f90",
    "state": "external_dependency_unavailable"
@@ -1924,7 +1924,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: ddsdde_extraction_after_selected_stress_regions. Meaning: DDSDDE is extracted before the end of the selected stress regions (transformed file: seed at line 57, first stress expression at line 98, last stress update at line 98, STRESS extraction at line 109, DDSDDE extraction at line 117). What to do: set transformation_anchors.ddsdde_extraction.insert_after_line after the last selected stress region.",
-   "run": "",
+   "run": "pass23",
    "sha256": "4aed54f9e3d1a922e260be0ced79a17382be11d774fa5748c64423a3afc3b546",
    "source_id": "PeriHub__PeriLab.jl/src/Models/Material/UMATs/usertest.f",
    "state": "transform_refused"
@@ -1942,7 +1942,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE ext",
-   "run": "",
+   "run": "pass23",
    "sha256": "4b309b04ae41a7c09a911efb48a04ba83cb2fe4fbe7443d4292765724a776473",
    "source_id": "jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for",
    "state": "not_a_umat"
@@ -1960,7 +1960,7 @@
     "primal_agreed": ""
    },
    "reason": "HelperLiftingError: Unsupported DATA statement shape: 'I_mat(1,:) /1.D0, 0.D0, 0.D0/'. A lifted helper turns DATA into assignments and handles whole arrays and name/value lists, not array sections. What to do: write that DATA as assignments (or one whole-array DATA) in the source.",
-   "run": "",
+   "run": "pass23",
    "sha256": "4b647d7cb47cc30c46317cf35516154a450dd46ad914bb1f69c40c60bf253d25",
    "source_id": "prashanthgadwala__ferrite-fortran-integration_using_Julia/src/Material_Models/umat.f",
    "state": "transform_refused"
@@ -2086,7 +2086,7 @@
     "primal_agreed": ""
    },
    "reason": "The source computes its own complex-step derivative (OGDENONETERM_CS_DPDF) and the differentiated code branches on an imaginary part in EIG33Z_NEAR_DIAGONAL_OTI, EIG33Z_OTI (5 condition(s), e.g. EIG33Z_OTI: 'IF (REAL(max_imag) .GT. 0.0d0) THEN'). Those branches are written for the complex step; under the complex OTI type the imaginary part of every primal value is zero, so they are never taken and DDSDDE would be the derivative of the value algorithm, which is not differentiable where the author",
-   "run": "",
+   "run": "pass23",
    "sha256": "50f480173e78ba24483bd13751dd15e9a142b374a4e88737a463aa5dfa466aa3",
    "source_id": "tengzhang48__abaqus_ufl/examples/ogden_umat/ogden_umat.for",
    "state": "transform_refused"
@@ -2104,7 +2104,7 @@
     "primal_agreed": ""
    },
    "reason": "UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "5104439785250e014fcabf727b88e1384ab8d113577d9e978492c4c9af42deb0",
    "source_id": "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for",
    "state": "external_dependency_unavailable"
@@ -2122,7 +2122,7 @@
     "primal_agreed": ""
    },
    "reason": "STRESS_OTI is passed to HARDENING_SOIL_MN_BRICKS, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply HARDENING_SOIL_MN_BRICKS's source with this file (or in dependency_roots) so it can be lifted.; STATEV_OTI is passed to HARDENING_SOIL_MN_BRICKS, which was neither lifted, inlined, nor transformed ",
-   "run": "",
+   "run": "pass23",
    "sha256": "511644f9fc7cddf4697a22b81db698a1f9f3afb4e6ca185a2100171740cd4537",
    "source_id": "j-machacek__numgeo-hardening-soil-bricks/src/hs-bricks-umat/umat.f90",
    "state": "transform_refused"
@@ -2194,7 +2194,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "5300e1fe4154b1c56437ec3c312d88138441695c678b113cc0c0b2417c17b0fa",
    "source_id": "mrkearden__abaqus_umat/UMAT.F90",
    "state": "external_dependency_unavailable"
@@ -2212,7 +2212,7 @@
     "primal_agreed": ""
    },
    "reason": "CXX_UMAT_INTF appears as CXX_UMAT_INTF(...) on the stress path but is not declared anywhere in this source, which USEs ISO_C_BINDING, CPP_TO_FORTRAN_INTF_MOD, FORTRAN_UMAT_IMPL_MOD, PRESOLVE_MOD without defining it. The transformer cannot read that module, so it cannot tell whether CXX_UMAT_INTF is an array to promote or a call into it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "53c37262b79563d79367922ab4377cb0ddd408d30516ccefd1cca2a82f973b1f",
    "source_id": "Woowinehouse__ABQ-UMAT-Sanisand-High/src/interface/umat.f90",
    "state": "transform_refused"
@@ -2248,7 +2248,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 84, first stress expression at line 92, last stress update at line 92, STRESS extraction at line 97, DDSDDE extraction at line 105). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the contra",
-   "run": "",
+   "run": "pass23",
    "sha256": "54e6b5d836cadd57862f1cfbf3a2186b55479cdc7ff615d90846b3ef3768f0fa",
    "source_id": "philipcardiff__paper-code-vertex-centred-elastoplastic/src/abaqusUMATs/abaqusUmatLinearElastic/abaqusUmatLinearElastic.f",
    "state": "incomplete_or_corrupt_source"
@@ -2464,7 +2464,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "5c5dea85df690ec2f903bf6582d871b5cfd883c56591c83c924c421982b10aa0",
    "source_id": "zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/Adapters/UMAT_Adapter.f90",
    "state": "published_stub_no_constitutive_content"
@@ -2482,7 +2482,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 345, first stress expression at line 351, last stress update at line 354, STRESS extraction at line 357, DDSDDE extraction at line 381). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co",
-   "run": "",
+   "run": "pass23",
    "sha256": "5cdd283057b5a76bf69307a94e6db34efe310409e199c25728a1a2f3d908cba3",
    "source_id": "CAEAssistant-Group__Viscoelastic-Abaqus-model-for-the-analysis-of-composite-curing/Abaqus-Viscoelastic-Curing-Subroutine.for",
    "state": "incomplete_or_corrupt_source"
@@ -2554,7 +2554,7 @@
     "primal_agreed": ""
    },
    "reason": "STRESS_OTI is passed to HYPOPLASTICITY_ISA_IGS_GIS, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply HYPOPLASTICITY_ISA_IGS_GIS's source with this file (or in dependency_roots) so it can be lifted.; STATEV_OTI is passed to HYPOPLASTICITY_ISA_IGS_GIS, which was neither lifted, inlined, nor transf",
-   "run": "",
+   "run": "pass23",
    "sha256": "5de2cbd8a499b4e5917dbf16aad33cbf5d02588f40333e6be2882b7cc722367a",
    "source_id": "j-machacek__numgeo-hypo-igs-isa-gis/src/material_models.f90",
    "state": "transform_refused"
@@ -2716,7 +2716,7 @@
     "primal_agreed": ""
    },
    "reason": "Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 898: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 899: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form S",
-   "run": "",
+   "run": "pass23",
    "sha256": "649b582e76a3acfa027504db8aab1684353b5eb3865174d63d99f660362f8436",
    "source_id": "KianAbd__vCANN_FEM/Abaqus/umat_vCANN.for",
    "state": "transform_refused"
@@ -2734,7 +2734,7 @@
     "primal_agreed": ""
    },
    "reason": "NEWTON_TOLERANCE_OTI is passed to SME_SETPARAM, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply SME_SETPARAM's source with this file (or in dependency_roots) so it can be lifted.; X0_OTI is passed to NEWTON_RAPHSON_ANA, which was neither lifted, inlined, nor transformed with this file. Fortran'",
-   "run": "",
+   "run": "pass23",
    "sha256": "64d1d6a6ab72bb5091e5b0335ccba04820624bbbf78e318b5b49086d4e6bd52a",
    "source_id": "KnutAM__MaterialModels/models/Qin2018/src/umat.f90",
    "state": "transform_refused"
@@ -2932,7 +2932,7 @@
     "primal_agreed": ""
    },
    "reason": "IP_COUNT is a variable of module GLOBALVARIABLES (globalvariables.f), and the stress path reads it as IP_COUNT(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the st",
-   "run": "",
+   "run": "pass23",
    "sha256": "6ab8ff8cfb9c417abaca9de1b3a65d2c2e488695047b70186679a0c67cd745ce",
    "source_id": "Shi2oon__DIC2ABAQUS/OXFORD-UMAT/OXFORD-UMAT v2.26/OXFORD-UMAT.f",
    "state": "transform_refused"
@@ -2950,7 +2950,7 @@
     "primal_agreed": ""
    },
    "reason": "STRESS_OTI is passed to HARDENING_SOIL_MN_BRICKS, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply HARDENING_SOIL_MN_BRICKS's source with this file (or in dependency_roots) so it can be lifted.; STATEV_OTI is passed to HARDENING_SOIL_MN_BRICKS, which was neither lifted, inlined, nor transformed ",
-   "run": "",
+   "run": "pass23",
    "sha256": "6b444e2c224da9557f76e375f482789c377259947bcaea09d649593f0cc9e7d4",
    "source_id": "j-machacek__numgeo-hardening-soil-bricks/src/incremental-driver/material_models.f90",
    "state": "transform_refused"
@@ -3004,7 +3004,7 @@
     "primal_agreed": ""
    },
    "reason": "DET_OTI is passed to PK2VOL_OTI at position 4, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; Semantic check failed: no_oti_argument_reaches_an_untransformed_call.",
-   "run": "",
+   "run": "pass23",
    "sha256": "6cae6ffaf14090d9dc07efc54e7beab1ccda10dfd494f13dd4744eda12fe44cd",
    "source_id": "jpsferreira__UMAT-ABAQUS/src/_umat.for",
    "state": "transform_refused"
@@ -3130,7 +3130,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: old_ddsdde_assignments_disabled. Meaning: an original assignment to DDSDDE survives after the extraction and would overwrite the OTI tangent (transformed file: seed at line 248, first stress expression at line 254, last stress update at line 349, STRESS extraction at line 352, DDSDDE extraction at line 362). What to do: include that assignment in an old_tangent replacement region of the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "6fe9755ebabcb2e177f50b45218b4a87a83c88c8e8dcdde6dbfa4d8918eccd14",
    "source_id": "luisez1988__Viscoplastic-NorSand/UMAT_Nor_Sand_Zamb.for",
    "state": "transform_refused"
@@ -3166,7 +3166,7 @@
     "primal_agreed": ""
    },
    "reason": "MAX is declared as a variable here and is also a generic the OTI support modules make public. The import is renamed for the other such names, which leaves the author's variable untouched, but not for this one: the transform emits its own MAX(...) call -- the guard that keeps SQRT off a round-off negative, and the loop bound of the component copy -- and in this scope that call would reach the author's variable instead of the intrinsic. Renaming the variable in the source would resolve it; this tr",
-   "run": "",
+   "run": "pass23",
    "sha256": "725e5e4b83739f70fa62708de364510f7deb5bb200370ff14442dac4f89f0eff",
    "source_id": "mholla__growth/umats/umat_ortho_stretch.f",
    "state": "transform_refused"
@@ -3184,7 +3184,7 @@
     "primal_agreed": ""
    },
    "reason": "ValueError: This source defines no SUBROUTINE and no FUNCTION that the Fortran reader could parse, so there is no routine here to transform. Check the source form -- a free-form file named .f or .for is read by column and yields no statements -- or that the file is Fortran at all.",
-   "run": "",
+   "run": "pass23",
    "sha256": "7266d283185b2d0e068fcef5bd79775d991b11549480f8f4d4542cce9dc42770",
    "source_id": "mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ViscoelasticityCode3.f",
    "state": "incomplete_or_corrupt_source"
@@ -3202,7 +3202,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for UMAT_MATRIX reached external or undefined callee MATINVDET3D (called at line 591). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines MATINVDET3D beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "72bec88d7c3c2628a68061b785180c33c549240f3b79ff3fd831397232a3a4f3",
    "source_id": "bmmbUPF__abaqusIVD/Sub_MechDisc.f",
    "state": "external_dependency_unavailable"
@@ -3220,7 +3220,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for USERMAT_3D reached external or undefined callee GETNFNH (called at line 264). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines GETNFNH beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "73ad1e2d94ab608fd478cb993360da41a9cf2f440703faf1d0314d1c58141954",
    "source_id": "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for",
    "state": "transform_refused"
@@ -3328,7 +3328,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
-   "run": "",
+   "run": "pass23",
    "sha256": "7c4a547a16f73d19eaf4b7af0adf4eb3490d2f85fb0a3e6fc4a31134e282ed93",
    "source_id": "core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90",
    "state": "not_a_umat"
@@ -3346,7 +3346,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "7c7e8fd740683c058a840913617dafa62371b113afb89a8eb11fd3de3629f7c2",
    "source_id": "jgomezc1__WAVES/SOURCE/matutil.for",
    "state": "not_a_umat"
@@ -3508,7 +3508,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['FISOTROPIC', 'SHEARMOD']. The completed JSON rewrites those calls, so pass-through is unsafe. (FISOTROPIC is first called at line 57.) What to do: put the file that defines FISOTROPIC, SHEARMOD beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "83da23123ec49ced7f23db80319999b89a726d824784fe944b7d2d7ab70f2974",
    "source_id": "jacojvr__UMATs/UMAT_framework/umat_iso.f",
    "state": "transform_refused"
@@ -3544,7 +3544,7 @@
     "primal_agreed": ""
    },
    "reason": "STRESS_OTI is passed to MOONEY, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply MOONEY's source with this file (or in dependency_roots) so it can be lifted.; DSTRAN_OTI is passed to MOONEY, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes tha",
-   "run": "",
+   "run": "pass23",
    "sha256": "84a487f70601f8db0a6ef4c99a87973f3d9da8203f637a1f7ecbf92f5b273647",
    "source_id": "thelfer__tfel/mtest/tests/mtest/castem/umat.f",
    "state": "transform_refused"
@@ -3850,7 +3850,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['DAMAGE_CALC']. The completed JSON rewrites those calls, so pass-through is unsafe. (DAMAGE_CALC is first called at line 346.) What to do: put the file that defines DAMAGE_CALC beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "89ca271c3e198b3807a4322193d77a80e6d7141008f98accc2d0690a76eec071",
    "source_id": "thatliuyang__Abaqus-subroutine-for-composites-progressive-failure-analysis-/UMAT_comp_failure.for",
    "state": "transform_refused"
@@ -3994,7 +3994,7 @@
     "primal_agreed": ""
    },
    "reason": "STRESS_OTI is passed to UMAT_LINEAR, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply UMAT_LINEAR's source with this file (or in dependency_roots) so it can be lifted.; STATEV_OTI is passed to UMAT_LINEAR, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit inte",
-   "run": "",
+   "run": "pass23",
    "sha256": "8ed878adfd0e80da86ed6c2f467bed494b9273a0b50813cb3ba4041a37bc11e6",
    "source_id": "CriticalSoilModels__critical-soil-models/src/umat.f90",
    "state": "external_dependency_unavailable"
@@ -4012,7 +4012,7 @@
     "primal_agreed": ""
    },
    "reason": "IP_COUNT is a variable of module GLOBALVARIABLES (globalvariables.f), and the stress path reads it as IP_COUNT(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the st",
-   "run": "",
+   "run": "pass23",
    "sha256": "901cc58f2413dddcb018e24590375c68229914ec1fb2b6eef691eecaaee3854a",
    "source_id": "Shi2oon__DIC2ABAQUS/OXFORD-UMAT/OXFORD-UMAT v3.3/OXFORD-UMAT.f",
    "state": "transform_refused"
@@ -4030,7 +4030,7 @@
     "primal_agreed": ""
    },
    "reason": "NEWTON_TOLERANCE_OTI is passed to SME_SETPARAM, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply SME_SETPARAM's source with this file (or in dependency_roots) so it can be lifted.; X0_OTI is passed to NEWTON_RAPHSON_ANA, which was neither lifted, inlined, nor transformed with this file. Fortran'",
-   "run": "",
+   "run": "pass23",
    "sha256": "90bc3537655547da0e0226a75a288d1cd9a30cdfe3e330aa56624f6437d16dbd",
    "source_id": "KnutAM__MaterialModels/models/MM2021/src/umat.f90",
    "state": "transform_refused"
@@ -4120,7 +4120,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
-   "run": "",
+   "run": "pass23",
    "sha256": "94cfa2bdce83f9d893eaeb8236362a6bf6594b4250533d5fbe3168dda29c798d",
    "source_id": "brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90",
    "state": "not_a_umat"
@@ -4156,7 +4156,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['FULLSTRESSVEC', 'PRINTSTRESS']. The completed JSON rewrites those calls, so pass-through is unsafe. (FULLSTRESSVEC is first called at line 385.) What to do: put the file that defines FULLSTRESSVEC, PRINTSTRESS beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "961ef6f949df3d9046a52bd6e9ea95ab6dd9834b92f7c76fc357b863c097e83e",
    "source_id": "RickAlb__UMAT-DFD-Lebedev/all_subroutines/UMAT_DFD_LEB.for",
    "state": "transform_refused"
@@ -4264,7 +4264,7 @@
     "primal_agreed": ""
    },
    "reason": "UMAT delegates its whole body to UMAT_TSAIWU, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines UMAT_TSAIWU (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "9a796b7806bc78f28770ad44f2ebd83cdd347152152a8becafbca6187e7164b8",
    "source_id": "bennifuchs__TsaiWu-Fortran/abaqus-umat-interface.f90",
    "state": "transform_refused"
@@ -4408,7 +4408,7 @@
     "primal_agreed": ""
    },
    "reason": "STRESS is declared as a scalar in UMAT at line 31, so this routine has a one-component interface (a truss or uniaxial material). The transform seeds and extracts NTENS components of STRESS, which a scalar does not have, and the emitted STRESS_OTI(I) would not compile. What to do: a one-component interface is not supported yet; declare STRESS with its NTENS extent if the routine is really a continuum UMAT.; DSTRAN is declared as a scalar in UMAT at line 31, so this routine has a one-component int",
-   "run": "",
+   "run": "pass23",
    "sha256": "9cb7d2cb6fd024c51e11be66560a79409242175c9b8913e44f4c84bee6528a38",
    "source_id": "phhannequart__UMAT_sma_hannequart/UMAT_sma_hannequart.for",
    "state": "transform_refused"
@@ -4444,7 +4444,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "9dc635e2ef3e84d398bd4f79f108d89bb64aa596423923fb97c535a055e7b12a",
    "source_id": "matmodlab__matmodlab2/matmodlab2/umat/umats/umat_stub.f90",
    "state": "published_stub_no_constitutive_content"
@@ -4516,7 +4516,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 141, first stress expression at line 148, last stress update at line 148, STRESS extraction at line 156, DDSDDE extraction at line 164). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co",
-   "run": "",
+   "run": "pass23",
    "sha256": "a0ad07e34291ebf21774114c3d01234b352f51679fbd0431c29128ba17e7369c",
    "source_id": "llnl__ExaConstit/src/umats/umat.f",
    "state": "transform_refused"
@@ -4588,7 +4588,7 @@
     "primal_agreed": ""
    },
    "reason": "DSPEVD uses the built-in OTI Jacobi implementation; callers must check INFO. A repeated eigenvalue cluster is returned averaged: an individual eigenvalue of a repeated pair is not differentiable, while the cluster's trace is, so symmetric functions of the principal values differentiate exactly and differences within a cluster come out zero.; KSTRAN is passed to KRESIDUAL_OTI, whose dummy argument KSTRAN the lifted body declares as the OTI type. The lifted helpers are external subprograms, so For",
-   "run": "",
+   "run": "pass23",
    "sha256": "a27eafa222c1c622784735cac7981cc03542980e23c58b837244ece6378e408f",
    "source_id": "Farid-Alisafaei__Implant-Fibrotic-Capsule/CellMatrixModel_20241204.for",
    "state": "transform_refused"
@@ -4606,7 +4606,7 @@
     "primal_agreed": ""
    },
    "reason": "MPAR is declared with a deferred shape (:) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.; PARAM is declared with a deferred shape (:) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bo",
-   "run": "",
+   "run": "pass23",
    "sha256": "a4c6a635920537f2a4d37bae0ad3af13de3899f3441b97dd6fd14da1e329c9b3",
    "source_id": "KnutAM__MaterialModels/models/GenSmallStrain/src/GeneralSmallStrain.f90",
    "state": "transform_refused"
@@ -4624,7 +4624,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "a60c03a30dff37329550c7b288c61bfe310d0d999e27dad55a4735b1f2d9813f",
    "source_id": "Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/francesc/umat_DP_primal_CPPM_def.f90",
    "state": "not_a_umat"
@@ -4696,7 +4696,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (SIGMA, SV, C, SSE, DELTA_W_P, SCD, Q_DOT_P, DSIGMA_DT, DQ_DEPS, DQ_DT, EPS, DELTA_EPS, T, DELTA_T, T_N, DELTA_TEMP, PFV, DELTA_PFV, CMNAME, N_DIR, N_SHR, N_TOTAL, N_SV, PROPS, N_PROPS, COORDS, DELTA_R, PNEWDT, L_ELEMENT, F_N, F, I_EL, I_IP, I_LAYER, I_SP, I_STEP, I_INCREMENT), so neither STRESS nor DDSDDE appears among them. This is t",
-   "run": "",
+   "run": "pass23",
    "sha256": "acd0cb12b922afa7ef2309bba8ce901993b033c0c5db752bca5c29701dd0943d",
    "source_id": "sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Stress-based Return Mapping - Fully-Implicit/umat_subroutine.for",
    "state": "transform_refused"
@@ -4768,7 +4768,7 @@
     "primal_agreed": ""
    },
    "reason": "Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 316: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 317: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form S",
-   "run": "",
+   "run": "pass23",
    "sha256": "ae6c563ed5ea1aecf2a15d0d07cb3e6595d33b028aca737dba5000319f5d2904",
    "source_id": "KianAbd__vCANN_FEM/Abaqus/umat.f90",
    "state": "transform_refused"
@@ -4786,7 +4786,7 @@
     "primal_agreed": ""
    },
    "reason": "IP_COUNT is a variable of module GLOBALVARIABLES (globalvariables.f), and the stress path reads it as IP_COUNT(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the st",
-   "run": "",
+   "run": "pass23",
    "sha256": "af389603fec43c698722dd43f6129ff3d9a577e9f986c147d97d78a12b5d91bb",
    "source_id": "Shi2oon__DIC2ABAQUS/OXFORD-UMAT/OXFORD-UMAT v3.1/OXFORD-UMAT.f",
    "state": "transform_refused"
@@ -4912,7 +4912,7 @@
     "primal_agreed": ""
    },
    "reason": "NEWTON_TOLERANCE_OTI is passed to SME_SETPARAM, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply SME_SETPARAM's source with this file (or in dependency_roots) so it can be lifted.; X0_OTI is passed to SETUP, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit in",
-   "run": "",
+   "run": "pass23",
    "sha256": "b378577f656a9064e4af1f07ec83503cfb9133b5a118786713230b116982c764",
    "source_id": "KnutAM__MaterialModels/models/GenFiniteStrain/src/GeneralFiniteStrain.for",
    "state": "external_dependency_unavailable"
@@ -5074,7 +5074,7 @@
     "primal_agreed": ""
    },
    "reason": "Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 1203: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 1204: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form",
-   "run": "",
+   "run": "pass23",
    "sha256": "b8213b255742a0a5b38479f7b698b88585e7ec5c51f8a2af184dd1c30f7dc25f",
    "source_id": "KianAbd__vCANN_FEM/Abaqus/umat_vCANN.f90",
    "state": "transform_refused"
@@ -5092,7 +5092,7 @@
     "primal_agreed": ""
    },
    "reason": "Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 1203: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form SUM(..., DIM/MASK) is used with promoted variables on stress path line 1204: oti_intrinsics declares SUM(array) over the OTI type and nothing else. What to do: write that reduction as a DO loop in the source.; Unsupported intrinsic form",
-   "run": "",
+   "run": "pass23",
    "sha256": "b8213b255742a0a5b38479f7b698b88585e7ec5c51f8a2af184dd1c30f7dc25f",
    "source_id": "KianAbd__vCANN_FEM/TensorFlow/Results_Liao_Thermo/20260601-103627/UMAT/umat_vCANN.for",
    "state": "transform_refused"
@@ -5164,7 +5164,7 @@
     "primal_agreed": ""
    },
    "reason": "HelperLiftingError: RotMatrixToAngles applies ATAN2 to a differentiated value at line 7000: 'angle(1) = datan2(crot(2,3)/sth, crot(1,3)/sth)'. The OTI algebra declares no ATAN2 over the type and none can be written inside an expression here -- a reduction over a run-time extent needs a loop, which i",
-   "run": "",
+   "run": "pass23",
    "sha256": "ba037bed06b2e298a8806969c77bad1b12bea0b07d126518a51b5c1b653c778c",
    "source_id": "damin225__short-crack-propagation-3d/input_clean/umat.f",
    "state": "transform_refused"
@@ -5200,7 +5200,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: dstran_initialization_before_stress_use. Meaning: the shadow of the seeded variable is initialised after the first stress expression (transformed file: seed at line 441, first stress expression at line 403, last stress update at line 512, STRESS extraction at line 584, DDSDDE extraction at line 592). What to do: start the stress update region after the point where DSTRAN is complete, or move the seed with transformation_anchors.seed.; Semantic check failed: dstran_seed_bef",
-   "run": "",
+   "run": "pass23",
    "sha256": "ba476f42c92baca1832fd28fbc9a2e254cbce19a3c03d3b5012acf43e1734938",
    "source_id": "cunhuav__Abaqus-Neural-Network-UMAT/ro_nn_umat.f90",
    "state": "transform_refused"
@@ -5272,7 +5272,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
-   "run": "",
+   "run": "pass23",
    "sha256": "bd71cd13c0d52194375699612844d5d09413f8b14b21ba68651094bb399e0e26",
    "source_id": "mrkearden__abaqus_umat/PlasticSolve.F90",
    "state": "not_a_umat"
@@ -5308,7 +5308,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "becd36d057157020e22f8970c72161f0ce4a7b602076f00fcf934455c3257d5d",
    "source_id": "bmmbUPF__abaqusIVD/Sub_TransDisc.f",
    "state": "external_dependency_unavailable"
@@ -5344,7 +5344,7 @@
     "primal_agreed": ""
    },
    "reason": "CONVERT_ARRAY_TO_TENSOR appears as CONVERT_ARRAY_TO_TENSOR(...) on the stress path but is not declared anywhere in this source, which USEs BASE_CONFIG, PRESOLVE_MOD, TENSOR_OPT_MOD, ELASTIC_MOD, CONTAINER_MOD, PLASTIC_MOD, MATH_MOD without defining it. The transformer cannot read that module, so it cannot tell whether CONVERT_ARRAY_TO_TENSOR is an array to promote or a call into it.; CONVERT_TENSOR_TO_ARRAY appears as CONVERT_TENSOR_TO_ARRAY(...) on the stress path but is not declared anywhere i",
-   "run": "",
+   "run": "pass23",
    "sha256": "bfb74e1747ff13adac0e0438d881184069b70795e31d2fd3ec1b510027497e53",
    "source_id": "Woowinehouse__Abaqus_UMAT_sanisand/src/interface/umat.f90",
    "state": "transform_refused"
@@ -5398,7 +5398,7 @@
     "primal_agreed": ""
    },
    "reason": "ValueError: This source defines no SUBROUTINE and no FUNCTION that the Fortran reader could parse, so there is no routine here to transform. Check the source form -- a free-form file named .f or .for is read by column and yields no statements -- or that the file is Fortran at all.",
-   "run": "",
+   "run": "pass23",
    "sha256": "c08f2ccfb731a1d5a3e2cea95f7484df5ff9ef63c820b2943e6882c347b63b13",
    "source_id": "mkhadijeh26__UMAT_for_Viscoelastictiy/Linking Mechanical with Aging Code/CoupledMechanicalAgingCode.f",
    "state": "incomplete_or_corrupt_source"
@@ -5488,7 +5488,7 @@
     "primal_agreed": ""
    },
    "reason": "HQR2 puts complex names (Z3) in EQUIVALENCE(Z3,T3(1)) at line 1274. That fixes a storage layout the complex OTI type cannot occupy. Not supported by this transform.; HQR2 declares a variable named DCMPLX, which oti_complex exports as a generic. Not supported by this transform.",
-   "run": "",
+   "run": "pass23",
    "sha256": "c34c70f1a346f70c733534e0cc5fdec4a0561eebc96a42c3db12e3591883b898",
    "source_id": "sd104400__OPA_Modeling/FE Modeling/UMAT_DPIsodwAniDM.for",
    "state": "transform_refused"
@@ -5524,7 +5524,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for HYPEREL reached external or undefined callee INVARS (called at line 26). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines INVARS beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "c398892f1405ca4c5ef721e85b5b0222c6fdeede368cffc3ef221d881adecd01",
    "source_id": "matmodlab__matmodlab2/matmodlab2/umat/uhyper_wrap.f90",
    "state": "transform_refused"
@@ -5578,7 +5578,7 @@
     "primal_agreed": ""
    },
    "reason": "UMAT_ELASTIC appears as UMAT_ELASTIC(...) on the stress path but is not declared anywhere in this source, which USEs ABAQUS_DEFINITIONS, ELASTIC_MOD without defining it. The transformer cannot read that module, so it cannot tell whether UMAT_ELASTIC is an array to promote or a call into it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "c5512e4965dac51698e58bbcc53acc4f2bd4d935eda872447c6eee5d6a57bd45",
    "source_id": "BristolCompositesInstitute__abaqus-modern-fortran/src/umat.f",
    "state": "transform_refused"
@@ -5686,7 +5686,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: old_ddsdde_assignments_disabled. Meaning: an original assignment to DDSDDE survives after the extraction and would overwrite the OTI tangent (transformed file: seed at line 135, first stress expression at line 162, last stress update at line 289, STRESS extraction at line 366, DDSDDE extraction at line 374). What to do: include that assignment in an old_tangent replacement region of the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "c96bb814dd30e0567e242da1fd069d08af2c4dce8c5055149a367185c0fb7f5f",
    "source_id": "mholla__growth/umats/umat_iso_Mandel_v2.f",
    "state": "transform_refused"
@@ -5776,7 +5776,7 @@
     "primal_agreed": ""
    },
    "reason": "MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2STRAN is an array to promote or a call into i",
-   "run": "",
+   "run": "pass23",
    "sha256": "cd6267414f4821cb3006e89fba679914829087bd417d6f379102c6a3999fbae5",
    "source_id": "patrickstaubach__abaqus-explicit/examples/_pile_driving/HPP_Staubach_explicit.f",
    "state": "transform_refused"
@@ -5794,7 +5794,7 @@
     "primal_agreed": ""
    },
    "reason": "MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2STRAN is an array to promote or a call into i",
-   "run": "",
+   "run": "pass23",
    "sha256": "cd6267414f4821cb3006e89fba679914829087bd417d6f379102c6a3999fbae5",
    "source_id": "patrickstaubach__abaqus-explicit/src/HPP_Staubach_explicit.f",
    "state": "transform_refused"
@@ -5812,7 +5812,7 @@
     "primal_agreed": ""
    },
    "reason": "UMAT_ELASTIC appears as UMAT_ELASTIC(...) on the stress path but is not declared anywhere in this source, which USEs ABAQUS_DEFINITIONS, ELASTIC_MOD without defining it. The transformer cannot read that module, so it cannot tell whether UMAT_ELASTIC is an array to promote or a call into it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "d05dd8613ac55d4cafcf0cca0444e0525c0bdadd0ae3ace469a1a48c514b2fd5",
    "source_id": "BristolCompositesInstitute__abaci/example/src/umat.f",
    "state": "transform_refused"
@@ -5956,7 +5956,7 @@
     "primal_agreed": ""
    },
    "reason": "anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (SIGMA, SV, C, SSE, DELTA_W_P, SCD, Q_DOT_P, DSIGMA_DT, DQ_DEPS, DQ_DT, EPS, DELTA_EPS, T, DELTA_T, T_N, DELTA_TEMP, PFV, DELTA_PFV, CMNAME, N_DIR, N_SHR, N_TOTAL, N_SV, PROPS, N_PROPS, COORDS, DELTA_R, PNEWDT, L_ELEMENT, F_N, F, I_EL, I_IP, I_LAYER, I_SP, I_STEP, I_INCREMENT), so neither STRESS nor DDSDDE appears among them. This is t",
-   "run": "",
+   "run": "pass23",
    "sha256": "d3b5a3f114345f10015258a97c3eb7dca6d99161ef5bec3146a542ff01fe4d61",
    "source_id": "sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Strain-based Return Mapping - Fully-Implicit/umat_subroutine.for",
    "state": "transform_refused"
@@ -6046,7 +6046,7 @@
     "primal_agreed": ""
    },
    "reason": "UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "d636237a925b51c63b78d289a0c9d928a7a1126b20b434818772d6526934d2fd",
    "source_id": "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for",
    "state": "external_dependency_unavailable"
@@ -6100,7 +6100,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['CYCLREVERSAL', 'FCOMBINED']. The completed JSON rewrites those calls, so pass-through is unsafe. (CYCLREVERSAL is first called at line 61.) What to do: put the file that defines CYCLREVERSAL, FCOMBINED beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "d759664babbf496944ea6ec2a4d901e5ae48ca02d843f545fdc32c32c543078a",
    "source_id": "jacojvr__UMATs/UMAT_framework/umat_comb.f",
    "state": "transform_refused"
@@ -6118,7 +6118,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
-   "run": "",
+   "run": "pass23",
    "sha256": "d7d01c176859475f4a9dccf57a891b9e454d05479ab7f902b35d5087fb68a11b",
    "source_id": "jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL.for",
    "state": "not_a_umat"
@@ -6244,7 +6244,7 @@
     "primal_agreed": ""
    },
    "reason": "IP_COUNT is a variable of module GLOBALVARIABLES (globalvariables.f), and the stress path reads it as IP_COUNT(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the st",
-   "run": "",
+   "run": "pass23",
    "sha256": "dd24ff24aa00629297f7cc5f22e8f989fc1d4f51b7993d026fa892078211c140",
    "source_id": "Shi2oon__DIC2ABAQUS/OXFORD-UMAT/Example - Polycrytal with PROPS/OXFORD-UMAT.f",
    "state": "transform_refused"
@@ -6280,7 +6280,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for UMAT_OVERSTRESS reached external or undefined callee WRITEOUT (called at line 387). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines WRITEOUT beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.; DDSDDE assignment is not covered by an old tangent replacement region (at line 405; it is reached after the stress update and",
-   "run": "",
+   "run": "pass23",
    "sha256": "ddebcab1aab02dc24d2b671ba0c7f4c5790df7a198e8316ced5fa03390ad202f",
    "source_id": "JuliaFEM__UMAT.jl/umat_models/drucker_prager_plasticity.f90",
    "state": "transform_refused"
@@ -6298,7 +6298,7 @@
     "primal_agreed": ""
    },
    "reason": "ASABQARRAY appears as ASABQARRAY(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether ASABQARRAY is an array to promote or a call into it.; DEV appears as DEV(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether DEV is an array to promote or a call into it",
-   "run": "",
+   "run": "pass23",
    "sha256": "de6c6dc8865d9c9e2de7196b6cd59d1e098d15f3a60f1ca151d51229e5bbd147",
    "source_id": "adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb_simple.f",
    "state": "transform_refused"
@@ -6316,7 +6316,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
-   "run": "",
+   "run": "pass23",
    "sha256": "de865ed48377230f8aa5e213f483fc72b942f78e571cc8d28c3e19e6a503f7d5",
    "source_id": "jgomezc1__DRM-FEAP/matutil.for",
    "state": "not_a_umat"
@@ -6514,7 +6514,7 @@
     "primal_agreed": ""
    },
    "reason": "ValueError: This source defines no SUBROUTINE and no FUNCTION that the Fortran reader could parse, so there is no routine here to transform. Check the source form -- a free-form file named .f or .for is read by column and yields no statements -- or that the file is Fortran at all.",
-   "run": "",
+   "run": "pass23",
    "sha256": "e3e52aeb098f2094e0f88ac955f10ffe6e8ff0e22605ea27c7735045a6aed5dc",
    "source_id": "mkhadijeh26__UMAT_for_Viscoelastictiy/Linking Mechanical with Aging Code/CoupledMechanicalAgingCode2.f",
    "state": "incomplete_or_corrupt_source"
@@ -6550,7 +6550,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for CALCKERNELFUNCTION reached external or undefined callee INDEX (called at line 409). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines INDEX beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "e55f139d12244e49460b358cca5a4647d791208b802dc3128951d73740d62297",
    "source_id": "hwu12sluedu__MaterialAI-Workbench/examples/UMAT/ml_umat.f",
    "state": "transform_refused"
@@ -6568,7 +6568,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for CALCKERNELFUNCTION reached external or undefined callee INDEX (called at line 409). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines INDEX beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "e55f139d12244e49460b358cca5a4647d791208b802dc3128951d73740d62297",
    "source_id": "hwu12sluedu__MaterialAI-Workbench/material_ai_workbench/resources/umat/ml_umat.f",
    "state": "transform_refused"
@@ -6586,7 +6586,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "e57ae8f60361bedda921bf99d191b524c155af6d02b1cfec2028df5c34c33ac6",
    "source_id": "ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
    "state": "external_dependency_unavailable"
@@ -6730,7 +6730,7 @@
     "primal_agreed": ""
    },
    "reason": "Semantic check failed: dstran_initialization_before_stress_use. Meaning: the shadow of the seeded variable is initialised after the first stress expression (transformed file: seed at line 144, first stress expression at line 66, last stress update at line 226, STRESS extraction at line 273, DDSDDE extraction at line 281). What to do: start the stress update region after the point where DSTRAN is complete, or move the seed with transformation_anchors.seed.; Semantic check failed: dstran_seed_befo",
-   "run": "",
+   "run": "pass23",
    "sha256": "ebe77d2fe1cd51274a98194f5a970d19b65ac926047f789270dbd55124a24509",
    "source_id": "mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ABAQUS_DSR_EXAMPLE/ViscoelasticityCode3.f",
    "state": "transform_refused"
@@ -6748,7 +6748,7 @@
     "primal_agreed": ""
    },
    "reason": "ValueError: This source defines no SUBROUTINE and no FUNCTION that the Fortran reader could parse, so there is no routine here to transform. Check the source form -- a free-form file named .f or .for is read by column and yields no statements -- or that the file is Fortran at all.",
-   "run": "",
+   "run": "pass23",
    "sha256": "ec199d91a73d054f195b059fee7d9b25fa3ed55110c10fe01f373526ffbe6cae",
    "source_id": "mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ViscoelasticityCode2.f",
    "state": "incomplete_or_corrupt_source"
@@ -6766,7 +6766,7 @@
     "primal_agreed": ""
    },
    "reason": "ASABQARRAY appears as ASABQARRAY(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether ASABQARRAY is an array to promote or a call into it.; DET appears as DET(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether DET is an array to promote or a call into it",
-   "run": "",
+   "run": "pass23",
    "sha256": "ec40c53c27500c3ed5130c7744bed381fb988d315130f0b6b83352772196960b",
    "source_id": "adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f",
    "state": "transform_refused"
@@ -6892,7 +6892,7 @@
     "primal_agreed": ""
    },
    "reason": "ValueError: This source defines no SUBROUTINE and no FUNCTION that the Fortran reader could parse, so there is no routine here to transform. Check the source form -- a free-form file named .f or .for is read by column and yields no statements -- or that the file is Fortran at all.",
-   "run": "",
+   "run": "pass23",
    "sha256": "f05451e634923360c20a4df58bbb19ddd21306e5c81a0f0efcdbbba38290e90f",
    "source_id": "mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ViscoelasticityCode.f",
    "state": "incomplete_or_corrupt_source"
@@ -7126,7 +7126,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "fd2c19d7adb617049b563e9c462821ab888db878f55364f172f328ba9522e46a",
    "source_id": "frodal__SCMM-hypo/HypoImp.f",
    "state": "external_dependency_unavailable"
@@ -7216,7 +7216,7 @@
     "primal_agreed": ""
    },
    "reason": "HelperLiftingError: Missing helper INCLUDE 'SMAAspUserArrays.hdr' relative to <work>/out/dependencies/UMAT_DamThermMech_1_H.f",
-   "run": "",
+   "run": "pass23",
    "sha256": "fec0fec9fa94d2913b0d939fe9e47acf9f95c7dc6765b82a155c76e477ce8a64",
    "source_id": "InstituteOfMechanics__Thermomechanical_Gradient_Enhanced_Damage_UMAT/src/UMAT_DamThermMech_1_H.f",
    "state": "transform_refused"
@@ -7234,7 +7234,7 @@
     "primal_agreed": ""
    },
    "reason": "Helper lifting failed: Helper lifting for KGTN reached external or undefined callee DTIME (called at line 400). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines DTIME beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
-   "run": "",
+   "run": "pass23",
    "sha256": "ff792be0b6dfe8928b9be53939dd48933550d83eccb56dbb9e1ec04d371bed04",
    "source_id": "williammora1984__UMAT_GTN/3_UMAT/UMAT_GTN_W.f",
    "state": "transform_refused"
@@ -7288,7 +7288,7 @@
     "primal_agreed": ""
    },
    "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
-   "run": "",
+   "run": "pass23",
    "sha256": "ffd5c87f4d23993755d7727aa277895325944c214341443a96e767a318025f17",
    "source_id": "sas229__geomat/tests/umat_integration.f90",
    "state": "not_a_umat"
