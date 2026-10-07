@@ -22,7 +22,7 @@ NEEDS: dict = {
     "routine": {
         "ask": "This file does not hold the Abaqus material routine (the "
                "UMAT): {why}.",
-        "default": "Nothing can be assumed. Give the file that holds the "
+        "default": "The run cannot go on. Give the file that holds the "
                    "UMAT itself; helper files go beside it or in a folder "
                    "named with --dependency-root FOLDER.",
         "whose": "you or the author",
@@ -39,7 +39,7 @@ NEEDS: dict = {
     "element": {
         "ask": "This kind of material or element is not one this program "
                "can run yet: {why}.",
-        "default": "Nothing can be assumed. Use a solid, plane-strain or "
+        "default": "The run cannot go on. Use a solid, plane-strain or "
                    "plane-stress setup for this check, or send the file to "
                    "the maintainers.",
         "whose": "this program",
@@ -48,8 +48,8 @@ NEEDS: dict = {
         "ask": "I could not find the numbers this material "
                "needs: the values of {slots}, in the order the routine "
                "reads them.",
-        "default": "None. The constants are never guessed or filled in for "
-                   "you. Put an Abaqus input file with a *USER MATERIAL "
+        "default": "The run cannot go on, and the constants are never guessed "
+                   "or filled in for you. Put an Abaqus input file with a *USER MATERIAL "
                    "block next to the UMAT, or type the values into a "
                    "material file and pass it with --material-config FILE "
                    "(if the input file lives elsewhere, use "
@@ -60,7 +60,7 @@ NEEDS: dict = {
         "ask": "Your routine calls {names}, which are not in the files this "
                "program was given, so it cannot follow the stress "
                "calculation through them.",
-        "default": "None. Put the file that defines {names} beside your "
+        "default": "The run cannot go on. Put the file that defines {names} beside your "
                    "UMAT, or give its folder with --dependency-root FOLDER. "
                    "If it is an Abaqus library routine or was never "
                    "published, ask the author.",
@@ -69,7 +69,7 @@ NEEDS: dict = {
     "includes": {
         "ask": "Your routine includes {names}, which are not in the files "
                "this program was given.",
-        "default": "None. Put the file beside your UMAT, or give its folder "
+        "default": "The run cannot go on. Put the file beside your UMAT, or give its folder "
                    "with --dependency-root FOLDER.",
         "whose": "you",
     },
@@ -77,7 +77,7 @@ NEEDS: dict = {
         "ask": "Your routine uses the module {names}, whose file was not "
                "given, so this program cannot tell what the names it "
                "provides are.",
-        "default": "None. Get the file that contains the module (look for "
+        "default": "The run cannot go on. Get the file that contains the module (look for "
                    "'module' followed by its name in the same project) and "
                    "put it beside your UMAT, or name its folder with "
                    "--dependency-root FOLDER.",

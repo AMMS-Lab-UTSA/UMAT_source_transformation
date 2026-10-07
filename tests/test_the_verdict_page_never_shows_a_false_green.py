@@ -66,3 +66,21 @@ def test_registry_rows_render_green_exactly_when_the_rule_says():
     for r in data["records"]:
         green = verdict_for(r)["colour"] == "green"
         assert green == bool(r["verified_on_every_gate"]), r["source_id"]
+
+
+def test_a_derivative_only_success_is_its_own_amber_state_with_its_own_next_action():
+    rec = {"stages": {"sensitivities": {"verification": {"result": {"verdict": "verified"}}}}}
+    v = verdict_for(rec)
+    assert v["colour"] == "amber"
+    assert v["terminal state"] == "derivative_check_passed_abaqus_not_run"
+    assert "numerical derivative check passed" in v["sentence"]
+    assert "Run the Abaqus check to verify the translated routine against your original" in v["next action"]
+    text = render_verdict(rec)
+    assert "GREEN" not in text and "Nothing was measured" not in text and "0 of 6" not in text
+
+
+def test_the_derivative_only_state_never_applies_once_any_gate_is_measured_false():
+    rec = {"stages": {"v": {"verdict": "verified"}},
+           "evidence": {**{g: None for g in GATES}, GATES[0]: False}}
+    assert verdict_for(rec)["terminal state"] != "derivative_check_passed_abaqus_not_run"
+    assert verdict_for(rec)["colour"] != "green"
