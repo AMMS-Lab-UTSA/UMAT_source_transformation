@@ -229,6 +229,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for line in _describe_source(facts, source):
         print(line)
 
+    out = _new_out_dir(source, args.out)
+    inputs = out.with_name(out.name + "_input")
+    inputs.mkdir(parents=True, exist_ok=True)
+    # The routine first, the material second: the real blocker is the message.
+    from umat_oti.app.check_preflight import preflight
+
+    blocked = preflight(source, facts, [d.expanduser().resolve() for d in args.dependency_root],
+                        inputs / "preflight")
+    if blocked is not None:
+        print_card(*blocked)
+        print(TEXT["where"].format(path=inputs / "preflight"))
+        return 2
+    print("  Conversion    the routine's helpers resolve and I can find where it sets "
+          "stress and stiffness  [ok]")
+
     deck, how, candidates = resolve_deck(source, args.target, args.deck)
     deck_facts = None
     if deck is not None:
@@ -244,10 +259,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return _fail(f"I cannot find the deck {candidates[0]}.")
     else:
         print("  Deck          none found beside the UMAT  [missing]")
-
-    out = _new_out_dir(source, args.out)
-    inputs = out.with_name(out.name + "_input")
-    inputs.mkdir(parents=True, exist_ok=True)
 
     material_config: Optional[Path] = None
     discovery_root: Optional[Path] = None
