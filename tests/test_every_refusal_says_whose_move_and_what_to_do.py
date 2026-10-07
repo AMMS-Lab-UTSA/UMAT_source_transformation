@@ -127,3 +127,32 @@ def test_the_specific_undefined_rule_gives_the_same_concrete_step():
     card = card_for("undefined_in_original", "undefined_in_original (D-12): STRESS(1) differ between the original built with gfortran -finit zero / snan / inf.")
     assert card.rule.startswith("rule:") and card.whose_move == "the author of this UMAT"
     assert "-finit-real=snan" in card.next_action and "-fbacktrace" in card.next_action
+
+
+@pytest.mark.parametrize("reason,fragment", [
+    ("Automatic material configuration failed: Discovered model is not supported by the small-strain NTENS=6 sensitivity provider.",
+     "finite-strain model"),
+    ("Discovered settings cannot be represented by the standalone provider: orientation, nonzero initial_statev",
+     "orientation, nonzero initial_statev"),
+    ("Discovered loading is not a prescribed strain history supported by the provider.",
+     "prescribed strain history")])
+def test_constants_read_but_model_unsupported_says_so_and_never_says_the_numbers_were_not_found(reason, fragment):
+    from umat_oti.app.check_command import failure_state
+    from umat_oti.app.refusal_cards import state_after_reading
+    from umat_oti.app.verdict_page import render_verdict, verdict_for
+    assert state_after_reading("missing_material_data", reason) == "unsupported_formulation"
+    assert state_after_reading("transform_refused", reason) == "transform_refused"
+    card = card_for("missing_material_data", reason)
+    assert card.rule == "rule:discovered" and card.whose_move == "this program"
+    assert "Your constants were read from the deck" in card.sentence and fragment in card.sentence
+    assert "could not find the numbers" not in card.sentence + card.next_action
+    state, text = failure_state({"failed_stage": "material_settings", "error": reason})
+    assert state == "unsupported_formulation" and "Discovered" in text
+    page = render_verdict({"terminal_state": "missing_material_data", "reason": reason})
+    assert page.startswith("=" * 70 + "\nRED:") and "could not find the numbers" not in page
+    assert verdict_for({"terminal_state": "missing_material_data", "reason": reason})["terminal state"] == "unsupported_formulation"
+
+
+def test_a_missing_material_without_that_reason_keeps_its_own_card():
+    card = card_for("missing_material_data", "x publishes no deck with a *USER MATERIAL block, so")
+    assert card.rule != "rule:discovered" and card.whose_move == "you"

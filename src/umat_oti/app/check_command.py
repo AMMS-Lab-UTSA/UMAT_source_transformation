@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 from umat_oti.app import check_intake as intake
-from umat_oti.app.refusal_cards import card_for
+from umat_oti.app.refusal_cards import card_for, state_after_reading
 
 #: Everything this command says in its own words.
 TEXT = {
@@ -211,7 +211,8 @@ def failure_state(summary: dict) -> tuple:
         for stage_name, body in (summary.get("stages") or {}).items():
             if isinstance(body, dict) and body.get("blockers"):
                 reason = "; ".join(map(str, body["blockers"]))
-    return _STATE_OF_STAGE.get(stage, "transform_refused"), clean_reason(reason)
+    reason = clean_reason(reason)
+    return state_after_reading(_STATE_OF_STAGE.get(stage, "transform_refused"), reason), reason
 
 
 def load_scanner():

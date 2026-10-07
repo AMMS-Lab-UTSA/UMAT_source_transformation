@@ -30,7 +30,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-__all__ = ["Card", "card_for", "STATE_CARDS", "RULES", "FLAGS_USED"]
+__all__ = ["Card", "card_for", "STATE_CARDS", "RULES", "FLAGS_USED", "state_after_reading"]
 
 YOU = "you"
 AUTHOR = "the author of this UMAT"
@@ -405,7 +405,47 @@ def _undefined(text, state):
         + " Set it in a copy and run again, or send the line to the author.")
 
 
+#: The constants WERE read from the deck, and the model they belong to cannot be checked here.
+DISCOVERED_UNSUPPORTED = re.compile(
+    r"Discovered (model is not supported|settings cannot be represented|loading is not a prescribed)")
+
+
+def state_after_reading(state: str, reason: Optional[str]) -> str:
+    """``unsupported_formulation`` when the reason says the deck was read but its model is not supported.
+
+    The pipeline files that stage under material settings, which reads as "could not find the
+    numbers" -- not true when the numbers were found and the model is the problem.
+    """
+    if state in ("missing_material_data", "") and DISCOVERED_UNSUPPORTED.search(str(reason or "")):
+        return "unsupported_formulation"
+    return state
+
+
+def _discovered(text, state):
+    t = str(text or "")
+    if "model is not supported" in t:
+        what = ("it is a finite-strain model, a plane-stress or shell model, or one with another "
+                "number of stress components than six")
+    elif "settings cannot be represented" in t:
+        listed = re.search(r"provider:\s*([^\n.]*)", t)
+        what = ("the deck asks for something this check cannot represent"
+                + (f" ({listed.group(1).strip()})" if listed else ""))
+    elif "loading is not a prescribed" in t:
+        what = ("its loading is not a prescribed strain history (it uses a body force, a "
+                "separation, time alone, a rotation or a clamped face)")
+    else:
+        what = "its setup is outside what this check can represent"
+    return (
+        f"Your constants were read from the deck, but this program cannot check this kind of model yet: {what}. "
+        "It checks small-strain three-dimensional solid models with six stress components.",
+        PROGRAM,
+        "Nothing is missing from your files. To get a check now, set the model up as a small-strain "
+        "three-dimensional solid in the deck; otherwise send the file to the maintainers so it is recorded "
+        "as not supported yet.")
+
+
 RULES: tuple = (
+    ("discovered", DISCOVERED_UNSUPPORTED.pattern, _discovered),
     ("anchor_args", r"anchors not located.*own_argument_names|umat_interface_uses_the_authors_own_argument_names", _anchor_args),
     ("anchor", r"anchors not located", _anchor),
     ("seed", r"stress_path_consumes_the_seed", _seed),
