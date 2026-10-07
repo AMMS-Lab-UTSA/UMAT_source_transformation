@@ -756,15 +756,24 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
                  ask=p["ask"].format(slots=slots) + (f" ({why})" if why else ""),
                  default=p["default"], whose=p["whose"]))
     agrees = None
+    differ = None
     if parsed is not None and pipeline_values is not None and not parsed["problems"]:
         written = [0.0 if v is None else v for v in parsed["slots"]]
         agrees = written == pipeline_values
         if not agrees:
+            n_slots = max(len(written), len(pipeline_values))
+            differ = [{"slot": i + 1,
+                       "card_reader": written[i] if i < len(written) else None,
+                       "pipeline_reader": pipeline_values[i] if i < len(pipeline_values) else None}
+                      for i in range(n_slots)
+                      if (written[i] if i < len(written) else None) != (pipeline_values[i] if i < len(pipeline_values) else None)]
             intake.item("props_values").note += (
                 " (the pipeline's own reader gives different numbers for this "
                 "block: " + ", ".join(f"{v:g}" for v in pipeline_values) + ")")
     elif parsed is not None and parsed["problems"] and pipeline_values is not None:
         agrees = False
+        differ = [{"slot": i + 1, "card_reader": None, "pipeline_reader": v}
+                  for i, v in enumerate(pipeline_values) if v != 0.0]
         intake.item("props_values").note += (
             " (the pipeline's own reader returns " + ", ".join(
                 f"{v:g}" for v in pipeline_values) + " for it)")
@@ -849,7 +858,8 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
         "props_count": props_count or None,
         "kinematics": "finite" if finite else "small strain",
         "props_values_found": values_ok,
-        "props_values_agree_with_pipeline": agrees}
+        "props_values_agree_with_pipeline": agrees,
+        "props_values_differ": differ}
 
     # ---- hand-over to the pipeline ----------------------------------------
     config, complete, missing = _material_config(

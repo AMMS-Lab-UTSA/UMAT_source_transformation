@@ -15,6 +15,7 @@
     "ntens": 6,
     "props_count": 2,
     "props_values_agree_with_pipeline": null,
+    "props_values_differ": null,
     "props_values_found": false
   },
   "inputs": {

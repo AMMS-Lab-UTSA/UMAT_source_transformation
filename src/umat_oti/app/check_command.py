@@ -303,7 +303,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if scanner is not None:
         found = scanner.scan(source, deck, roots=roots)
         if args.details:
+            from umat_oti.app.check_compact import amber_notes
+
             sys.stdout.write(found.to_text())
+            for note in amber_notes(found):
+                print(note)
         else:
             from umat_oti.app.check_compact import compact_intake
 
