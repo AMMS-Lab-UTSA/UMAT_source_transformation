@@ -1696,6 +1696,24 @@
   "mock:tests/test_check_reads_what_it_can_and_asks_for_the_rest.py:test_the_template_is_the_fallback_when_the_scanner_is_not_there:monkeypatch.setattr:ca00f4f3": {
    "verdict": "justified",
    "reason": "Makes check's loader report that tools/intake_scan.py is absent (an installed copy has no tools/ folder), to test the fallback that reads the files itself; everything else in the run is real."
+  },
+  "broad_except:src/umat_oti/app/check_command.py:print_corpus_line:except Exception:d88c6d7e": {
+   "verdict": "justified",
+   "reason": "The corpus-record line is advisory: an unreadable table or file means no line, never a stopped check. Nothing the check computes or says about the user's files depends on it, and it prints a line only when the SHA-256 of the files matches a row.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/app/check_command.py",
+     "text": "except Exception:                                   # a lookup must never stop a check"
+    }
+   ]
+  },
+  "mock:tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py:test_check_prints_the_line_beside_the_intake_and_never_stops_on_a_missing_table:monkeypatch.setattr:27bc2156": {
+   "verdict": "justified",
+   "reason": "Replaces the digest-table loader by a table built from the test's own files, and then by None, to test that check prints the line when the files match and prints nothing when the table is absent; the SHA-256 matching and the verdict colour are the real code."
+  },
+  "mock:tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py:test_check_prints_the_line_beside_the_intake_and_never_stops_on_a_missing_table:monkeypatch.setattr:8cb0ae05": {
+   "verdict": "justified",
+   "reason": "Replaces the digest-table loader by a table built from the test's own files, and then by None, to test that check prints the line when the files match and prints nothing when the table is absent; the SHA-256 matching and the verdict colour are the real code."
   }
  }
 }

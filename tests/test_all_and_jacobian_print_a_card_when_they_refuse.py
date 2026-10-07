@@ -35,7 +35,9 @@ def test_all_asks_about_the_routine_first_and_runs_nothing_when_it_cannot_be_con
     out = folder / "o"
     assert door.main(["all", str(folder / "missing_helper.f"), "--out", str(out)]) == 2
     text = capsys.readouterr().out
-    assert "REFUSED" in text and "SHEARMOD" in text and "--dependency-root" in text
+    import re
+    assert re.search(r"^(BLUE: I NEED ONE THING FROM YOU|RED: REFUSED)$", text, re.M), "a colour word in the banner"
+    assert "SHEARMOD" in text and "--dependency-root" in text
     _no_internals(text)
     assert not out.exists()
 
