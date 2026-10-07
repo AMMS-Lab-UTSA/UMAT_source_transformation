@@ -4223,6 +4223,24 @@ def run_objectivity(manifest: VerificationManifest, original_call: dict,
     return answer
 
 
+def ntens_mismatch(stored_ntens: int, manifest) -> str:
+    """The refusal text when the stored transform's NTENS is not the element's, else "".
+
+    B17 rule G2b makes the transform read the element's NTENS from the same
+    function the experiment planner uses, so this is the guard that proves it:
+    a transform built at any other NTENS is refused, never run.
+    """
+    if not stored_ntens or stored_ntens == manifest.ntens:
+        return ""
+    return (
+        f"the stored transform was built for NTENS={stored_ntens} and this "
+        f"material is called with NTENS={manifest.ntens} on "
+        f"{manifest.element_type}. The seed directions would not "
+        f"correspond to the element's components, so the tangent it "
+        f"extracts would be the wrong derivatives in the right shape. "
+        f"Re-transform this source at NTENS={manifest.ntens}")
+
+
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
@@ -4307,15 +4325,10 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # history agreed exactly and the tangent was out by a factor of 5000, flat
     # across every step size.
     stored_ntens = int((getattr(stored, "metadata", {}) or {}).get("ntens") or 0)
-    if stored_ntens and stored_ntens != manifest.ntens:
-        seen["manifest_refusals"] = (
-            f"the stored transform was built for NTENS={stored_ntens} and this "
-            f"material is called with NTENS={manifest.ntens} on "
-            f"{manifest.element_type}. The seed directions would not "
-            f"correspond to the element's components, so the tangent it "
-            f"extracts would be the wrong derivatives in the right shape. "
-            f"Re-transform this source at NTENS={manifest.ntens}",)
-        return settle(seen["manifest_refusals"][0])
+    wrong = ntens_mismatch(stored_ntens, manifest)
+    if wrong:
+        seen["manifest_refusals"] = (wrong,)
+        return settle(wrong)
 
     original = Path(cache_root) / stored.source_id
     absent = [str(name) for path, name in
