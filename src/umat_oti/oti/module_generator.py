@@ -223,7 +223,7 @@ def _install_pyoti_shim(template_dir: Path) -> dict[str, types.ModuleType]:
         return dhelp
 
     def get_deriv_factor(hum_dir: Any) -> float:
-        return 1.0
+        return float(_dirs.deriv_factor(tuple(hum_dir)))
 
     def ndir_total(nbases: int, order: int) -> int:
         return dhelp.get_ndir_total(nbases, order)
