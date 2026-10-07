@@ -1,0 +1,208 @@
+"""``umat-oti check UMAT.for [DECK]`` (Nico, B11; Maya's design M1-M2).
+
+It reads the deck from any path and says where each fact came from, takes the
+constants and the loading directly, writes a commented template when there is
+nothing to read, and never prints argparse or ``trial_deck`` usage.
+"""
+import json
+import re
+import shutil
+from pathlib import Path
+
+import pytest
+
+from umat_oti.app import check_command as check
+from umat_oti.app import check_intake as intake
+
+pytestmark = pytest.mark.unit
+
+ROOT = Path(__file__).resolve().parents[1]
+J2 = ROOT / "UMATs" / "UMATs" / "generic_ps" / "j2_props.f"
+
+DECK = """\
+*HEADING
+** a small deck
+*NODE
+1, 0., 0., 0.
+*ELEMENT, TYPE=C3D8, ELSET=BLOCK
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*MATERIAL, NAME=J2
+*USER MATERIAL, CONSTANTS=4
+210000.0, 0.3,
+250.0, 2.0d3
+*DEPVAR
+1
+*STEP, NAME=LOAD, NLGEOM=YES
+*STATIC
+0.1, 1.0
+*END STEP
+*STEP, NAME=BACK
+*STATIC
+*END STEP
+"""
+
+
+@pytest.fixture
+def j2(tmp_path):
+    folder = tmp_path / "work"
+    folder.mkdir()
+    shutil.copy(J2, folder / "j2_props.f")
+    return folder / "j2_props.f"
+
+
+def test_the_deck_gives_constants_state_steps_and_elements_with_their_lines(tmp_path):
+    deck = tmp_path / "block.inp"
+    deck.write_text(DECK)
+    facts = intake.scan_deck(deck)
+    (name, constants, depvar), = facts.user_materials()
+    assert name == "J2" and constants.value == [210000.0, 0.3, 250.0, 2000.0]
+    assert (constants.line, constants.last_line) == (8, 10) and constants.where() == "block.inp lines 8-10"
+    assert depvar.value == 1 and depvar.line == 12
+    assert [s.value for s in facts.steps] == ["LOAD", "BACK"] and facts.steps[0].line == 13
+    assert facts.element_types == ["C3D8"] and facts.nlgeom is True
+
+
+def test_the_source_gives_the_constants_it_reads_and_their_names(j2):
+    facts = intake.scan_source(j2)
+    assert facts.has_umat and facts.umat_line == 18 and not facts.other_kind
+    assert facts.props_max == 4
+    assert [facts.props_names[k].value for k in (1, 2, 3, 4)] == ["E", "XNU", "SIGY0", "H"]
+    assert facts.props_names[1].where() == "j2_props.f line 42"
+
+
+def test_a_vumat_is_named_for_what_it_is(tmp_path):
+    source = tmp_path / "v.f"
+    source.write_text("      SUBROUTINE VUMAT(NBLOCK)\n      RETURN\n      END\n")
+    facts = intake.scan_source(source)
+    assert not facts.has_umat and "VUMAT" in facts.other_kind
+
+
+def test_constants_typed_by_name_or_in_order_and_nothing_guessed(j2):
+    names = intake.scan_source(j2).props_names
+    assert intake.parse_props("E=210000 xnu=0.3 SIGY0=250 H=2000", names, 4)[0] == [210000.0, 0.3, 250.0, 2000.0]
+    assert intake.parse_props("210000 0.3 250 2000", names, 4)[0] == [210000.0, 0.3, 250.0, 2000.0]
+    values, _, problems = intake.parse_props("210000 0.3 250", names, 4)
+    assert values == [] and "PROPS(4) (H)" in problems[0]
+    _, _, problems = intake.parse_props("E=1 poisson=0.3", names, 4)
+    assert "'poisson'" in problems[0] and "E, H, SIGY0, XNU" in problems[0]
+    assert intake.parse_props("E=1 E=2 xnu=0.3 sigy0=1 h=1", names, 4)[2] == ["PROPS(1) is given twice."]
+
+
+def test_the_peak_path_goes_out_back_through_zero_and_unloads():
+    path = intake.out_back_path(0.02)["increments"]
+    total, running = 0.0, []
+    for row in path:
+        total += row[0]
+        running.append(total)
+        assert row[1:] == [0.0] * 5
+    assert len(path) == 40 and max(running) == pytest.approx(0.02) \
+        and min(running) == pytest.approx(-0.02) and running[-1] == pytest.approx(0.0, abs=1e-12)
+    with pytest.raises(ValueError, match="--peak"):
+        intake.out_back_path(-1.0)
+
+
+def test_the_template_is_commented_has_blanks_and_is_stripped_before_use(j2):
+    template = intake.template_material(intake.scan_source(j2), nstatev=1)
+    assert template["props_values"] == [None] * 4
+    assert template["_props_values_are"]["1"].startswith("E (j2_props.f line 42)")
+    clean = intake.strip_comments(template)
+    assert not [k for k in clean if k.startswith("_")]
+    assert set(clean) == {"kinematics", "ntens", "nstatev", "props_values", "check_path"}
+
+
+def test_a_deck_given_by_path_a_folder_or_beside_the_umat_is_found_and_an_ambiguous_one_is_not_guessed(tmp_path):
+    source = tmp_path / "a" / "u.f"
+    source.parent.mkdir()
+    source.write_text("      SUBROUTINE UMAT\n      END\n")
+    elsewhere = tmp_path / "decks"
+    elsewhere.mkdir()
+    (elsewhere / "one.inp").write_text(DECK)
+    assert check.resolve_deck(source, None, elsewhere / "one.inp")[:2] == ((elsewhere / "one.inp").resolve(), "given")
+    assert check.resolve_deck(source, elsewhere, None)[0] == elsewhere / "one.inp"
+    (elsewhere / "two.inp").write_text(DECK)
+    deck, how, candidates = check.resolve_deck(source, elsewhere, None)
+    assert deck is None and how == "folder" and len(candidates) == 2
+    assert check.resolve_deck(source, None, None)[1] == "none"
+    (source.parent / "beside.inp").write_text(DECK)
+    assert check.resolve_deck(source, None, None) == (source.parent / "beside.inp", "beside the UMAT", [])
+
+
+def test_a_bad_option_says_one_plain_line_and_never_argparse_usage(j2, capsys):
+    assert check.main([str(j2), "--no-such-flag"]) == 2
+    err = capsys.readouterr().err
+    assert "usage:" not in err.lower() and "trial_deck" not in err
+    assert err.startswith("umat-oti check:") and "Example:  umat-oti check" in err
+    assert check.main([str(j2.with_name("nothing.f"))]) == 2
+    assert "I cannot find the file" in capsys.readouterr().err
+
+
+def test_a_routine_that_is_not_a_umat_is_refused_with_a_card(tmp_path, capsys):
+    source = tmp_path / "v.f"
+    source.write_text("      SUBROUTINE VUMAT(NBLOCK)\n      RETURN\n      END\n")
+    assert check.main([str(source)]) == 2
+    out = capsys.readouterr().out
+    assert "REFUSED" in out and "Whose move:" in out and "VUMAT" not in out.split("REFUSED")[0]
+
+
+def test_with_no_deck_and_no_constants_a_template_is_written_and_nothing_is_run(j2, monkeypatch, capsys):
+    monkeypatch.chdir(j2.parent)
+    assert check.main([str(j2)]) == 3
+    out = capsys.readouterr().out
+    template = j2.parent / "j2_props_material.json"
+    assert template.is_file() and "--material-config j2_props_material.json" in out
+    assert "REFUSED" in out and "usage:" not in out.lower() and "trial_deck" not in out
+    assert not (j2.parent / "j2_props_check").exists()           # the pipeline did not run
+    # a second run does not overwrite the user's file
+    check.main([str(j2)])
+    assert (j2.parent / "j2_props_material_2.json").is_file()
+
+
+def test_a_material_file_with_blanks_left_in_it_is_refused(j2, monkeypatch, capsys):
+    monkeypatch.chdir(j2.parent)
+    check.main([str(j2)])
+    capsys.readouterr()
+    assert check.main([str(j2), "--material-config", str(j2.parent / "j2_props_material.json")]) == 2
+    assert "still has blanks" in capsys.readouterr().out
+
+
+def test_incomplete_typed_constants_stop_before_anything_runs(j2, monkeypatch, capsys):
+    monkeypatch.chdir(j2.parent)
+    assert check.main([str(j2), "--props", "E=210000 xnu=0.3"]) == 2
+    err = capsys.readouterr().err
+    assert "PROPS(3) (SIGY0), PROPS(4) (H)" in err and "usage:" not in err.lower()
+    assert not (j2.parent / "j2_props_check").exists()
+
+
+@pytest.mark.slow
+@pytest.mark.fortran
+def test_typed_constants_and_a_peak_run_the_pipeline_and_the_json_goes_to_a_file(j2, monkeypatch, capsys):
+    if shutil.which("gfortran") is None:
+        pytest.skip("gfortran not on PATH")
+    monkeypatch.chdir(j2.parent)
+    code = check.main([str(j2), "--props", "E=210000 xnu=0.3 SIGY0=250 H=2000", "--peak", "0.02"])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert '"stages"' not in out and len(out.splitlines()) < 30         # no JSON wall on the screen
+    assert "typed with --props" in out and "[--peak]" in out
+    summary = json.loads((j2.parent / "j2_props_check" / "workflow_summary.json").read_text())
+    assert summary["exit_code"] == 0
+    config = json.loads((j2.parent / "j2_props_check_input" / "material_check.json").read_text())
+    assert config["props_values"] == [210000.0, 0.3, 250.0, 2000.0] and config["nstatev"] == 1
+    assert len(config["check_path"]["increments"]) == 40
+
+
+@pytest.mark.slow
+@pytest.mark.fortran
+def test_a_deck_in_another_folder_gives_the_constants_and_says_where_from(j2, tmp_path, monkeypatch, capsys):
+    if shutil.which("gfortran") is None:
+        pytest.skip("gfortran not on PATH")
+    deck = tmp_path / "elsewhere" / "block.inp"
+    deck.parent.mkdir()
+    deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO").replace("2.0d3", "2000.0").replace(
+        "*ELEMENT, TYPE=C3D8, ELSET=BLOCK\n1, 1, 2, 3, 4, 5, 6, 7, 8\n", ""))
+    monkeypatch.chdir(j2.parent)
+    code = check.main([str(j2), "--deck", str(deck)])
+    out = capsys.readouterr().out
+    assert "[given]" in out and re.search(r"4 values from block.inp lines \d+-\d+ \(\*USER MATERIAL", out) and "*DEPVAR" in out
+    assert "Working:" in out                      # it got as far as running the pipeline
+    assert code in (0, 1, 2)                      # what the pipeline concludes about a deck without nodes is its own
