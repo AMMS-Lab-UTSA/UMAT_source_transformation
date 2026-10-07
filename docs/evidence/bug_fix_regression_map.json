@@ -758,6 +758,10 @@
   {
    "commit": "d6d8473",
    "reason": "Audit-record commit: adds the fix entries for 4492958, c9179ca and e9bfe26 and reviews their test substitutions; its message names the map ('regression' is the map's own name), not a corrected behaviour."
+  },
+  {
+   "commit": "4675ba6",
+   "reason": "New feature, not a correction: umat-oti --version and doctor, and a checkout launcher. 'fix' in its message is the doctor telling a user how to fix their install, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
