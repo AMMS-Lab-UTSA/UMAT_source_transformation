@@ -714,6 +714,15 @@
     "tests/test_f2eval_second_order_coefficients.py::test_pow_oo_second_order_coefficients",
     "tests/test_f2eval_second_order_coefficients.py::test_canary_old_divisor_is_detected"
    ]
+  },
+  {
+   "commit": "1f94297",
+   "selected_by": "manual",
+   "bug": "The deck reader published a material vector from a *USER MATERIAL block whose data lines Abaqus 2021 does not read as written (a blank line between data lines is an error, more data lines than CONSTANTS needs is an error, and a line of more than eight values is not a card); such a block is now unusable and the pairing says which rule it broke. No pairing of the 405 sources changes.",
+   "tests": [
+    "tests/test_a_user_material_block_that_breaks_the_measured_card_rules_is_unusable.py::test_the_measured_layouts",
+    "tests/test_a_user_material_block_that_breaks_the_measured_card_rules_is_unusable.py::test_a_pairing_says_why_the_authors_block_is_not_read"
+   ]
   }
  ],
  "excluded": [
