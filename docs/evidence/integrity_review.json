@@ -1680,6 +1680,18 @@
   "skip:tests/test_intake_scan.py:<module>:mark.skipif:15e7f1ff": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the golden and agreement tests read corpus sources from the discovery cache (UMAT_OTI_DISCOVERY_CACHE, default ../discovery_cache), which is acquired data that is not committed and is not on a clean clone. Every other corpus test skips the same way; the toy tests in the same file need no cache and always run."
+  },
+  "skip:tests/test_check_ends_with_the_verdict_and_a_readable_table.py:test_a_whole_run_ends_with_a_verdict_a_table_and_no_json_on_the_screen:call:skip:0a9f153c": {
+   "verdict": "justified",
+   "reason": "The test runs the whole pipeline (conversion, gfortran compile, original and converted runs, finite-difference check) and is skipped only where gfortran is absent; the guard, reading, card and table behaviour it sits beside is tested without a compiler."
+  },
+  "skip:tests/test_check_reads_what_it_can_and_asks_for_the_rest.py:test_a_deck_in_another_folder_gives_the_constants_and_says_where_from:call:skip:3652b52d": {
+   "verdict": "justified",
+   "reason": "The test runs the whole pipeline (conversion, gfortran compile, original and converted runs, finite-difference check) and is skipped only where gfortran is absent; the guard, reading, card and table behaviour it sits beside is tested without a compiler."
+  },
+  "skip:tests/test_check_reads_what_it_can_and_asks_for_the_rest.py:test_typed_constants_and_a_peak_run_the_pipeline_and_the_json_goes_to_a_file:call:skip:e4725413": {
+   "verdict": "justified",
+   "reason": "The test runs the whole pipeline (conversion, gfortran compile, original and converted runs, finite-difference check) and is skipped only where gfortran is absent; the guard, reading, card and table behaviour it sits beside is tested without a compiler."
   }
  }
 }

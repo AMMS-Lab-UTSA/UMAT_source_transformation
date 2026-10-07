@@ -762,6 +762,26 @@
   {
    "commit": "4675ba6",
    "reason": "New feature, not a correction: umat-oti --version and doctor, and a checkout launcher. 'fix' in its message is the doctor telling a user how to fix their install, not a corrected behaviour."
+  },
+  {
+   "commit": "d38135f",
+   "reason": "New feature (Iris): plain-language refusal cards, the one-page verdict and the goal-first README; 'refusal' in its message names the cards, not a corrected behaviour."
+  },
+  {
+   "commit": "3a72c33",
+   "reason": "New feature: umat-oti check; 'refusal'/'refused' name the cards it prints, not a corrected behaviour."
+  },
+  {
+   "commit": "a51d225",
+   "reason": "New feature: check asks about the routine before the material; 'refusal'/'refused' name the cards it prints."
+  },
+  {
+   "commit": "71d5d39",
+   "reason": "New feature: a refusal card around umat-oti all and jacobian; the commit adds the card and keeps the command's output and exit code, it does not correct a computed result."
+  },
+  {
+   "commit": "1babc6c",
+   "reason": "Documentation: the README's first command; 'refusal' names the cards."
   }
  ],
  "changelog_fixed": {
