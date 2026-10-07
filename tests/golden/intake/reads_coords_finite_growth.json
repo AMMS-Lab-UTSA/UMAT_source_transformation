@@ -1,0 +1,348 @@
+{
+  "counts": {
+    "DEFAULT": 1,
+    "FOUND": 17,
+    "INFERRED": 0,
+    "MISSING": 0
+  },
+  "facts": {
+    "deck_found": true,
+    "element": "C3D8H",
+    "entry_is_umat": true,
+    "family": "three-dimensional continuum",
+    "kinematics": "finite",
+    "nstatv": 10,
+    "ntens": 6,
+    "props_count": 2,
+    "props_values_found": true
+  },
+  "inputs": {
+    "deck": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+    "repository": "Jeff97__growth-of-circular-plate",
+    "umat": "Wrinkle/l1-is-1--l2-is-12.for",
+    "umat_sha256": "30b5d4d98cd7c657173a67b003eb3d19cbc1adaf8753f13138c2d1cedeb7a2fa"
+  },
+  "items": [
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12.for",
+          "line": 2,
+          "text": "SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,"
+        }
+      ],
+      "key": "routine",
+      "label": "Material routine",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "UMAT at line 2",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 47446,
+          "text": "*User Material, constants=2"
+        }
+      ],
+      "key": "deck",
+      "label": "Deck that feeds this routine",
+      "needs_user": false,
+      "note": "a section in l1-is-1--l2-is-12-H0001.inp attaches NeoHookean to C3D6H, C3D8H; the deck's name 'l1-is-1--l2-is-12-H0001.inp' contains the whole of the source's stem 'l1-is-1--l2-is-12'; the deck sits i",
+      "status": "FOUND",
+      "value": "Wrinkle/l1-is-1--l2-is-12-H0001.inp, material NeoHookean",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 31612,
+          "text": "*Element, type=C3D8H"
+        }
+      ],
+      "key": "ntens",
+      "label": "Stress components (NTENS)",
+      "needs_user": false,
+      "note": "the source and the deck agree: three-dimensional continuum",
+      "status": "FOUND",
+      "value": 6,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 31612,
+          "text": "*Element, type=C3D8H"
+        }
+      ],
+      "key": "element",
+      "label": "Element / formulation",
+      "needs_user": false,
+      "note": "verification element; the author's own: C3D6H, C3D8H",
+      "status": "FOUND",
+      "value": "C3D8H (three-dimensional continuum)",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 47454,
+          "text": "*Step, name=Growth, nlgeom=YES, inc=10000"
+        }
+      ],
+      "key": "kinematics",
+      "label": "Geometric nonlinearity (NLGEOM)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "yes: finite strain",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 47444,
+          "text": "*Depvar"
+        },
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 47445,
+          "text": "10,"
+        }
+      ],
+      "key": "nstatv",
+      "label": "State variables (NSTATV / *DEPVAR)",
+      "needs_user": false,
+      "note": "the routine itself reaches STATEV(9)",
+      "status": "FOUND",
+      "value": 10,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 47446,
+          "text": "*User Material, constants=2"
+        }
+      ],
+      "key": "props_count",
+      "label": "Constants (PROPS count)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": 2,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12.for",
+          "line": 45,
+          "text": "EMOD=PROPS(1)"
+        },
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12.for",
+          "line": 46,
+          "text": "ENU=PROPS(2)"
+        }
+      ],
+      "key": "props_names",
+      "label": "Constants (names)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": {
+        "PROPS(1)": "EMOD",
+        "PROPS(2)": "ENU"
+      },
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 47447,
+          "text": "906512., 0.499"
+        }
+      ],
+      "key": "props_values",
+      "label": "Constant values",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": [
+        906512.0,
+        0.499
+      ],
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+          "line": 47454,
+          "text": "*Step, name=Growth, nlgeom=YES, inc=10000"
+        }
+      ],
+      "key": "loading",
+      "label": "Loading",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "the deck's own 1 step(s), periods 10",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "temperature",
+      "label": "Reads temperature (TEMP/DTEMP)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "Wrinkle/l1-is-1--l2-is-12.for",
+          "line": 51,
+          "text": "STATEV(3)=COORDS(1)"
+        }
+      ],
+      "key": "coordinates",
+      "label": "Reads position (COORDS)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "yes; the deck's mesh supplies it",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "element_number",
+      "label": "Reads element number (NOEL)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "fields",
+      "label": "Reads field variables (PREDEF/DPRED)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "helpers",
+      "label": "Helper routines it calls",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "includes",
+      "label": "Files it INCLUDEs",
+      "needs_user": false,
+      "note": "ABA_PARAM.INC is supplied by the solver",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "modules",
+      "label": "Modules it USEs",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "quantity",
+      "label": "What to differentiate",
+      "needs_user": false,
+      "note": "constants that are switches or flags are not worth differentiating; say so if one is",
+      "status": "DEFAULT",
+      "value": "stress and tangent with respect to all 2 constant(s) the routine reads",
+      "whose": ""
+    }
+  ],
+  "material_config": {
+    "check_path": null,
+    "kinematics": "finite_strain",
+    "nstatev": 10,
+    "ntens": 6,
+    "props_values": [
+      906512.0,
+      0.499
+    ]
+  },
+  "needs_user": [],
+  "pipeline_inputs": {
+    "deck": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",
+    "dependency_roots": [],
+    "material_config_complete": false,
+    "material_config_missing": [
+      "this input form supports small strain only",
+      "check_path (the pipeline generates one when it reads a deck)"
+    ],
+    "material_config_needed": false,
+    "umat": "Wrinkle/l1-is-1--l2-is-12.for"
+  },
+  "schema": "umat-oti/intake/1"
+}

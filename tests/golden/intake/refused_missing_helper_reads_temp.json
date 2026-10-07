@@ -1,0 +1,296 @@
+{
+  "counts": {
+    "DEFAULT": 6,
+    "FOUND": 6,
+    "INFERRED": 2,
+    "MISSING": 4
+  },
+  "facts": {
+    "deck_found": false,
+    "element": "C3D8",
+    "entry_is_umat": true,
+    "family": "three-dimensional continuum",
+    "kinematics": "small strain",
+    "nstatv": 1,
+    "ntens": 6,
+    "props_count": null,
+    "props_values_found": false
+  },
+  "inputs": {
+    "deck": "",
+    "repository": "jacojvr__UMATs",
+    "umat": "UMAT_framework/umat_iso.f",
+    "umat_sha256": "83da23123ec49ced7f23db80319999b89a726d824784fe944b7d2d7ab70f2974"
+  },
+  "items": [
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMAT_framework/umat_iso.f",
+          "line": 1,
+          "text": "subroutine umat(stress, statev, ddsdde, sse, spd, scd, rpl,"
+        }
+      ],
+      "key": "routine",
+      "label": "Material routine",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "umat at line 1",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "deck",
+      "label": "Deck that feeds this routine",
+      "needs_user": false,
+      "note": "no deck with a *USER MATERIAL block was found next to the file",
+      "status": "MISSING",
+      "value": "none found",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "ntens",
+      "label": "Stress components (NTENS)",
+      "needs_user": false,
+      "note": "nothing in the files says; a solid three-dimensional element (6 components) is the usual",
+      "status": "DEFAULT",
+      "value": 6,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "element",
+      "label": "Element / formulation",
+      "needs_user": false,
+      "note": "",
+      "status": "DEFAULT",
+      "value": "C3D8 (three-dimensional continuum)",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "kinematics",
+      "label": "Geometric nonlinearity (NLGEOM)",
+      "needs_user": false,
+      "note": "the routine never reads DFGRD0/DFGRD1; no deck says otherwise",
+      "status": "INFERRED",
+      "value": "no: small strain",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "nstatv",
+      "label": "State variables (NSTATV / *DEPVAR)",
+      "needs_user": false,
+      "note": "the routine never subscripts STATEV; 1 is the smallest the solver allows",
+      "status": "INFERRED",
+      "value": 1,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "props_count",
+      "label": "Constants (PROPS count)",
+      "needs_user": false,
+      "note": "the routine names no PROPS slot and no deck gives a count",
+      "status": "MISSING",
+      "value": null,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "props_names",
+      "label": "Constants (names)",
+      "needs_user": false,
+      "note": "the routine does not write NAME = PROPS(k) for its constants",
+      "status": "DEFAULT",
+      "value": "PROPS",
+      "whose": ""
+    },
+    {
+      "ask": "I could not find the numbers this material needs: the values of its constants, in the routine's order.",
+      "default": "none: values are never guessed. Give a deck with *USER MATERIAL, or type them (for example E=210000 nu=0.3).",
+      "evidence": [],
+      "key": "props_values",
+      "label": "Constant values",
+      "needs_user": true,
+      "note": "",
+      "status": "MISSING",
+      "value": null,
+      "whose": "you"
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "loading",
+      "label": "Loading",
+      "needs_user": false,
+      "note": "chosen by the program, not by you; zero initial stress and state",
+      "status": "DEFAULT",
+      "value": "a generated path that makes the material do something, in unit time increments",
+      "whose": ""
+    },
+    {
+      "ask": "The routine reads the temperature and the files do not state one.",
+      "default": "293.15 (isothermal), the same for every increment.",
+      "evidence": [
+        {
+          "file": "UMAT_framework/umat_iso.f",
+          "line": 24,
+          "text": "call shearmod(eg,enu,temp,props,nprops)"
+        }
+      ],
+      "key": "temperature",
+      "label": "Reads temperature (TEMP/DTEMP)",
+      "needs_user": true,
+      "note": "",
+      "status": "DEFAULT",
+      "value": "yes; using 293.15 (isothermal)",
+      "whose": "you"
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "coordinates",
+      "label": "Reads position (COORDS)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "element_number",
+      "label": "Reads element number (NOEL)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "fields",
+      "label": "Reads field variables (PREDEF/DPRED)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "Your routine calls FISOTROPIC, SHEARMOD, which are not in the files you gave me.",
+      "default": "none: add the file that defines FISOTROPIC, SHEARMOD next to the UMAT, or give its folder.",
+      "evidence": [
+        {
+          "file": "UMAT_framework/umat_iso.f",
+          "line": 57,
+          "text": "call fisotropic(sy,dsy,zero,dtime,temp,"
+        },
+        {
+          "file": "UMAT_framework/umat_iso.f",
+          "line": 24,
+          "text": "call shearmod(eg,enu,temp,props,nprops)"
+        }
+      ],
+      "key": "helpers",
+      "label": "Helper routines it calls",
+      "needs_user": true,
+      "note": "",
+      "status": "MISSING",
+      "value": {
+        "missing": [
+          "FISOTROPIC",
+          "SHEARMOD"
+        ],
+        "present": []
+      },
+      "whose": "you"
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "includes",
+      "label": "Files it INCLUDEs",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "modules",
+      "label": "Modules it USEs",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "quantity",
+      "label": "What to differentiate",
+      "needs_user": false,
+      "note": "",
+      "status": "DEFAULT",
+      "value": "stress and tangent with respect to every constant the routine reads",
+      "whose": ""
+    }
+  ],
+  "material_config": {
+    "check_path": null,
+    "kinematics": "small_strain",
+    "nstatev": 1,
+    "ntens": 6,
+    "props_values": null
+  },
+  "needs_user": [
+    "props_values",
+    "temperature",
+    "helpers"
+  ],
+  "pipeline_inputs": {
+    "deck": null,
+    "dependency_roots": [],
+    "material_config_complete": false,
+    "material_config_missing": [
+      "props_values",
+      "check_path (the pipeline generates one when it reads a deck)"
+    ],
+    "material_config_needed": true,
+    "umat": "UMAT_framework/umat_iso.f"
+  },
+  "schema": "umat-oti/intake/1"
+}

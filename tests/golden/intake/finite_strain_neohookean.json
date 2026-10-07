@@ -1,0 +1,333 @@
+{
+  "counts": {
+    "DEFAULT": 1,
+    "FOUND": 16,
+    "INFERRED": 1,
+    "MISSING": 0
+  },
+  "facts": {
+    "deck_found": true,
+    "element": "C3D8",
+    "entry_is_umat": true,
+    "family": "three-dimensional continuum",
+    "kinematics": "finite",
+    "nstatv": 1,
+    "ntens": 6,
+    "props_count": 2,
+    "props_values_found": true
+  },
+  "inputs": {
+    "deck": "umat/twist_umat.inp",
+    "repository": "AlexanderJFDR__Hyperelastic_phase_field",
+    "umat": "umat/NeoHookean_umat.for",
+    "umat_sha256": "565d307f0679dcb9377d0ccf04e601082c115590707af15bb6d193a25ef836a9"
+  },
+  "items": [
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/NeoHookean_umat.for",
+          "line": 15,
+          "text": "subroutine umat(stress,statev,ddsdde,sse,spd,scd,"
+        }
+      ],
+      "key": "routine",
+      "label": "Material routine",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "umat at line 15",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/twist_umat.inp",
+          "line": 45228,
+          "text": "*User Material, constants=2"
+        }
+      ],
+      "key": "deck",
+      "label": "Deck that feeds this routine",
+      "needs_user": false,
+      "note": "a section in twist_umat.inp attaches user_mat to C3D8R; the deck's name 'twist_umat.inp' contains the whole of the source's stem 'umat'; the deck sits in the source's own directory",
+      "status": "FOUND",
+      "value": "umat/twist_umat.inp, material user_mat",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/twist_umat.inp",
+          "line": 163,
+          "text": "*Element, type=C3D8R"
+        }
+      ],
+      "key": "ntens",
+      "label": "Stress components (NTENS)",
+      "needs_user": false,
+      "note": "the source and the deck agree: three-dimensional continuum",
+      "status": "FOUND",
+      "value": 6,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/twist_umat.inp",
+          "line": 163,
+          "text": "*Element, type=C3D8R"
+        }
+      ],
+      "key": "element",
+      "label": "Element / formulation",
+      "needs_user": false,
+      "note": "verification element; the author's own: C3D8R",
+      "status": "FOUND",
+      "value": "C3D8 (three-dimensional continuum)",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/twist_umat.inp",
+          "line": 45245,
+          "text": "*Step, name=Step-1, nlgeom=YES"
+        }
+      ],
+      "key": "kinematics",
+      "label": "Geometric nonlinearity (NLGEOM)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "yes: finite strain",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "nstatv",
+      "label": "State variables (NSTATV / *DEPVAR)",
+      "needs_user": false,
+      "note": "the routine never subscripts STATEV; 1 is the smallest the solver allows",
+      "status": "INFERRED",
+      "value": 1,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/twist_umat.inp",
+          "line": 45228,
+          "text": "*User Material, constants=2"
+        }
+      ],
+      "key": "props_count",
+      "label": "Constants (PROPS count)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": 2,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/NeoHookean_umat.for",
+          "line": 48,
+          "text": "C10 = props(1) ! First mechanical constant"
+        },
+        {
+          "file": "umat/NeoHookean_umat.for",
+          "line": 49,
+          "text": "D1 = props(2) ! Second mechanical constant"
+        }
+      ],
+      "key": "props_names",
+      "label": "Constants (names)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": {
+        "PROPS(1)": "C10",
+        "PROPS(2)": "D1"
+      },
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/twist_umat.inp",
+          "line": 45229,
+          "text": "0.5, 2.5641"
+        }
+      ],
+      "key": "props_values",
+      "label": "Constant values",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": [
+        0.5,
+        2.5641
+      ],
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat/twist_umat.inp",
+          "line": 45245,
+          "text": "*Step, name=Step-1, nlgeom=YES"
+        }
+      ],
+      "key": "loading",
+      "label": "Loading",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "the deck's own 2 step(s), periods 1, 1",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "temperature",
+      "label": "Reads temperature (TEMP/DTEMP)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "coordinates",
+      "label": "Reads position (COORDS)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "element_number",
+      "label": "Reads element number (NOEL)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "fields",
+      "label": "Reads field variables (PREDEF/DPRED)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "helpers",
+      "label": "Helper routines it calls",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "includes",
+      "label": "Files it INCLUDEs",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "modules",
+      "label": "Modules it USEs",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": [
+        "NUMKIND"
+      ],
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "quantity",
+      "label": "What to differentiate",
+      "needs_user": false,
+      "note": "constants that are switches or flags are not worth differentiating; say so if one is",
+      "status": "DEFAULT",
+      "value": "stress and tangent with respect to all 2 constant(s) the routine reads",
+      "whose": ""
+    }
+  ],
+  "material_config": {
+    "check_path": null,
+    "kinematics": "finite_strain",
+    "nstatev": 1,
+    "ntens": 6,
+    "props_values": [
+      0.5,
+      2.5641
+    ]
+  },
+  "needs_user": [],
+  "pipeline_inputs": {
+    "deck": "umat/twist_umat.inp",
+    "dependency_roots": [],
+    "material_config_complete": false,
+    "material_config_missing": [
+      "this input form supports small strain only",
+      "check_path (the pipeline generates one when it reads a deck)"
+    ],
+    "material_config_needed": false,
+    "umat": "umat/NeoHookean_umat.for"
+  },
+  "schema": "umat-oti/intake/1"
+}
