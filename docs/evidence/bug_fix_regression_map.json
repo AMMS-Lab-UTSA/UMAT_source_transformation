@@ -810,6 +810,10 @@
   {
    "commit": "66c5536",
    "reason": "Regeneration of the intake scanner's golden files after its wording changed (not mine; mapped here so the audit is complete): 'refused_missing_helper_reads_temp' in its message is a golden's file name, not a corrected behaviour."
+  },
+  {
+   "commit": "81dd0c1",
+   "reason": "The record entry for 9626bdc itself: 'fix' and 'regression' in its message name the record being edited, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
