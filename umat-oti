@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""Run umat-oti from this checkout: no install, no PYTHONPATH.
+
+    python umat-oti check my_umat.for my_deck.inp
+    python umat-oti doctor
+    python umat-oti --version
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+
+from umat_oti.app.front_door import main  # noqa: E402
+
+if __name__ == "__main__":
+    raise SystemExit(main())
