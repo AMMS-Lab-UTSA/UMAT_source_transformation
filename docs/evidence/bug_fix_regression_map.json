@@ -723,6 +723,16 @@
     "tests/test_a_user_material_block_that_breaks_the_measured_card_rules_is_unusable.py::test_the_measured_layouts",
     "tests/test_a_user_material_block_that_breaks_the_measured_card_rules_is_unusable.py::test_a_pairing_says_why_the_authors_block_is_not_read"
    ]
+  },
+  {
+   "commit": "054f8e3",
+   "selected_by": "manual",
+   "bug": "The registry decided external_dependency_unavailable from USE and INCLUDE lines only, read from a stored audit: an external CALL to a routine no file of the repository defines left a source counted as ours, and an include that was commented out or an Abaqus-supplied header counted as missing. It now applies the rule 'a callee that is not in the repository and not an Abaqus utility is external; one that is in the repository is resolved' to every source.",
+   "tests": [
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_callee_in_a_sibling_file_is_resolved_and_the_same_source_without_it_is_external",
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_commented_out_include_is_not_a_dependency",
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_the_registry_moves_a_transformed_but_unrunnable_source_and_leaves_run_states_alone"
+   ]
   }
  ],
  "excluded": [
