@@ -57,7 +57,10 @@ __all__ = [
 
 FORTRAN_SUFFIXES = (".for", ".f", ".f90", ".f77", ".FOR", ".F", ".F90")
 
-_CALL_RE = re.compile(r"(?:^|\W)CALL\s+([A-Za-z_]\w*)", re.IGNORECASE)
+# ``CALL obj%method(...)`` is a type-bound call, not a call to a global routine
+# named ``obj``: reading it as one reported a routine nobody defines (``MDL``,
+# ``MODEL`` in CriticalSoilModels) and put a routine nobody calls into the diagnostic.
+_CALL_RE = re.compile(r"(?:^|\W)CALL\s+([A-Za-z_]\w*)(?!\w)(?!\s*%)", re.IGNORECASE)
 _EXTERNAL_RE = re.compile(r"^\s*EXTERNAL\s+(.+)$", re.IGNORECASE)
 _INCLUDE_RE = re.compile(r"^\s*INCLUDE\s+['\"]([^'\"]+)['\"]", re.IGNORECASE)
 _DEF_RE = re.compile(
