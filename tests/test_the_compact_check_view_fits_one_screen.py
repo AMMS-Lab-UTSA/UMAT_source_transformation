@@ -73,3 +73,21 @@ def test_no_expert_vocabulary_in_the_compact_view(tmp_path):
     text = compact_intake(_scan(tmp_path))
     text = re.sub(r"\b[A-Z][A-Z0-9_]{2,}\b", "NAME", text)
     assert jargon_in([text]) == []
+
+
+def test_a_constant_the_deck_does_not_write_is_named_and_listed_as_assumed(tmp_path):
+    toy = TOY.replace("      ENU=PROPS(2)\n", "      ENU=PROPS(2)\n      H=PROPS(3)\n")
+    src = tmp_path / "toy.for"
+    src.write_text(toy)
+    deck = tmp_path / "toy.inp"
+    deck.write_text("*MATERIAL, NAME=M\n*USER MATERIAL, CONSTANTS=3\n200000., 0.3\n*DEPVAR\n1\n*STEP\n*STATIC\n0.1, 1.\n*END STEP\n")
+    spec = importlib.util.spec_from_file_location("scan_for_compact_h", REPO / "tools" / "intake_scan.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    found = mod.scan(src, deck)
+    text = compact_intake(found)
+    assert "None" not in text
+    assert "H not written (Abaqus uses 0)" in text
+    assert "H is not written in your deck, so Abaqus uses 0" in text.split("Assumed", 1)[1]
+    assert "Constants (3): EMOD=200000, ENU=0.3, H not written (Abaqus uses 0)" in text

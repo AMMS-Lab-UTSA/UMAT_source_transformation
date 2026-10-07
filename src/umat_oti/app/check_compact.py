@@ -43,17 +43,31 @@ def _number(x) -> str:
     return f"{x:g}" if isinstance(x, (int, float)) else str(x)
 
 
-def _constants_line(found: Any) -> str:
-    values, names = _item(found, "props_values"), _item(found, "props_names")
-    if values is None or values.value is None:
-        return "Constants: not found (see below)."
-    vals = list(values.value)
+def _labels(found: Any, count: int) -> list:
+    names = _item(found, "props_names")
     labels = []
     if names is not None and isinstance(names.value, dict):
         labels = [str(v) for _, v in sorted(names.value.items(),
                                             key=lambda kv: int(kv[0][6:-1]) if kv[0][6:-1].isdigit() else 0)]
-    pairs = [f"{labels[i] if i < len(labels) else f'PROPS({i + 1})'}={_number(v)}"
-             for i, v in enumerate(vals)]
+    return [labels[i] if i < len(labels) else f"PROPS({i + 1})" for i in range(count)]
+
+
+def _unwritten(found: Any) -> list:
+    """Names of the constants the deck does not write (Abaqus fills a short data line with 0)."""
+    values = _item(found, "props_values")
+    if values is None or values.value is None:
+        return []
+    vals = list(values.value)
+    return [name for name, v in zip(_labels(found, len(vals)), vals) if v is None]
+
+
+def _constants_line(found: Any) -> str:
+    values = _item(found, "props_values")
+    if values is None or values.value is None:
+        return "Constants: not found (see below)."
+    vals = list(values.value)
+    pairs = [f"{name} not written (Abaqus uses 0)" if v is None else f"{name}={_number(v)}"
+             for name, v in zip(_labels(found, len(vals)), vals)]
     return f"Constants ({len(vals)}): " + ", ".join(pairs) + _where(values)
 
 
@@ -77,6 +91,10 @@ def compact_intake(found: Any) -> str:
                 assumed.append(value)
             else:
                 assumed.append(f"{_SHORT[key]} {value.split(' (')[0]}")
+    missing = _unwritten(found)
+    if missing:
+        assumed.append(", ".join(missing) + (" is" if len(missing) == 1 else " are")
+                       + " not written in your deck, so Abaqus uses 0")
     if assumed:
         lines.append("Assumed, not stated in your files (change if wrong): " + "; ".join(assumed) + ".")
     needed = found.needs_user()
