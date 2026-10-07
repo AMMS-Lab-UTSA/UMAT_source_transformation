@@ -116,3 +116,16 @@ def test_doctor_exit_code_follows_its_warnings(tmp_path, monkeypatch, capsys):
     _on_path(monkeypatch, stale)
     assert door.doctor() == 1
     assert "WARN" in capsys.readouterr().out
+
+
+def test_a_stale_command_on_path_is_the_only_warning_so_doctor_says_first_that_all_else_is_fine(tmp_path, monkeypatch, capsys):
+    stale = _fake_install(tmp_path, package_file=tmp_path / "old" / "src" / "umat_oti" / "__init__.py",
+                          version="0.9.0", commands=["transform", "config"])
+    _on_path(monkeypatch, stale)
+    monkeypatch.setattr(door.shutil, "which", lambda name: "/usr/bin/" + name if name != "umat-oti" else str(stale))
+    code = door.doctor()
+    out = capsys.readouterr().out.splitlines()
+    assert code == 1
+    assert out[0].startswith("All else is fine")
+    assert any(line.startswith("[WARN]") for line in out) and any(line.startswith("[fix ]") for line in out)
+    assert out.index(next(l for l in out if l.startswith("[WARN]"))) > 0
