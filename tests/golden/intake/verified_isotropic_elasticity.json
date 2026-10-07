@@ -1,0 +1,330 @@
+{
+  "counts": {
+    "DEFAULT": 1,
+    "FOUND": 15,
+    "INFERRED": 2,
+    "MISSING": 0
+  },
+  "facts": {
+    "deck_found": true,
+    "element": "C3D8",
+    "entry_is_umat": true,
+    "family": "three-dimensional continuum",
+    "kinematics": "small strain",
+    "nstatv": 1,
+    "ntens": 6,
+    "props_count": 2,
+    "props_values_found": true
+  },
+  "inputs": {
+    "deck": "UMATmodel.inp",
+    "repository": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine",
+    "umat": "ISOTROPIC-ELASTICITY.for",
+    "umat_sha256": "fd378b8e17884e1e841260fe7dbc69e4ba887b0c8228e79ae5573db137069e43"
+  },
+  "items": [
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "ISOTROPIC-ELASTICITY.for",
+          "line": 15,
+          "text": "SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,"
+        }
+      ],
+      "key": "routine",
+      "label": "Material routine",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "UMAT at line 15",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMATmodel.inp",
+          "line": 3742,
+          "text": "*User Material, constants=2"
+        }
+      ],
+      "key": "deck",
+      "label": "Deck that feeds this routine",
+      "needs_user": false,
+      "note": "a section in UMATmodel.inp attaches Steel to C3D8; the deck sits in the source's own directory",
+      "status": "FOUND",
+      "value": "UMATmodel.inp, material Steel",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMATmodel.inp",
+          "line": 2205,
+          "text": "*Element, type=C3D8"
+        }
+      ],
+      "key": "ntens",
+      "label": "Stress components (NTENS)",
+      "needs_user": false,
+      "note": "only the deck says which element is used",
+      "status": "FOUND",
+      "value": 6,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMATmodel.inp",
+          "line": 2205,
+          "text": "*Element, type=C3D8"
+        }
+      ],
+      "key": "element",
+      "label": "Element / formulation",
+      "needs_user": false,
+      "note": "verification element; the author's own: C3D8",
+      "status": "FOUND",
+      "value": "C3D8 (three-dimensional continuum)",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMATmodel.inp",
+          "line": 3748,
+          "text": "*Step, name=Step-1, nlgeom=NO"
+        }
+      ],
+      "key": "kinematics",
+      "label": "Geometric nonlinearity (NLGEOM)",
+      "needs_user": false,
+      "note": "no NLGEOM in the deck's steps, and the routine never reads DFGRD0/DFGRD1",
+      "status": "INFERRED",
+      "value": "no: small strain",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "nstatv",
+      "label": "State variables (NSTATV / *DEPVAR)",
+      "needs_user": false,
+      "note": "the routine never subscripts STATEV; 1 is the smallest the solver allows",
+      "status": "INFERRED",
+      "value": 1,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMATmodel.inp",
+          "line": 3742,
+          "text": "*User Material, constants=2"
+        }
+      ],
+      "key": "props_count",
+      "label": "Constants (PROPS count)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": 2,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "ISOTROPIC-ELASTICITY.for",
+          "line": 49,
+          "text": "EMOD=PROPS(1)"
+        },
+        {
+          "file": "ISOTROPIC-ELASTICITY.for",
+          "line": 50,
+          "text": "ENU=PROPS(2)"
+        }
+      ],
+      "key": "props_names",
+      "label": "Constants (names)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": {
+        "PROPS(1)": "EMOD",
+        "PROPS(2)": "ENU"
+      },
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMATmodel.inp",
+          "line": 3743,
+          "text": "210000., 0.3"
+        }
+      ],
+      "key": "props_values",
+      "label": "Constant values",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": [
+        210000.0,
+        0.3
+      ],
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "UMATmodel.inp",
+          "line": 3748,
+          "text": "*Step, name=Step-1, nlgeom=NO"
+        }
+      ],
+      "key": "loading",
+      "label": "Loading",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "the deck's own 1 step(s), periods 1",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "temperature",
+      "label": "Reads temperature (TEMP/DTEMP)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "coordinates",
+      "label": "Reads position (COORDS)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "element_number",
+      "label": "Reads element number (NOEL)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "fields",
+      "label": "Reads field variables (PREDEF/DPRED)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "helpers",
+      "label": "Helper routines it calls",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "includes",
+      "label": "Files it INCLUDEs",
+      "needs_user": false,
+      "note": "ABA_PARAM.INC is supplied by the solver",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "modules",
+      "label": "Modules it USEs",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "quantity",
+      "label": "What to differentiate",
+      "needs_user": false,
+      "note": "constants that are switches or flags are not worth differentiating; say so if one is",
+      "status": "DEFAULT",
+      "value": "stress and tangent with respect to all 2 constant(s) the routine reads",
+      "whose": ""
+    }
+  ],
+  "material_config": {
+    "check_path": null,
+    "kinematics": "small_strain",
+    "nstatev": 1,
+    "ntens": 6,
+    "props_values": [
+      210000.0,
+      0.3
+    ]
+  },
+  "needs_user": [],
+  "pipeline_inputs": {
+    "deck": "UMATmodel.inp",
+    "dependency_roots": [],
+    "material_config_complete": true,
+    "material_config_missing": [
+      "check_path (the pipeline generates one when it reads a deck)"
+    ],
+    "material_config_needed": false,
+    "umat": "ISOTROPIC-ELASTICITY.for"
+  },
+  "schema": "umat-oti/intake/1"
+}
