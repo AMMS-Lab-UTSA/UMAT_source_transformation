@@ -32,7 +32,7 @@ from typing import Any, Optional
 
 from umat_oti.app.plain_language import (_verdict, may_say_verified,
                                          verified_summary)
-from umat_oti.app.refusal_cards import card_for
+from umat_oti.app.refusal_cards import card_for, state_after_reading
 
 __all__ = ["verdict_for", "render_verdict", "VERIFIED_SENTENCE", "main"]
 
@@ -118,8 +118,8 @@ def verdict_for(record: Any) -> dict:
     """The verdict as data: colour, headline, lines and the one next action."""
     flat = _record_for_gates(record)
     summary = verified_summary(flat)
-    state = _state_of(record)
     reason = _reason_of(record)
+    state = state_after_reading(_state_of(record), reason)
     pipeline_word = str(_find(record, "verdict") or "")
     caution = []
     # The pipeline's own numerical check passed and none of the six Abaqus
