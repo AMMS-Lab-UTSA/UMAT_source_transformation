@@ -1,0 +1,42 @@
+{
+  "accepted": 14,
+  "accepted_by_slide_family": {
+    "crystal plasticity": 3,
+    "damage/phase field": 4,
+    "linear elastic": 1,
+    "plasticity": 6
+  },
+  "accepted_with_deck": 7,
+  "accepted_with_partial_deck": 3,
+  "candidate_files_found": 17,
+  "caveat": "Nothing here is verified or counted toward the 206 target. Families are a provisional Scout code read. Several accepted files need companions the transformer cannot yet follow (module sources, helper ATAN2, file I/O); the triage stage per source is recorded. The NTNU PhysMet files are one group's lineage.",
+  "hosts": {
+    "github.com via zenodo link": {
+      "repos_not_previously_surveyed": 29,
+      "with_new_umat": 1
+    },
+    "gitlab.com": {
+      "licence_cleared_read": 21,
+      "projects_seen": 456,
+      "relevant": 57,
+      "repos_with_new_umat": 5
+    },
+    "sourceforge.net (svn)": {
+      "projects": 1,
+      "repos_with_new_umat": 1
+    },
+    "zenodo.org": {
+      "licence_cleared_by_file": 6,
+      "records_seen": 950,
+      "records_with_new_umat": 2,
+      "relevant": 143
+    }
+  },
+  "rejected_candidates": 8,
+  "screens": {
+    "d2": "licence file at the pinned version, classified from its text; GitLab detector must agree",
+    "near_duplicate": "5-token shingle Jaccard of comment-stripped code against every UMAT in discovery_cache and Residual_Assembler/sources (max over accepted 0.29) and against the other candidates; >=0.85 skipped",
+    "own_project": "releases of the project being validated are excluded"
+  },
+  "what_this_is": "B11 Scout discovery round beyond GitHub (2026-10-06): GitLab.com (group-expanded project search), the SourceForge SVN project ABUMPACK, Zenodo records (35 queries, 950 records), and one GitHub repository reached through a Zenodo link. Tools: tools/discover_hosts.py (committed), driven by corpus_campaign/batches/B11/scout_hosts/{fetch_round,prune_round,neardup,build_round_records}.py. Licence under D-2 is read from a licence FILE at the pinned version (commit, SVN revision, or archive md5); a metadata-only licence is not accepted."
+}
