@@ -69,6 +69,7 @@ def build_parser() -> PlainParser:
     parser.add_argument("--material-config", type=Path)
     parser.add_argument("--dependency-root", type=Path, action="append", default=[])
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--template", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     return parser
 
@@ -86,6 +87,7 @@ umat-oti check UMAT.for [DECK.inp | FOLDER] [options]
   --material-config FILE a material file (a template is written when none is found)
   --dependency-root DIR  a folder with helper routines the UMAT calls
   --out DIR              where results go (default: <umat name>_check)
+  --template             write a commented material file to fill in, when the constants are missing
 """
 
 
@@ -210,6 +212,50 @@ def failure_state(summary: dict) -> tuple:
     return _STATE_OF_STAGE.get(stage, "transform_refused"), clean_reason(reason)
 
 
+def load_scanner():
+    """Ada's intake scanner (``tools/intake_scan.py`` of the checkout), loaded by path
+    because ``tools/`` is not a package; ``None`` when this is an installed copy
+    without it, and ``check`` then reads the files with :mod:`check_intake`."""
+    import importlib.util
+
+    import umat_oti
+
+    path = Path(umat_oti.__file__).resolve().parents[2] / "tools" / "intake_scan.py"
+    if not path.is_file():
+        return None
+    name = "umat_oti_intake_scan"
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def blocking_items(found, *, constants_supplied: bool) -> list:
+    """The items the scanner could not settle and that stop the run: MISSING, and
+    needing the user. The constants are not blocking when the user has just supplied
+    them (``--props`` or ``--material-config``)."""
+    blocking = [i for i in found.needs_user()
+                if i.status == "MISSING" and not (i.key == "props_values" and constants_supplied)]
+    # The routine before the material (Nico, B11): a helper or module nobody supplied is why
+    # the material question is moot, so it is asked first; the constants come last.
+    order = ("routine", "element", "helpers", "includes", "modules", "ntens")
+    return sorted(blocking, key=lambda i: order.index(i.key) if i.key in order else len(order))
+
+
+def print_need(item, *, extra: str = "") -> None:
+    """The scanner's own plain ask for one blocking item, with who has to move."""
+    mine = item.whose in ("you", "")
+    header = "I NEED ONE THING FROM YOU" if mine else "REFUSED"
+    bar = "=" * 70
+    print(f"\n{bar}\n{header}\n{bar}")
+    print(item.ask)
+    print(f"Whose move: {item.whose or 'you'}.")
+    print(f"Next: {item.default}" + (f" {extra}" if extra else ""))
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args_in = list(sys.argv[1:] if argv is None else argv)
     try:
@@ -232,17 +278,54 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                   else "no SUBROUTINE UMAT in this file")
         print_card("not_a_umat", reason)
         return 2
-    for line in _describe_source(facts, source):
-        print(line)
 
     out = _new_out_dir(source, args.out)
     inputs = out.with_name(out.name + "_input")
     inputs.mkdir(parents=True, exist_ok=True)
+    roots = [d.expanduser().resolve() for d in args.dependency_root]
+
+    deck, how, candidates = resolve_deck(source, args.target, args.deck)
+    if deck is None and how in ("ambiguous", "folder"):
+        listing = "; ".join(str(c) for c in candidates[:6])
+        print(f"  Deck          several candidates: {listing}  [ask: give one with --deck FILE]")
+        return _fail("More than one input file could be the deck. Say which with --deck FILE.")
+    if deck is None and how == "missing":
+        return _fail(f"I cannot find the deck {candidates[0]}.")
+
+    # What the files already say, item by item, each with the line it stands on (Ada's scanner).
+    scanner = load_scanner()
+    found = None
+    if scanner is not None:
+        found = scanner.scan(source, deck, roots=roots)
+        sys.stdout.write(found.to_text())
+        found.write(inputs)
+        print(f"(The same, with the lines quoted: {inputs / 'intake.md'}, {inputs / 'intake.json'})")
+        stop = blocking_items(found, constants_supplied=bool(args.props or args.material_config))
+        if stop:
+            names = " ".join(f"{k}=<value>" for k in
+                              [str(v.value) for _, v in sorted(facts.props_names.items())]) or "<name>=<value>"
+            if stop[0].key == "props_values":
+                extra = (f"Type them:  umat-oti check {source.name} --props \"{names}\"  "
+                         "(or add --template for a file to fill in).")
+                if args.template:
+                    template = intake.template_material(facts, nstatev=found.facts.get("nstatv"))
+                    path = _free_name(Path.cwd() / f"{source.stem}_material.json")
+                    path.write_text(json.dumps(template, indent=2) + "\n", encoding="utf-8")
+                    extra = TEXT["template_written"].format(path=path) + " " + TEXT["template_next"].format(
+                        source=source.name, path=path.name)
+            else:
+                extra = "(Give the folder with --dependency-root FOLDER.)" if stop[0].key in (
+                    "helpers", "includes", "modules") else ""
+            print_need(stop[0], extra=extra)
+            return 3 if (stop[0].whose or "you") == "you" else 2
+    else:
+        for line in _describe_source(facts, source):
+            print(line)
+
     # The routine first, the material second: the real blocker is the message.
     from umat_oti.app.check_preflight import preflight
 
-    blocked = preflight(source, facts, [d.expanduser().resolve() for d in args.dependency_root],
-                        inputs / "preflight")
+    blocked = preflight(source, facts, roots, inputs / "preflight")
     if blocked is not None:
         print_card(*blocked)
         print(TEXT["where"].format(path=inputs / "preflight"))
@@ -250,28 +333,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print("  Conversion    the routine's helpers resolve and I can find where it sets "
           "stress and stiffness  [ok]")
 
-    deck, how, candidates = resolve_deck(source, args.target, args.deck)
     deck_facts = None
     if deck is not None:
         deck_facts = intake.scan_deck(deck)
-        print(f"  Deck          {deck}  [{how}]")
-        for line in _describe_deck(deck, deck_facts):
-            print(line)
-    elif how in ("ambiguous", "folder"):
-        listing = "; ".join(str(c) for c in candidates[:6])
-        print(f"  Deck          several candidates: {listing}  [ask: give one with --deck FILE]")
-        return _fail("More than one input file could be the deck. Say which with --deck FILE.")
-    elif how == "missing":
-        return _fail(f"I cannot find the deck {candidates[0]}.")
-    else:
+        if found is None:
+            print(f"  Deck          {deck}  [{how}]")
+            for line in _describe_deck(deck, deck_facts):
+                print(line)
+    elif found is None:
         print("  Deck          none found beside the UMAT  [missing]")
 
     material_config: Optional[Path] = None
     discovery_root: Optional[Path] = None
-    nstatev = (deck_facts.user_materials()[0][2].value
-               if deck_facts and len(deck_facts.user_materials()) == 1
-               and deck_facts.user_materials()[0][2] is not None
-               else (facts.statev_max or None))
+    nstatev = (found.facts.get("nstatv") if found is not None and found.facts.get("nstatv") is not None
+               else (deck_facts.user_materials()[0][2].value
+                     if deck_facts and len(deck_facts.user_materials()) == 1
+                     and deck_facts.user_materials()[0][2] is not None
+                     else (facts.statev_max or None)))
 
     if args.material_config is not None:
         path = args.material_config.expanduser().resolve()
@@ -287,8 +365,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                                    encoding="utf-8")
         print(f"  Constants     from {path.name}  [material file]")
     elif args.props is not None:
-        count = (len(deck_facts.user_materials()[0][1].value)
-                 if deck_facts and len(deck_facts.user_materials()) == 1 else facts.props_max)
+        count = ((found.facts.get("props_count") if found is not None else None)
+                 or (len(deck_facts.user_materials()[0][1].value)
+                     if deck_facts and len(deck_facts.user_materials()) == 1 else facts.props_max))
         if not count:
             return _fail("I cannot tell how many constants this routine has; "
                          "use --material-config with a material file.")
@@ -333,7 +412,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     from umat_oti.services.complete_workflow import run_complete_workflow
 
     summary = run_complete_workflow(source, material_config, out,
-                                    dependency_roots=list(args.dependency_root),
+                                    dependency_roots=roots,
                                     material_discovery_root=discovery_root)
     return finish(summary, out)
 

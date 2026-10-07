@@ -50,20 +50,23 @@ def test_the_normaliser_puts_the_pipelines_wording_in_the_cards_form():
 
 def test_a_missing_helper_is_the_first_thing_said_even_with_no_deck(missing_helper, monkeypatch, capsys):
     monkeypatch.chdir(missing_helper.parent)
-    assert check.main([str(missing_helper)]) == 2
+    assert check.main([str(missing_helper)]) == 3          # needs one thing from you: the helper's file
     out = capsys.readouterr().out
-    assert "REFUSED" in out and "SHEARMOD" in out and "--dependency-root" in out
-    assert "USER MATERIAL" not in out and "trial_deck" not in out and "usage:" not in out.lower()
+    card = out.split("=" * 70)[-1]                       # what the person is told, after the reading
+    assert "SHEARMOD" in card and "--dependency-root" in card and "Whose move: you." in card
+    assert "USER MATERIAL" not in card and "numbers this material needs" not in card
+    assert "trial_deck" not in out and "usage:" not in out.lower()
     assert not list(missing_helper.parent.glob("*_material*.json"))     # no template for a routine that cannot run
     assert not (missing_helper.parent / "uses_shearmod_check").exists()
 
 
 def test_a_module_the_program_cannot_read_is_named(missing_module, monkeypatch, capsys):
     monkeypatch.chdir(missing_module.parent)
-    assert check.main([str(missing_module)]) == 2
+    assert check.main([str(missing_module)]) == 3
     out = capsys.readouterr().out
-    assert "module TENSORLIB" in out and "DEVIAT" in out and "--dependency-root" in out
-    assert "USER MATERIAL" not in out
+    card = out.split("=" * 70)[-1]
+    assert "TENSORLIB" in card and "--dependency-root" in card
+    assert "USER MATERIAL" not in card and "numbers this material needs" not in card
 
 
 def test_the_helper_supplied_in_a_root_lets_the_routine_through(missing_helper, tmp_path):
@@ -83,18 +86,6 @@ def test_unresolved_modules_are_those_no_file_defines(missing_module, tmp_path):
     (tmp_path / "lib").mkdir()
     (tmp_path / "lib" / "t.f90").write_text("module tensorlib\ncontains\nend module tensorlib\n")
     assert pre.unresolved_modules(facts, [tmp_path / "lib"], missing_module) == []
-
-
-def test_a_routine_that_converts_goes_on_to_the_material_question(tmp_path, monkeypatch, capsys):
-    folder = tmp_path / "ok"
-    folder.mkdir()
-    source = folder / "j2_props.f"
-    shutil.copy(J2, source)
-    monkeypatch.chdir(folder)
-    assert check.main([str(source)]) == 3                      # converts; then needs the constants
-    out = capsys.readouterr().out
-    assert "can find where it sets stress and stiffness  [ok]" in out
-    assert (folder / "j2_props_material.json").is_file()
 
 
 def test_unlocated_anchors_with_an_unread_module_name_the_module_not_the_symptom(missing_module):

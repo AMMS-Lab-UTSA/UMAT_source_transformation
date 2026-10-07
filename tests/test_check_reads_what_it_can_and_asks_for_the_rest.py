@@ -144,25 +144,80 @@ def test_a_routine_that_is_not_a_umat_is_refused_with_a_card(tmp_path, capsys):
     assert "REFUSED" in out and "Whose move:" in out and "VUMAT" not in out.split("REFUSED")[0]
 
 
-def test_with_no_deck_and_no_constants_a_template_is_written_and_nothing_is_run(j2, monkeypatch, capsys):
+def test_with_no_deck_and_no_constants_it_stops_with_the_scanners_ask_and_runs_nothing(j2, monkeypatch, capsys):
     monkeypatch.chdir(j2.parent)
     assert check.main([str(j2)]) == 3
     out = capsys.readouterr().out
+    assert "MISSING  Constant values" in out and "I NEED ONE THING FROM YOU" in out
+    assert "the values of PROPS(1) to PROPS(4) (E, XNU, SIGY0, H)" in out
+    assert 'umat-oti check j2_props.f --props "E=<value> XNU=<value> SIGY0=<value> H=<value>"' in out
+    assert "usage:" not in out.lower() and "trial_deck" not in out
+    assert not list(j2.parent.glob("*_material*.json"))           # no template unless asked for
+    assert not (j2.parent / "j2_props_check").exists()            # the pipeline did not run
+    record = json.loads((j2.parent / "j2_props_check_input" / "intake.json").read_text())
+    assert record["schema"] == "umat-oti/intake/1" and "props_values" in record["needs_user"]
+    assert (j2.parent / "j2_props_check_input" / "intake.md").is_file()
+
+
+def test_a_template_is_written_only_when_asked_for_and_never_over_a_file(j2, monkeypatch, capsys):
+    monkeypatch.chdir(j2.parent)
+    assert check.main([str(j2), "--template"]) == 3
+    out = capsys.readouterr().out
     template = j2.parent / "j2_props_material.json"
     assert template.is_file() and "--material-config j2_props_material.json" in out
-    assert "REFUSED" in out and "usage:" not in out.lower() and "trial_deck" not in out
-    assert not (j2.parent / "j2_props_check").exists()           # the pipeline did not run
-    # a second run does not overwrite the user's file
-    check.main([str(j2)])
+    check.main([str(j2), "--template"])
     assert (j2.parent / "j2_props_material_2.json").is_file()
+
+
+def test_the_template_is_the_fallback_when_the_scanner_is_not_there(j2, monkeypatch, capsys):
+    monkeypatch.chdir(j2.parent)
+    monkeypatch.setattr(check, "load_scanner", lambda: None)
+    assert check.main([str(j2)]) == 3
+    out = capsys.readouterr().out
+    assert (j2.parent / "j2_props_material.json").is_file()
+    assert "--material-config j2_props_material.json" in out and "usage:" not in out.lower()
 
 
 def test_a_material_file_with_blanks_left_in_it_is_refused(j2, monkeypatch, capsys):
     monkeypatch.chdir(j2.parent)
-    check.main([str(j2)])
+    check.main([str(j2), "--template"])
     capsys.readouterr()
     assert check.main([str(j2), "--material-config", str(j2.parent / "j2_props_material.json")]) == 2
     assert "still has blanks" in capsys.readouterr().out
+
+
+class _Item:
+    def __init__(self, key, status, needs_user=True, whose="you"):
+        self.key, self.status, self.needs_user, self.whose = key, status, needs_user, whose
+
+
+class _Found:
+    def __init__(self, *items):
+        self.items = items
+
+    def needs_user(self):
+        return [i for i in self.items if i.needs_user]
+
+
+def test_only_a_missing_item_that_needs_the_user_blocks_and_typed_constants_unblock_the_constants():
+    found = _Found(_Item("routine", "FOUND", False), _Item("temperature", "DEFAULT"),
+                   _Item("props_values", "MISSING"), _Item("helpers", "MISSING"))
+    # the routine's files before its constants: a missing helper is why the constants are moot
+    assert [i.key for i in check.blocking_items(found, constants_supplied=False)] == ["helpers", "props_values"]
+    assert [i.key for i in check.blocking_items(found, constants_supplied=True)] == ["helpers"]
+
+
+def test_the_scanner_is_loaded_by_path_and_its_intake_is_printed_with_the_lines_quoted(j2, tmp_path, monkeypatch, capsys):
+    deck = tmp_path / "elsewhere" / "block.inp"
+    deck.parent.mkdir()
+    deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO"))
+    scanner = check.load_scanner()
+    assert scanner is not None and hasattr(scanner, "scan") and scanner.SCHEMA == "umat-oti/intake/1"
+    found = scanner.scan(j2, deck)
+    text = found.to_text()
+    assert "FOUND    Material routine" in text and "j2_props.f:18:" in text
+    assert "block.inp:" in text and "*USER MATERIAL" in text
+    assert not check.blocking_items(found, constants_supplied=False)       # a deck settles the constants
 
 
 def test_incomplete_typed_constants_stop_before_anything_runs(j2, monkeypatch, capsys):
@@ -182,13 +237,18 @@ def test_typed_constants_and_a_peak_run_the_pipeline_and_the_json_goes_to_a_file
     code = check.main([str(j2), "--props", "E=210000 xnu=0.3 SIGY0=250 H=2000", "--peak", "0.02"])
     out = capsys.readouterr().out
     assert code == 0, out
-    assert '"stages"' not in out and len(out.splitlines()) < 30         # no JSON wall on the screen
+    assert '"stages"' not in out and len(out.splitlines()) < 90        # no JSON wall on the screen
     assert "typed with --props" in out and "[--peak]" in out
     summary = json.loads((j2.parent / "j2_props_check" / "workflow_summary.json").read_text())
     assert summary["exit_code"] == 0
     config = json.loads((j2.parent / "j2_props_check_input" / "material_check.json").read_text())
     assert config["props_values"] == [210000.0, 0.3, 250.0, 2000.0] and config["nstatev"] == 1
     assert len(config["check_path"]["increments"]) == 40
+    # the intake was printed first, with the lines quoted, and kept beside the output
+    assert out.index("FOUND    Material routine") < out.index("Working:")
+    record = json.loads((j2.parent / "j2_props_check_input" / "intake.json").read_text())
+    assert record["facts"]["props_count"] == 4 and record["facts"]["nstatv"] == 1
+    assert (j2.parent / "j2_props_check_input" / "intake.md").is_file()
 
 
 @pytest.mark.slow
@@ -203,6 +263,6 @@ def test_a_deck_in_another_folder_gives_the_constants_and_says_where_from(j2, tm
     monkeypatch.chdir(j2.parent)
     code = check.main([str(j2), "--deck", str(deck)])
     out = capsys.readouterr().out
-    assert "[given]" in out and re.search(r"4 values from block.inp lines \d+-\d+ \(\*USER MATERIAL", out) and "*DEPVAR" in out
+    assert re.search(r"block\.inp:\d+: \*USER MATERIAL", out) and "*DEPVAR" in out
     assert "Working:" in out                      # it got as far as running the pipeline
     assert code in (0, 1, 2)                      # what the pipeline concludes about a deck without nodes is its own
