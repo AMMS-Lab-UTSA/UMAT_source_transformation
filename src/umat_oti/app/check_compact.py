@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["compact_intake", "DETAILS_HINT"]
+__all__ = ["compact_intake", "amber_notes", "DETAILS_HINT"]
 
 DETAILS_HINT = ("The full list, with the lines quoted: add --details, or read "
                 "intake.md in the input folder.")
@@ -44,12 +44,15 @@ def _number(x) -> str:
 
 
 def _labels(found: Any, count: int) -> list:
+    """The name of each constant by its slot number; PROPS(k) where the routine names none."""
     names = _item(found, "props_names")
-    labels = []
+    by_slot = {}
     if names is not None and isinstance(names.value, dict):
-        labels = [str(v) for _, v in sorted(names.value.items(),
-                                            key=lambda kv: int(kv[0][6:-1]) if kv[0][6:-1].isdigit() else 0)]
-    return [labels[i] if i < len(labels) else f"PROPS({i + 1})" for i in range(count)]
+        for key, name in names.value.items():
+            slot = key[6:-1]
+            if slot.isdigit():
+                by_slot[int(slot)] = str(name)
+    return [by_slot.get(i + 1, f"PROPS({i + 1})") for i in range(count)]
 
 
 def _unwritten(found: Any) -> list:
@@ -69,6 +72,37 @@ def _constants_line(found: Any) -> str:
     pairs = [f"{name} not written (Abaqus uses 0)" if v is None else f"{name}={_number(v)}"
              for name, v in zip(_labels(found, len(vals)), vals)]
     return f"Constants ({len(vals)}): " + ", ".join(pairs) + _where(values)
+
+
+def amber_notes(found: Any) -> list:
+    """Amber notes: where the pipeline's own deck reader disagrees with the card-by-card reader.
+
+    The check uses the card-by-card reader (Abaqus's own rule); the pipeline's
+    reader joins the numbers of a block, so the two can differ. Said in words,
+    naming the constants, so the disagreement is not only a fact in the record.
+    """
+    facts = getattr(found, "facts", None) or {}
+    differ = facts.get("props_values_differ") or []
+    if facts.get("props_values_agree_with_pipeline") is not False:
+        return []
+    if differ:
+        labels = _labels(found, max(d["slot"] for d in differ))
+    if differ and all(d["card_reader"] is None for d in differ) and not facts.get("props_values_found"):
+        shown = ", ".join(f"{labels[d['slot'] - 1]} = {_number(d['pipeline_reader'])}" for d in differ[:6])
+        more = f" and {len(differ) - 6} more" if len(differ) > 6 else ""
+        return ["Amber note: Abaqus does not accept this constants block as written, but the pipeline's own deck reader "
+                f"returns numbers for it ({shown}{more}). No constants are taken from it; they differ from what Abaqus would use."]
+    if differ:
+        shown = []
+        for d in differ[:6]:
+            card = "not written" if d["card_reader"] is None else _number(d["card_reader"])
+            pipe = "not written" if d["pipeline_reader"] is None else _number(d["pipeline_reader"])
+            shown.append(f"{labels[d['slot'] - 1]} (as Abaqus reads it: {card}; the pipeline's reader: {pipe})")
+        more = f" and {len(differ) - 6} more" if len(differ) > 6 else ""
+        return ["Amber note: the pipeline's own deck reader and the card-by-card reader (Abaqus's rule) disagree on "
+                + ", ".join(shown) + more + ". This check uses the card-by-card values."]
+    return ["Amber note: the pipeline's own deck reader reads this constants block differently from Abaqus; "
+            "the check uses the card-by-card reading."]
 
 
 def compact_intake(found: Any) -> str:
@@ -105,5 +139,6 @@ def compact_intake(found: Any) -> str:
             lines.append(f"    If you say nothing: {item.default}")
     else:
         lines.append("Needs you: nothing.")
+    lines.extend(amber_notes(found))
     lines.append(DETAILS_HINT)
     return "\n".join(lines) + "\n"
