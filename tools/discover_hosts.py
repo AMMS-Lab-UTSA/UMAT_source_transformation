@@ -552,6 +552,29 @@ def zenodo_prefilter(record: dict) -> bool:
                for n in names)
 
 
+def search_zenodo(client: ZenodoClient, queries=None) -> tuple[dict[str, dict], list[dict]]:
+    """Relevant records by id, and what each query contributed or why it failed."""
+    records: dict[str, dict] = {}
+    provenance: list[dict] = []
+    for query in (ZENODO_QUERIES if queries is None else queries):
+        try:
+            hits = client.search(query)
+        except RateLimited:
+            raise
+        except AcquisitionError as exc:
+            # A query the host rejects is a recorded outcome, not a crash:
+            # Zenodo answered 500 to a query containing "/".
+            provenance.append({"query": query, "error": str(exc)})
+            continue
+        new = 0
+        for hit in hits:
+            if str(hit["id"]) not in records and zenodo_prefilter(hit):
+                records[str(hit["id"])] = {**hit, "_q": query}
+                new += 1
+        provenance.append({"query": query, "hits": len(hits), "new_relevant": new})
+    return records, provenance
+
+
 # --------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------
@@ -589,23 +612,7 @@ def main(argv: list[str] | None = None) -> int:
                 stopped = str(exc); break
     else:
         client = ZenodoClient()
-        records: dict[str, dict] = {}
-        provenance = []
-        for query in ZENODO_QUERIES:
-            try:
-                hits = client.search(query)
-            except RateLimited:
-                raise
-            except AcquisitionError as exc:
-                # A query the host rejects is a recorded outcome, not a crash:
-                # Zenodo answered 500 to a query containing "/".
-                provenance.append({"query": query, "error": str(exc)})
-                continue
-            new = 0
-            for hit in hits:
-                if str(hit["id"]) not in records and zenodo_prefilter(hit):
-                    records[str(hit["id"])] = {**hit, "_q": query}; new += 1
-            provenance.append({"query": query, "hits": len(hits), "new_relevant": new})
+        records, provenance = search_zenodo(client)
         print(f"{len(records)} relevant records")
         for rid, record in records.items():
             try:
