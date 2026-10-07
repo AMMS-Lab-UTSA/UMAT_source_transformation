@@ -640,6 +640,42 @@
     "tests/test_intake_scan.py::test_a_short_first_line_keeps_the_second_line_in_its_own_card",
     "tests/test_intake_scan.py::test_the_card_reader_alone_on_the_measured_cases"
    ]
+  },
+  {
+   "commit": "a6528bb",
+   "selected_by": "manual",
+   "bug": "The one-page verdict rendered GREEN for a record whose six gates all read true but whose terminal state was derivative_truncated (or another state that is not fully_verified).",
+   "tests": [
+    "tests/test_the_verdict_page_never_shows_a_false_green.py::test_all_six_gates_true_but_a_terminal_state_that_is_not_fully_verified_is_not_green",
+    "tests/test_the_verdict_page_never_shows_a_false_green.py::test_all_six_gates_true_with_an_empty_or_fully_verified_state_is_green"
+   ]
+  },
+  {
+   "commit": "60cbbf8",
+   "selected_by": "manual",
+   "bug": "The compact check view printed H=None and 'Needs you: nothing' for a short *USER MATERIAL data line; it now prints 'H not written (Abaqus uses 0)' and lists the constant under Assumed.",
+   "tests": [
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_a_constant_the_deck_does_not_write_is_named_and_listed_as_assumed"
+   ]
+  },
+  {
+   "commit": "2dbb04d",
+   "selected_by": "manual",
+   "bug": "When the pipeline's own deck reader disagreed with the card-by-card reader, check showed only a fact in the record; it now prints an amber note naming the constants. The compact view also named a constant by its position in the list of named constants instead of its slot number.",
+   "tests": [
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_a_block_abaqus_rejects_but_the_pipeline_reads_gets_an_amber_note_naming_the_constants",
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_two_readers_with_different_numbers_give_an_amber_note_naming_the_constants",
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_a_constant_is_named_by_its_slot_not_by_its_position_in_the_list_of_named_ones"
+   ]
+  },
+  {
+   "commit": "a04bc33",
+   "selected_by": "manual",
+   "bug": "check took the typed-constants count and the state count from the older deck reader, which joins every number of a block into one list (1.,2.,3.,4. then 5.,6. counted six where Abaqus has ten slots); the intake test also used a CONSTANTS=4 block that Abaqus rejects.",
+   "tests": [
+    "tests/test_check_reads_what_it_can_and_asks_for_the_rest.py::test_the_typed_constants_count_is_the_card_by_card_count_where_the_old_reader_joins_numbers",
+    "tests/test_check_reads_what_it_can_and_asks_for_the_rest.py::test_the_scanner_is_loaded_by_path_and_its_intake_is_printed_with_the_lines_quoted"
+   ]
   }
  ],
  "excluded": [
