@@ -166,7 +166,7 @@
       "whose": ""
     },
     {
-      "ask": "I could not find the numbers this material needs: the values of PROPS(1) to PROPS(2) (E, XNU), in the order the routine reads them.",
+      "ask": "I could not find the numbers this material needs: the values of its 2 constants: E, XNU (PROPS in the source), in the order the routine reads them.",
       "default": "The run cannot go on, and the constants are never guessed or filled in for you. Put an Abaqus input file with a *USER MATERIAL block next to the UMAT, or type the values into a material file and pass it with --material-config FILE (if the input file lives elsewhere, use --material-discovery-root FOLDER).",
       "evidence": [],
       "key": "props_values",

@@ -702,7 +702,8 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
                  {f"PROPS({i})": n for i, (n, _l, _t) in sorted(names.items())},
                  [_quote(name, l, t) for i, (n, l, t) in sorted(names.items())][:4]))
     else:
-        slots = f"PROPS(1) to PROPS({props_count})" if props_count else "PROPS"
+        slots = (f"its {props_count} constants (PROPS in the source)" if props_count > 1 else
+                 "its constant (PROPS in the source)" if props_count else "its constants (PROPS in the source)")
         add(Item("props_names", "Constants (names)", DEFAULT, slots,
                  note="the routine does not write NAME = PROPS(k) for its constants"))
 
@@ -735,10 +736,11 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
                            f"solver fills the rest of a short data line with 0 (measured), "
                            f"and they are shown here as not written, not as 0")))
     if not values_ok and not (parsed is not None and slots_written is not None):
-        slots = (f"PROPS(1) to PROPS({props_count})" if props_count > 1
-                 else "PROPS(1)" if props_count else "its constants")
+        slots = (f"its {props_count} constants" if props_count > 1
+                 else "its constant" if props_count else "its constants")
         if names:
-            slots += " (" + ", ".join(f"{n}" for _i, (n, _l, _t) in sorted(names.items())) + ")"
+            slots += ": " + ", ".join(f"{n}" for _i, (n, _l, _t) in sorted(names.items()))
+        slots += " (PROPS in the source)"
         why = ""
         if parsed is not None and parsed["problems"]:
             why = "; ".join(parsed["problems"])[:300]

@@ -512,9 +512,9 @@ STATE_CARDS: dict = {
     "published_stub_no_constitutive_content": _c(
         "This file is a template with no material in it.", AUTHOR,
         "Ask the author for the finished routine, or write the material in "
-        "yourself: set STRESS and DDSDDE from DSTRAN and PROPS inside the "
-        "routine. Then run the same command again; until then there is "
-        "nothing to check."),
+        "yourself: make the routine compute the stress and the stiffness from "
+        "the strain increment and the material constants. Then run the same "
+        "command again; until then there is nothing to check."),
     "incomplete_or_corrupt_source": _c(
         "The file does not build as published.", AUTHOR,
         "Fix the first compiler error in a copy, or ask the author for a "
@@ -609,7 +609,7 @@ STATE_CARDS: dict = {
     "tangent_not_verified": _c(
         "The numerical check of the stiffness derivatives did not settle.",
         YOU,
-        "The stresses agreed and no derivative disagreed; too few load states "
+        "In the numerical check the stresses agreed and no derivative disagreed; too few load states "
         "could be judged. Run your command again over other strain ranges: "
         "add --peak 0.005, then --peak 0.05 (--peak needs --props with your "
         "constants), and compare. A derivative judged at one range is checked "

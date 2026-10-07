@@ -113,7 +113,7 @@ def test_a_umat_alone_is_inferred_from_its_own_lines_and_asks_for_the_numbers(tm
     assert names.status == "FOUND" and names.value == {"PROPS(1)": "EMOD", "PROPS(2)": "ENU"}
     values = item(r, "props_values")
     assert values.status == "MISSING" and values.needs_user
-    assert "PROPS(1) to PROPS(2)" in values.ask and "EMOD, ENU" in values.ask
+    assert "its 2 constants: EMOD, ENU (PROPS in the source)" in values.ask
     assert "never guessed" in values.default
     # six literal indices on the tensors: six components, from the routine
     assert (item(r, "ntens").status, item(r, "ntens").value) == ("INFERRED", 6)
@@ -400,7 +400,7 @@ def test_the_plain_language_table_can_be_replaced_key_by_key(tmp_path):
     texts = {"props_values": {"ask": "FROM IRIS {slots}", "default": "iris default"}}
     r = intake_scan.scan(toy(tmp_path), texts=texts)
     v = item(r, "props_values")
-    assert v.ask.startswith("FROM IRIS PROPS(1) to PROPS(2)") and v.default == "iris default"
+    assert v.ask.startswith("FROM IRIS its 2 constants: EMOD, ENU (PROPS in the source)") and v.default == "iris default"
     assert v.whose == "you", "keys Iris does not give keep their text"
     assert intake_scan.scan(toy(tmp_path)).item("props_values").ask.startswith(
         "I could not find the numbers")

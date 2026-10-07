@@ -129,7 +129,7 @@ def results_table(out: Path) -> Optional[dict]:
         lines.append("Entries that match the numerical check of your original routine: " + "; ".join(counts))
         lines.append("")
     lines.append("'Local' here is the derivative of the stress update of one increment at the recorded "
-                 "state (the checker's DSIGMA_DP / DSTATEV_DP). Every increment, and the derivative "
+                 "state (one increment, before the history is carried along). Every increment, and the derivative "
                  "carried along the whole path, are in sensitivities/verification/verification_entries.csv.")
     text_path, csv_out = out / "results_table.txt", out / "results_table.csv"
     text_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
