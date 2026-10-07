@@ -368,3 +368,18 @@ def test_real_source_with_a_file_scope_manifest_settles_its_own_donors():
         assert graph.resolved[helper].path.parent == OXFORD, helper
     assert not any("ExampleInputFiles" in str(d.path)
                    for d in graph.resolved.values())
+
+
+def test_a_type_bound_call_is_not_a_call_to_a_global_routine(tmp_path):
+    """``CALL obj%method(...)`` named a routine ``OBJ`` that nobody defines (B17 G3a)."""
+    from umat_oti.transform.dependency_resolution import resolve_closure
+    entry = tmp_path / "umat.f90"
+    entry.write_text("subroutine umat(stress)\n  call mdl%calc(stress)\n  call helper(stress)\n"
+                     "end subroutine umat\nsubroutine helper(s)\nend subroutine helper\n")
+    graph = resolve_closure(entry, entry="UMAT", roots=[tmp_path])
+    assert [m.symbol for m in graph.missing] == []
+    assert graph.edges["UMAT"] == ("HELPER",)
+    # canary: the same line as a plain call IS a missing dependency
+    entry.write_text(entry.read_text().replace("call mdl%calc(stress)", "call mdl(stress)"))
+    graph = resolve_closure(entry, entry="UMAT", roots=[tmp_path])
+    assert [m.symbol for m in graph.missing] == ["MDL"]
