@@ -95,3 +95,17 @@ def test_a_routine_that_converts_goes_on_to_the_material_question(tmp_path, monk
     out = capsys.readouterr().out
     assert "can find where it sets stress and stiffness  [ok]" in out
     assert (folder / "j2_props_material.json").is_file()
+
+
+def test_unlocated_anchors_with_an_unread_module_name_the_module_not_the_symptom(missing_module):
+    facts = intake.scan_source(missing_module)
+    summary = {"completion_issues": [{"kind": "missing_stress_update_regions"}]}
+    state, reason = pre.refusal_from_summary(summary, exit_code=2, succeeded=False, facts=facts,
+                                             roots=[], source=missing_module)
+    assert "USEs TENSORLIB without defining it" in reason
+    from umat_oti.app.refusal_cards import card_for
+    card = card_for(state, reason)
+    assert card.rule == "rule:module_use" and "module TENSORLIB" in card.sentence and card.whose_move == "you"
+    # with no module to blame the card is the honest "not supported yet" one
+    plain = pre.refusal_from_summary(summary, exit_code=2, succeeded=False)
+    assert plain[1].startswith("anchors not located") and card_for(*plain).whose_move == "this program"
