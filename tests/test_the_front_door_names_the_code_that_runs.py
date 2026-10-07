@@ -86,7 +86,11 @@ def test_doctor_warns_when_the_installed_command_is_older_than_the_checkout(tmp_
     text = warned[0]
     assert "older than this checkout" in text and str(tmp_path / "old") in text
     assert "no `all` or `jacobian` command" in text and "version 0.9.0 is older" in text
-    assert "pip install -e" in text or "umat-oti ..." in text
+    assert "pip install -e" not in text and "umat-oti ..." not in text, "the remedy is its own line"
+    remedies = [t for s, t in findings if s == "fix"]
+    assert len(remedies) == 1 and len(remedies[0]) < 220
+    assert "pip install -e" in remedies[0] and "umat-oti ..." in remedies[0]
+    assert findings.index(("fix", remedies[0])) == findings.index(("warn", text)) + 1
 
 
 def test_doctor_is_quiet_when_the_installed_command_runs_this_code(tmp_path, monkeypatch):

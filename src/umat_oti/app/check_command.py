@@ -34,7 +34,7 @@ from umat_oti.app.refusal_cards import card_for, state_after_reading
 TEXT = {
     "reading": "Reading your files ...",
     "no_file": "I cannot find the file {path}.",
-    "needs_you": "I NEED ONE THING FROM YOU",
+    "needs_you": "BLUE: I NEED ONE THING FROM YOU",
     "template_written": "I wrote a template for the numbers I could not find: {path}",
     "template_next": "Fill it in (the comments say how), then run:  umat-oti check {source} --material-config {path}",
     "placeholder": "The material file {path} still has blanks (null) in its list of constant values (props_values). Fill in the numbers.",
@@ -84,10 +84,10 @@ umat-oti check UMAT.for [DECK.inp | FOLDER] [options]
 
   --deck FILE            the deck, wherever it is
   --props "E=210000 nu=0.3"   the constants, if there is no deck (names from the source, or in order)
-  --peak 0.02            how far to strain the material (default 0.02 with --props)
+  --peak 0.02            how far to strain the material: 0.02 is 2 % (default 0.02; goes with --props)
   --material-config FILE a material file (a template is written when none is found)
   --dependency-root DIR  a folder with helper routines the UMAT calls
-  --out DIR              where results go (default: <umat name>_check)
+  --out DIR              where results go (default: <umat name>_check, next to the UMAT)
   --template             write a commented material file to fill in, when the constants are missing
   --details              print every item the files gave, with the lines quoted (always in intake.md)
 """
@@ -101,9 +101,10 @@ def _fail(message: str) -> int:
 
 
 def _new_out_dir(source: Path, requested: Optional[Path]) -> Path:
+    """The results folder: ``--out``, or ``<umat name>_check`` NEXT TO THE UMAT (not the current directory)."""
     if requested is not None:
         return requested.expanduser().resolve()
-    base = Path.cwd() / f"{source.stem}_check"
+    base = source.parent / f"{source.stem}_check"
     candidate, n = base, 1
     while candidate.exists():
         n += 1
@@ -119,10 +120,12 @@ def _free_name(path: Path) -> Path:
     return candidate
 
 
-def print_card(state: str, reason: str, *, header: str = "REFUSED") -> None:
+def print_card(state: str, reason: str, *, header: Optional[str] = None) -> None:
+    from umat_oti.app.verdict_page import banner_for_card
+
     card = card_for(state, reason)
     bar = "=" * 70
-    print(f"\n{bar}\n{header}\n{bar}")
+    print(f"\n{bar}\n{header or banner_for_card(state_after_reading(state, reason), card.whose_move)}\n{bar}")
     print(card.sentence)
     print(f"Whose move: {card.whose_move}.")
     print(f"Next: {card.next_action}")
@@ -236,6 +239,22 @@ def load_scanner():
     return module
 
 
+def deck_note(deck: Path) -> tuple:
+    """(a sentence, whether the deck is unusable) for a deck that is empty or has no *USER MATERIAL block."""
+    try:
+        text = Path(deck).read_text(errors="replace")
+    except OSError:
+        return "", False
+    meaningful = [ln for ln in text.splitlines() if ln.strip() and not ln.lstrip().startswith("**")]
+    if not meaningful:
+        return (f"AMBER: The deck {Path(deck).name} is empty (nothing but blank or comment lines), so it gives "
+                "no constants and no loading. It is not used."), True
+    if not intake.contains_user_material(deck):
+        return (f"AMBER: The deck {Path(deck).name} has no *USER MATERIAL block, so it gives no constants "
+                "(the section of an Abaqus input file that lists a user material's numbers)."), False
+    return "", False
+
+
 def print_corpus_line(source: Path, deck: Optional[Path]) -> None:
     """A separate line when these exact files (UMAT, and deck if given) are in the corpus record.
 
@@ -268,7 +287,7 @@ def blocking_items(found, *, constants_supplied: bool) -> list:
 def print_need(item, *, extra: str = "") -> None:
     """The scanner's own plain ask for one blocking item, with who has to move."""
     mine = item.whose in ("you", "")
-    header = "I NEED ONE THING FROM YOU" if mine else "REFUSED"
+    header = "BLUE: I NEED ONE THING FROM YOU" if mine else "RED: REFUSED"
     bar = "=" * 70
     print(f"\n{bar}\n{header}\n{bar}")
     print(item.ask)
@@ -305,6 +324,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     out = _new_out_dir(source, args.out)
     inputs = out.with_name(out.name + "_input")
     inputs.mkdir(parents=True, exist_ok=True)
+    print(f"Results go to: {out}   (what was read from your files: {inputs})")
     roots = [d.expanduser().resolve() for d in args.dependency_root]
 
     deck, how, candidates = resolve_deck(source, args.target, args.deck)
@@ -314,6 +334,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return _fail("More than one input file could be the deck. Say which with --deck FILE.")
     if deck is None and how == "missing":
         return _fail(f"I cannot find the deck {candidates[0]}.")
+
+    if deck is not None:
+        note, unusable = deck_note(deck)
+        if note:
+            print(note)
+        if unusable:
+            deck = None
 
     # What the files already say, item by item, each with the line it stands on (Ada's scanner).
     scanner = load_scanner()
@@ -342,7 +369,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                          "(or add --template for a file to fill in).")
                 if args.template:
                     template = intake.template_material(facts, nstatev=found.facts.get("nstatv"))
-                    path = _free_name(Path.cwd() / f"{source.stem}_material.json")
+                    path = _free_name(source.parent / f"{source.stem}_material.json")
                     path.write_text(json.dumps(template, indent=2) + "\n", encoding="utf-8")
                     extra = TEXT["template_written"].format(path=path) + " " + TEXT["template_next"].format(
                         source=source.name, path=path.name)
@@ -429,7 +456,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             print(f"  Loading       out to +{args.peak:g}, back to -{args.peak:g}, unloaded to 0  [--peak]")
     else:
         template = intake.template_material(facts, nstatev=nstatev)
-        path = _free_name(Path.cwd() / f"{source.stem}_material.json")
+        path = _free_name(source.parent / f"{source.stem}_material.json")
         path.write_text(json.dumps(template, indent=2) + "\n", encoding="utf-8")
         print_card("missing_material_data", "no deck with a *USER MATERIAL block was found")
         print(TEXT["template_written"].format(path=path))

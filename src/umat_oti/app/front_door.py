@@ -22,6 +22,7 @@ import os
 import re
 import shutil
 import subprocess
+import textwrap
 import sys
 from pathlib import Path
 from typing import Optional, Sequence
@@ -187,7 +188,8 @@ def diagnose(*, installed: Optional[dict] = None) -> list:
         problems.append(f"its version {installed['version']} is older than {umat_oti.__version__}")
     if problems:
         findings.append(("warn", f"The `umat-oti` on PATH ({command}) is older than this checkout: "
-                                 + "; ".join(problems) + ". " + hint))
+                                 + "; ".join(problems) + "."))
+        findings.append(("fix", hint))
     else:
         findings.append(("ok", f"The `umat-oti` on PATH ({command}) runs this code."))
     return findings
@@ -195,7 +197,7 @@ def diagnose(*, installed: Optional[dict] = None) -> list:
 
 def doctor(argv: Sequence[str] = ()) -> int:
     findings = diagnose()
-    marks = {"ok": "ok  ", "warn": "WARN", "info": "    "}
+    marks = {"ok": "ok  ", "warn": "WARN", "info": "    ", "fix": "fix "}
     for status, text in findings:
         print(f"[{marks[status]}] {text}")
     warned = any(status == "warn" for status, _ in findings)
@@ -213,6 +215,39 @@ umat-oti: derivatives of a UMAT with respect to its parameters, checked.
 
 The commands below are the lower-level steps `check` is built from.
 """
+
+
+_ONE_LINE = {
+    "check": "Check one UMAT: read its files, convert it, verify it and give the verdict (start here).",
+    "doctor": "Say which umat-oti code is running and whether the command on your PATH is the same.",
+}
+
+
+def _lower_level_help() -> str:
+    """The pipeline's own ``--help`` with ``check`` and ``doctor`` added to its usage line and its command list."""
+    import contextlib
+    import io
+
+    from umat_oti.cli import main as cli_main
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        try:
+            cli_main(["--help"])
+        except SystemExit:
+            pass
+    text = buffer.getvalue()
+    text = text.replace("{all,transform,config,jacobian}", "{check,doctor,all,transform,config,jacobian}")
+    lines, added = [], False
+    for line in text.splitlines():
+        if line.startswith("    all ") and not added:
+            for name, sentence in _ONE_LINE.items():
+                wrapped = textwrap.wrap(sentence, 50)
+                lines.append(f"    {name:<19} {wrapped[0]}")
+                lines += [" " * 24 + w for w in wrapped[1:]]
+            added = True
+        lines.append(line)
+    return "\n".join(lines)
 
 
 def _plain_usage_error(text: str) -> str:
@@ -342,6 +377,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return run_with_cards(args[0], args[1:])
     if not args or args[0] in ("-h", "--help"):
         print(_DOOR_HELP)
+        print(_lower_level_help())
+        return 0
     from umat_oti.cli import main as cli_main
 
     make_this_code_visible_to_children()
