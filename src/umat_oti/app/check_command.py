@@ -360,11 +360,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     material_config: Optional[Path] = None
     discovery_root: Optional[Path] = None
-    nstatev = (found.facts.get("nstatv") if found is not None and found.facts.get("nstatv") is not None
-               else (deck_facts.user_materials()[0][2].value
-                     if deck_facts and len(deck_facts.user_materials()) == 1
-                     and deck_facts.user_materials()[0][2] is not None
-                     else (facts.statev_max or None)))
+    nstatev = _state_count(found, deck_facts, facts)
 
     if args.material_config is not None:
         path = args.material_config.expanduser().resolve()
@@ -380,9 +376,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                                    encoding="utf-8")
         print(f"  Constants     from {path.name}  [material file]")
     elif args.props is not None:
-        count = ((found.facts.get("props_count") if found is not None else None)
-                 or (len(deck_facts.user_materials()[0][1].value)
-                     if deck_facts and len(deck_facts.user_materials()) == 1 else facts.props_max))
+        count = _constant_count(found, deck_facts, facts)
         if not count:
             return _fail("I cannot tell how many constants this routine has; "
                          "use --material-config with a material file.")
@@ -430,6 +424,38 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                                     dependency_roots=roots,
                                     material_discovery_root=discovery_root)
     return finish(summary, out)
+
+
+def _constant_count(found, deck_facts, facts) -> int:
+    """How many constants a typed ``--props`` must supply.
+
+    The routine's own highest PROPS index first; then the number of slots the
+    deck WRITES, read card by card as Abaqus reads it (the scanner's reading).
+    The older reader of :mod:`check_intake` joins every number of a block into
+    one list, so a block of 1,2,3,4, then 5,6 counted 6 where Abaqus has 10
+    slots; it is used only when the scanner is not there (an installed copy).
+    """
+    if found is not None:
+        if found.facts.get("props_count"):
+            return int(found.facts["props_count"])
+        item = found.item("props_values")
+        if item is not None and item.value:
+            return len(item.value)
+        return int(facts.props_max or 0)
+    if deck_facts and len(deck_facts.user_materials()) == 1:
+        return len(deck_facts.user_materials()[0][1].value)
+    return int(facts.props_max or 0)
+
+
+def _state_count(found, deck_facts, facts):
+    """How many state variables: the scanner's reading of the deck, else the routine's own highest STATEV index."""
+    if found is not None:
+        value = found.facts.get("nstatv")
+        return value if value is not None else (facts.statev_max or None)
+    if (deck_facts and len(deck_facts.user_materials()) == 1
+            and deck_facts.user_materials()[0][2] is not None):
+        return deck_facts.user_materials()[0][2].value
+    return facts.statev_max or None
 
 
 def finish(summary: dict, out: Path) -> int:

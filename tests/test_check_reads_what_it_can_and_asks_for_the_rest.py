@@ -210,7 +210,8 @@ def test_only_a_missing_item_that_needs_the_user_blocks_and_typed_constants_unbl
 def test_the_scanner_is_loaded_by_path_and_its_intake_is_printed_with_the_lines_quoted(j2, tmp_path, monkeypatch, capsys):
     deck = tmp_path / "elsewhere" / "block.inp"
     deck.parent.mkdir()
-    deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO"))
+    # CONSTANTS=4 on ONE data line: Abaqus rejects the same four numbers split over two lines (measured), and the scanner then asks for them
+    deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO").replace("210000.0, 0.3,\n250.0, 2.0d3", "210000.0, 0.3, 250.0, 2.0d3"))
     scanner = check.load_scanner()
     assert scanner is not None and hasattr(scanner, "scan") and scanner.SCHEMA == "umat-oti/intake/1"
     found = scanner.scan(j2, deck)
@@ -299,3 +300,57 @@ def test_details_prints_every_item_with_its_lines_and_the_default_is_the_short_v
         assert ("FOUND    Material routine" in out) is long
         assert ("Files: " in out) is (not long)
         assert (j2.parent / f"u{len(flags)}_check_input" / "intake.md").is_file()      # always written
+
+
+DYNAMIC = """      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,
+     1 DRPLDT,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,NDI,NSHR,
+     2 NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1,NOEL,
+     3 NPT,LAYER,KSPT,JSTEP,KINC)
+      INCLUDE 'ABA_PARAM.INC'
+      DIMENSION STRESS(NTENS),STATEV(NSTATV),DDSDDE(NTENS,NTENS),PROPS(NPROPS),
+     1 DSTRAN(NTENS)
+      SUMP=0.D0
+      DO I=1,NPROPS
+        SUMP=SUMP+PROPS(I)
+      END DO
+      DO I=1,NTENS
+        STRESS(I)=STRESS(I)+SUMP*DSTRAN(I)
+      END DO
+      RETURN
+      END
+"""
+
+
+def _counts(tmp_path, constants, data):
+    source = tmp_path / "dyn.for"
+    source.write_text(DYNAMIC)
+    deck = tmp_path / "dyn.inp"
+    deck.write_text(f"*MATERIAL, NAME=M\n*USER MATERIAL, CONSTANTS={constants}\n{data}*DEPVAR\n2\n*STEP\n*STATIC\n0.1, 1.\n*END STEP\n")
+    scanner = check.load_scanner()
+    found = scanner.scan(source, deck)
+    deck_facts = intake.scan_deck(deck)
+    facts = intake.scan_source(source)
+    old = len(deck_facts.user_materials()[0][1].value)
+    return check._constant_count(found, deck_facts, facts), old, check._state_count(found, deck_facts, facts)
+
+
+def test_the_typed_constants_count_is_the_card_by_card_count_where_the_old_reader_joins_numbers(tmp_path):
+    """1.,2.,3.,4., then 5.,6.: Abaqus has ten slots (5 and 6 at slots 9 and 10); the old reader counted the six numbers."""
+    new, old, nstatv = _counts(tmp_path, 10, "1., 2., 3., 4.,\n5., 6.\n")
+    assert old == 6
+    assert new == 10
+    assert nstatv == 2
+
+
+@pytest.mark.parametrize("constants,data", [(4, "1., 2., 3., 4.\n"), (8, "1., 2., 3., 4., 5., 6., 7., 8.\n"),
+                                            (10, "1., 2., 3., 4., 5., 6., 7., 8.,\n9., 10.\n"),
+                                            (3, "1., 2., 3.\n")])
+def test_the_two_readers_agree_on_a_block_written_as_abaqus_wants_it(tmp_path, constants, data):
+    new, old, nstatv = _counts(tmp_path, constants, data)
+    assert new == old == constants
+
+
+def test_the_state_count_and_the_constant_count_do_not_use_the_old_deck_reader_when_the_scanner_is_there():
+    import inspect
+    src = inspect.getsource(check._constant_count) + inspect.getsource(check._state_count)
+    assert src.index("if found is not None") < src.index("deck_facts.user_materials()")
