@@ -611,8 +611,9 @@ STATE_CARDS: dict = {
         YOU,
         "In the numerical check the stresses agreed and no derivative disagreed; too few load states "
         "could be judged. Run your command again over other strain ranges: "
-        "add --peak 0.005, then --peak 0.05 (--peak needs --props with your "
-        "constants), and compare. A derivative judged at one range is checked "
+        "add --peak 0.005, then --peak 0.05 (--peak is how far the test strains "
+        "the material, 0.02 meaning 2 %; it goes with --props and your constants), "
+        "and compare. A derivative judged at one range is checked "
         "at that range only. If none settles, treat the derivatives as "
         "unchecked and send the report folder to the maintainers."),
     "not_attempted": _c(

@@ -34,7 +34,7 @@ from umat_oti.app.plain_language import (GATE_PLAIN, _verdict, may_say_verified,
                                          plain_sentence, verified_summary)
 from umat_oti.app.refusal_cards import card_for, state_after_reading
 
-__all__ = ["verdict_for", "render_verdict", "VERIFIED_SENTENCE", "main"]
+__all__ = ["verdict_for", "render_verdict", "VERIFIED_SENTENCE", "banner_for_card", "card_colour", "main"]
 
 VERIFIED_SENTENCE = (
     "Both versions of your material ran and agreed on the stresses, and the "
@@ -118,6 +118,21 @@ def _reason_of(record: Any) -> str:
     return ""
 
 
+def card_colour(state: str, whose: str) -> str:
+    """amber where a result exists and was partly checked; blue where it is the user's move; else red."""
+    if state in AMBER_STATES:
+        return "amber"
+    return "blue" if whose == "you" else "red"
+
+
+#: The banner words of a card printed on its own (a refusal or a request), colour first.
+_CARD_BANNER = {"amber": "AMBER: PARTLY CHECKED", "blue": "BLUE: I NEED ONE THING FROM YOU", "red": "RED: REFUSED"}
+
+
+def banner_for_card(state: str, whose: str) -> str:
+    return _CARD_BANNER[card_colour(state, whose)]
+
+
 def verdict_for(record: Any) -> dict:
     """The verdict as data: colour, headline, lines and the one next action."""
     flat = _record_for_gates(record)
@@ -170,12 +185,7 @@ def verdict_for(record: Any) -> dict:
         else:
             sentence, whose, action = (card.sentence, card.whose_move,
                                        card.next_action)
-            if state in AMBER_STATES:
-                colour = "amber"
-            elif whose == "you":
-                colour = "blue"
-            else:
-                colour = "red"
+            colour = card_colour(state, whose)
 
     assert colour != "green" or (may_say_verified(flat) and state in ("", "fully_verified"))
     return {
