@@ -235,6 +235,23 @@ def load_scanner():
     return module
 
 
+def print_corpus_line(source: Path, deck: Optional[Path]) -> None:
+    """A separate line when these exact files (UMAT, and deck if given) are in the corpus record.
+
+    Never changes what this command found, and never raises: a missing table or an unreadable
+    file just means no line.
+    """
+    try:
+        from umat_oti.app import verified_lookup
+
+        match = verified_lookup.lookup(source, deck)
+        if match is not None:
+            for line in verified_lookup.render(match):
+                print(line)
+    except Exception:                                   # a lookup must never stop a check
+        return
+
+
 def blocking_items(found, *, constants_supplied: bool) -> list:
     """The items the scanner could not settle and that stop the run: MISSING, and
     needing the user. The constants are not blocking when the user has just supplied
@@ -314,6 +331,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             sys.stdout.write(compact_intake(found))
         found.write(inputs)
         print(f"(The same, with the lines quoted: {inputs / 'intake.md'}, {inputs / 'intake.json'})")
+        print_corpus_line(source, deck)
         stop = blocking_items(found, constants_supplied=bool(args.props or args.material_config))
         if stop:
             names = " ".join(f"{k}=<value>" for k in
@@ -336,6 +354,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     else:
         for line in _describe_source(facts, source):
             print(line)
+        print_corpus_line(source, deck)
 
     # The routine first, the material second: the real blocker is the message.
     from umat_oti.app.check_preflight import preflight
