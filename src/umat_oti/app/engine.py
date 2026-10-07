@@ -119,11 +119,37 @@ def _head_and_called(source_text: str, head: str) -> str:
     return "\n".join(l for n in order for l in lines[blocks[n][0]:blocks[n][1]]) + "\n"
 
 
+def _match_interface_by_position(src_path: Path) -> dict:
+    """Give the staged UMAT the Abaqus argument names Abaqus itself matches by position.
+
+    Returns the record of what was renamed ({} when the source already names
+    STRESS or DDSDDE, or has no 37-argument UMAT). The staged copy is
+    rewritten in place; the author's file is never touched.
+    """
+    from umat_oti.fortran.parser import parse_fortran_file
+    from umat_oti.fortran.symbols import find_routine
+    from umat_oti.transform.interface_by_position import rewrite_umat_interface_by_position
+    try:
+        parsed = parse_fortran_file(src_path)
+    except (OSError, UnicodeDecodeError):
+        return {}
+    outcome = rewrite_umat_interface_by_position(
+        src_path.read_text(encoding="utf-8", errors="replace"), parsed.form,
+        find_routine(parsed, "UMAT"))
+    if outcome.refused:
+        return {"applied": False, "refused": outcome.refused}
+    if not outcome.applied:
+        return {}
+    src_path.write_text(outcome.text, encoding="utf-8")
+    return {"applied": True, "dummy_map": outcome.dummy_map, "clash_map": outcome.clash_map}
+
+
 def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, order: int,
                     src_path: Path) -> tuple[dict, bool]:
     """Auto-scaffold the contract from a source scan (src_path must already hold the
     cleaned source): full variable role classification + finite-strain correction."""
     from umat_oti.core.roles import suggest_variable_roles, role_summary
+    position_record = _match_interface_by_position(src_path)
     analysis = _analyze(src_path)
     finite = _is_finite(analysis) if seed == "auto" else (seed == "DFGRD1")
     # Keeping the Abaqus interface separate from the constitutive model is an
@@ -205,6 +231,8 @@ def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, 
     keep_real = [n for n in dict.fromkeys(summ["keep_real_variables"] + unchosen_seeds)
                  if n not in claimed]
     source_block: dict = {"file": str(src_path)}
+    if position_record:
+        source_block["interface_by_position"] = position_record
     if delegate:
         source_block["selected_umat_name"] = delegate
         source_block["selected_umat_reason"] = (
