@@ -429,7 +429,9 @@ def _abaqus_utility_stubs() -> str:
     models call it when their local Newton loop fails to converge, so it must
     stop the run with a non-zero status. A silent stub would let a
     non-converged increment flow into the evidence as if it were a converged
-    one.
+    one. SPRIND, SPRINC and SINV follow what the real solver returns (B17
+    G2c, tests/fixtures/utility_semantics); they replace a SPRINC that only
+    knew the plane-strain shape and aborted on any other.
     """
     return """SUBROUTINE GETOUTDIR(PATH,NCHAR)
   CHARACTER(*) :: PATH
@@ -440,28 +442,190 @@ SUBROUTINE XIT
   WRITE(0,'(A)') 'UMAT called XIT: the model aborted (local Newton did not converge).'
   STOP 3
 END SUBROUTINE XIT
-SUBROUTINE SPRINC(S,PS,LSTR,NDI,NSHR)
-  ! Principal values of a symmetric tensor, Abaqus storage order.
-  ! Only the plane-strain shape these models use is implemented: NDI=3, NSHR=1,
-  ! S = (s11, s22, s33, s12), where s33 is already principal because s13=s23=0.
-  ! Any other shape aborts rather than returning a plausible wrong answer.
+SUBROUTINE SPRIND(S, PS, AN, LSTR, NDI, NSHR)
+  ! Principal values PS(1:3) and directions AN(K,1:3) of a symmetric tensor in
+  ! Abaqus's Voigt storage (NDI direct, then shears 12, 13, 23). LSTR=1 stress
+  ! type; LSTR=2 strain type, whose stored shears are engineering shears
+  ! (twice the tensor entry). B17 G2c: written from measurements of the real
+  ! solver (Abaqus 2021.HF5, one-element UMAT jobs on C3D8, CPE4 and CPS4,
+  ! 56 + 10 + 41 + 41 tensors; tools/utility_semantics in the batch notes):
+  !  * the SET of values is the eigenvalues, and AN(K,:) is a unit eigenvector
+  !    of PS(K) (checked on every case);
+  !  * the ORDER is not documented and is not ascending. Measured: if every
+  !    shear is exactly zero the values come back in storage order (S11, S22,
+  !    S33); otherwise a 3-D tensor returns (largest, smallest, middle) and a
+  !    2-D one (NDI=2, or NDI=3 with NSHR=1) returns (smaller, larger, S33)
+  !    of its in-plane pair with S33 (or 0 for NDI=2) third;
+  !  * a 3-D tensor with a repeated eigenvalue AND a shear came back in an
+  !    order that depends on the algorithm (sorted ascending in four cases,
+  !    (max,min,mid) in another), which a closed rule does not reproduce. That
+  !    case STOPS here instead of returning a guess;
+  !  * the SIGN of an eigenvector is not reproduced (it is not determined by
+  !    the tensor). Largest component positive.
   IMPLICIT NONE
   INTEGER :: LSTR, NDI, NSHR
-  REAL(8) :: S(*), PS(3)
-  REAL(8) :: SHEAR, CENTRE, RADIUS
-  IF (NDI /= 3 .OR. NSHR /= 1) THEN
-    WRITE(0,'(A)') 'SPRINC stub: only NDI=3, NSHR=1 (plane strain) is implemented.'
-    STOP 4
+  REAL(8) :: S(*), PS(3), AN(3,3)
+  REAL(8) :: T(3,3), V(3,3), W(3), HALFSH, OFF, SC, TH, C, SN, TAU, APQ, TMP
+  REAL(8) :: WS(3), VS(3,3)
+  INTEGER :: I, J, K, P, Q, SWEEP, ORD(3), I3, IA, IB
+  LOGICAL :: TWOD, SHEARED
+  HALFSH = 1.0D0
+  IF (LSTR == 2) HALFSH = 0.5D0
+  T = 0.0D0
+  DO I = 1, NDI
+    T(I,I) = S(I)
+  END DO
+  IF (NSHR >= 1) THEN
+    T(1,2) = S(NDI+1)*HALFSH
+    T(2,1) = T(1,2)
   END IF
-  SHEAR = S(4)
-  ! LSTR=2 means strain, whose off-diagonal entries are engineering shear.
-  IF (LSTR == 2) SHEAR = 0.5D0*S(4)
-  CENTRE = 0.5D0*(S(1) + S(2))
-  RADIUS = SQRT((0.5D0*(S(1) - S(2)))**2 + SHEAR**2)
-  PS(1) = CENTRE + RADIUS
-  PS(2) = CENTRE - RADIUS
-  PS(3) = S(3)
+  IF (NSHR >= 2) THEN
+    T(1,3) = S(NDI+2)*HALFSH
+    T(3,1) = T(1,3)
+  END IF
+  IF (NSHR >= 3) THEN
+    T(2,3) = S(NDI+3)*HALFSH
+    T(3,2) = T(2,3)
+  END IF
+  SHEARED = (T(1,2) /= 0.0D0) .OR. (T(1,3) /= 0.0D0) .OR. (T(2,3) /= 0.0D0)
+  AN = 0.0D0
+  DO I = 1, 3
+    AN(I,I) = 1.0D0
+    PS(I) = T(I,I)
+  END DO
+  IF (.NOT. SHEARED) RETURN
+  ! cyclic Jacobi, eigenvectors in the columns of V
+  V = 0.0D0
+  DO I = 1, 3
+    V(I,I) = 1.0D0
+  END DO
+  DO SWEEP = 1, 60
+    OFF = ABS(T(1,2)) + ABS(T(1,3)) + ABS(T(2,3))
+    SC = ABS(T(1,1)) + ABS(T(2,2)) + ABS(T(3,3)) + OFF
+    IF (OFF <= 1.0D-300 .OR. OFF <= 1.0D-17*SC) EXIT
+    DO P = 1, 2
+      DO Q = P+1, 3
+        APQ = T(P,Q)
+        IF (APQ == 0.0D0) CYCLE
+        TH = (T(Q,Q) - T(P,P)) / (2.0D0*APQ)
+        IF (TH >= 0.0D0) THEN
+          TAU = 1.0D0 / (TH + SQRT(1.0D0 + TH*TH))
+        ELSE
+          TAU = -1.0D0 / (-TH + SQRT(1.0D0 + TH*TH))
+        END IF
+        C = 1.0D0 / SQRT(1.0D0 + TAU*TAU)
+        SN = TAU*C
+        DO K = 1, 3
+          TMP = T(K,P)
+          T(K,P) = C*TMP - SN*T(K,Q)
+          T(K,Q) = SN*TMP + C*T(K,Q)
+        END DO
+        DO K = 1, 3
+          TMP = T(P,K)
+          T(P,K) = C*TMP - SN*T(Q,K)
+          T(Q,K) = SN*TMP + C*T(Q,K)
+        END DO
+        DO K = 1, 3
+          TMP = V(K,P)
+          V(K,P) = C*TMP - SN*V(K,Q)
+          V(K,Q) = SN*TMP + C*V(K,Q)
+        END DO
+      END DO
+    END DO
+  END DO
+  DO I = 1, 3
+    W(I) = T(I,I)
+  END DO
+  TWOD = (NDI == 2) .OR. (NDI == 3 .AND. NSHR == 1)
+  IF (TWOD) THEN
+    ! the eigenvector that stays on axis 3 is the third value
+    I3 = 1
+    DO I = 2, 3
+      IF (ABS(V(3,I)) > ABS(V(3,I3))) I3 = I
+    END DO
+    IA = 0
+    IB = 0
+    DO I = 1, 3
+      IF (I == I3) CYCLE
+      IF (IA == 0) THEN
+        IA = I
+      ELSE
+        IB = I
+      END IF
+    END DO
+    IF (W(IA) <= W(IB)) THEN
+      ORD = (/ IA, IB, I3 /)
+    ELSE
+      ORD = (/ IB, IA, I3 /)
+    END IF
+  ELSE
+    ! ascending first, then (largest, smallest, middle)
+    ORD = (/ 1, 2, 3 /)
+    DO I = 1, 2
+      DO J = 1, 3-I
+        IF (W(ORD(J)) > W(ORD(J+1))) THEN
+          K = ORD(J)
+          ORD(J) = ORD(J+1)
+          ORD(J+1) = K
+        END IF
+      END DO
+    END DO
+    IF (MIN(W(ORD(2))-W(ORD(1)), W(ORD(3))-W(ORD(2))) <= &
+        1.0D-9*MAX(ABS(W(ORD(1))), ABS(W(ORD(3))), 1.0D-300)) THEN
+      WRITE(0,'(A)') 'SPRIND stub: a 3-D tensor with a repeated principal value and a shear. ' &
+        // 'The solver returns the values in an order no rule reproduces, so the replay stops ' &
+        // 'rather than guess it.'
+      STOP 7
+    END IF
+    ORD = (/ ORD(3), ORD(1), ORD(2) /)
+  END IF
+  DO K = 1, 3
+    PS(K) = W(ORD(K))
+    TMP = 0.0D0
+    I3 = 1
+    DO I = 1, 3
+      IF (ABS(V(I,ORD(K))) > ABS(V(I3,ORD(K)))) I3 = I
+    END DO
+    TMP = 1.0D0
+    IF (V(I3,ORD(K)) < 0.0D0) TMP = -1.0D0
+    DO I = 1, 3
+      AN(K,I) = TMP*V(I,ORD(K))
+    END DO
+  END DO
+END SUBROUTINE SPRIND
+SUBROUTINE SPRINC(S, PS, LSTR, NDI, NSHR)
+  ! The values of SPRIND, in the order SPRIND returns them (measured: the
+  ! solver's SPRINC and SPRIND agree on every one of 148 tensors).
+  IMPLICIT NONE
+  INTEGER :: LSTR, NDI, NSHR
+  REAL(8) :: S(*), PS(3), AN(3,3)
+  CALL SPRIND(S, PS, AN, LSTR, NDI, NSHR)
 END SUBROUTINE SPRINC
+SUBROUTINE SINV(STRESS, SINV1, SINV2, NDI, NSHR)
+  ! SINV1 = tr(sigma)/3 (the mean stress, tension positive) and SINV2 =
+  ! sqrt(3/2 s:s) with s the deviator (the Mises stress), for a stress-type
+  ! tensor. Checked against the solver on C3D8, CPE4 and CPS4 (NDI=2 has
+  ! S33 = 0).
+  IMPLICIT NONE
+  INTEGER :: NDI, NSHR, I
+  REAL(8) :: STRESS(*), SINV1, SINV2, D(3), SQ
+  SINV1 = 0.0D0
+  DO I = 1, NDI
+    SINV1 = SINV1 + STRESS(I)
+  END DO
+  SINV1 = SINV1/3.0D0
+  DO I = 1, 3
+    D(I) = -SINV1
+  END DO
+  DO I = 1, NDI
+    D(I) = STRESS(I) - SINV1
+  END DO
+  SQ = D(1)*D(1) + D(2)*D(2) + D(3)*D(3)
+  DO I = NDI+1, NDI+NSHR
+    SQ = SQ + 2.0D0*STRESS(I)*STRESS(I)
+  END DO
+  SINV2 = SQRT(1.5D0*SQ)
+END SUBROUTINE SINV
 SUBROUTINE MUTEXINIT(ID)
   ! Abaqus's thread locks. This driver runs one material point on one thread,
   ! so there is nothing to serialise and a no-op is not an approximation of
