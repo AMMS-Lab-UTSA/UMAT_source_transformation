@@ -215,6 +215,108 @@ The commands below are the lower-level steps `check` is built from.
 """
 
 
+def _plain_usage_error(text: str) -> str:
+    """The message of an argparse failure, without its usage block or its prefix."""
+    lines = [l.strip() for l in text.strip().splitlines() if l.strip()]
+    errors = [l for l in lines if "error:" in l]
+    message = errors[-1] if errors else (lines[-1] if lines else "the command line was not understood")
+    return message.rsplit("error: ", 1)[-1]
+
+
+def _out_of(args: Sequence[str]) -> Optional[Path]:
+    for index, token in enumerate(args):
+        if token == "--out" and index + 1 < len(args):
+            return Path(args[index + 1])
+        if token.startswith("--out="):
+            return Path(token.split("=", 1)[1])
+    return None
+
+
+def run_with_cards(command: str, args: Sequence[str]) -> int:
+    """Run ``umat-oti all`` or ``umat-oti jacobian`` and, when it is refused or fails,
+    print the plain card (:mod:`umat_oti.app.refusal_cards`) instead of the raw JSON
+    error or an internal script's usage text. The raw output is kept in a file; on
+    success the command's output passes through unchanged."""
+    import contextlib
+    import io
+
+    from umat_oti.cli import main as cli_main
+
+    out_text, err_text = io.StringIO(), io.StringIO()
+    with contextlib.redirect_stdout(out_text), contextlib.redirect_stderr(err_text):
+        try:
+            code = cli_main([command, *args])
+        except SystemExit as stop:
+            code = stop.code if isinstance(stop.code, int) else (0 if stop.code in (None, 0) else 2)
+    printed, errors = out_text.getvalue(), err_text.getvalue()
+    if code == 0:
+        sys.stdout.write(printed)
+        sys.stderr.write(errors)
+        return 0
+    if "usage:" in errors and not printed.strip():
+        print(f"umat-oti {command}: {_plain_usage_error(errors)}", file=sys.stderr)
+        print("The one-command route is: umat-oti check my_umat.for [my_deck.inp]   "
+              "(umat-oti check --help)", file=sys.stderr)
+        return int(code)
+    from umat_oti.app.check_command import clean_reason, failure_state, print_card
+    from umat_oti.app.check_preflight import normalise, refusal_from_summary
+
+    summary = None
+    try:
+        summary = json.loads(printed) if printed.lstrip().startswith("{") else None
+    except ValueError:
+        summary = None
+    if command == "all" and isinstance(summary, dict):
+        state, reason = failure_state(summary)
+    elif isinstance(summary, dict):
+        found = refusal_from_summary(summary, exit_code=int(code), succeeded=False)
+        state, reason = found if found else ("transform_refused", "the transformation did not complete")
+    else:
+        state = "transform_refused"
+        reason = normalise(clean_reason(printed or errors))
+    destination = _out_of(args)
+    where = None
+    try:
+        folder = destination if destination is not None and destination.is_dir() else Path.cwd()
+        where = folder / f"umat-oti-{command}-output.json"
+        where.write_text(printed or errors, encoding="utf-8")
+    except OSError:
+        where = None
+    print_card(state, reason)
+    if summary is None and (printed or errors).strip():
+        print("The program said: " + clean_reason(printed or errors).strip().splitlines()[0][:300])
+    if where is not None:
+        print(f"Everything the program recorded is in {where}")
+    return int(code)
+
+
+def guard_all(args: Sequence[str]) -> Optional[int]:
+    """Before ``all`` asks for material data, ask whether the routine can be converted
+    at all, so the first refusal is the real one. Returns an exit code to stop, or None."""
+    import argparse
+    import tempfile
+
+    from umat_oti.app.check_command import print_card
+    from umat_oti.app.check_intake import scan_source
+    from umat_oti.app.check_preflight import preflight
+
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("source", nargs="?", type=Path)
+    parser.add_argument("--dependency-root", type=Path, action="append", default=[])
+    known, _ = parser.parse_known_args(list(args))
+    if known.source is None or not known.source.is_file():
+        return None
+    source = known.source.expanduser().resolve()
+    work = Path(tempfile.mkdtemp(prefix="umat-oti-preflight-"))
+    blocked = preflight(source, scan_source(source),
+                        [p.expanduser().resolve() for p in known.dependency_root], work)
+    if blocked is None:
+        return None
+    print_card(*blocked)
+    print(f"Everything the program recorded is in {work}")
+    return 2
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if args[:1] in (["--version"], ["-V"], ["version"]):
@@ -227,6 +329,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         make_this_code_visible_to_children()
         return check_main(args[1:])
+    if args[:1] in (["all"], ["jacobian"]):
+        make_this_code_visible_to_children()
+        if args[0] == "all" and "-h" not in args and "--help" not in args:
+            stop = guard_all(args[1:])
+            if stop is not None:
+                return stop
+        if "-h" in args or "--help" in args:
+            from umat_oti.cli import main as cli_main
+
+            return cli_main(args)
+        return run_with_cards(args[0], args[1:])
     if not args or args[0] in ("-h", "--help"):
         print(_DOOR_HELP)
     from umat_oti.cli import main as cli_main
