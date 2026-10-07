@@ -63,13 +63,14 @@ def refusal_from_summary(summary: dict, *, exit_code: int = 1, succeeded: bool =
     if exit_code and not succeeded:
         issues = [str(i.get("kind")) for i in summary.get("completion_issues") or []
                   if isinstance(i, dict)]
-        reason = "anchors not located: " + ", ".join(dict.fromkeys(issues) or ["unknown"])
         missing = unresolved_modules(facts, roots, source) if facts is not None and source else []
         if missing:
-            reason += (f"; a name appears as NAME(...) on the stress path but is not declared "
-                       f"anywhere in this source, which USEs {', '.join(missing)} without "
-                       f"defining it")
-        return "transform_refused", reason
+            # The cause, not its symptom: a module nobody supplied is why the stress and
+            # stiffness cannot be located (mrkearden UMAT.F90: USE Types).
+            return "transform_refused", (
+                f"a name appears as NAME(...) on the stress path but is not declared anywhere in "
+                f"this source, which USEs {', '.join(missing)} without defining it")
+        return "transform_refused", "anchors not located: " + ", ".join(dict.fromkeys(issues) or ["unknown"])
     return None
 
 
