@@ -198,6 +198,10 @@ def diagnose(*, installed: Optional[dict] = None) -> list:
 def doctor(argv: Sequence[str] = ()) -> int:
     findings = diagnose()
     marks = {"ok": "ok  ", "warn": "WARN", "info": "    ", "fix": "fix "}
+    warnings = [text for status, text in findings if status == "warn"]
+    if warnings and all("on PATH" in text for text in warnings):
+        # exit code stays 1 (the install on PATH is not this checkout), but the user is told first that nothing else is wrong
+        print("All else is fine: the tools umat-oti needs are in place. One thing to put right, below.")
     for status, text in findings:
         print(f"[{marks[status]}] {text}")
     warned = any(status == "warn" for status, _ in findings)
