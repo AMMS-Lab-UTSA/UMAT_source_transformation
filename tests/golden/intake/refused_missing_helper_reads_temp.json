@@ -126,8 +126,8 @@
       "whose": ""
     },
     {
-      "ask": "I could not find the numbers this material needs: the values of its constants, in the routine's order.",
-      "default": "none: values are never guessed. Give a deck with *USER MATERIAL, or type them (for example E=210000 nu=0.3).",
+      "ask": "I could not find the numbers this material needs: the values of its constants, in the order the routine reads them.",
+      "default": "The run cannot go on, and the constants are never guessed or filled in for you. Put an Abaqus input file with a *USER MATERIAL block next to the UMAT, or type the values into a material file and pass it with --material-config FILE (if the input file lives elsewhere, use --material-discovery-root FOLDER).",
       "evidence": [],
       "key": "props_values",
       "label": "Constant values",
@@ -151,7 +151,7 @@
     },
     {
       "ask": "The routine reads the temperature and the files do not state one.",
-      "default": "293.15 (isothermal), the same for every increment.",
+      "default": "293.15 (the same for every increment, no heating). Change it in the material file given with --material-config FILE if it matters for your material.",
       "evidence": [
         {
           "file": "UMAT_framework/umat_iso.f",
@@ -204,8 +204,8 @@
       "whose": ""
     },
     {
-      "ask": "Your routine calls FISOTROPIC, SHEARMOD, which are not in the files you gave me.",
-      "default": "none: add the file that defines FISOTROPIC, SHEARMOD next to the UMAT, or give its folder.",
+      "ask": "Your routine calls FISOTROPIC, SHEARMOD, which are not in the files this program was given, so it cannot follow the stress calculation through them.",
+      "default": "The run cannot go on. Put the file that defines FISOTROPIC, SHEARMOD beside your UMAT, or give its folder with --dependency-root FOLDER. If it is an Abaqus library routine or was never published, ask the author.",
       "evidence": [
         {
           "file": "UMAT_framework/umat_iso.f",
