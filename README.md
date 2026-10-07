@@ -4,10 +4,71 @@
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
-**UMAT-OTI** rewrites the Fortran source of an Abaqus user material (UMAT) so
-that its derivatives are computed exactly by order-truncated imaginary (OTI)
-hypercomplex arithmetic instead of being derived by hand or approximated by
-finite differences. From one real-valued UMAT it produces:
+## What you can do with it
+
+**Goal:** get the derivatives of the stress with respect to your material
+parameters, and a check that they are right.
+
+You give it your Abaqus user material (a UMAT, `.for` or `.f`). If the Abaqus
+input file (the deck) that uses it sits **next to the UMAT**, the program
+reads the material constants and the loading from that deck. It then converts
+the routine, runs the original and the converted version, and reports the
+derivatives together with whether they matched an independent check.
+
+```bash
+umat-oti check my_umat.for my_deck.inp          # NOT AVAILABLE YET: being added; until it lands use the next command
+```
+
+Until `check` lands, the working command is below. Run it from a checkout, with
+the checkout's own code (see "Three commands"), because a `umat-oti` already on
+your PATH may be an old install that lacks `all`:
+
+```bash
+PYTHONPATH=src python3 -m umat_oti.cli all path/to/my_umat.for --out out/mine
+```
+
+`--out` must be a new or empty folder. If no deck sits beside the UMAT, give
+the constants and loading yourself with `--material-config FILE` (an example is
+`examples/03_j2_parameter_sensitivities/material_workflow.json`). If the run is
+refused, it says whose move it is and what to do; the explanations are in
+`src/umat_oti/app/refusal_cards.py`. To turn a results file into a one-page
+verdict: `PYTHONPATH=src python3 -m umat_oti.app.verdict_page out/mine/<results>.json`.
+
+**You do not need the Residual Assembler for this.** That companion program
+answers a different question (how a whole finite-element result changes with a
+parameter) and is only needed if you want that.
+
+### Three commands
+
+```bash
+git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git && cd UMAT_source_transformation
+python3 -m venv .venv && . .venv/bin/activate && python -m pip install -e ".[test]"   # needs Python 3.10+ and gfortran
+PYTHONPATH=src python3 -m umat_oti.cli all path/to/my_umat.for --out out/mine          # or: umat-oti check my_umat.for my_deck.inp, once it lands
+```
+
+`PYTHONPATH=src` makes the command use this checkout even if an older
+`umat-oti` is installed elsewhere. If `umat-oti all` answers
+`invalid choice: 'all'`, you are running that old install.
+
+### Words you will meet
+
+| word | meaning |
+|---|---|
+| UMAT | the Fortran subroutine in which Abaqus users write their own material law |
+| PROPS | the list of material constants Abaqus hands the UMAT (PROPS(1), PROPS(2), ...) |
+| DDSDDE | the stiffness matrix the UMAT returns: how the stress changes with a small strain change |
+| OTI | order-truncated imaginary numbers: arithmetic that carries exact derivatives through the code, instead of approximating them |
+| primal | the ordinary result, the stress and state the UMAT computes without any derivative |
+| tangent | the stiffness (DDSDDE) in the sense above, not a line touching a curve |
+| provider | a compiled copy of your material that also returns the derivatives, for use by other programs |
+| verified | both versions ran and agreed on the stresses, and the derivatives matched an independent check of your original routine, in this test only |
+
+## What is behind it
+
+**UMAT-OTI** rewrites the Fortran source of an Abaqus user material so that its
+derivatives are computed exactly by OTI arithmetic instead of being derived by
+hand or approximated by finite differences. From one real-valued UMAT it
+produces:
 
 - the consistent tangent `DDSDDE = dSTRESS/dDSTRAN` as a drop-in Abaqus UMAT;
 - local constitutive Jacobians of the model's own internal Newton solve;
@@ -18,16 +79,14 @@ finite differences. From one real-valued UMAT it produces:
   collaborator can use without ever seeing the source.
 
 The companion project [Residual_Assembler](https://github.com/AMMS-Lab-UTSA/Residual_Assembler)
-consumes that provider together with a converged Abaqus analysis
-(`Analysis.inp` + `Analysis.odb`) and returns full-field parameter
-sensitivities of the finite-element solution by the residual method. The two
-are separate programs connected by a versioned contract.
+consumes that provider together with a converged Abaqus analysis and returns
+full-field parameter sensitivities of the finite-element solution. The two are
+separate programs connected by a versioned contract.
 
-**New here?** Install with [docs/INSTALL.md](docs/INSTALL.md) (about five
-minutes), then work through the six [worked examples](examples/README.md). The
-[command-line guide](docs/CLI_GUIDE.md) and the [GUI guide](docs/GUI_GUIDE.md)
-cover every entry point, with real output. What has been verified, and how, is
-in [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md).
+**More:** install in detail: [docs/INSTALL.md](docs/INSTALL.md); six
+[worked examples](examples/README.md); the [command-line guide](docs/CLI_GUIDE.md)
+and [GUI guide](docs/GUI_GUIDE.md); what has been verified and how:
+[docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md).
 
 ## Install
 
@@ -169,14 +228,12 @@ what did **not** reproduce, is [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_R
 | J2 consistent tangent against finite differences of the original | 3e-11 (scaled) over elastic, plastic and unloading increments | `umat-oti jacobian` + `tests/gui/test_developer_screens.py` |
 | Provider verification, entry by entry, J2 and FCC crystal plasticity | J2: 628 entries agree, 240 consistent with zero, none unresolved, none disagrees. FCC (tension with shear): 4,556 agree, 1,572 consistent with zero, 112 the reference cannot resolve, none disagrees | `python -m umat_oti.provider.collaborator <contract> --out <dir>` ([Examples 3](examples/03_j2_parameter_sensitivities/README.md) and [4](examples/04_fcc_crystal_plasticity_provider/README.md)) |
 
-Corpus of 391 UMATs acquired from public repositories, re-transformed and run
-in Abaqus at the current transform (2026-09-18): 240 transform, and 43
-of the 260 adequately specified genuine UMATs clear all six acceptance gates
-(Abaqus job, outputs, finite history, primal agreement, verified derivatives,
-informative experiment). Every other source carries a named reason, and the 217
-that are this project's to fix are counted as such. Census:
-[paper_results/corpus/CORPUS_VERIFICATION.md](paper_results/corpus/CORPUS_VERIFICATION.md);
-method: [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md).
+Corpus of 391 UMATs acquired from public repositories; 242 are eligible
+(genuine, adequately specified UMATs). At the pass23 freeze (final-umat
+42a526f), 106 of the 242 pass the Abaqus six-check gate under the D-4 rule and
+114 of the 242 are verified at routine level (D-8). The two counts are never
+added. Every other source carries a named reason. Census and method:
+[docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md).
 
 ## Tests
 

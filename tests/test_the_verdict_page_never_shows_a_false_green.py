@@ -1,0 +1,68 @@
+"""The one-page verdict: green only where all six gates were measured true."""
+import copy
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "src"))
+
+from umat_oti.app.corpus_view import EVIDENCE_GATES              # noqa: E402
+from umat_oti.app.verdict_page import render_verdict, verdict_for  # noqa: E402
+
+pytestmark = pytest.mark.unit
+GATES = [g[0] for g in EVIDENCE_GATES]
+
+
+def _all_true():
+    return {"terminal_state": "fully_verified",
+            "evidence": {g: True for g in GATES}}
+
+
+def test_all_six_gates_is_green():
+    assert verdict_for(_all_true())["colour"] == "green"
+    assert "this test only" in render_verdict(_all_true())
+
+
+@pytest.mark.parametrize("gate", GATES)
+@pytest.mark.parametrize("value", [False, None])
+def test_one_gate_missing_or_false_is_never_green(gate, value):
+    rec = _all_true()
+    rec["evidence"][gate] = value
+    out = verdict_for(rec)
+    assert out["colour"] != "green"
+    assert "GREEN" not in render_verdict(rec)
+
+
+def test_a_pipeline_verdict_of_verified_without_gates_is_amber_not_green():
+    rec = {"stages": {"sensitivities": {"verification": {"result": {"verdict": "verified"}}}}}
+    out = verdict_for(rec)
+    assert out["colour"] == "amber" and "GREEN" not in render_verdict(rec)
+
+
+def test_stage_verified_with_an_unmeasured_gate_is_not_green():
+    rec = {"stage": "verified", "terminal_state": "fully_verified",
+           "evidence": {g: True for g in GATES[:-1]}}
+    assert verdict_for(rec)["colour"] != "green"
+
+
+def test_colours_follow_whose_move_it_is():
+    blue = verdict_for({"terminal_state": "missing_material_data",
+                        "reason": "x publishes no deck with a *USER MATERIAL block"})
+    assert blue["colour"] == "blue" and "--material-config" in blue["next action"]
+    red = verdict_for({"terminal_state": "transform_refused",
+                       "reason": "anchors not located: missing_stress_update_regions"})
+    assert red["colour"] == "red"
+    amber = verdict_for({"terminal_state": "tangent_not_verified"})
+    assert amber["colour"] == "amber"
+    for v in (blue, red, amber):
+        assert v["next action"]
+
+
+def test_registry_rows_render_green_exactly_when_the_rule_says():
+    import json
+    data = json.loads((REPO / "paper_results/corpus/corpus_registry.json").read_text())
+    for r in data["records"]:
+        green = verdict_for(r)["colour"] == "green"
+        assert green == bool(r["verified_on_every_gate"]), r["source_id"]
