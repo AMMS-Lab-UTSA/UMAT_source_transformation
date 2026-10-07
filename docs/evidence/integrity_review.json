@@ -1696,6 +1696,16 @@
   "mock:tests/test_check_reads_what_it_can_and_asks_for_the_rest.py:test_the_template_is_the_fallback_when_the_scanner_is_not_there:monkeypatch.setattr:ca00f4f3": {
    "verdict": "justified",
    "reason": "Makes check's loader report that tools/intake_scan.py is absent (an installed copy has no tools/ folder), to test the fallback that reads the files itself; everything else in the run is real."
+  },
+  "skip:tests/test_f2eval_second_order_coefficients.py:<module>:mark.skipif:8e9a4e8f": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which it needs to compile the generated order-2 OTI module and run x**y. CI installs gfortran, so it runs there. It tests x**y only (stated in the commit message that ports it).",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
   }
  }
 }
