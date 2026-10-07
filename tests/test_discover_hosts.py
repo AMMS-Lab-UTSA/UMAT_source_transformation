@@ -205,8 +205,8 @@ def test_zenodo_prefilter_wants_abaqus_text_and_code():
     assert not H.zenodo_prefilter(other)
 
 
-def test_a_query_the_host_rejects_is_recorded_not_fatal(tmp_path, monkeypatch):
-    """Zenodo returned 500 for one query; the other fifty must still run."""
+def test_a_query_the_host_rejects_is_recorded_not_fatal():
+    """Zenodo returned 500 for one query; the others must still run."""
     calls = []
 
     class Flaky(H.ZenodoClient):
@@ -216,11 +216,6 @@ def test_a_query_the_host_rejects_is_recorded_not_fatal(tmp_path, monkeypatch):
                 raise H.AcquisitionError("http_error", "500")
             return []
 
-    monkeypatch.setattr(H, "ZenodoClient", Flaky)
-    monkeypatch.setattr(H, "ZENODO_QUERIES", ("bad/query", "good"))
-    monkeypatch.setattr(H, "known_identities", lambda root: {"x": "y"})
-    monkeypatch.setattr(H, "cache_identities", lambda *r: {})
-    assert H.main(["--host", "zenodo", "--out-dir", str(tmp_path)]) == 0
-    assert calls == ["bad/query", "good"]
-    summary = json.loads((tmp_path / "zenodo_sources.json").read_text())
-    assert "error" in summary["queries"][0] and summary["queries"][1]["query"] == "good"
+    records, provenance = H.search_zenodo(Flaky(), ("bad/query", "good"))
+    assert calls == ["bad/query", "good"] and records == {}
+    assert "error" in provenance[0] and provenance[1]["query"] == "good"
