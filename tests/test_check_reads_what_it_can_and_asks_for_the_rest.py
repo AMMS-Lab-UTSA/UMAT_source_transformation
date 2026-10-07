@@ -266,3 +266,18 @@ def test_a_deck_in_another_folder_gives_the_constants_and_says_where_from(j2, tm
     assert re.search(r"block\.inp:\d+: \*USER MATERIAL", out) and "*DEPVAR" in out
     assert "Working:" in out                      # it got as far as running the pipeline
     assert code in (0, 1, 2)                      # what the pipeline concludes about a deck without nodes is its own
+
+
+def test_a_need_is_printed_with_its_ask_whose_move_and_what_to_do_without_the_none_prefix(capsys):
+    class Item:
+        key, whose = "helpers", "you"
+        ask = "Your routine calls SHEARMOD, which is not in the files you gave me."
+        default = "None. Put the file that defines SHEARMOD beside your UMAT."
+
+    check.print_need(Item(), extra="(Give the folder with --dependency-root FOLDER.)")
+    out = capsys.readouterr().out
+    assert "I NEED ONE THING FROM YOU" in out and "Whose move: you." in out
+    assert "Next: Put the file that defines SHEARMOD beside your UMAT. (Give the folder with --dependency-root FOLDER.)" in out
+    Item.whose = "this program"
+    check.print_need(Item())
+    assert "REFUSED" in capsys.readouterr().out

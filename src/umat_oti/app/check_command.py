@@ -253,7 +253,11 @@ def print_need(item, *, extra: str = "") -> None:
     print(f"\n{bar}\n{header}\n{bar}")
     print(item.ask)
     print(f"Whose move: {item.whose or 'you'}.")
-    print(f"Next: {item.default}" + (f" {extra}" if extra else ""))
+    # the scanner states "If you say nothing: None. <what to do>"; here it is just what to do
+    default = re.sub(r"^\s*none[.:]\s*", "", str(item.default), flags=re.IGNORECASE)
+    if extra and extra in default:
+        extra = ""
+    print(f"Next: {default}" + (f" {extra}" if extra else ""))
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -314,8 +318,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     extra = TEXT["template_written"].format(path=path) + " " + TEXT["template_next"].format(
                         source=source.name, path=path.name)
             else:
-                extra = "(Give the folder with --dependency-root FOLDER.)" if stop[0].key in (
-                    "helpers", "includes", "modules") else ""
+                extra = ("(Give the folder with --dependency-root FOLDER.)"
+                         if stop[0].key in ("helpers", "includes", "modules")
+                         and "--dependency-root" not in str(stop[0].default) else "")
             print_need(stop[0], extra=extra)
             return 3 if (stop[0].whose or "you") == "you" else 2
     else:
