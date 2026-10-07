@@ -276,6 +276,11 @@ DEFAULT_ACQUISITION = (REPO / "paper_results/corpus/companions.json",
                        # accepted sources to the inventory; its acquisition
                        # manifest pins their commits and licences.
                        REPO / "paper_results/discovery/family_round_2026-10-02/"
+                              "companions.json",
+                       # the 2026-10-06 round reached GitLab, SourceForge and
+                       # Zenodo as well as GitHub; its entries name their own
+                       # per-file URL template.
+                       REPO / "paper_results/discovery/family_round_2026-10-06/"
                               "companions.json")
 
 #: The offline evidence about what each refused source is. Written by
@@ -899,6 +904,10 @@ def acquisition_provenance(paths=DEFAULT_ACQUISITION) -> dict:
                                     else "derived from the cache directory name"),
                 "license_spdx": str(entry.get("license_spdx") or ""),
                 "license_by_path": list(entry.get("license_by_path") or []),
+                # Hosts other than GitHub: the acquisition recorded how to
+                # build the per-file URL and which pin kind the commit is.
+                "blob_url_template": str(entry.get("blob_url_template") or ""),
+                "pin_kind": str(entry.get("pin_kind") or ""),
             }
     return found
 
@@ -932,6 +941,11 @@ def _acquisition_url(source_id: str, provenance: dict) -> tuple:
     if not entry or not entry.get("commit"):
         return "", "no commit was recorded for this repository"
     quoted = "/".join(quote(part) for part in rest.split("/"))
+    if entry.get("blob_url_template"):
+        return (entry["blob_url_template"].replace("{path}", quoted),
+                f"built from the acquisition's recorded URL template for "
+                f"{entry.get('slug', repo_dir)} ({entry.get('pin_kind') or 'pin'} "
+                f"{entry['commit'][:12]})")
     return (f"https://github.com/{entry['slug']}/blob/{entry['commit']}/{quoted}",
             f"reconstructed from the commit the acquisition pinned "
             f"({entry['commit'][:12]}), whose owner/repo was "

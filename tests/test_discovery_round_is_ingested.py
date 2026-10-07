@@ -67,15 +67,20 @@ def test_csv_and_json_agree_and_the_summary_counts_the_rows():
     csv_sources = [r["source"] for r in _inventory_csv()]
     json_sources = [r["source"] for r in payload["rows"]]
     assert csv_sources == json_sources
-    assert len(set(csv_sources)) == len(csv_sources) == 405
+    assert len(set(csv_sources)) == len(csv_sources) == 419
     assert csv_sources == sorted(csv_sources, key=ingest_tool._order)
     summary = payload["summary"]
-    assert summary["sources"] == 405
-    assert sum(summary["by_stage"].values()) == 405
+    assert summary["sources"] == 419
+    assert sum(summary["by_stage"].values()) == 419
     assert summary["transformed"] == summary["by_stage"]["transformed"]
     (entry,) = [r for r in summary["rounds_ingested"]
                 if r["round"].endswith("family_round_2026-10-02")]
     assert entry["added"] == 14
+    (later,) = [r for r in summary["rounds_ingested"]
+                if r["round"].endswith("family_round_2026-10-06")]
+    assert later["added"] == 14
+    assert later["acceptance_sha256"] == hashlib.sha256(
+        (REPO / "paper_results/discovery/family_round_2026-10-06/acceptance.json").read_bytes()).hexdigest()
     assert entry["acceptance_sha256"] == hashlib.sha256(
         (ROUND / "acceptance.json").read_bytes()).hexdigest()
 
@@ -169,3 +174,20 @@ def test_a_fresh_inventory_gets_exactly_the_accepted_rows(tmp_path):
     assert sorted(added) == sorted(accepted)
     assert (inventory / "discovery_triage.csv").read_bytes() == \
         (INVENTORY / "discovery_triage.csv").read_bytes()
+
+
+def test_a_non_github_source_gets_a_url_on_its_own_host_at_its_pin():
+    """The 2026-10-06 round reached GitLab, SourceForge and Zenodo: a derived
+    github.com URL for them would name a file that does not exist there."""
+    import build_corpus_registry as registry_tool
+    provenance = registry_tool.acquisition_provenance(registry_tool.DEFAULT_ACQUISITION)
+    accepted = json.loads((REPO / "paper_results/discovery/family_round_2026-10-06/"
+                           "acceptance.json").read_text(encoding="utf-8"))["accepted"]
+    hosts = {"gitlab.com": "https://gitlab.com/", "sourceforge.net": "https://svn.code.sf.net/",
+             "zenodo.org": "https://zenodo.org/", "github.com": "https://github.com/"}
+    for entry in accepted:
+        url, how = registry_tool._acquisition_url(entry["source"], provenance)
+        assert url.startswith(hosts[entry["host"]]), (entry["source"], url)
+        assert provenance[entry["source"].split("/", 1)[0]]["commit"] == entry["commit"]
+        if entry["host"] != "github.com":
+            assert "template" in how

@@ -49,7 +49,8 @@ def _root(flag: str | None, env: str, default: Path) -> Path:
 #: default, so the harness fingerprint does not move for a data path.
 ACQUISITION_MANIFESTS = ("paper_results/corpus/companions.json",
                          "paper_results/corpus/companions_wave2.json",
-                         "paper_results/discovery/family_round_2026-10-02/companions.json")
+                         "paper_results/discovery/family_round_2026-10-02/companions.json",
+                         "paper_results/discovery/family_round_2026-10-06/companions.json")
 
 
 def main(argv=None) -> int:
