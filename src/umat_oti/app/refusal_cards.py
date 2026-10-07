@@ -39,7 +39,7 @@ PROGRAM = "this program"
 #: Every command-line flag the cards name. A test asserts each one exists.
 FLAGS_USED = ("--dependency-root",
               "--material-config", "--material-discovery-root",
-              "--abaqus-experiment")
+              "--abaqus-experiment", "--peak", "--props")
 
 
 @dataclass(frozen=True)
@@ -390,14 +390,19 @@ def _no_constants(text, state):
         "input file with a *USER MATERIAL block next to the UMAT.")
 
 
+_FIND_UNSET = ("To find the line, compile your original with "
+               "`gfortran -g -fbacktrace -finit-real=snan -ffpe-trap=invalid` and run it: "
+               "it stops at the first read of the unset value and prints the line.")
+
+
 def _undefined(text, state):
     return (
         "The routine reads a value it never sets, so its answer changes "
         "with whatever happens to be in memory and there is no single "
         "answer to check against.",
         AUTHOR,
-        "Nothing to supply. The author has to initialise that variable; if "
-        "you know which one it is, set it in a copy and run again.")
+        "The author has to give that variable a starting value. " + _FIND_UNSET
+        + " Set it in a copy and run again, or send the line to the author.")
 
 
 RULES: tuple = (
@@ -466,7 +471,10 @@ STATE_CARDS: dict = {
         "Give the file that holds the UMAT."),
     "published_stub_no_constitutive_content": _c(
         "This file is a template with no material in it.", AUTHOR,
-        "Fill in the material first; there is nothing to check yet."),
+        "Ask the author for the finished routine, or write the material in "
+        "yourself: set STRESS and DDSDDE from DSTRAN and PROPS inside the "
+        "routine. Then run the same command again; until then there is "
+        "nothing to check."),
     "incomplete_or_corrupt_source": _c(
         "The file does not build as published.", AUTHOR,
         "Fix the first compiler error in a copy, or ask the author for a "
@@ -474,7 +482,7 @@ STATE_CARDS: dict = {
     "undefined_in_original": _c(
         "The routine reads a value it never sets, so its answer is not "
         "repeatable.", AUTHOR,
-        "The author has to initialise that value."),
+        "The author has to give that value a starting value. " + _FIND_UNSET),
     "waits_for_input": _c(
         "The routine stops to ask for keyboard input, which a batch run "
         "cannot give.", AUTHOR,
@@ -547,7 +555,12 @@ STATE_CARDS: dict = {
         "The extra comparison that would settle a small difference in "
         "stresses did not run, so the stresses cannot be called equal.",
         PROGRAM,
-        "Nothing is wrong with your file. Treat the result as not verified."),
+        "Nothing is wrong with your file and you cannot settle this from "
+        "your side; treat the result as not verified. The maintainers' move: "
+        "run this one source again on its own with "
+        "tools/verify_store_in_abaqus.py, filtered to its name, and read the "
+        "control record in the report. To hand it over, send the report "
+        "folder with the outcome name shown at the top of the report."),
     "derivative_truncated": _c(
         "Part of the derivative is dropped on the way to the stress, so the "
         "derivatives may be incomplete.", PROGRAM,
@@ -555,9 +568,13 @@ STATE_CARDS: dict = {
         "report folder to the maintainers."),
     "tangent_not_verified": _c(
         "The numerical check of the stiffness derivatives did not settle.",
-        PROGRAM,
-        "The stresses agreed. Treat the derivatives as unchecked, or run a "
-        "stronger check with other step sizes."),
+        YOU,
+        "The stresses agreed and no derivative disagreed; too few load states "
+        "could be judged. Run your command again over other strain ranges: "
+        "add --peak 0.005, then --peak 0.05 (--peak needs --props with your "
+        "constants), and compare. A derivative judged at one range is checked "
+        "at that range only. If none settles, treat the derivatives as "
+        "unchecked and send the report folder to the maintainers."),
     "not_attempted": _c(
         "This step was not reached.", YOU,
         "Run the command again once the earlier problem is fixed."),

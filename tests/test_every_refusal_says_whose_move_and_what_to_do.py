@@ -76,11 +76,14 @@ def test_no_card_uses_expert_vocabulary():
     # Routine names quoted from the user's own file (STIFFNESMATRIX, ISO_C_BINDING)
     # are theirs, not our vocabulary: strip them before judging the wording.
     texts = [re.sub(r"\b[A-Z][A-Z0-9_]{2,}\b", "NAME", t) for t in texts]
+    # a command typed verbatim (in backticks) is not wording
+    texts = [re.sub(r"`[^`]*`", "COMMAND", t) for t in texts]
     assert jargon_in(texts) == []
 
 
 def test_the_flags_a_card_names_are_real_command_line_flags():
-    cli = (REPO / "src" / "umat_oti" / "cli.py").read_text()
+    cli = ((REPO / "src" / "umat_oti" / "cli.py").read_text()
+           + (REPO / "src" / "umat_oti" / "app" / "check_command.py").read_text())
     for flag in FLAGS_USED:
         assert f'"{flag}"' in cli, flag
     used = {f for f in FLAGS_USED}
@@ -101,3 +104,26 @@ def test_nicos_worst_refusals_name_whose_move_and_the_real_flag():
     assert "TENSOR" in m.sentence and "--dependency-root" in m.next_action
     d = card_for("missing_material_data", "x publishes no deck with a *USER MATERIAL block, so")
     assert d.whose_move == "you" and "--material-config" in d.next_action
+
+
+CONCRETE = {
+    "primal_control_not_decided": ("this program", "tools/verify_store_in_abaqus.py"),
+    "tangent_not_verified": ("you", "--peak"),
+    "undefined_in_original": ("the author of this UMAT", "`gfortran -g -fbacktrace -finit-real=snan -ffpe-trap=invalid`"),
+    "published_stub_no_constitutive_content": ("the author of this UMAT", "STRESS and DDSDDE"),
+}
+
+
+@pytest.mark.parametrize("state", sorted(CONCRETE))
+def test_four_weak_cards_now_name_whose_move_and_one_concrete_step(state):
+    whose, step = CONCRETE[state]
+    card = card_for(state, "")
+    assert card.whose_move == whose
+    assert step in card.next_action, card.next_action
+    assert len(card.next_action.split()) >= 25, "a step, not a sentence"
+
+
+def test_the_specific_undefined_rule_gives_the_same_concrete_step():
+    card = card_for("undefined_in_original", "undefined_in_original (D-12): STRESS(1) differ between the original built with gfortran -finit zero / snan / inf.")
+    assert card.rule.startswith("rule:") and card.whose_move == "the author of this UMAT"
+    assert "-finit-real=snan" in card.next_action and "-fbacktrace" in card.next_action
