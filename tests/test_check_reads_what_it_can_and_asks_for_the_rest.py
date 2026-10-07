@@ -289,7 +289,6 @@ def test_details_prints_every_item_with_its_lines_and_the_default_is_the_short_v
     deck.parent.mkdir()
     deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO"))
     monkeypatch.chdir(j2.parent)
-    monkeypatch.setattr(check, "preflight_stub", None, raising=False)
     for flags, long in (([], False), (["--details"], True)):
         # stop right after the intake: the helper is missing in this copy
         source = j2.parent / f"u{len(flags)}.f"

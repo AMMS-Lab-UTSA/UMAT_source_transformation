@@ -793,6 +793,10 @@
   {
    "commit": "0c2705f",
    "reason": "New behaviour: check reads the files with Ada's intake scanner first and stops at the first blocking item; 'exits 3' and 'refusal' in its message describe the new exit code and the cards, not a corrected result."
+  },
+  {
+   "commit": "66c5536",
+   "reason": "Regeneration of the intake scanner's golden files after its wording changed (not mine; mapped here so the audit is complete): 'refused_missing_helper_reads_temp' in its message is a golden's file name, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
