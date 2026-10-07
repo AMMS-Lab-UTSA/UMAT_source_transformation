@@ -133,7 +133,7 @@ def banner_for_card(state: str, whose: str) -> str:
     return _CARD_BANNER[card_colour(state, whose)]
 
 
-def verdict_for(record: Any) -> dict:
+def verdict_for(record: Any, elsewhere: Optional[str] = None) -> dict:
     """The verdict as data: colour, headline, lines and the one next action."""
     flat = _record_for_gates(record)
     summary = verified_summary(flat)
@@ -176,7 +176,7 @@ def verdict_for(record: Any) -> dict:
                           "this 'derivatives checked numerically', not "
                           "'verified'.")
             else:
-                why = summary["why not"] or "the six checks were not all measured"
+                why = summary["why not"] or "the checks the word 'verified' needs were not all measured"
                 sentence = ("A result was produced, but it cannot be called "
                             f"verified: {why}")
                 action = ("Run the full check (with Abaqus) before quoting "
@@ -187,12 +187,22 @@ def verdict_for(record: Any) -> dict:
                                        card.next_action)
             colour = card_colour(state, whose)
 
+    headline = None
+    if state == "unsupported_formulation" and elsewhere and colour != "green":
+        # The file is not broken: this quick check cannot take its kind of model, and the full
+        # corpus run verified the exact file another way. Not red (red is a real failure).
+        colour, whose = "amber", "nobody (nothing is broken)"
+        sentence = ("This quick check covers small-deformation solid models only; the full corpus run "
+                    f"verified this exact file another way (run {elsewhere}).")
+        action = ("Nothing to do: the corpus result stands for this exact file. For a quick check of "
+                  "this material, set it up as a small-deformation 3D solid and run again.")
+        headline = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS QUICK CHECK"
     assert colour != "green" or (may_say_verified(flat) and state in ("", "fully_verified"))
     return {
         "colour": colour,
-        "headline": ("AMBER: DERIVATIVES CHECKED, ABAQUS NOT RUN"
-                     if state == "derivative_check_passed_abaqus_not_run"
-                     else _COLOUR_WORD[colour]),
+        "headline": (headline or ("AMBER: DERIVATIVES CHECKED, ABAQUS NOT RUN"
+                                  if state == "derivative_check_passed_abaqus_not_run"
+                                  else _COLOUR_WORD[colour])),
         "sentence": sentence,
         "whose move": whose,
         "next action": action,
@@ -205,18 +215,19 @@ def verdict_for(record: Any) -> dict:
     }
 
 
-def render_verdict(record: Any) -> str:
+def render_verdict(record: Any, elsewhere: Optional[str] = None) -> str:
     """The one-page verdict as plain text."""
-    v = verdict_for(record)
+    v = verdict_for(record, elsewhere)
     bar = "=" * 70
-    out = [bar, v["headline"], bar, v["sentence"]]
-    out += v["caution"]
-    if v["colour"] != "green":
+    if v["colour"] == "green":
+        out = [bar, v["headline"], bar, v["sentence"]] + v["caution"] + [f"Next: {v['next action']}"]
+    else:
+        # the one next step first, then what happened and whose move it is
+        out = [bar, v["headline"], bar, f"Next: {v['next action']}", v["sentence"]] + v["caution"]
         out.append(f"Whose move: {v['whose move']}.")
-    out.append(f"Next: {v['next action']}")
     if v["terminal state"] == "derivative_check_passed_abaqus_not_run":
         out.append("Abaqus checks: not run.")
-        out.append('"Verified" needs all six Abaqus checks: ' + VERIFIED_SENTENCE)
+        out.append('The word "verified" needs all the Abaqus checks: ' + VERIFIED_SENTENCE)
         return "\n".join(out)
     def names(items) -> str:
         return "; ".join(GATE_PLAIN.get(x, str(x).replace("_", " ")) for x in items)
@@ -224,7 +235,7 @@ def render_verdict(record: Any) -> str:
     six = list(GATE_PLAIN)
     held, broke, never = v["gates that hold"], v["gates that did not hold"], v["gates never established"]
     if _n(never) == 6 and not _n(held) and not _n(broke):
-        out.append("None of the six checks that 'verified' needs was run here (they need Abaqus): "
+        out.append("None of the checks the word 'verified' needs was run here (they all need Abaqus): "
                    + names(six) + "."
                    + (" What is said above about the stresses and the derivatives comes from the numerical "
                       "check made without Abaqus, so it does not contradict this line."

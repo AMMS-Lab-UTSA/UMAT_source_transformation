@@ -187,13 +187,13 @@ def facts(out: Path) -> dict:
 
 
 def render(summary: dict, out: Path, *, state: str = "", reason: str = "",
-           stage: str = "") -> str:
+           stage: str = "", elsewhere: Optional[str] = None) -> str:
     """The text a person reads at the end: verdict first, then what was found."""
     out = Path(out)
     record = dict(summary)
     if state:
         record["terminal_state"], record["reason"] = state, reason
-    lines = [render_verdict(record), ""]
+    lines = [render_verdict(record, elsewhere), ""]
     found = facts(out)
     if stage and stage in _PLAIN_STAGE:
         lines.append(f"The run stopped while {_PLAIN_STAGE[stage]}.")

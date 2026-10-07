@@ -68,7 +68,7 @@ NEEDS: dict[str, dict[str, str]] = {
         "default": "none: pick the file that defines SUBROUTINE UMAT.",
         "whose": "you or the author"},
     "ntens": {
-        "ask": "The files do not say how many stress components the routine is called with.",
+        "ask": "The files do not say how many stress values per point the routine is called with.",
         "default": "6 (a solid three-dimensional element), which is the usual.",
         "whose": "you"},
     "element": {
@@ -91,8 +91,8 @@ NEEDS: dict[str, dict[str, str]] = {
         "default": "none: add the file next to the UMAT, or give its folder.",
         "whose": "you"},
     "modules": {
-        "ask": "Your routine uses the module {names}, which is not in the files you "
-               "gave me.",
+        "ask": "Your routine uses the shared-definitions file {names} (a Fortran 'module'), "
+               "which is not in the files you gave me.",
         "default": "none: add the file that defines the module next to the UMAT.",
         "whose": "you"},
     "temperature": {
@@ -702,8 +702,8 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
                  {f"PROPS({i})": n for i, (n, _l, _t) in sorted(names.items())},
                  [_quote(name, l, t) for i, (n, l, t) in sorted(names.items())][:4]))
     else:
-        slots = (f"its {props_count} constants (PROPS in the source)" if props_count > 1 else
-                 "its constant (PROPS in the source)" if props_count else "its constants (PROPS in the source)")
+        slots = (f"its {props_count} constants (read from the material definition)" if props_count > 1 else
+                 "its constant (read from the material definition)" if props_count else "its constants (read from the material definition)")
         add(Item("props_names", "Constants (names)", DEFAULT, slots,
                  note="the routine does not write NAME = PROPS(k) for its constants"))
 
@@ -740,7 +740,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
                  else "its constant" if props_count else "its constants")
         if names:
             slots += ": " + ", ".join(f"{n}" for _i, (n, _l, _t) in sorted(names.items()))
-        slots += " (PROPS in the source)"
+        slots += " (read from the material definition)"
         why = ""
         if parsed is not None and parsed["problems"]:
             why = "; ".join(parsed["problems"])[:300]

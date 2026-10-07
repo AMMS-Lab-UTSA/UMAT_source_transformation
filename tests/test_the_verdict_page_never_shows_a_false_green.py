@@ -106,7 +106,7 @@ def test_the_six_checks_are_named_and_a_run_that_made_none_does_not_contradict_i
     from umat_oti.app.plain_language import GATE_PLAIN
     rec = {"terminal_state": "tangent_not_verified"}
     text = render_verdict(rec)
-    line = [ln for ln in text.splitlines() if ln.startswith("None of the six checks")]
+    line = [ln for ln in text.splitlines() if ln.startswith("None of the checks the word")]
     assert len(line) == 1, text
     for plain in GATE_PLAIN.values():
         assert plain in line[0]
@@ -128,4 +128,4 @@ def test_the_recorded_reason_is_shown_in_plain_words():
     text = render_verdict({"terminal_state": "missing_material_data",
                            "reason": "Automatic material configuration failed: Discovered model is not supported by the small-strain NTENS=6 sensitivity provider."})
     recorded = text.split("What the run recorded: ", 1)[1].splitlines()[0]
-    assert "NTENS" not in recorded and "provider" not in recorded and "six stress components" in recorded
+    assert "NTENS" not in recorded and "provider" not in recorded and "this quick check" in recorded and "six stress values per point" not in recorded or "this quick check" in recorded

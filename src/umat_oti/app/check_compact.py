@@ -23,7 +23,7 @@ DETAILS_HINT = ("The full list, with the lines quoted: add --details, or read "
 #: Items whose value is a plain fact the reader wants to see at a glance when
 #: it was not found in the files (so it is an assumption they may change).
 _ASSUMED_KEYS = ("ntens", "element", "kinematics", "nstatv", "temperature")
-_SHORT = {"ntens": "stress components", "element": "element",
+_SHORT = {"ntens": "stress values per point", "element": "element",
           "kinematics": "small strain", "nstatv": "state variables",
           "temperature": "temperature", "quantity": "differentiate"}
 
@@ -137,8 +137,6 @@ def compact_intake(found: Any) -> str:
         for item in needed:
             lines.append(f"  - {item.ask}")
             lines.append(f"    If you say nothing: {item.default}")
-    else:
-        lines.append("Needs you: nothing.")
     lines.extend(amber_notes(found))
     lines.append(DETAILS_HINT)
     return "\n".join(lines) + "\n"

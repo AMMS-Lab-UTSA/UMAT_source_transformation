@@ -408,11 +408,12 @@ EXPERT_TERMS: tuple[str, ...] = _JARGON + _stage_names()
 #: Longest first when applied, so that ".inp file" becomes "Abaqus input file"
 #: rather than "Abaqus input filefile".
 PLAIN_PHRASES: tuple[tuple[str, str], ...] = (
-    ("small-strain NTENS=6 sensitivity provider", "small-strain derivative engine for six stress components"),
-    ("NTENS=6", "six stress components"),
-    ("sensitivity provider", "derivative engine"),
-    ("standalone provider", "standalone derivative engine"),
-    ("by the provider", "by the derivative engine"),
+    ("small-strain NTENS=6 sensitivity provider", "this quick check, which handles small-deformation solid models only"),
+    ("NTENS=6", "six stress values per point"),
+    ("sensitivity provider", "this quick check"),
+    ("standalone provider", "this quick check"),
+    ("by the provider", "by this quick check"),
+    ("informativeness", "whether the test moved the material enough"),
     ("consistent tangent", "stiffness"),
     (".inp file", "Abaqus input file"),
     ("an .inp", "an Abaqus input"),

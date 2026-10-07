@@ -86,7 +86,7 @@ umat-oti check UMAT.for [DECK.inp | FOLDER] [options]
   --props "E=210000 nu=0.3"   the constants, if there is no deck (names from the source, or in order)
   --peak 0.02            how far to strain the material: 0.02 is 2 % (default 0.02; goes with --props)
   --material-config FILE a material file (a template is written when none is found)
-  --dependency-root DIR  a folder with helper routines the UMAT calls
+  --dependency-root DIR  a folder with the extra subroutines the UMAT calls
   --out DIR              where results go (default: <umat name>_check, next to the UMAT)
   --template             write a commented material file to fill in, when the constants are missing
   --details              print every item the files gave, with the lines quoted (always in intake.md)
@@ -120,15 +120,38 @@ def _free_name(path: Path) -> Path:
     return candidate
 
 
+#: What this run has said so far, so the corpus-record line can come AFTER the final verdict.
+_RUN: dict = {}
+
+
+def _record_final(colour: str, why: str) -> None:
+    _RUN["final"] = colour
+    _RUN["why"] = why
+
+
 def print_card(state: str, reason: str, *, header: Optional[str] = None) -> None:
-    from umat_oti.app.verdict_page import banner_for_card
+    from umat_oti.app.verdict_page import banner_for_card, card_colour
 
     card = card_for(state, reason)
+    state = state_after_reading(state, reason)
     bar = "=" * 70
-    print(f"\n{bar}\n{header or banner_for_card(state_after_reading(state, reason), card.whose_move)}\n{bar}")
+    elsewhere = _RUN.get("elsewhere")
+    if state == "unsupported_formulation" and elsewhere and header is None:
+        banner, colour = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS QUICK CHECK", "amber"
+        print(f"\n{bar}\n{banner}\n{bar}")
+        print("Next: Nothing to do: the corpus result stands for this exact file. For a quick check of this "
+              "material, set it up as a small-deformation 3D solid and run again.")
+        print("This quick check covers small-deformation solid models only; the full corpus run verified "
+              f"this exact file another way (run {elsewhere}).")
+        print("Whose move: nobody (nothing is broken).")
+        _record_final(colour, "this quick check covers small-deformation solid models only")
+        return
+    banner = header or banner_for_card(state, card.whose_move)
+    print(f"\n{bar}\n{banner}\n{bar}")
+    print(f"Next: {card.next_action}")
     print(card.sentence)
     print(f"Whose move: {card.whose_move}.")
-    print(f"Next: {card.next_action}")
+    _record_final(card_colour(state, card.whose_move), card.sentence)
 
 
 def resolve_deck(source: Path, target: Optional[Path], deck_flag: Optional[Path]) -> tuple:
@@ -247,27 +270,63 @@ def deck_note(deck: Path) -> tuple:
         return "", False
     meaningful = [ln for ln in text.splitlines() if ln.strip() and not ln.lstrip().startswith("**")]
     if not meaningful:
-        return (f"AMBER: The deck {Path(deck).name} is empty (nothing but blank or comment lines), so it gives "
+        return (f"Note: The deck {Path(deck).name} is empty (nothing but blank or comment lines), so it gives "
                 "no constants and no loading. It is not used."), True
     if not intake.contains_user_material(deck):
-        return (f"AMBER: The deck {Path(deck).name} has no *USER MATERIAL block, so it gives no constants "
+        return (f"Note: The deck {Path(deck).name} has no *USER MATERIAL block, so it gives no constants "
                 "(the section of an Abaqus input file that lists a user material's numbers)."), False
     return "", False
 
 
-def print_corpus_line(source: Path, deck: Optional[Path]) -> None:
-    """A separate line when these exact files (UMAT, and deck if given) are in the corpus record.
+def say_unsupported_up_front(found) -> None:
+    """Before anything else: this quick check cannot take this kind of model, though the corpus verified the file.
 
-    Never changes what this command found, and never raises: a missing table or an unreadable
-    file just means no line.
+    Said when the files themselves show a large-deformation model, a number of stress values per
+    point other than six, or an element kind this check cannot run -- and the exact files are
+    fully verified in the corpus record.
     """
+    elsewhere = _RUN.get("elsewhere")
+    if not elsewhere:
+        return
+    facts = found.facts
+    element = found.item("element")
+    if (facts.get("kinematics") == "finite" or facts.get("ntens") not in (None, 6)
+            or (element is not None and element.status == "MISSING")):
+        print("Note: this quick check covers small-deformation solid models only (a large-deformation "
+              "(finite-strain) model, a plane-stress or shell model, or another number of stress values per "
+              f"point is outside it); the full corpus run verified this file another way (run {elsewhere}).")
+
+
+def prepare_corpus_record(source: Path, deck: Optional[Path], *, suppress: bool) -> None:
+    """Look the exact files up now; print nothing until the verdict is out (see :func:`print_corpus_record`).
+
+    ``suppress``: the deck is empty or has no *USER MATERIAL block, so a corpus result for the UMAT
+    alone would describe a different job; nothing from the record is shown then.
+    """
+    _RUN["match"] = None
+    _RUN["elsewhere"] = None
+    if suppress:
+        return
     try:
         from umat_oti.app import verified_lookup
 
         match = verified_lookup.lookup(source, deck)
-        if match is not None:
-            for line in verified_lookup.render(match):
-                print(line)
+        _RUN["match"] = match
+        _RUN["elsewhere"] = verified_lookup.verified_elsewhere(match)
+    except Exception:                                   # a lookup must never stop a check
+        _RUN["match"], _RUN["elsewhere"] = None, None
+
+
+def print_corpus_record() -> None:
+    """The record line, AFTER the final verdict, in words that carry no colour and never read as the verdict."""
+    match, final = _RUN.get("match"), _RUN.get("final")
+    if match is None or final is None:
+        return
+    try:
+        from umat_oti.app import verified_lookup
+
+        for line in verified_lookup.render(match, final=final, why=_RUN.get("why", "")):
+            print(line)
     except Exception:                                   # a lookup must never stop a check
         return
 
@@ -287,18 +346,34 @@ def blocking_items(found, *, constants_supplied: bool) -> list:
 def print_need(item, *, extra: str = "") -> None:
     """The scanner's own plain ask for one blocking item, with who has to move."""
     mine = item.whose in ("you", "")
-    header = "BLUE: I NEED ONE THING FROM YOU" if mine else "RED: REFUSED"
+    elsewhere = _RUN.get("elsewhere")
+    if item.key == "element" and elsewhere:
+        header, colour = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS QUICK CHECK", "amber"
+        item_ask = ("This quick check covers small-deformation solid models only; the full corpus run verified "
+                    f"this exact file another way (run {elsewhere}).")
+    else:
+        header, colour = ("BLUE: I NEED ONE THING FROM YOU", "blue") if mine else ("RED: REFUSED", "red")
+        item_ask = item.ask
     bar = "=" * 70
     print(f"\n{bar}\n{header}\n{bar}")
-    print(item.ask)
-    print(f"Whose move: {item.whose or 'you'}.")
     default = str(item.default)
     if extra and extra in default:
         extra = ""
     print(f"Next: {default}" + (f" {extra}" if extra else ""))
+    print(item_ask)
+    _record_final(colour, item_ask)
+    print(f"Whose move: {item.whose or 'you'}.")
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    """Run ``check``; the corpus-record line, if any, comes last, after the verdict."""
+    _RUN.clear()
+    code = _check(argv)
+    print_corpus_record()
+    return code
+
+
+def _check(argv: Optional[Sequence[str]] = None) -> int:
     args_in = list(sys.argv[1:] if argv is None else argv)
     try:
         args = build_parser().parse_args(args_in)
@@ -335,12 +410,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if deck is None and how == "missing":
         return _fail(f"I cannot find the deck {candidates[0]}.")
 
+    deck_noted = False
     if deck is not None:
         note, unusable = deck_note(deck)
         if note:
             print(note)
+            deck_noted = True
         if unusable:
             deck = None
+    prepare_corpus_record(source, deck, suppress=deck_noted)
 
     # What the files already say, item by item, each with the line it stands on (Ada's scanner).
     scanner = load_scanner()
@@ -359,7 +437,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             sys.stdout.write(compact_intake(found))
         found.write(inputs)
         print(f"(The same, with the lines quoted: {inputs / 'intake.md'}, {inputs / 'intake.json'})")
-        print_corpus_line(source, deck)
+        say_unsupported_up_front(found)
         stop = blocking_items(found, constants_supplied=bool(args.props or args.material_config))
         if stop:
             names = " ".join(f"{k}=<value>" for k in
@@ -382,7 +460,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     else:
         for line in _describe_source(facts, source):
             print(line)
-        print_corpus_line(source, deck)
 
     # The routine first, the material second: the real blocker is the message.
     from umat_oti.app.check_preflight import preflight
@@ -392,7 +469,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print_card(*blocked)
         print(TEXT["where"].format(path=inputs / "preflight"))
         return 2
-    print("  Conversion    the routine's helpers resolve and I can find where it sets "
+    print("  Conversion    the routine's other subroutines are all found and I can find where it sets "
           "stress and stiffness  [ok]")
 
     deck_facts = None
@@ -511,13 +588,24 @@ def finish(summary: dict, out: Path) -> int:
     from umat_oti.app import check_summary
 
     code = int(summary.get("exit_code", 1))
+    elsewhere = _RUN.get("elsewhere")
     if code == 0:
-        text = check_summary.render(summary, out)
+        text = check_summary.render(summary, out, elsewhere=elsewhere)
+        record = dict(summary)
     else:
         state, reason = failure_state(summary)
         text = check_summary.render({k: v for k, v in summary.items() if k not in ("error", "stages")},
                                     out, state=state, reason=reason,
-                                    stage=str(summary.get("failed_stage") or ""))
+                                    stage=str(summary.get("failed_stage") or ""), elsewhere=elsewhere)
+        record = {**{k: v for k, v in summary.items() if k not in ("error", "stages")},
+                  "terminal_state": state, "reason": reason}
+    try:
+        from umat_oti.app.verdict_page import verdict_for
+
+        verdict = verdict_for(record, elsewhere)
+        _record_final(verdict["colour"], verdict["sentence"])
+    except Exception:
+        pass
     print("\n" + text)
     try:
         (Path(out) / "check_summary.txt").write_text(text + "\n", encoding="utf-8")

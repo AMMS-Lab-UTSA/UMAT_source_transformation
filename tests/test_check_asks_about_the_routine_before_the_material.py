@@ -96,7 +96,7 @@ def test_unlocated_anchors_with_an_unread_module_name_the_module_not_the_symptom
     assert "USEs TENSORLIB without defining it" in reason
     from umat_oti.app.refusal_cards import card_for
     card = card_for(state, reason)
-    assert card.rule == "rule:module_use" and "module TENSORLIB" in card.sentence and card.whose_move == "you"
+    assert card.rule == "rule:module_use" and "TENSORLIB (a Fortran 'module')" in card.sentence and card.whose_move == "you"
     # with no module to blame the card is the honest "not supported yet" one
     plain = pre.refusal_from_summary(summary, exit_code=2, succeeded=False)
     assert plain[1].startswith("anchors not located") and card_for(*plain).whose_move == "this program"
