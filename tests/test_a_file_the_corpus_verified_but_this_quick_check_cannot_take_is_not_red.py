@@ -24,7 +24,7 @@ def test_with_a_corpus_result_it_is_amber_says_why_and_names_the_run():
     v = verdict_for(RECORD, "pass23")
     assert v["colour"] == "amber" and v["headline"].startswith("AMBER: VERIFIED ANOTHER WAY")
     page = render_verdict(RECORD, "pass23")
-    assert "covers small-deformation solid models only" in page and "(run pass23)" in page
+    assert "covers small-deformation solid models" in page and "(run pass23)" in page
     assert "RED" not in page and "Nothing to do" in page
     assert "NTENS" not in page and "provider" not in page
 
@@ -50,7 +50,7 @@ def test_the_limit_is_said_up_front_only_for_such_a_file_and_only_with_a_corpus_
     check._RUN["elsewhere"] = "pass23"
     check.say_unsupported_up_front(found)
     out = capsys.readouterr().out
-    assert ("this quick check covers small-deformation solid models only" in out) is says
+    assert ("this check command (which does not run Abaqus) covers small-deformation solid models only" in out) is says
     if says:
         assert "(run pass23)" in out and "finite-strain" in out
     check._RUN.clear()
@@ -65,7 +65,7 @@ def test_the_request_for_an_element_this_check_cannot_run_is_amber_when_the_corp
     check._RUN["elsewhere"] = "pass23"
     check.print_need(item)
     out = capsys.readouterr().out
-    assert "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS QUICK CHECK" in out and "RED" not in out
+    assert "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS CHECK COMMAND" in out and "RED" not in out
     assert check._RUN["final"] == "amber"
     check._RUN.clear()
     check.print_need(item)

@@ -21,7 +21,7 @@ from typing import Optional
 
 from umat_oti.app.verdict_page import verdict_for
 
-__all__ = ["Match", "lookup", "find_rows", "judge", "render", "verified_elsewhere", "table_path", "load_table", "record_of"]
+__all__ = ["Match", "lookup", "find_rows", "judge", "render", "verified_elsewhere", "verified_with_other_deck", "table_path", "load_table", "record_of"]
 
 _GATE_WORD = {"true": True, "false": False}
 _COLOUR = {"green": "GREEN", "amber": "AMBER", "blue": "BLUE", "red": "RED"}
@@ -65,6 +65,7 @@ class Match:
     deck_compared: bool        # the deck's bytes were compared too
     colour: str                # "green" only if EVERY matched row is green
     verdicts: list            # verdict_for of each row
+    deck_differs: bool = False  # the UMAT matches, the deck given does not: the rows are those of OTHER decks
 
 
 def find_rows(table: dict, sha: str, deck_sha: Optional[str] = None) -> list:
@@ -95,6 +96,15 @@ def lookup(umat: Path, deck: Optional[Path] = None, *, table: Optional[dict] = N
     except OSError:
         return None
     rows = find_rows(table, sha, deck_sha)
+    if not rows and deck_sha is not None:
+        other = find_rows(table, sha, None)
+        if other:
+            # same UMAT bytes, another deck: the result belongs to that deck and never to this run
+            matched = judge(other, deck_compared=True)
+            matched.deck_differs = True
+            matched.colour = "amber" if matched.colour == "green" else matched.colour
+            return matched
+        return None
     if not rows:
         return None
     return judge(rows, deck_compared=deck_sha is not None)
@@ -105,10 +115,21 @@ def _date(table: dict) -> str:
 
 
 def verified_elsewhere(match: Optional[Match]) -> Optional[str]:
-    """The run id when EVERY matched row is fully verified (green by the verdict rule), else None."""
-    if match is not None and match.colour == "green":
+    """The run id when the exact files are fully verified in the record (green by the verdict rule), else None."""
+    if match is not None and match.colour == "green" and not match.deck_differs:
         return ", ".join(sorted({r["run"] for r in match.rows})) or None
     return None
+
+
+def verified_with_other_deck(match: Optional[Match]) -> Optional[tuple]:
+    """``(run id, deck names)`` when the UMAT bytes match, the deck does not, and every such row is fully verified."""
+    if match is None or not match.deck_differs:
+        return None
+    if not all(r["state"] == "fully_verified" for r in match.rows):
+        return None
+    runs_ = ", ".join(sorted({r["run"] for r in match.rows}))
+    names = sorted({Path(r["deck"]).name for r in match.rows if r.get("deck")})
+    return (runs_, names)
 
 
 def _clause(text: str, limit: int = 170) -> str:
@@ -118,7 +139,8 @@ def _clause(text: str, limit: int = 170) -> str:
     return first[:limit]
 
 
-def render(match: Match, *, final: Optional[str] = None, why: str = "", table: Optional[dict] = None) -> list:
+def render(match: Match, *, final: Optional[str] = None, why: str = "", table: Optional[dict] = None,
+           deck_name: str = "") -> list:
     """The record line, printed AFTER the verdict of this run and never as a verdict.
 
     It carries no colour word: the colour of ``check`` is the one on the verdict banner. ``final``
@@ -128,30 +150,41 @@ def render(match: Match, *, final: Optional[str] = None, why: str = "", table: O
     table = table if table is not None else load_table()
     date = _date(table)
     rows, verdicts = match.rows, match.verdicts
-    runs = ", ".join(sorted({r["run"] for r in rows}))
+    runs = ", ".join(sorted({r["run"] for r in rows if r["run"]}))
+    when_all = f"run {runs}, {date}" if runs else date
+    when_one = (f"run {rows[0]['run']}, {date}" if rows[0]["run"] else date) if len(rows) == 1 else when_all
+    if match.deck_differs:
+        decks = sorted({Path(r["deck"]).name for r in rows if r.get("deck")})
+        names = ", ".join(decks) or "another deck"
+        ok = all(r["state"] == "fully_verified" for r in rows)
+        what = "was verified" if ok else "is in the record"
+        states = "" if ok else " as " + "/".join(sorted({r["state"] for r in rows}))
+        return [f"On record: this file {what} with a different deck: {names} ({when_all}){states}. "
+                f"Your deck{(' ' + deck_name) if deck_name else ''} is not that one, so that result does not apply to this run.",
+                "  (the UMAT matches the record byte for byte; the deck does not.)"]
     how = ("the UMAT and the deck match the record byte for byte" if match.deck_compared
            else "the UMAT matches the record byte for byte; no deck was given")
     if len(rows) == 1:
         row, verdict = rows[0], verdicts[0]
         if match.colour == "green":
             if final == "green":
-                return [f"On record: this exact file was also verified earlier (run {row['run']}, {date}); {how}."]
-            reason = _clause(why) or "this quick check does not run the Abaqus checks"
-            return [f"On record: this exact file was verified earlier (run {row['run']}, {date}: {row['state']}). "
+                return [f"On record: this exact file was also verified earlier ({when_one}); {how}."]
+            reason = _clause(why) or "this check command does not run the Abaqus checks"
+            return [f"On record: this exact file was verified earlier ({when_one}: {row['state']}). "
                     f"This run could not repeat it: {reason}.",
                     f"  ({how}.)"]
-        return [f"On record: this exact file ended as {row['state']} in run {row['run']} ({date}), not as verified. "
+        return [f"On record: this exact file ended as {row['state']} ({when_one}), not as verified. "
                 f"{verdict['sentence']}",
                 f"  ({how}.)"]
     states = sorted({r["state"] for r in rows})
     count = sum(1 for r in rows if r["state"] == "fully_verified")
     if match.deck_compared:
         head = (f"On record: these exact files appear {len(rows)} times in the corpus record, in different folders "
-                f"(run {runs}, {date}): {count} verified, states: {', '.join(states)}.")
+                f"({when_all}): {count} verified, states: {', '.join(states)}.")
     else:
-        head = (f"On record: this exact UMAT file appears {len(rows)} times in the corpus record (run {runs}, {date}), "
+        head = (f"On record: this exact UMAT file appears {len(rows)} times in the corpus record ({when_all}), "
                 f"with different decks: {count} verified, states: {', '.join(states)}. "
                 "Give the deck you use (it is compared byte for byte) to see which one applies.")
     if match.colour == "green" and final != "green":
-        head += f" This run could not repeat it: {_clause(why) or 'this quick check does not run the Abaqus checks'}."
+        head += f" This run could not repeat it: {_clause(why) or 'this check command does not run the Abaqus checks'}."
     return [head, f"  ({how}.)"]

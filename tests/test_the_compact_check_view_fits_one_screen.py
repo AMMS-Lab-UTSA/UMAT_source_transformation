@@ -54,7 +54,7 @@ def test_what_still_needs_the_user_is_never_hidden(tmp_path):
     found = _scan(tmp_path)
     text = compact_intake(found)
     assert found.needs_user(), "the toy has no deck, so the constants are needed"
-    assert "Needs you:" in text and found.item("props_values").ask in text
+    assert "Needs you" in text and found.item("props_values").ask in text
 
 
 def test_found_constants_show_names_values_and_where_from(tmp_path):

@@ -48,6 +48,12 @@ def build(registry: Path, cache: Path, previous: dict) -> dict:
             "gates": {g: rec.get("gate_" + g) for g in GATES},
             "all_gates_true": bool(rec.get("verified_on_every_gate")),
             "reason": str(rec.get("reason") or rec.get("not_verified_reason") or "")[:600]})
+    # a row with no verification record of its own (never reached the Abaqus gate) was still judged in the
+    # registry's own pass: carry that pass id instead of a blank
+    own = [r["run"] for r in rows if r["run"]]
+    registry_run = max(set(own), key=own.count) if own else ""
+    for r in rows:
+        r["run"] = r["run"] or registry_run
     rows.sort(key=lambda r: (r["sha256"], r["deck"], r["source_id"]))
     return {"schema": SCHEMA, "registry_generated": data["generated"],
             "registry_sha256": sha256_of(registry), "records": len(rows), "rows": rows}
