@@ -627,6 +627,19 @@
    "tests": [
     "tests/test_check_asks_about_the_routine_before_the_material.py::test_unlocated_anchors_with_an_unread_module_name_the_module_not_the_symptom"
    ]
+  },
+  {
+   "commit": "9626bdc",
+   "bug": "The intake scanner took a *USER MATERIAL block's numbers from the pipeline's deck reader, which zero-fills a short data line and keeps only the first line of a block Abaqus rejects, so CONSTANTS=4 over two lines came back as SIGY0=0, H=0 -- a silent wrong value. It now reads the block card by card by the rules measured on Abaqus 2021.HF5 and shows an unwritten slot as not written, never as 0.",
+   "tests": [
+    "tests/test_intake_scan.py::test_two_short_lines_for_a_block_that_fits_on_one_are_never_read_as_zeros",
+    "tests/test_intake_scan.py::test_a_short_line_leaves_the_slots_it_does_not_write_unwritten_not_zero",
+    "tests/test_intake_scan.py::test_constants_over_two_lines_with_a_trailing_comma_are_read_in_order",
+    "tests/test_intake_scan.py::test_a_comment_line_between_the_data_lines_is_skipped",
+    "tests/test_intake_scan.py::test_a_blank_line_between_the_data_lines_is_not_readable",
+    "tests/test_intake_scan.py::test_a_short_first_line_keeps_the_second_line_in_its_own_card",
+    "tests/test_intake_scan.py::test_the_card_reader_alone_on_the_measured_cases"
+   ]
   }
  ],
  "excluded": [
