@@ -55,3 +55,25 @@ guard in verify_one is kept and is the canary: a transform at the wrong NTENS is
 refused, never run.
 
 Canary: a deliberately wrong NTENS mapping must fail (tests/test_transform_ntens_follows_the_deck.py).
+
+## G2c. Abaqus-supplied utilities are linked in the offline drivers, from measured semantics
+
+Written 2026-10-07 after the survey (corpus_campaign/batches/B17/hopper_g2/utilities.md)
+and the measurements of the real solver, and BEFORE the all-row re-run with the stubs.
+
+Rule:
+1. A utility the solver provides is stubbed in the offline replay drivers only if its
+   semantics are documented or have been measured against the real Abaqus on a
+   one-element job, and the stub is checked against a hand-computed value. The stub
+   must not hide or invent an uninitialised read: it writes every output it owns, and
+   where the solver's behaviour cannot be reproduced (a repeated principal value with
+   a shear, whose order is algorithm-dependent) it STOPS instead of returning a guess.
+2. A utility with no documented semantics (ptk*, the SMA* wrappers) is not stubbed;
+   the source keeps its "not established" verdict with that reason.
+3. Applies to every source: D-12 is re-run offline over every row that reaches it,
+   with and without the new stubs. Sources that newly reach the gate are NOT counted
+   passed; they are reported as "106 of 242 plus j" beside "106 of 242 as published",
+   and pass24 decides them.
+
+Canary: a source that reads an uninitialised variable after calling SPRIND is still
+flagged undefined_in_original (tests/test_abaqus_utility_stubs.py).
