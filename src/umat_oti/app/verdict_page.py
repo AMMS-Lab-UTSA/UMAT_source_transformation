@@ -128,7 +128,11 @@ def verdict_for(record: Any) -> dict:
                        and summary["gates that hold"] in (0, [], ())
                        and _n(summary["gates never established"]) == 6)
 
-    if may_say_verified(flat):
+    # Green needs the six gates AND a terminal state that says so: a record
+    # whose gates all read true but whose state is, for example,
+    # derivative_truncated (the converted source drops a derivative it then
+    # uses) is the state's own card, never green.
+    if may_say_verified(flat) and state in ("", "fully_verified"):
         colour, whose = "green", "nobody"
         sentence = VERIFIED_SENTENCE
         action = ("Open the results table to read the derivatives, or test "
@@ -169,7 +173,7 @@ def verdict_for(record: Any) -> dict:
             else:
                 colour = "red"
 
-    assert colour != "green" or may_say_verified(flat)
+    assert colour != "green" or (may_say_verified(flat) and state in ("", "fully_verified"))
     return {
         "colour": colour,
         "headline": ("AMBER: DERIVATIVES CHECKED, ABAQUS NOT RUN"
