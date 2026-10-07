@@ -84,3 +84,19 @@ def test_the_derivative_only_state_never_applies_once_any_gate_is_measured_false
            "evidence": {**{g: None for g in GATES}, GATES[0]: False}}
     assert verdict_for(rec)["terminal state"] != "derivative_check_passed_abaqus_not_run"
     assert verdict_for(rec)["colour"] != "green"
+
+
+@pytest.mark.parametrize("state", ["derivative_truncated", "tangent_not_verified", "primal_control_not_decided"])
+def test_all_six_gates_true_but_a_terminal_state_that_is_not_fully_verified_is_not_green(state):
+    rec = {"terminal_state": state, "evidence": {g: True for g in GATES}}
+    out = verdict_for(rec)
+    assert out["colour"] != "green"
+    assert "GREEN" not in render_verdict(rec)
+    assert out["terminal state"] == state
+
+
+@pytest.mark.parametrize("record", [{"evidence": {g: True for g in GATES}},
+                                    {"terminal_state": "", "evidence": {g: True for g in GATES}},
+                                    {"terminal_state": "fully_verified", "evidence": {g: True for g in GATES}}])
+def test_all_six_gates_true_with_an_empty_or_fully_verified_state_is_green(record):
+    assert verdict_for(record)["colour"] == "green"
