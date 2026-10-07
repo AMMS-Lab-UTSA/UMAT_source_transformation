@@ -23,12 +23,12 @@ NEEDS: dict = {
         "ask": "This file does not hold the Abaqus material routine (the "
                "UMAT): {why}.",
         "default": "The run cannot go on. Give the file that holds the "
-                   "UMAT itself; helper files go beside it or in a folder "
+                   "UMAT itself; files with its extra subroutines go beside it or in a folder "
                    "named with --dependency-root FOLDER.",
         "whose": "you or the author",
     },
     "ntens": {
-        "ask": "The files do not say how many stress components the routine "
+        "ask": "The files do not say how many stress values per point the routine "
                "is called with.",
         "default": "6, which is right for a solid three-dimensional element. "
                    "Say so if your element is plane strain, plane stress or "
@@ -74,10 +74,10 @@ NEEDS: dict = {
         "whose": "you",
     },
     "modules": {
-        "ask": "Your routine uses the module {names}, whose file was not "
-               "given, so this program cannot tell what the names it "
-               "provides are.",
-        "default": "The run cannot go on. Get the file that contains the module (look for "
+        "ask": "Your routine uses the shared-definitions file {names} (a Fortran "
+               "'module'), which was not given, so this program cannot tell "
+               "what the names it provides are.",
+        "default": "The run cannot go on. Get the file that defines it (look for "
                    "'module' followed by its name in the same project) and "
                    "put it beside your UMAT, or name its folder with "
                    "--dependency-root FOLDER.",

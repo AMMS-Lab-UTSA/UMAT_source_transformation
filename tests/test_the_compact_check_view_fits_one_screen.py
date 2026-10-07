@@ -146,3 +146,11 @@ def test_a_constant_is_named_by_its_slot_not_by_its_position_in_the_list_of_name
     found = _scan_with(tmp_path, 4, "200000., 0.3, 250., 2000.\n")
     text = compact_intake(found)
     assert "EMOD=200000, ENU=0.3, constant 3=250, H=2000" in text
+
+
+def test_the_compact_view_never_says_that_nothing_is_needed(tmp_path):
+    """It cannot know the verdict that follows; a verdict that is not green must not sit beside 'Needs you: nothing'."""
+    found = _scan(tmp_path)
+    for item in found.items:
+        item.needs_user = False
+    assert "Needs you: nothing" not in compact_intake(found)

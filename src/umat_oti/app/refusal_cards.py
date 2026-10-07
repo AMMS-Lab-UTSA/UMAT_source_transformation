@@ -92,26 +92,26 @@ def _defs(text, state):
 
 
 def _module_use(text, state):
-    mod = _names(text, r"USEs ([\w, ]+?) without defining", "a module")
+    mod = _names(text, r"USEs ([\w, ]+?) without defining", "a shared-definitions file")
     who = _names(text, r"^(\w+) appears as", "a name")
     return (
-        f"The stress calculation uses {who}, which comes from the module "
-        f"{mod}, and that module's file was not given, so the program cannot "
-        "tell what it is.",
+        f"The stress calculation uses {who}, which is defined in a shared-definitions "
+        f"file called {mod} (a Fortran 'module'), and that file was not given, so "
+        "the program cannot tell what it is.",
         YOU,
-        f"Get the file that contains the module {mod} (look for 'module "
-        f"{mod}' in the same project), put it beside your UMAT, or name its "
-        "folder with --dependency-root FOLDER. Then run again.")
+        f"Put the file that defines {mod} (look for the line 'module {mod}' in the "
+        "same project) beside your UMAT, or name its folder with "
+        "--dependency-root FOLDER. Then run again.")
 
 
 def _module_var(text, state):
-    mod = _names(text, r"variable of module (\w+)", "a module")
+    mod = _names(text, r"variable of module (\w+)", "a shared-definitions file")
     return (
-        f"The stress calculation reads a value that lives in the module "
-        f"{mod}, which this program does not follow.",
+        f"The stress calculation reads a value that lives in the shared-definitions "
+        f"file {mod} (a Fortran 'module'), which this program does not follow.",
         PROGRAM,
         "Nothing is missing on your side. Reading values through a shared "
-        "module is not supported yet. If you can, pass the value into the "
+        "file like that is not supported yet. If you can, pass the value into the "
         "routine as an argument or a constant; otherwise send the file to the "
         "maintainers so it is recorded as not supported yet.")
 
@@ -160,8 +160,8 @@ def _anchor(text, state):
 def _seed(text, state):
     return (
         "In this routine the stress does not visibly depend on the strain "
-        "increment (it may reach it through a shared COMMON block, a module "
-        "or a call this program cannot see), so the derivative would come "
+        "increment (it may reach it through a shared COMMON block, a shared-definitions "
+        "file or a call this program cannot see), so the derivative would come "
         "out wrong.",
         PROGRAM,
         "Check that the stress is computed from the strain increment or the deformation gradient in the "
@@ -207,11 +207,11 @@ def _not_lifted(text, state):
 
 def _scalar_stress(text, state):
     return (
-        "This routine has a single stress component (a truss or "
+        "This routine has a single stress value per point (a truss or "
         "one-dimensional element), which this program does not handle.",
         PROGRAM,
-        "Use a UMAT with the full stress components (3D, plane strain or "
-        "plane stress) for this check; one-component routines are not "
+        "Use a UMAT that returns the full set of stress values (3D, plane strain or "
+        "plane stress) for this check; one-value routines are not "
         "supported yet.")
 
 
@@ -319,11 +319,11 @@ def _interface_mismatch(text, state):
 def _not_umat_file(text, state):
     return (
         "This file does not contain an Abaqus material subroutine as its "
-        "entry point (it may be a helper, a module or another kind of "
-        "routine).",
+        "entry point (it may be a file of extra subroutines, a shared-definitions "
+        "file or another kind of routine).",
         AUTHOR,
-        "Give the file that holds the UMAT itself; helper files go "
-        "beside it or in --dependency-root FOLDER.")
+        "Give the file that holds the UMAT itself; files with its extra "
+        "subroutines go beside it or in --dependency-root FOLDER.")
 
 
 def _viz_umat(text, state):
@@ -366,9 +366,9 @@ def _element_not_read(text, state):
 def _ntens_mismatch(text, state):
     return (
         "The input file calls this material with a different number of "
-        "stress components than the converted version was built for.",
+        "stress values per point than the converted version was built for.",
         YOU,
-        "Say how many stress components you want checked (for a 3D solid it "
+        "Say how many stress values per point you want checked (for a 3D solid it "
         "is 6) in the material file given with --material-config FILE, or "
         "use an input file with a matching element.")
 
@@ -376,7 +376,7 @@ def _ntens_mismatch(text, state):
 def _truss_beam(text, state):
     return (
         "The input file uses this material on truss or beam elements, which "
-        "call a UMAT with fewer stress components than a solid; this "
+        "call a UMAT with fewer stress values than a solid; this "
         "program does not handle that.",
         PROGRAM,
         "Use an input file with solid or shell elements for this check.")
@@ -424,8 +424,8 @@ def state_after_reading(state: str, reason: Optional[str]) -> str:
 def _discovered(text, state):
     t = str(text or "")
     if "model is not supported" in t:
-        what = ("it is a finite-strain model, a plane-stress or shell model, or one with another "
-                "number of stress components than six")
+        what = ("it is a large-deformation (finite-strain) model, a plane-stress or shell model, "
+                "or one with another number of stress values per point than six")
     elif "settings cannot be represented" in t:
         listed = re.search(r"provider:\s*([^\n.]*)", t)
         what = ("the deck asks for something this check cannot represent"
@@ -437,9 +437,9 @@ def _discovered(text, state):
         what = "its setup is outside what this check can represent"
     return (
         f"Your constants were read from the deck, but this program cannot check this kind of model yet: {what}. "
-        "It checks small-strain three-dimensional solid models with six stress components.",
+        "It checks small-deformation three-dimensional solid models with six stress values per point.",
         PROGRAM,
-        "Nothing is missing from your files. To get a check now, set the model up as a small-strain "
+        "Nothing is missing from your files. To get a check now, set the model up as a small-deformation "
         "three-dimensional solid in the deck; otherwise send the file to the maintainers so it is recorded "
         "as not supported yet.")
 

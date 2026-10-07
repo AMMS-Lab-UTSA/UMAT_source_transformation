@@ -38,7 +38,7 @@ def test_every_card_printed_on_its_own_has_a_colour_word_in_its_banner(capsys):
 
 def test_the_request_for_one_thing_and_the_refusal_carry_a_colour_word(capsys):
     class Item:
-        ask, default, whose = "Say how many.", "6", "you"
+        key, ask, default, whose = "ntens", "Say how many.", "6", "you"
     check.print_need(Item())
     assert "BLUE: I NEED ONE THING FROM YOU" in capsys.readouterr().out
     Item.whose = "this program"
@@ -62,8 +62,8 @@ def test_an_empty_deck_is_said_to_be_empty_and_is_not_used(work, monkeypatch, ca
     monkeypatch.chdir(elsewhere)
     code = check.main([str(folder / "j2_props.f"), "--deck", str(deck)])
     out = capsys.readouterr().out
-    assert "AMBER: The deck empty.inp is empty" in out and "It is not used" in out
-    assert "(no deck)" in out or "Deck          none" in out or "Needs you" in out or "template" in out
+    assert "Note: The deck empty.inp is empty" in out and "It is not used" in out
+    assert "I NEED ONE THING FROM YOU" in out
     assert code == 3
 
 
@@ -74,7 +74,7 @@ def test_a_deck_with_no_user_material_block_is_said_so(work, monkeypatch, capsys
     monkeypatch.chdir(elsewhere)
     check.main([str(folder / "j2_props.f"), "--deck", str(deck)])
     out = capsys.readouterr().out
-    assert "AMBER: The deck geometry.inp has no *USER MATERIAL block, so it gives no constants" in out
+    assert "Note: The deck geometry.inp has no *USER MATERIAL block, so it gives no constants" in out
 
 
 def test_the_output_folders_and_the_template_go_next_to_the_umat_not_into_the_current_directory(work, monkeypatch, capsys):

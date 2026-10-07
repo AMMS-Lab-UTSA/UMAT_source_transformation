@@ -149,7 +149,7 @@ def test_with_no_deck_and_no_constants_it_stops_with_the_scanners_ask_and_runs_n
     assert check.main([str(j2)]) == 3
     out = capsys.readouterr().out
     assert "Constants: not found" in out and "I NEED ONE THING FROM YOU" in out and "Files: j2_props.f  (no deck)" in out
-    assert "the values of its 4 constants: E, XNU, SIGY0, H (PROPS in the source)" in out
+    assert "the values of its 4 constants: E, XNU, SIGY0, H (read from the material definition)" in out
     assert 'umat-oti check j2_props.f --props "E=<value> XNU=<value> SIGY0=<value> H=<value>"' in out
     assert "usage:" not in out.lower() and "trial_deck" not in out
     assert not list(j2.parent.glob("*_material*.json"))           # no template unless asked for

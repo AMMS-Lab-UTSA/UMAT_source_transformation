@@ -87,8 +87,10 @@ def test_the_exact_files_match_and_one_changed_byte_does_not(tmp_path):
     table = _table_for(umat, deck)
     match = vl.lookup(umat, deck, table=table)
     assert match is not None and match.colour == "green"
-    lines = vl.render(match, table=table)
-    assert lines[0] == "GREEN: This exact file was verified on 2026-10-06 in run pass23: fully_verified."
+    lines = vl.render(match, final="blue", why="Nothing could be run here. Second sentence.", table=table)
+    assert lines[0].startswith("On record: this exact file was verified earlier (run pass23, 2026-10-06: fully_verified). "
+                               "This run could not repeat it: nothing could be run here.")
+    assert not any(w in " ".join(lines) for w in ("GREEN", "AMBER", "BLUE", "RED"))
     umat.write_text("      SUBROUTINE UMAT\n      END \n")
     assert vl.lookup(umat, deck, table=table) is None, "one extra space in the UMAT"
     umat.write_text("      SUBROUTINE UMAT\n      END\n")
@@ -99,10 +101,9 @@ def test_the_exact_files_match_and_one_changed_byte_does_not(tmp_path):
 def test_a_row_that_is_not_verified_shows_its_state_and_its_card_in_the_colour_of_that_card(tmp_path):
     umat, deck = _files(tmp_path, "      SUBROUTINE UMAT\n      END\n", "*USER MATERIAL, CONSTANTS=1\n1.\n")
     table = _table_for(umat, deck, state="tangent_not_verified", gates="no_evidence_block")
-    lines = vl.render(vl.lookup(umat, deck, table=table), table=table)
-    assert lines[0].startswith("AMBER: This exact file is in the corpus record (run pass23, 2026-10-06) as tangent_not_verified")
-    assert any("Whose move:" in ln and "Next:" in ln for ln in lines)
-    assert "GREEN" not in "\n".join(lines)
+    lines = vl.render(vl.lookup(umat, deck, table=table), final="blue", table=table)
+    assert lines[0].startswith("On record: this exact file ended as tangent_not_verified in run pass23 (2026-10-06), not as verified.")
+    assert not any(w in " ".join(lines) for w in ("GREEN", "AMBER", "BLUE", "RED"))
 
 
 def test_without_a_deck_the_line_is_green_only_if_every_matching_row_is(tmp_path):
@@ -113,16 +114,52 @@ def test_without_a_deck_the_line_is_green_only_if_every_matching_row_is(tmp_path
     assert vl.lookup(umat, None, table={"registry_generated": "2026-10-06", "rows": [good]}).colour == "green"
     mixed = vl.lookup(umat, None, table={"registry_generated": "2026-10-06", "rows": [good, bad]})
     assert mixed.colour != "green"
-    assert "GREEN" not in vl.render(mixed, table={"registry_generated": "2026-10-06", "rows": [good, bad]})[0]
+    assert "GREEN" not in " ".join(vl.render(mixed, final="red", table={"registry_generated": "2026-10-06", "rows": [good, bad]}))
 
 
-def test_check_prints_the_line_beside_the_intake_and_never_stops_on_a_missing_table(tmp_path, monkeypatch, capsys):
+def test_the_line_is_printed_by_check_only_after_the_verdict_and_never_in_the_middle(tmp_path, monkeypatch, capsys):
+    import shutil
     from umat_oti.app import check_command as check
-    umat, deck = _files(tmp_path, "      SUBROUTINE UMAT\n      END\n", "x\n")
-    table = _table_for(umat, deck)
+    folder = tmp_path / "w"
+    folder.mkdir()
+    umat = folder / "j2_props.f"
+    shutil.copy(REPO / "UMATs" / "UMATs" / "generic_ps" / "j2_props.f", umat)
+    table = _table_for(umat, None)
     monkeypatch.setattr(vl, "load_table", lambda path=None: table)
-    check.print_corpus_line(umat, deck)
-    assert capsys.readouterr().out.startswith("GREEN: This exact file was verified on 2026-10-06 in run pass23")
-    monkeypatch.setattr(vl, "load_table", lambda path=None: None)
-    check.print_corpus_line(umat, deck)
-    assert capsys.readouterr().out == ""
+    monkeypatch.chdir(tmp_path)
+    check.main([str(umat)])
+    out = capsys.readouterr().out
+    assert "BLUE: I NEED ONE THING FROM YOU" in out
+    assert out.index("On record: this exact file was verified earlier") > out.index("BLUE: I NEED ONE THING FROM YOU")
+    assert "GREEN" not in out, "no green word anywhere unless the final verdict is green"
+    assert out.rstrip().splitlines()[-2].startswith("On record:") or out.rstrip().splitlines()[-1].startswith("  (")
+
+
+@pytest.mark.parametrize("deck_text", ["", "** only a comment\n", "*HEADING\nno material here\n*NODE\n1,0.,0.,0.\n"])
+def test_an_empty_deck_or_one_without_a_user_material_block_never_shows_the_record(tmp_path, monkeypatch, capsys, deck_text):
+    import shutil
+    from umat_oti.app import check_command as check
+    folder = tmp_path / "w"
+    folder.mkdir()
+    umat = folder / "j2_props.f"
+    shutil.copy(REPO / "UMATs" / "UMATs" / "generic_ps" / "j2_props.f", umat)
+    deck = folder / "d.inp"
+    deck.write_text(deck_text)
+    table = _table_for(umat, None)                       # a UMAT-only green row exists for these bytes
+    monkeypatch.setattr(vl, "load_table", lambda path=None: table)
+    monkeypatch.chdir(tmp_path)
+    check.main([str(umat), "--deck", str(deck)])
+    out = capsys.readouterr().out
+    assert "Note: The deck d.inp" in out
+    assert "On record" not in out and "GREEN" not in out
+
+
+@pytest.mark.parametrize("final", [None, "green", "amber", "blue", "red"])
+@pytest.mark.parametrize("state", ["fully_verified", "tangent_not_verified", "transform_refused", "missing_material_data",
+                                   "derivative_truncated", "not_a_umat"])
+def test_a_green_word_appears_only_when_the_final_verdict_is_green(tmp_path, state, final):
+    umat, deck = _files(tmp_path, "      SUBROUTINE UMAT\n      END\n", "x\n")
+    table = _table_for(umat, deck, state=state, gates="true" if state == "fully_verified" else "no_evidence_block")
+    lines = vl.render(vl.lookup(umat, deck, table=table), final=final, why="x", table=table)
+    words = " ".join(lines)
+    assert not any(w in words for w in ("GREEN", "AMBER", "BLUE", "RED")), words

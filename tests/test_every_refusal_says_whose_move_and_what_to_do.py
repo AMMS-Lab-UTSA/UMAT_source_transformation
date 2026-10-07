@@ -131,7 +131,7 @@ def test_the_specific_undefined_rule_gives_the_same_concrete_step():
 
 @pytest.mark.parametrize("reason,fragment", [
     ("Automatic material configuration failed: Discovered model is not supported by the small-strain NTENS=6 sensitivity provider.",
-     "finite-strain model"),
+     "large-deformation (finite-strain) model"),
     ("Discovered settings cannot be represented by the standalone provider: orientation, nonzero initial_statev",
      "orientation, nonzero initial_statev"),
     ("Discovered loading is not a prescribed strain history supported by the provider.",
@@ -156,3 +156,26 @@ def test_constants_read_but_model_unsupported_says_so_and_never_says_the_numbers
 def test_a_missing_material_without_that_reason_keeps_its_own_card():
     card = card_for("missing_material_data", "x publishes no deck with a *USER MATERIAL block, so")
     assert card.rule != "rule:discovered" and card.whose_move == "you"
+
+
+def test_no_card_or_question_shows_internal_words_a_user_does_not_know():
+    """PROPS, stress components, helper, module, derivative engine, six checks and informativeness never reach a user as such."""
+    import re
+    from umat_oti.app.intake_text import NEEDS
+    texts = []
+    for sentence, whose, action in STATE_CARDS.values():
+        texts += [sentence, action]
+    for name, pattern, build in RULES:
+        for probe in ("callee ABC", "[ABC]", "module XYZ", "USEs STDLIB_KINDS without defining; X appears as"):
+            s, w, a = build(probe, "transform_refused")
+            texts += [s, a]
+    for entry in NEEDS.values():
+        texts += [entry["ask"], entry["default"]]
+    for r in _records():
+        c = card_for(r["terminal_state"], _reason(r))
+        texts += [c.sentence, c.next_action]
+    text = re.sub(r"--[a-z-]+", "FLAG", " ".join(texts))
+    banned = re.compile(r"\bPROPS\b|stress components|\bhelpers?\b|derivative engine|six checks|informativeness|"
+                        r"\b(the|a) module\b|\bmodules\b|small-strain", re.I)
+    assert banned.findall(text) == [], banned.findall(text)
+    assert text.count("finite-strain") <= text.count("(finite-strain)") + 0, "finite-strain is always defined where it is used"
