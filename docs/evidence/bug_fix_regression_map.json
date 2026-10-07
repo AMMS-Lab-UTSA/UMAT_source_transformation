@@ -705,6 +705,26 @@
     "tests/test_check_wording_banners_and_places_for_a_novice.py::test_help_lists_check_and_doctor_in_the_usage_line_and_the_command_list",
     "tests/test_the_front_door_names_the_code_that_runs.py::test_doctor_warns_when_the_installed_command_is_older_than_the_checkout"
    ]
+  },
+  {
+   "commit": "e7e0bb8",
+   "bug": "doctor reported a stale umat-oti on PATH as a bare warning; it now says first that all else is fine and puts the remedy on its own line, keeping exit code 1.",
+   "tests": [
+    "tests/test_the_front_door_names_the_code_that_runs.py::test_a_stale_command_on_path_is_the_only_warning_so_doctor_says_first_that_all_else_is_fine"
+   ]
+  },
+  {
+   "commit": "3707128",
+   "selected_by": "manual",
+   "bug": "check printed an early GREEN corpus-record line before a RED, BLUE or AMBER verdict, showed it for an empty deck, ended a file verified in the corpus but outside the quick check as RED, printed 'Needs you: nothing' beside a verdict that was not green, and left internal words (PROPS, stress components, helpers, module) in red and blue cards.",
+   "tests": [
+    "tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py::test_the_line_is_printed_by_check_only_after_the_verdict_and_never_in_the_middle",
+    "tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py::test_a_green_word_appears_only_when_the_final_verdict_is_green",
+    "tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py::test_an_empty_deck_or_one_without_a_user_material_block_never_shows_the_record",
+    "tests/test_a_file_the_corpus_verified_but_this_quick_check_cannot_take_is_not_red.py::test_with_a_corpus_result_it_is_amber_says_why_and_names_the_run",
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_the_compact_view_never_says_that_nothing_is_needed",
+    "tests/test_every_refusal_says_whose_move_and_what_to_do.py::test_no_card_or_question_shows_internal_words_a_user_does_not_know"
+   ]
   }
  ],
  "excluded": [

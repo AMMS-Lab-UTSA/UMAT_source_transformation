@@ -1697,9 +1697,9 @@
    "verdict": "justified",
    "reason": "Makes check's loader report that tools/intake_scan.py is absent (an installed copy has no tools/ folder), to test the fallback that reads the files itself; everything else in the run is real."
   },
-  "broad_except:src/umat_oti/app/check_command.py:print_corpus_line:except Exception:d88c6d7e": {
+  "broad_except:src/umat_oti/app/check_command.py:prepare_corpus_record:except Exception:72cdecac": {
    "verdict": "justified",
-   "reason": "The corpus-record line is advisory: an unreadable table or file means no line, never a stopped check. Nothing the check computes or says about the user's files depends on it, and it prints a line only when the SHA-256 of the files matches a row.",
+   "reason": "The corpus-record line is advisory: an unreadable table or file means no line, never a stopped check; nothing the check computes or says about the user's files depends on it.",
    "evidence": [
     {
      "in": "src/umat_oti/app/check_command.py",
@@ -1707,13 +1707,37 @@
     }
    ]
   },
-  "mock:tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py:test_check_prints_the_line_beside_the_intake_and_never_stops_on_a_missing_table:monkeypatch.setattr:27bc2156": {
+  "broad_except:src/umat_oti/app/check_command.py:print_corpus_record:except Exception:bca58b18": {
    "verdict": "justified",
-   "reason": "Replaces the digest-table loader by a table built from the test's own files, and then by None, to test that check prints the line when the files match and prints nothing when the table is absent; the SHA-256 matching and the verdict colour are the real code."
+   "reason": "The corpus-record line is advisory: an unreadable table or file means no line, never a stopped check; nothing the check computes or says about the user's files depends on it.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/app/check_command.py",
+     "text": "except Exception:                                   # a lookup must never stop a check"
+    }
+   ]
   },
-  "mock:tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py:test_check_prints_the_line_beside_the_intake_and_never_stops_on_a_missing_table:monkeypatch.setattr:8cb0ae05": {
+  "broad_except:src/umat_oti/app/check_command.py:finish:except Exception:726711f5": {
    "verdict": "justified",
-   "reason": "Replaces the digest-table loader by a table built from the test's own files, and then by None, to test that check prints the line when the files match and prints nothing when the table is absent; the SHA-256 matching and the verdict colour are the real code."
+   "reason": "Only records the colour of the verdict for the corpus-record line that follows it; if it cannot, no record line is printed. The verdict itself was already printed by check_summary.render.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/app/check_command.py",
+     "text": "_record_final(verdict[\"colour\"], verdict[\"sentence\"])"
+    }
+   ]
+  },
+  "mock:tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py:test_an_empty_deck_or_one_without_a_user_material_block_never_shows_the_record:monkeypatch.setattr:c85e2c2c": {
+   "verdict": "justified",
+   "reason": "Replaces the digest-table loader by a table built from the test's own copy of a UMAT, so a row with these exact bytes exists; check itself, the matching and the colour are the real code."
+  },
+  "mock:tests/test_check_shows_what_the_corpus_record_says_about_this_exact_file.py:test_the_line_is_printed_by_check_only_after_the_verdict_and_never_in_the_middle:monkeypatch.setattr:741c089f": {
+   "verdict": "justified",
+   "reason": "Replaces the digest-table loader by a table built from the test's own copy of a UMAT, so a row with these exact bytes exists; check itself, the matching and the colour are the real code."
+  },
+  "mock:tests/test_the_front_door_names_the_code_that_runs.py:test_a_stale_command_on_path_is_the_only_warning_so_doctor_says_first_that_all_else_is_fine:monkeypatch.setattr:aa212375": {
+   "verdict": "justified",
+   "reason": "Makes shutil.which find every tool except a fake older umat-oti, so the only warning is the one about the command on PATH; doctor's own printing and exit code are real."
   }
  }
 }
