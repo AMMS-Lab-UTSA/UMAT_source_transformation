@@ -725,6 +725,17 @@
     "tests/test_the_compact_check_view_fits_one_screen.py::test_the_compact_view_never_says_that_nothing_is_needed",
     "tests/test_every_refusal_says_whose_move_and_what_to_do.py::test_no_card_or_question_shows_internal_words_a_user_does_not_know"
    ]
+  },
+  {
+   "commit": "f572a4a",
+   "bug": "check's line about the six checks listed passed checks as unrun, a constant used without a plain NAME = PROPS(k) line was left out of the list while the count included it, the intake listed two items under one thing, a blank run id was printed, a plane-stress file was reported as missing numbers, and a UMAT verified with another deck ended red.",
+   "tests": [
+    "tests/test_check_round_three_the_six_checks_the_constants_the_one_thing_and_the_abaqus_command.py::test_the_line_names_what_held_what_failed_and_what_was_not_run_and_never_says_none_ran_when_one_did",
+    "tests/test_check_round_three_the_six_checks_the_constants_the_one_thing_and_the_abaqus_command.py::test_every_constant_is_listed_so_the_count_and_the_list_agree",
+    "tests/test_check_round_three_the_six_checks_the_constants_the_one_thing_and_the_abaqus_command.py::test_the_intake_asks_one_thing_first_and_names_what_comes_after",
+    "tests/test_check_round_three_the_six_checks_the_constants_the_one_thing_and_the_abaqus_command.py::test_a_stress_value_count_mismatch_is_not_reported_as_missing_numbers",
+    "tests/test_check_round_three_the_six_checks_the_constants_the_one_thing_and_the_abaqus_command.py::test_the_umat_verified_with_another_deck_is_amber_not_red_and_says_which_deck"
+   ]
   }
  ],
  "excluded": [
