@@ -676,6 +676,35 @@
     "tests/test_check_reads_what_it_can_and_asks_for_the_rest.py::test_the_typed_constants_count_is_the_card_by_card_count_where_the_old_reader_joins_numbers",
     "tests/test_check_reads_what_it_can_and_asks_for_the_rest.py::test_the_scanner_is_loaded_by_path_and_its_intake_is_printed_with_the_lines_quoted"
    ]
+  },
+  {
+   "commit": "be7d0d2",
+   "selected_by": "manual",
+   "bug": "When the constants had been read from the deck but the model could not be checked (finite strain, plane stress, another number of stress components), check said it could not find the numbers; it now says the constants were read and why the model is outside what is checked.",
+   "tests": [
+    "tests/test_every_refusal_says_whose_move_and_what_to_do.py::test_constants_read_but_model_unsupported_says_so_and_never_says_the_numbers_were_not_found"
+   ]
+  },
+  {
+   "commit": "3f9da53",
+   "selected_by": "manual",
+   "bug": "The verdict said '0 of 6 held; never measured: 6' beside a card saying the stresses agreed and no derivative disagreed, and showed NTENS, provider, tangent and PROPS to a novice; it now names the six checks, says none was run here, and uses plain words.",
+   "tests": [
+    "tests/test_the_verdict_page_never_shows_a_false_green.py::test_the_six_checks_are_named_and_a_run_that_made_none_does_not_contradict_its_own_card",
+    "tests/test_the_verdict_page_never_shows_a_false_green.py::test_the_recorded_reason_is_shown_in_plain_words"
+   ]
+  },
+  {
+   "commit": "f455117",
+   "selected_by": "manual",
+   "bug": "An empty deck was treated as no deck without a word, banners of the request and refusal cards had no colour word, ./umat-oti --help left check out of its usage line, results were written into the current directory, and doctor put the remedy inside the warning.",
+   "tests": [
+    "tests/test_check_wording_banners_and_places_for_a_novice.py::test_an_empty_deck_is_said_to_be_empty_and_is_not_used",
+    "tests/test_check_wording_banners_and_places_for_a_novice.py::test_every_card_printed_on_its_own_has_a_colour_word_in_its_banner",
+    "tests/test_check_wording_banners_and_places_for_a_novice.py::test_the_output_folders_and_the_template_go_next_to_the_umat_not_into_the_current_directory",
+    "tests/test_check_wording_banners_and_places_for_a_novice.py::test_help_lists_check_and_doctor_in_the_usage_line_and_the_command_list",
+    "tests/test_the_front_door_names_the_code_that_runs.py::test_doctor_warns_when_the_installed_command_is_older_than_the_checkout"
+   ]
   }
  ],
  "excluded": [
