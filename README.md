@@ -16,23 +16,42 @@ the routine, runs the original and the converted version, and reports the
 derivatives together with whether they matched an independent check.
 
 ```bash
-umat-oti check my_umat.for my_deck.inp          # NOT AVAILABLE YET: being added; until it lands use the next command
+python umat-oti check my_umat.for my_deck.inp
 ```
 
-Until `check` lands, the working command is below. Run it from a checkout, with
-the checkout's own code (see "Three commands"), because a `umat-oti` already on
-your PATH may be an old install that lacks `all`:
+Run it from the checkout (from another folder, give the path to the launcher: `python /path/to/UMAT_source_transformation/umat-oti check ...`): `umat-oti` in the checkout's top folder is a launcher
+that uses the checkout's own code, so it needs no install and no `PYTHONPATH`
+(after `pip install -e .` in a fresh virtual environment the same command is
+just `umat-oti check my_umat.for my_deck.inp`). A `umat-oti` that is already on
+your PATH may be an old install that lacks these commands; `python umat-oti
+doctor` says whether it is, and `python umat-oti --version` says which code is
+running and where it is.
 
-```bash
-PYTHONPATH=src python3 -m umat_oti.cli all path/to/my_umat.for --out out/mine
-```
+What `check` does:
 
-`--out` must be a new or empty folder. If no deck sits beside the UMAT, give
-the constants and loading yourself with `--material-config FILE` (an example is
-`examples/03_j2_parameter_sensitivities/material_workflow.json`). If the run is
-refused, it says whose move it is and what to do; the explanations are in
-`src/umat_oti/app/refusal_cards.py`. To turn a results file into a one-page
-verdict: `PYTHONPATH=src python3 -m umat_oti.app.verdict_page out/mine/<results>.json`.
+- **The deck.** Give it as the second argument, with `--deck FILE` from any
+  folder, or leave it beside the UMAT. It prints where each fact came from,
+  for example "4 values from my.inp lines 76-77 (*USER MATERIAL)".
+- **No deck.** Type the constants and the loading:
+  `umat-oti check my_umat.for --props "E=210000 nu=0.3" --peak 0.02`. Without
+  them it writes a commented material file (`my_umat_material.json`) with the
+  blanks to fill in, and tells you to run it again with
+  `--material-config my_umat_material.json`.
+- **If it cannot be done** it says why in one plain sentence, whose move it is
+  and what to do next (a missing helper routine, for example, before it asks
+  about any constants); the explanations are in
+  `src/umat_oti/app/refusal_cards.py`.
+- **When it works** it ends with the one-page verdict (it is never green unless
+  all six checks held, and a derivative-only run says so), which constants were
+  checked, how many derivative entries agree with finite differences of your
+  original routine, the worst difference, and whether the loading took the
+  material out of its elastic range. The derivatives, with named columns, are
+  in `<name>_check/results_table.txt` (and `.csv`); everything the run
+  recorded is in `<name>_check/workflow_summary.json`.
+
+The lower-level steps are still there: `umat-oti all my_umat.for --out DIR`
+(the pipeline `check` is built on) and `umat-oti jacobian`. When they refuse they
+now print the same plain card and keep the raw output in a file.
 
 **You do not need the Residual Assembler for this.** That companion program
 answers a different question (how a whole finite-element result changes with a
@@ -43,12 +62,12 @@ parameter) and is only needed if you want that.
 ```bash
 git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git && cd UMAT_source_transformation
 python3 -m venv .venv && . .venv/bin/activate && python -m pip install -e ".[test]"   # needs Python 3.10+ and gfortran
-PYTHONPATH=src python3 -m umat_oti.cli all path/to/my_umat.for --out out/mine          # or: umat-oti check my_umat.for my_deck.inp, once it lands
+python umat-oti check path/to/my_umat.for path/to/my_deck.inp                          # run from this checkout; no PYTHONPATH needed
 ```
 
-`PYTHONPATH=src` makes the command use this checkout even if an older
-`umat-oti` is installed elsewhere. If `umat-oti all` answers
-`invalid choice: 'all'`, you are running that old install.
+`python umat-oti` runs the checkout's own code even if an older `umat-oti` is
+installed elsewhere. If `umat-oti all` answers `invalid choice: 'all'`, you are
+running that old install: `python umat-oti doctor` will say so.
 
 ### Words you will meet
 
