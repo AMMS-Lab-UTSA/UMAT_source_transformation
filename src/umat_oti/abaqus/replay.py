@@ -989,7 +989,7 @@ def without_the_authors_program(text: str,
     out: list[str] = []
     removed: list[str] = []
     inside = False
-    open_subprogram = False
+    open_subprogram = 0     # depth: an internal procedure after CONTAINS nests
     for line in text.splitlines(keepends=True):
         stripped = line.rstrip("\n")
         # A preprocessor line is not Fortran and must survive untouched: it is
@@ -1008,12 +1008,12 @@ def without_the_authors_program(text: str,
                 out.append(comment(line, " (the replay supplies its own PROGRAM)"))
                 continue
             if _SUBPROGRAM_START.match(stripped):
-                open_subprogram = True
+                open_subprogram += 1
                 out.append(line)
                 continue
             if _PROGRAM_END.match(stripped):
                 if open_subprogram:
-                    open_subprogram = False
+                    open_subprogram -= 1
                     out.append(line)
                     continue
                 # An END with no subprogram open closes an IMPLICIT main
