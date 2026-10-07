@@ -1672,6 +1672,10 @@
   "mock:tests/test_run_corpus_features_council_plans.py:test_without_the_flag_the_harness_default_is_kept:monkeypatch.setattr:6a83019d": {
    "verdict": "justified",
    "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which council plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
+  },
+  "mock:tests/test_the_front_door_names_the_code_that_runs.py:test_doctor_says_so_when_no_command_is_installed:monkeypatch.setattr:4580c99e": {
+   "verdict": "justified",
+   "reason": "The machine running the test may or may not have a umat-oti on PATH; the test replaces only the lookup of that command (to say none) and checks the doctor's sentence about it. The stale-install, current-install and exit-code tests use real fake scripts on PATH instead."
   }
  }
 }
