@@ -97,7 +97,7 @@ def test_the_two_denominators_are_both_published_and_d2_is_inside_d1():
     records = registry()["records"]
     d1 = summary["acquired"]
     d2 = summary["adequately_specified_genuine_umats"]
-    assert d1 == len(records) == 405, d1
+    assert d1 == len(records) == 419, d1
     assert 0 < d2 <= d1
     assert len([r for r in records if r["adequately_specified"] is True]) == d2
     both = summary["denominators"]
@@ -202,7 +202,7 @@ def test_retained_refresh_preserves_observations_and_retires_currency(tmp_path):
     untouched = deepcopy(original)
     records, refreshed = refresh_retained(original)
     assert original == untouched
-    assert len(records) == len(refreshed["records"]) == 405
+    assert len(records) == len(refreshed["records"]) == 419
     for before, after in zip(original["records"], refreshed["records"]):
         assert after == {**before, "kind": kind_of(before["terminal_state"])}
     for key in ("inputs", "inventory", "verification_file_reconciliation",
@@ -222,7 +222,7 @@ def test_retained_refresh_preserves_observations_and_retires_currency(tmp_path):
                  "--csv", str(table), "--markdown", str(text)]) == 0
     assert json.loads(output.read_text()) == refreshed
     assert "HISTORICAL EVIDENCE ONLY" in text.read_text()
-    assert len(list(csv.DictReader(table.open()))) == 405
+    assert len(list(csv.DictReader(table.open()))) == 419
     current = deepcopy(original)
     current["summary"]["inputs"]["store_fingerprint"] = currency["current_code_fingerprint"]
     with pytest.raises(ValueError, match="historical store generation"):
@@ -313,7 +313,7 @@ def test_the_csv_carries_the_same_391_rows_as_the_json():
         pytest.skip("the registry CSV has not been built")
     with CSV_PATH.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    assert len(rows) == 405
+    assert len(rows) == 419
     assert {r["source_id"] for r in rows} == \
         {r["source_id"] for r in registry()["records"]}
 

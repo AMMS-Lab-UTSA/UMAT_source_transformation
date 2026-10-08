@@ -24,7 +24,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 CAMPAIGN = REPO.parent / "corpus_campaign"
 COUNT_TARGET = CAMPAIGN / "count_target.py"
-CELLS = CAMPAIGN / "pass23_harness/run/manifest_cells.jsonl"
+CELLS = CAMPAIGN / "pass24_harness/run/manifest_cells.jsonl"  # pass24 since the B17 freeze; the name of the test keeps its pass23 wording
 REGISTRY = REPO / "paper_results/corpus/corpus_registry.json"
 
 if not COUNT_TARGET.is_file():
@@ -56,11 +56,11 @@ def test_the_fisher_test_is_two_sided_and_exact(table, p):
 
 def test_the_deck_only_column_is_the_d8_figure():
     if not CELLS.is_file():
-        pytest.skip("pass23 harness cells not on this machine")
+        pytest.skip("pass24 harness cells not on this machine")
     fam = _families()
     records = json.loads(REGISTRY.read_text(encoding="utf-8"))["records"]
     denom, abaqus, routine = ct.deck_counts(records, fam, CELLS)
-    assert (sum(denom.values()), sum(abaqus.values()), sum(routine.values())) == (242, 106, 114)
+    assert (sum(denom.values()), sum(abaqus.values()), sum(routine.values())) == (259, 106, 114)
     # the same figure from a registry that carries the tier columns, with a
     # council row added beside it: the deck column does not move
     tiered = [r.as_dict() for r in reg.apply_origins(
@@ -73,7 +73,7 @@ def test_the_deck_only_column_is_the_d8_figure():
                              adequacy_tier="council_chosen").as_dict())
     again = ct.deck_counts(tiered, fam, CELLS)
     assert (sum(again[0].values()), sum(again[1].values()), sum(again[2].values())) == \
-        (242, 106, 114)
+        (259, 106, 114)
     tiers = ct.tier_counts(tiered, fam, CELLS)
     # the committed registry is built with the S2 options, so it carries its
     # own council_chosen rows (30 at pass21); the added row is one more

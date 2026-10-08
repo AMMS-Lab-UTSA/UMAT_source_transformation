@@ -8,36 +8,55 @@ tools yourself.
 
 ## Current result
 
-The whole corpus of 405 acquired sources was re-transformed and re-verified on
-2026-10-06 (pass23: commit 42a526f, transform fingerprint `830e5ee95ce99cd2`,
-harness fingerprint `ec609ab41bb45a02`, contract 5.0.0). pass23 is the
-author-deck run at the final code of D-19a rev 2 (R7); no council experiment
-counts yet. The eligible denominator (D2) is 242: adequately specified genuine
-UMATs with an author's deck. It was 245 at pass21; three left it by reviewed
-ruling or a newly read deck: hamza-djeloud plate_with_notch and irfancn
-uel_elastic are the visualisation UMATs of a UEL (`not_a_umat`), and
-vishalsubbiah umatcode3 needs an orientation file the author did not publish
-(`missing_material_data`). Two counts are reported, never pooled:
+The whole corpus of 419 acquired sources (the 405 of pass23 and 14 from the
+2026-10-06 host round) was re-transformed and re-verified in Abaqus 2021 on
+2026-10-07 and 2026-10-08 (pass24: commit 0324ca5, transform fingerprint
+`50ae446f12de66d8`, harness fingerprint `0b2c472c7085b594`, contract 5.0.0).
+pass24 is the single acceptance pass of the B17 engineering batch; no council
+experiment counts toward either figure below. Two lines are published and the
+new sources are reported apart; none of the three is pooled with another:
+
+- **106 of 242 as published** (the pass23 population and the pass23 adequacy
+  test). Unchanged from pass23: the same 106 sources, none lost, none gained.
+- **106 of 246 with the revised callee rule** (242 - 0 + 4): a callee counts as
+  unpublished only if it is absent from the repository at the pinned commit, so
+  Diffusion_3D, GeneralFiniteStrain and the two bmmbUPF discs (Sub_MechDisc,
+  Sub_TransDisc) enter the eligible set; none left. All four are
+  `transform_refused`. The pass count did not change, only the denominator.
+- **The 14 new sources** are attempted in pass24 and reported apart, never in
+  either line: 13 are adequately specified (11 `transform_refused`, 1
+  `primal_disagreed`, 1 `experiment_not_generated`), 1 is
+  `external_dependency_unavailable`; none is verified.
+
+The eligible denominator (D2) of the pass23 population is 242: adequately
+specified genuine UMATs with an author's deck. Two counts are reported:
 
 - **Abaqus, D-4 gate** (both builds run in Abaqus, primal gate by routine
   replay plus the Jacobian-matched control, DDSDDE judged entry by entry
   against a finite difference of the original with an FD-only plateau of at
   least 3 steps and a quad reference where double cannot resolve, mechanically
-  informative): **106 of 242** (105 of 242 at pass22, 102 of 245 at pass21; 67
-  of 238 at pass20 came from the legacy tangent gate, which D-4 supersedes, and
-  is not comparable). A source whose Jacobian-matched control decided nothing
-  (`primal_control_not_decided`, 3 sources) can never count as verified.
+  informative): **106 of 242** (106 of 242 at pass23, 105 at pass22, 102 of 245
+  at pass21; 67 of 238 at pass20 came from the legacy tangent gate, which D-4
+  supersedes, and is not comparable). A source whose Jacobian-matched control
+  decided nothing (`primal_control_not_decided`, 5 sources at pass24) can never
+  count as verified.
 - **Routine level (decision D-8)**: Abaqus primal gate passed, the
   mechanically informative gate read true, and the routine-level harness
   verifies primal and DDSDDE against FD of the original (FD-only plateau of at
   least 3 steps, entrywise tolerance, quad-precision reference where double
   cannot resolve, binary32 stores judged under rule B32), with STRESS and
-  DDSDDE fully defined in the original: **114 of 242** (113 of 242 at pass22,
-  112 of 245 at pass21, 109 of 238 at pass20). Of the 114, 105 are
+  DDSDDE fully defined in the original: **114 of 242** (114 at pass23, 113 at
+  pass22, 112 of 245 at pass21, 109 of 238 at pass20). Of the 114, 105 are
   `fully_verified` and 9 are not: 4 `tangent_not_verified`, all unresolved at the
   chosen states and none with a measured disagreement; 5 `derivative_truncated`
   (the three RitioL sources, ahartloper UVCmultiaxial and harshaa765 UMAT), whose
   footnote stays: the converted source drops a derivative it then uses.
+
+Eight pass23 sources inside the 242 changed terminal state at pass24 without
+changing either count (for example MML_U3 became `undefined_in_original` under rule G2d, and
+NN_UMAT_Vahid and the two mholla orientation files now reach the Abaqus gate and
+are decided there); the per-source table is in
+`corpus_campaign/batches/B18/atlas/` (outside this repository).
 
 Per material family (code-reviewed classification, decision D-11; "eligible" is the
 family's share of D2):
