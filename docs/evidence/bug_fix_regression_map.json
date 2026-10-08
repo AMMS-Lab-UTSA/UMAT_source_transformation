@@ -994,6 +994,16 @@
     "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_the_same_store_into_a_different_slot_flags",
     "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_nint_times_stress_still_flags"
    ]
+  },
+  {
+   "commit": "2f3f4ae",
+   "selected_by": "manual",
+   "bug": "A discovery_cache source was rewritten in place (every line changed) because a patch handed the published file to the companion retry as its entry and the argument-position rewrite edits the file it is given; nothing stopped a write into the cache. A write whose resolved path is inside the cache root now raises DiscoveryCacheReadOnly in the in-place rewrite, the driver's staged copy and includes, and the bundler's copies.",
+   "tests": [
+    "tests/test_the_discovery_cache_is_never_written.py::test_canary_the_in_place_rewrite_aimed_at_a_cache_file_raises_and_leaves_it_alone",
+    "tests/test_the_discovery_cache_is_never_written.py::test_the_normal_transform_of_a_cached_source_never_writes_it",
+    "tests/test_the_discovery_cache_is_never_written.py::test_a_path_inside_the_cache_is_refused_and_one_outside_is_not"
+   ]
   }
  ],
  "excluded": [
