@@ -124,6 +124,7 @@ def test_a_name_held_in_a_parameter_is_found_staged_and_pointed_at(tmp_path):
                                                  include_dirs=[repo])
     literal = pointed["fibers.inp"]
     assert "param_umat.inc" in extra and literal in extra["param_umat.inc"]
+    assert extra["PARAM_UMAT.INC"] == extra["param_umat.inc"]       # every casing the sources use
     scratch = "/tmp/someuser_original_12345"
     assert os.path.normpath(f"{scratch}/{literal}") == str((job / "fibers.inp").resolve())
     # the original include on disk is never rewritten
