@@ -205,3 +205,42 @@ def test_a_name_the_upstream_tree_publishes_is_not_missing_because_the_cache_is_
     assert reg.upstream_present_names("o__r/umat.for", check) == frozenset({"include core.for"})
     assert reg.upstream_absent_calls("o__r/umat.for", check) == frozenset({"GONE"})
     assert reg.upstream_present_names("o__r/other.for", check) == frozenset()
+
+
+def test_includes_are_matched_by_file_name_and_the_nearest_one_wins(tmp_path):
+    """Two files called body.f in different directories: the includer's own
+    directory wins, then the shallower path. A name match is not a path match
+    (INCLUDE './x/body.f' finds ./y/body.f if x has none), and that ambiguity is
+    documented in docs/CORPUS_VERIFICATION.md."""
+    import build_corpus_registry as reg
+    from umat_oti.corpus.entry_routines import umat_outputs_written
+    main = HEAD + "      INCLUDE 'body.f'\n      END\n"
+    repo(tmp_path, {"a/umat.for": main,
+                    "a/body.f": "      STRESS(1)=1.D0\n",         # beside the includer
+                    "z/deep/er/body.f": "      DDSDDE(1,1)=2.D0\n"})
+    source = tmp_path / "owner__repo" / "a" / "umat.for"
+    found, followed = reg.outputs_following_includes(
+        source, main, umat_outputs_written(main, path=source), tmp_path)
+    assert followed == ["owner__repo/a/body.f"]
+    assert found.writes_stress and not found.writes_ddsdde
+    # no copy beside the includer: the one with the fewest path parts
+    repo(tmp_path, {"b/umat.for": main, "m/body.f": "      DDSDDE(1,1)=2.D0\n"}, name="owner__two")
+    repo(tmp_path, {"m/n/o/body.f": "      STRESS(1)=1.D0\n"}, name="owner__two")
+    rl._INDEXES.clear()
+    source = tmp_path / "owner__two" / "b" / "umat.for"
+    found, followed = reg.outputs_following_includes(
+        source, main, umat_outputs_written(main, path=source), tmp_path)
+    assert followed == ["owner__two/m/body.f"]
+    assert found.writes_ddsdde and not found.writes_stress
+
+
+def test_unconfirmed_absence_keeps_a_source_in_the_population_and_mkl_is_a_library(tmp_path):
+    import json
+    import build_corpus_registry as reg
+    check = tmp_path / "check.json"
+    check.write_text(json.dumps({"checked": {"o__r/u.f": {
+        "absent": ["GONE"], "absent_names_confirmed": ["module stdlib_kinds"]}}}))
+    names = ["call GONE", "call FETCHFAILED", "module stdlib_kinds", "module unconfirmed_mod",
+             "module MKL_RCI", "include mkl_lapack.f90"]
+    assert reg.unpublished_by_the_rule("o__r/u.f", names, check) == ["call GONE", "module stdlib_kinds"]
+    assert reg.unpublished_by_the_rule("o__r/never_checked.f", names, check) == []

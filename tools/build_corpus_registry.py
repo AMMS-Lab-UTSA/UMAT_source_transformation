@@ -1375,14 +1375,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             # upstream tree at the pinned commit was confirmed
             # (upstream_callee_check.json). Modules and includes keep the
             # evidence they always had.
-            confirmed = upstream_absent_calls(record.source_id)
-            published_upstream = upstream_present_names(record.source_id)
-            missing = [name for name in looked.unpublished
-                       if name not in published_upstream]
-            missing = [name for name in missing
-                       if name.split(" ", 1)[-1].lower() not in INTRINSIC_MODULES
-                       and (not name.startswith("call ")
-                            or name.split(" ", 1)[1] in confirmed)]
+            missing = unpublished_by_the_rule(record.source_id, looked.unpublished)
             record.missing_companions = missing_companions_text(missing)
 
             verdict = classify_refusal(
@@ -1621,6 +1614,37 @@ def upstream_present_names(source_id: str, path: Optional[Path] = None) -> froze
     upstream_absent_calls(source_id, path)             # loads the file
     return frozenset(_UPSTREAM[str(path)].get(source_id, {})
                      .get("present_upstream_names", {}))
+
+
+_MKL = re.compile(r"mkl", re.IGNORECASE)
+
+
+def unpublished_by_the_rule(source_id: str, names, path: Optional[Path] = None) -> list:
+    """The names that count as unpublished (RULE_G3a amendments 1-3).
+
+    * a name the upstream tree publishes is not missing;
+    * MKL names are a library, ruled like BLAS/LAPACK: neither resolved nor external;
+    * a name counts only if its absence from the upstream tree at the pinned
+      commit was CONFIRMED (``upstream_callee_check.json``: ``absent`` for CALL
+      names, ``absent_names_confirmed`` for modules and includes). Absence that
+      is unconfirmed -- a snapshot that cannot be fetched, a helper that stays
+      unresolved -- keeps the source in the population.
+    """
+    path = Path(path or UPSTREAM_CALLEE_CHECK)
+    calls = upstream_absent_calls(source_id, path)
+    present = upstream_present_names(source_id, path)
+    absent = frozenset(_UPSTREAM[str(path)].get(source_id, {}).get("absent_names_confirmed", ()))
+    kept = []
+    for name in names:
+        label, _, bare = name.partition(" ")
+        if name in present or _MKL.search(bare) or bare.lower() in INTRINSIC_MODULES:
+            continue
+        if label == "call":
+            if bare in calls:
+                kept.append(name)
+        elif name in absent:
+            kept.append(name)
+    return kept
 
 
 #: States the B17 G3a rule may move to ``external_dependency_unavailable``. They
