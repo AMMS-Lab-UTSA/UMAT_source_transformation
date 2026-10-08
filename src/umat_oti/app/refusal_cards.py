@@ -215,6 +215,26 @@ def _scalar_stress(text, state):
         "supported yet.")
 
 
+def _unshaped_variable(text, state):
+    name = _names(text, r"Promoted variable (\w+) is indexed", "a variable")
+    return (
+        f"The routine uses {name} as a list of numbers, but nowhere says how many, so this program cannot "
+        "tell how much room it needs.",
+        AUTHOR,
+        f"In a copy of the file, declare {name} with its length where the routine starts, for example "
+        f"`DIMENSION {name}(6)` (use the length the routine really uses), then run again.")
+
+
+def _value_set_in_declaration(text, state):
+    name = _names(text, r"gives (\w+) a value in its declaration", "a variable")
+    return (
+        f"One of the routine's sub-routines sets {name} in the line that declares it and also changes it later; Fortran then "
+        "keeps the first value from call to call, and this program cannot carry that over.",
+        AUTHOR,
+        f"In a copy of the file, declare {name} without a value and set it with its own line "
+        f"(`{name} = ...`) at the start of that sub-routine, then run again.")
+
+
 def _lu_eigen(text, state):
     return (
         "The routine solves a linear system or eigenvalue problem with an "
@@ -463,6 +483,8 @@ RULES: tuple = (
     ("delegates", r"delegates its whole body to", _delegates),
     ("not_lifted", r"neither lifted, inlined, nor transformed", _not_lifted),
     ("scalar_stress", r"declared as a scalar in UMAT", _scalar_stress),
+    ("unshaped_variable", r"has no confirmed shape", _unshaped_variable),
+    ("value_in_declaration", r"gives \w+ a value in its declaration", _value_set_in_declaration),
     ("lu_eigen", r"DGETRF|DSPEVD|HQR2|built-in (OTI )?(unblocked|Jacobi)|eigenvalue cluster", _lu_eigen),
     ("complex_step", r"complex-step derivative", _complex_step),
     ("construct", r"Unsupported intrinsic|deferred shape|EQUIVALENCE|DATA statement|applies ATAN2|generic the OTI support|dummy the lifted body keeps", _unsupported_construct),
