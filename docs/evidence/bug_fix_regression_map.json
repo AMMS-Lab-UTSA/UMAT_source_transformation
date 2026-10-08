@@ -874,6 +874,24 @@
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_routine_the_repository_defines_and_is_handed_stress_is_searched",
     "tests/test_the_four_sources_that_disagreed_with_the_transformer.py::test_no_source_is_both_a_genuine_umat_here_and_anchorless_there"
    ]
+  },
+  {
+   "commit": "cfec3d2",
+   "selected_by": "manual",
+   "bug": "The oriented family's shear check read STRAN and STRESS in the material's frame, so a ply at 30 degrees never had an increment with zero shear and the gate was null; both are now rotated back to the loading's frame.",
+   "tests": [
+    "tests/test_b20_the_oriented_shear_check_reads_the_loading_frame.py::test_the_shear_check_reads_the_loading_frame_and_an_isotropic_material_fails_it",
+    "tests/test_b20_the_oriented_shear_check_reads_the_loading_frame.py::test_with_no_rotation_the_shear_check_is_the_old_one"
+   ]
+  },
+  {
+   "commit": "aac6ce7",
+   "selected_by": "manual",
+   "bug": "A growth source whose tensor is a local variable had no clock-driven STATEV slot, so the growth gate was never measured; the end-state targets are now read, and a complete run is no longer worded as cut off because the last increment's start was read as its end.",
+   "tests": [
+    "tests/test_b20_the_growth_instrument_reads_the_targets_when_the_tensor_is_local.py::test_a_target_that_grows_is_developed_and_the_same_run_with_no_growth_is_not",
+    "tests/test_b20_the_growth_instrument_reads_the_targets_when_the_tensor_is_local.py::test_a_complete_run_is_not_called_cut_off_and_a_short_one_is"
+   ]
   }
  ],
  "excluded": [
