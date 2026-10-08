@@ -9226,6 +9226,13 @@ def _stress_expression_lines(active_lines: list[tuple[int, str]], roles: dict[st
             continue
         if "=" not in line and not re.match(r"^\s*CALL\b", line, flags=re.IGNORECASE):
             continue
+        # ALLOCATE / DEALLOCATE of a shadow (the emitter's own mirror of the author's
+        # ALLOCATE) names a shadow and computes nothing: not a stress expression.
+        if re.match(r"^\s*(?:IF\s*\(\s*ALLOCATED\s*\([^)]*\)\s*\)\s*)?(?:DE)?ALLOCATE\s*\(", line, flags=re.IGNORECASE):
+            continue
+        # ... and the emitter's own zeroing loop over that mirror: DO OTI_HI = LBOUND(X_OTI,1), ...
+        if re.match(r"^\s*(?:\d+\s+)?DO\s+OTI_H[IJKL]\s*=", line, flags=re.IGNORECASE):
+            continue
         if _is_dstran_initialization_line(line, dstran) or _is_dstran_seed_line(line, dstran):
             continue
         if _is_finite_dfgrd1_seed_line(line, mappings.get("dfgrd1", "DFGRD1")):
