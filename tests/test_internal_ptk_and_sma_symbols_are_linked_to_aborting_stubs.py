@@ -51,7 +51,7 @@ DEAD = HEAD + "      PTRB = SMAFLOATARRAYACCESS(1)\n" + BODY + """      SUBROUTI
 ENTERED = HEAD + "      CALL PTKCOMPUTE(NOEL)\n" + BODY
 
 
-def _check(tmp_path, text):
+def _check(tmp_path, text, monkeypatch):
     import umat_oti.abaqus.replay as R
     import verify_store_in_abaqus as V
     real = R.build_history_replay
@@ -62,43 +62,40 @@ def _check(tmp_path, text):
             b.reason = "ifort is not on PATH"
             return b
         return real(source, work_dir, **kw)
-    R.build_history_replay = no_ifort
-    try:
-        source = tmp_path / "original_probed.for"
-        source.write_text(text)
-        include = tmp_path / "inc"
-        include.mkdir()
-        for name in ("aba_param.inc", "ABA_PARAM.INC"):
-            (include / name).write_text("      implicit real*8(a-h,o-z)\n")
-        entry = {"NTENS": 6, "NSTATV": 1, "NPROPS": 1, "NDI": 3, "NSHR": 3,
-                 "DTIME": [1.0], "TIME": [0.0, 0.0], "STRESS0": [0.0] * 6,
-                 "STATEV0": [0.0], "STRAN": [0.0] * 6, "DSTRAN": [1e-3] * 6,
-                 "PROPS": [10.0], "COORDS": [0.0, 0.0, 0.0, 1.0], "NOEL": 1}
-        return V.init_variant_check(source, [entry, entry], tmp_path / "work", ntens=6,
-                                    include_dirs=[include])
-    finally:
-        R.build_history_replay = real
+    monkeypatch.setattr(R, "build_history_replay", no_ifort)
+    source = tmp_path / "original_probed.for"
+    source.write_text(text)
+    include = tmp_path / "inc"
+    include.mkdir()
+    for name in ("aba_param.inc", "ABA_PARAM.INC"):
+        (include / name).write_text("      implicit real*8(a-h,o-z)\n")
+    entry = {"NTENS": 6, "NSTATV": 1, "NPROPS": 1, "NDI": 3, "NSHR": 3,
+             "DTIME": [1.0], "TIME": [0.0, 0.0], "STRESS0": [0.0] * 6,
+             "STATEV0": [0.0], "STRAN": [0.0] * 6, "DSTRAN": [1e-3] * 6,
+             "PROPS": [10.0], "COORDS": [0.0, 0.0, 0.0, 1.0], "NOEL": 1}
+    return V.init_variant_check(source, [entry, entry], tmp_path / "work", ntens=6,
+                                include_dirs=[include])
 
 
-def test_symbols_that_are_only_linked_let_the_replay_complete(tmp_path):
-    check = _check(tmp_path, DEAD)
+def test_symbols_that_are_only_linked_let_the_replay_complete(tmp_path, monkeypatch):
+    check = _check(tmp_path, DEAD, monkeypatch)
     assert check["established"], check
     assert not (check["undefined"]["STRESS"] or check["undefined"]["DDSDDE"])
 
 
-def test_a_stubbed_routine_that_is_entered_stops_the_run_with_status_8(tmp_path):
-    check = _check(tmp_path, ENTERED)
+def test_a_stubbed_routine_that_is_entered_stops_the_run_with_status_8(tmp_path, monkeypatch):
+    check = _check(tmp_path, ENTERED, monkeypatch)
     assert not check["established"], check
     assert "did not replay" in check["reason"] or "stopped" in check["reason"]
     assert check["zero"]["returncode"] == 8 and "PTKCOMPUTE" in check["zero"]["tail"]
 
 
-def test_a_source_that_defines_its_own_array_access_gets_no_second_definition(tmp_path):
+def test_a_source_that_defines_its_own_array_access_gets_no_second_definition(tmp_path, monkeypatch):
     own = DEAD.replace("      INTEGER*8 PTRB\n", "      INTEGER*8 PTRB, SMAFLOATARRAYACCESS\n") + """      FUNCTION SMAFLOATARRAYACCESS(ID)
       INTEGER*8 SMAFLOATARRAYACCESS
       SMAFLOATARRAYACCESS = 0
       RETURN
       END
 """
-    check = _check(tmp_path, own)
+    check = _check(tmp_path, own, monkeypatch)
     assert check["established"], check

@@ -1934,6 +1934,26 @@
      "text": "assert len(silent) == 14, len(silent)"
     }
    ]
+  },
+  "skip:tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which builds the replay driver around a small planted source (an Abaqus-internal routine only linked, one entered on the UMAT path, one defined by the source itself). CI installs gfortran, so it runs there.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "skip:tests/test_the_replay_stages_the_data_files_the_job_staged.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "New test; the one case that skips builds and runs a replay of a small planted UMAT that reads a staged table, with and without the staging; it needs gfortran, which CI installs. The staging and PARAMETER-resolution cases of the same file have no such condition.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
   }
  }
 }
