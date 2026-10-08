@@ -697,6 +697,12 @@ def instrument(source_text: str, tag: str, entry: str = "UMAT",
                     re.IGNORECASE):
             last_return = number
     if last_return is None:
+        # A routine that ends by running off its END, with no RETURN anywhere,
+        # is as legal as one that returns (biofilm_visco, template_umat,
+        # neo_hookean_umat): the exit call goes before the closing END, which
+        # is where the last RETURN would have been.
+        last_return = _closing_end(lines, start, end)
+    if last_return is None:
         return source_text, False
 
     first_executable = _first_executable(lines, start, end)
@@ -716,6 +722,22 @@ def instrument(source_text: str, tag: str, entry: str = "UMAT",
                             form=form))
     support = free_form(PROBE_SOURCE) if free else PROBE_SOURCE
     return "".join(lines) + support, True
+
+
+_ROUTINE_END = re.compile(r"^\s*END(?:\s+SUBROUTINE(?:\s+\w+)?)?\s*$", re.IGNORECASE)
+
+
+def _closing_end(lines: list[str], start: int, end: int) -> Optional[int]:
+    """The index of the END statement that closes the routine spanning [start, end], or None."""
+    for number in range(min(end, len(lines) - 1), start - 1, -1):
+        if _is_comment(lines[number]):
+            continue
+        if _ROUTINE_END.match(_statement_text(lines[number])):
+            return number
+        if number < end:
+            # The last statement of the routine is not its END: nothing closes it here.
+            return None
+    return None
 
 
 def _is_comment(line: str) -> bool:

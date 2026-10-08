@@ -20,7 +20,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Iterable, Sequence
 
-_MODULE_OPEN = re.compile(r"^\s*MODULE\s+(?!PROCEDURE\b)([A-Za-z_]\w*)\s*$", re.IGNORECASE)
+_MODULE_OPEN = re.compile(r"^\s*MODULE\s+(?!PROCEDURE\b)([A-Za-z_]\w*)\s*(?:!.*)?$", re.IGNORECASE)
 _MODULE_CLOSE = re.compile(r"^\s*END\s*MODULE\b", re.IGNORECASE)
 _END_BARE = re.compile(r"^\s*END\s*$", re.IGNORECASE)
 _USE = re.compile(r"^\s*USE\b\s*(?:,\s*(?:NON_)?INTRINSIC\s*)?(?:::)?\s*([A-Za-z_]\w*)", re.IGNORECASE)

@@ -892,6 +892,68 @@
     "tests/test_b20_the_growth_instrument_reads_the_targets_when_the_tensor_is_local.py::test_a_target_that_grows_is_developed_and_the_same_run_with_no_growth_is_not",
     "tests/test_b20_the_growth_instrument_reads_the_targets_when_the_tensor_is_local.py::test_a_complete_run_is_not_called_cut_off_and_a_short_one_is"
    ]
+  },
+  {
+   "commit": "7b87a14",
+   "selected_by": "manual",
+   "bug": "The old-DDSDDE guard (old_ddsdde_assignments_disabled) matched assignments to a dummy called DDSDDE in other routines of the file by text, and counted a plastic-branch tangent written between the last stress update and the full-array extraction as a surviving write although the extraction overwrites every entry after it, so cfietek's JC-damage UMAT and mholla's umat_iso_Mandel_v2 were refused. The guard now searches the selected routine only, and a write before the extraction is harmless when no RETURN, GO TO, ENTRY, STOP, arithmetic IF, alternate return or ERR=/END=/EOR= branch lies between; writes at or after the extraction are still refused.",
+   "tests": [
+    "tests/test_an_old_tangent_write_before_the_extraction_is_not_a_surviving_write.py::test_the_published_source_is_no_longer_refused",
+    "tests/test_an_old_tangent_write_before_the_extraction_is_not_a_surviving_write.py::test_mhollas_growth_umat_is_no_longer_refused",
+    "tests/test_an_old_tangent_write_before_the_extraction_is_not_a_surviving_write.py::test_canary_an_early_exit_before_the_tangent_is_still_refused"
+   ]
+  },
+  {
+   "commit": "7725c5b",
+   "selected_by": "manual",
+   "bug": "A DATA statement naming an array section (DATA I_mat(1,:) /1.D0,0.D0,0.D0/) was refused by the helper lifter as an unsupported shape, so prashanthgadwala's ferrite umat.f was refused. A section whose subscripts are ':' or integer literals, on a name with declared literal extents, now expands to its elements in array element order; unknown extents, a mismatched value count and a non-literal subscript are still refused.",
+   "tests": [
+    "tests/test_a_data_statement_may_name_an_array_section.py::test_a_row_section_is_expanded_in_element_order",
+    "tests/test_a_data_statement_may_name_an_array_section.py::test_a_column_section_runs_the_first_subscript_fastest",
+    "tests/test_a_data_statement_may_name_an_array_section.py::test_canary_what_cannot_be_expanded_is_still_refused"
+   ]
+  },
+  {
+   "commit": "85cde69",
+   "selected_by": "manual",
+   "bug": "ATAN2 and SUM(array, DIM=d) over a differentiated value were refused by name because the OTI support module had no form of them, and ASINH/ACOSH/ATANH over the OTI type did not exist, so the ntnu crystal-plasticity UMATs umatCP.for and umatCP_RD2.for were refused. oti_intrinsics now declares them, only for a file whose text calls them on a shadow, with the value of the real intrinsic and the closed-form derivative (checked at 12 points over all quadrants, the branch cut and the axes); SUM with MASK= or a positional second argument is still refused.",
+   "tests": [
+    "tests/test_oti_atan2_and_inverse_hyperbolics.py::test_atan2_value_and_both_partials_match_the_closed_form",
+    "tests/test_oti_atan2_and_inverse_hyperbolics.py::test_inverse_hyperbolics_match_the_closed_form",
+    "tests/test_oti_atan2_and_inverse_hyperbolics.py::test_the_crystal_plasticity_umats_are_no_longer_refused_for_atan2",
+    "tests/test_sum_with_dim_over_hypercomplex_arrays.py::test_values_and_derivatives_are_the_sums",
+    "tests/test_sum_with_dim_over_hypercomplex_arrays.py::test_a_keyword_dim_is_accepted_and_canary_a_mask_is_still_refused"
+   ]
+  },
+  {
+   "commit": "dcc9844",
+   "selected_by": "manual",
+   "bug": "A scalar initialised in its declaration (DOUBLE PRECISION :: RESTOL = 1.0D-09) was promoted and its shadow zeroed by the emitter (RESTOL_OTI = 0.0D0) with nothing carrying the declared value in, so a Newton convergence test against it could never succeed: the FGJD viscoelastic UMAT cut its increment back until Abaqus gave up (transformed_job_failed), and ten other rows carried the same silent zero. A declaration initialiser now counts like a DATA initialiser: never assigned, the name stays real with its value; assigned as well, the existing refusal applies and now names the line.",
+   "tests": [
+    "tests/test_a_declaration_initialiser_is_carried_to_the_transform.py::test_an_initialised_tolerance_that_is_never_assigned_stays_real",
+    "tests/test_a_declaration_initialiser_is_carried_to_the_transform.py::test_the_fgjd_viscoelastic_newton_tolerance_is_the_authors",
+    "tests/test_a_declaration_initialiser_is_carried_to_the_transform.py::test_canary_an_initialised_name_that_is_also_assigned_is_still_refused"
+   ]
+  },
+  {
+   "commit": "2e19f3f",
+   "selected_by": "manual",
+   "bug": "A call written 'CALL STRESS_UPDATE ! comment' with its argument list on the continuation line kept the name of the untransformed routine while its actuals were hypercomplex (theysy MML_U2: the first call returned a stress of 0.0 against 221.37), and the check that no hypercomplex actual reaches an untransformed callee read one physical line, so a continued CALL was never examined. A bare CALL name that names a lifted helper is now renamed NAME_OTI and the check reads logical statements; an unlifted callee split the same way is now refused.",
+   "tests": [
+    "tests/test_a_call_split_by_a_comment_still_reaches_its_lifted_callee.py::test_the_whole_transform_calls_the_lifted_helper",
+    "tests/test_a_call_split_by_a_comment_still_reaches_its_lifted_callee.py::test_a_bare_call_line_is_renamed_to_the_lifted_callee",
+    "tests/test_a_call_split_by_a_comment_still_reaches_its_lifted_callee.py::test_canary_an_unlifted_callee_split_the_same_way_is_still_refused"
+   ]
+  },
+  {
+   "commit": "7c8fdd8",
+   "selected_by": "manual",
+   "bug": "The refusal for an internal procedure that reads its host's variables by host association ran only when the host was itself lifted and only for internal procedures the parser kept inside the host (it ends a host at the first END SUBROUTINE); a UMAT hosting internal procedures that read its variables was transformed into a program whose lifted copies used uninitialised locals of the same names, with the transform reporting success. The check now also runs for an unlifted host over the host's whole text.",
+   "tests": [
+    "tests/test_an_internal_procedure_of_an_unlifted_host_may_not_read_the_host.py::test_canary_an_internal_function_that_reads_a_host_variable_is_refused",
+    "tests/test_an_internal_procedure_of_an_unlifted_host_may_not_read_the_host.py::test_an_internal_function_that_reads_only_its_arguments_is_lifted",
+    "tests/test_an_internal_procedure_of_an_unlifted_host_may_not_read_the_host.py::test_the_true_end_of_a_host_with_internal_subroutines_is_found"
+   ]
   }
  ],
  "excluded": [

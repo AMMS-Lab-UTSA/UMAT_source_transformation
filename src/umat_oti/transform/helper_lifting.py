@@ -546,6 +546,8 @@ def lift_helper_set_source(
     _refuse_calls_that_need_an_explicit_interface(parsed, routines, lifted_set)
     host_constants = host_constants_for_internal_procedures(parsed)
     hosts = internal_procedure_hosts(parsed)
+    _refuse_internal_procedures_that_read_an_unlifted_host(
+        parsed, routines, ordered, hosts, source_lines, lifted_set | lifted_functions)
     body = "\n\n".join(
         _lift_helper_routine(
             routines[name],
@@ -570,6 +572,26 @@ def lift_helper_set_source(
     body = _nest_internal_procedures(body, internal_procedure_hosts(parsed))
     return LiftedHelperSet(helper_names=ordered, source=body + ("\n" if body else ""))
 
+
+
+def _refuse_internal_procedures_that_read_an_unlifted_host(
+        parsed: ParsedFortranSource, routines: dict[str, ParsedSubroutine],
+        ordered: Sequence[str], hosts: dict[str, str], source_lines: list[str],
+        lifted: set[str]) -> None:
+    """An internal procedure is lifted as an external one; its host's variables must not be read.
+
+    The check for that lives in ``_without_internal_procedures`` and runs when
+    the HOST is lifted. A host that is not lifted (the selected UMAT itself,
+    ml_umat.f) never ran it, so its internal procedures were lifted without
+    anyone asking whether they read the host's variables by host association.
+    The same check is run here on the host's whole text, for each such host.
+    """
+    for host_name in sorted({hosts[name] for name in ordered if name in hosts}):
+        if host_name in ordered or host_name not in routines:
+            continue
+        host = routines[host_name]
+        _without_internal_procedures(
+            _host_source_lines(source_lines, parsed.form, host), parsed.form, host, lifted)
 
 def _refuse_calls_that_need_an_explicit_interface(
         parsed: ParsedFortranSource, routines: dict[str, ParsedSubroutine],
@@ -618,12 +640,12 @@ def internal_procedure_hosts(parsed: ParsedFortranSource) -> dict[str, str]:
     units = routines_by_name(parsed)
     hosts: dict[str, str] = {}
     for host in parsed.subroutines:
-        raw = _routine_source_lines(source_lines, host)
+        raw = _host_source_lines(source_lines, parsed.form, host)
         contains_at = next((index for index, line in enumerate(raw[1:-1], start=1)
                             if _CONTAINS_RE.match(_statement_text(line, parsed.form))), None)
         if contains_at is None:
             continue
-        first, last = host.lines[0].line_numbers[0], host.lines[-1].line_numbers[-1]
+        first, last = host.lines[0].line_numbers[0], _true_last_line(source_lines, parsed.form, host)
         for name, unit in units.items():
             start = unit.lines[0].line_numbers[0] if unit.lines else 0
             if name != host.upper_name and first + contains_at < start <= last:
@@ -988,7 +1010,7 @@ def _lift_helper_routine(
     host_constants: Sequence[str] = (),
     typing_host: ParsedSubroutine | None = None,
 ) -> str:
-    raw_lines = _routine_source_lines(source_lines, routine)
+    raw_lines = _host_source_lines(source_lines, form, routine)
     raw_lines = _without_internal_procedures(
         raw_lines, form, routine,
         set(lifted_names) | set(lifted_function_names or ()))
@@ -1698,7 +1720,7 @@ def _expand_helper_includes(
 #: spelling. The same four the main pass blocks on
 #: (``_INTRINSICS_WITHOUT_AN_OTI_FORM`` in source_transform); MOD and SUM have
 #: expanders above and only reach here when the expander could not apply.
-_UNSUPPORTED_OVER_OTI = ("SUM", "PRODUCT", "MOD", "ATAN2")
+_UNSUPPORTED_OVER_OTI = ("SUM", "PRODUCT", "MOD")
 
 #: Of those, the ones oti_intrinsics now declares for a single whole-array
 #: argument. A DIM= or MASK= argument is still refused by name.
@@ -3038,6 +3060,32 @@ def _data_to_assignments(payload: str,
                     assignments.append(
                         f"{name_entries[0]}({subscript}) = {_normalize_real_literal(value)}")
                 continue
+        # An array section on the name list -- DATA I(1,:) /1.D0,0.D0,0.D0/ -- is the
+        # elements it covers, in array element order (the leftmost subscript fastest).
+        expanded_names: list[str] = []
+        for entry in name_entries:
+            section = re.match(r"^([A-Za-z_]\w*)\s*\((.*)\)$", entry)
+            if section and ":" in section.group(2):
+                extents = (declared_extents or {}).get(section.group(1).upper())
+                subs = [part.strip() for part in split_top_level(section.group(2))]
+                if extents and len(extents) == len(subs):
+                    ranges = []
+                    for part, extent in zip(subs, extents):
+                        if part == ":":
+                            ranges.append(list(range(1, extent + 1)))
+                        elif re.fullmatch(r"\d+", part):
+                            ranges.append([int(part)])
+                        else:
+                            ranges = []
+                            break
+                    if ranges:
+                        from itertools import product
+                        for combo in product(*reversed(ranges)):
+                            expanded_names.append(
+                                f"{section.group(1)}({','.join(str(v) for v in reversed(combo))})")
+                        continue
+            expanded_names.append(entry)
+        name_entries = expanded_names
         if len(value_entries) != len(name_entries):
             raise HelperLiftingError(
                 f"Unsupported DATA statement shape: {payload!r}. A lifted "
@@ -3388,6 +3436,50 @@ def host_constants_for_internal_procedures(parsed: ParsedFortranSource) -> dict[
             result[internal] = constants
     return result
 
+
+
+_UNIT_OPEN_RE = re.compile(
+    r"^\s*(?:(?:PURE|IMPURE|ELEMENTAL|RECURSIVE|MODULE)\s+|(?:REAL|INTEGER|LOGICAL|COMPLEX|"
+    r"DOUBLE\s+PRECISION|CHARACTER|TYPE\s*\([^)]*\))(?:\s*\([^)]*\)|\s*\*\s*\d+)?\s+)*"
+    r"(?:SUBROUTINE|FUNCTION)\s+[A-Z_]\w*", re.IGNORECASE)
+_UNIT_CLOSE_RE = re.compile(r"^\s*END(?:\s+(?:SUBROUTINE|FUNCTION)(?:\s+[A-Z_]\w*)?)?\s*$", re.IGNORECASE)
+
+
+def _true_last_line(source_lines: list[str], form: str, routine: ParsedSubroutine) -> int:
+    """The 1-based line of the END that closes ``routine``, counting its internal procedures.
+
+    ``parse_subroutines`` closes a routine at the first ``END SUBROUTINE``,
+    which inside a CONTAINS section is the end of the first internal
+    SUBROUTINE: the later internal procedures were then parsed as external
+    routines and every check that reads a host's internal procedures (the
+    refusal for one that reads its host's variables, the nesting back into the
+    host) never saw them. The nesting is followed here by program-unit
+    openers and closers; the parser's own end is returned when the count does
+    not close, so a text this cannot follow behaves as before.
+    """
+    if not routine.lines:
+        return 0
+    parsed_last = routine.lines[-1].line_numbers[-1]
+    depth = 0
+    for index in range(routine.lines[0].line_numbers[0] - 1, len(source_lines)):
+        statement = _statement_text(source_lines[index], form)
+        if not statement:
+            continue
+        if _UNIT_CLOSE_RE.match(statement):
+            depth -= 1
+            if depth <= 0:
+                return max(index + 1, parsed_last)
+        elif _UNIT_OPEN_RE.match(statement):
+            depth += 1
+    return parsed_last
+
+
+def _host_source_lines(source_lines: list[str], form: str, routine: ParsedSubroutine) -> list[str]:
+    """The routine's lines through its true END (see :func:`_true_last_line`)."""
+    if not routine.lines:
+        return []
+    start = routine.lines[0].line_numbers[0]
+    return source_lines[max(start - 1, 0):_true_last_line(source_lines, form, routine)]
 
 def _routine_source_lines(source_lines: list[str], routine: ParsedSubroutine) -> list[str]:
     if not routine.lines:
