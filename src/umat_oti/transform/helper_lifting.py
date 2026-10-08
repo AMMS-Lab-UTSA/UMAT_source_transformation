@@ -3038,6 +3038,32 @@ def _data_to_assignments(payload: str,
                     assignments.append(
                         f"{name_entries[0]}({subscript}) = {_normalize_real_literal(value)}")
                 continue
+        # An array section on the name list -- DATA I(1,:) /1.D0,0.D0,0.D0/ -- is the
+        # elements it covers, in array element order (the leftmost subscript fastest).
+        expanded_names: list[str] = []
+        for entry in name_entries:
+            section = re.match(r"^([A-Za-z_]\w*)\s*\((.*)\)$", entry)
+            if section and ":" in section.group(2):
+                extents = (declared_extents or {}).get(section.group(1).upper())
+                subs = [part.strip() for part in split_top_level(section.group(2))]
+                if extents and len(extents) == len(subs):
+                    ranges = []
+                    for part, extent in zip(subs, extents):
+                        if part == ":":
+                            ranges.append(list(range(1, extent + 1)))
+                        elif re.fullmatch(r"\d+", part):
+                            ranges.append([int(part)])
+                        else:
+                            ranges = []
+                            break
+                    if ranges:
+                        from itertools import product
+                        for combo in product(*reversed(ranges)):
+                            expanded_names.append(
+                                f"{section.group(1)}({','.join(str(v) for v in reversed(combo))})")
+                        continue
+            expanded_names.append(entry)
+        name_entries = expanded_names
         if len(value_entries) != len(name_entries):
             raise HelperLiftingError(
                 f"Unsupported DATA statement shape: {payload!r}. A lifted "
