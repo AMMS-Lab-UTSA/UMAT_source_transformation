@@ -837,6 +837,16 @@
     "tests/test_the_word_green_is_only_in_a_green_banner_and_the_abaqus_command_promises_no_verification.py::test_check_prints_the_command_sentence_after_an_amber_verdict_and_passes_the_dependency_roots_through"
    ],
    "selected_by": "manual"
+  },
+  {
+   "commit": "8421e15",
+   "selected_by": "manual",
+   "bug": "The callee rule treated unpublished BLAS/LAPACK calls as external and trusted a partial discovery cache for CALL names, and a statement such as UserVar(i)=x was read as USE rVar, which removed or misfiled sources; library calls are now neither resolved nor external, a CALL name counts as unpublished only when confirmed absent upstream, the USE pattern needs a word boundary, and the census prints the pass23 population apart from the 14 new not-yet-attempted sources.",
+   "tests": [
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_blas_and_lapack_are_neither_resolved_nor_external_and_unconfirmed_ptk_names_do_not_count",
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_statement_that_starts_with_the_letters_use_is_not_a_use_statement",
+    "tests/test_the_registry_is_the_denominator.py::test_the_census_keeps_the_pass23_population_and_the_new_sources_apart"
+   ]
   }
  ],
  "excluded": [

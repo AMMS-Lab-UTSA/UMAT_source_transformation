@@ -236,8 +236,8 @@ def _inventory_ids():
 POPULATION = REPO / "paper_results/corpus/pass23_population.json"
 
 
-def test_the_inventory_is_the_pass23_population_of_405_plus_the_14_new_sources():
-    """The acquisition triage lists 419 sources: the 405 of the pass23 population
+def test_the_registry_holds_every_one_of_the_391_discovered_sources():
+    """(The name keeps the figure of 391 the test was written for.) The acquisition triage lists 419 sources: the 405 of the pass23 population
     (391 until tools/ingest_discovery_round.py added the 14 the 2026-10-02 round
     accepted) and 14 more from the 2026-10-06 host round. ``corpus_registry.json``
     is the pass23 registry and carries exactly the 405; the 14 are in no batch,
