@@ -1852,6 +1852,30 @@
   "mock:tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py:test_the_renamed_umat_transforms_and_its_tangent_matches_the_authors:monkeypatch.setattr:cef0b4ef": {
    "verdict": "justified",
    "reason": "Same routing as above: the harness's transform step is replaced by the corpus recipe (_build_contract then run_transformation, both real) so the rename is exercised; the build, run, bitwise primal and finite-difference tangent comparison against the author's own routine are the real harness."
+  },
+  "skip:tests/test_poison_stop_classification.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which compiles the planted source (a guard on an uninitialised value, and a clean control). CI installs gfortran, so it runs there.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "skip:tests/test_poison_stop_classification.py:<module>:mark.skipif:6824f295#2": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which compiles the planted source (a guard on an uninitialised value, and a clean control). CI installs gfortran, so it runs there.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "mock:tests/test_poison_stop_classification.py:test_a_planted_author_isnan_guard_on_an_uninitialised_value_is_flagged:monkeypatch.setattr:f46267d4": {
+   "verdict": "justified",
+   "reason": "Replaces build_history_replay by a wrapper that reports 'ifort is not on PATH' for ifort only and calls the real function for gfortran, so the real gfortran probe is built and run on the planted ISNAN guard and must flag STRESS; it lets CI, which has no ifort, exercise the rule. The classification and the flagging are the real code."
   }
  }
 }
