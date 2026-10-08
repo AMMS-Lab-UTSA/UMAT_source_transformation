@@ -1975,10 +1975,15 @@ class Finding:
     met: Optional[bool]
     reason: str
     magnitude: float = 0.0
+    #: ``"measured"`` for a finding read off the run; ``"inferred_not_measured"``
+    #: where the quantity was NOT observed and the number is an inference from
+    #: something that was (growth read from the state targets). An inferred
+    #: finding never carries ``met`` True or False: the gate stays null.
+    evidence: str = "measured"
 
     def as_dict(self) -> dict:
         return {"name": self.name, "met": self.met, "reason": self.reason,
-                "magnitude": self.magnitude}
+                "magnitude": self.magnitude, "evidence": self.evidence}
 
 
 def _values(record: dict, key: str) -> list[float]:
@@ -2136,14 +2141,19 @@ def _growth_developed_from_targets(results: Sequence[dict], targets: dict,
     best_slot, best = max(reach, key=lambda pair: pair[1])
     detail = ", ".join(f"STATEV({slot}) target x clock fraction {fraction:.0%} "
                        f"= {value:.3%}" for slot, value in reach)
-    how = (f"the growth tensor of this source is a local variable, so it was "
-           f"read from the end-state targets it ramps towards from the "
-           f"identity: {detail}")
-    if best >= GROWTH_MOVEMENT:
-        return Finding("growth developed", True, how, best)
-    return Finding("growth developed", False,
-                   how + f". The largest, STATEV({best_slot}), is {best:.3%} "
-                   f"against the {GROWTH_MOVEMENT:.0%} this family needs", best)
+    # NOT A MEASUREMENT. The growth tensor is a local variable nobody observed;
+    # this is an inference from the end-state targets, under the assumption of a
+    # ramp from the identity. The finding therefore stays null (met None): an
+    # inference is not a pass, and the gate it feeds stays "never measured".
+    return Finding(
+        "growth developed", None,
+        f"growth inferred from state targets, not measured: the growth tensor "
+        f"of this source is a local variable that was never observed; read "
+        f"from the end-state targets it would ramp towards from the identity "
+        f"({detail}), the inference is {best:.3%} against the "
+        f"{GROWTH_MOVEMENT:.0%} this family needs, which would "
+        f"{'meet' if best >= GROWTH_MOVEMENT else 'not meet'} the criterion if "
+        f"the assumed ramp holds", best, evidence="inferred_not_measured")
 
 
 def stress_stays_on_the_material_scale(records: Sequence[dict],
