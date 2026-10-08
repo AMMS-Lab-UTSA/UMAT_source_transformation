@@ -156,3 +156,15 @@ def test_the_crystal_plasticity_umats_are_no_longer_refused_for_atan2(tmp_path, 
     assert report["transform_success"], failed_checks(report)
     emitted = (tmp_path / "out" / "oti_intrinsics.f90").read_text()
     assert "oti_atan2_tt" in emitted
+
+
+def test_a_mention_in_a_comment_does_not_add_a_generic():
+    """CereusForbesiiSpiralis mentions ASINH only in commented-out lines (and calls it on reals)."""
+    from umat_oti.transform.source_transform import _calls_on_oti_values, _without_comments
+
+    fixed = ("      X = 1.D0\n"
+             "!      Y_OTI = ASINH(Z_OTI)\n"
+             "C      W_OTI = ASINH(Z_OTI)\n"
+             "      V = ASINH(Q)   ! was ASINH(Z_OTI)\n")
+    assert not _calls_on_oti_values("ASINH", _without_comments(fixed, True))
+    assert _calls_on_oti_values("ASINH", _without_comments(fixed + "      Y_OTI = ASINH(Z_OTI)\n", True))
