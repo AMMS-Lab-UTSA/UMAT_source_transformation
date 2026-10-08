@@ -1341,12 +1341,16 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             # transformer ever reached it.
             outputs = umat_outputs_written(text, form=found.source_form,
                                            path=source)
+            outputs, followed = outputs_following_includes(
+                source, text, outputs, cache)
             record.writes_stress = outputs.writes_stress
             record.writes_ddsdde = outputs.writes_ddsdde
             record.output_calls = outputs.calls
             record.output_first_write = outputs.first_write
             record.output_first_write_line = outputs.first_write_line or None
-            record.output_search = outputs.where_it_searched
+            record.output_search = outputs.where_it_searched + (
+                f"; followed {len(followed)} quoted INCLUDE file(s) that "
+                f"the repository publishes: {', '.join(followed)}" if followed else "")
             record.source_form = found.source_form
             record.entry_interface = found.entry_interface
             record.entry_routine = found.entry_routine
@@ -1372,7 +1376,10 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             # (upstream_callee_check.json). Modules and includes keep the
             # evidence they always had.
             confirmed = upstream_absent_calls(record.source_id)
+            published_upstream = upstream_present_names(record.source_id)
             missing = [name for name in looked.unpublished
+                       if name not in published_upstream]
+            missing = [name for name in missing
                        if name.split(" ", 1)[-1].lower() not in INTRINSIC_MODULES
                        and (not name.startswith("call ")
                             or name.split(" ", 1)[1] in confirmed)]
@@ -1605,6 +1612,15 @@ def upstream_absent_calls(source_id: str, path: Optional[Path] = None) -> frozen
                                 if path.is_file() else {})
     return frozenset(n.upper() for n in
                      _UPSTREAM[str(path)].get(source_id, {}).get("absent", ()))
+
+
+def upstream_present_names(source_id: str, path: Optional[Path] = None) -> frozenset:
+    """``module X`` / ``include X`` names the upstream tree at the pinned commit
+    defines although the (partial) discovery cache does not hold the file."""
+    path = Path(path or UPSTREAM_CALLEE_CHECK)
+    upstream_absent_calls(source_id, path)             # loads the file
+    return frozenset(_UPSTREAM[str(path)].get(source_id, {})
+                     .get("present_upstream_names", {}))
 
 
 #: States the B17 G3a rule may move to ``external_dependency_unavailable``. They
@@ -3232,6 +3248,61 @@ def companion_files_text(order, cache) -> str:
     Sanisand-High). Neither the JSON nor the CSV view truncates it.
     """
     return "; ".join(str(Path(unit).relative_to(cache)) for unit in order)
+
+
+def outputs_following_includes(source: Path, text: str, outputs, cache: Path,
+                               depth: int = 6) -> tuple:
+    """The output search of ``umat_outputs_written``, following quoted INCLUDEs.
+
+    A UMAT body that is spliced in by ``INCLUDE './x/UMAT_verification.f'``
+    assigns DDSDDE in the included file, and the compiler sees one source
+    (bmmbUPF Sub_TransDisc.f). The search follows the same quoted includes, in
+    the same repository, that the callee rule looks up (ABA_PARAM.INC and the
+    other Abaqus includes are not followed), transitively and without cycles.
+    Returns ``(evidence, [repository-relative files followed])``; the first
+    write keeps the main file's own line when it has one.
+    """
+    from dataclasses import replace
+    from umat_oti.abaqus.companions import ABAQUS_INCLUDES, needs
+    from umat_oti.abaqus.repository_lookup import repository_index
+    from umat_oti.corpus.entry_routines import umat_outputs_written
+
+    relative = Path(source).resolve().relative_to(Path(cache).resolve())
+    index = repository_index(Path(cache) / relative.parts[0])
+    seen, followed, queue = {Path(source).resolve()}, [], [(Path(source), text, 0)]
+    stress, ddsdde = outputs.writes_stress, outputs.writes_ddsdde
+    calls, lines = outputs.calls, outputs.logical_lines
+    first, first_line = outputs.first_write, outputs.first_write_line
+    while queue:
+        path, body, level = queue.pop(0)
+        if level >= depth:
+            continue
+        for include in needs(body).includes:
+            base = Path(include).name.lower()
+            if base in ABAQUS_INCLUDES:
+                continue
+            near = sorted(index.by_filename.get(base, ()),
+                          key=lambda p: (0 if p.parent == path.parent else 1,
+                                         len(p.parts), str(p)))
+            if not near or near[0].resolve() in seen:
+                continue
+            found = near[0]
+            seen.add(found.resolve())
+            inc_text = index.texts.get(found) or found.read_text(errors="replace")
+            inc = umat_outputs_written(inc_text, path=found)
+            followed.append(str(found.relative_to(cache)))
+            stress, ddsdde = stress or inc.writes_stress, ddsdde or inc.writes_ddsdde
+            calls += inc.calls
+            lines += inc.logical_lines
+            if not first and inc.first_write:
+                first = f"[{found.name}] {inc.first_write}"[:200]
+                first_line = 0
+            queue.append((found, inc_text, level + 1))
+    if not followed:
+        return outputs, []
+    return replace(outputs, writes_stress=stress, writes_ddsdde=ddsdde,
+                   calls=calls, logical_lines=lines, first_write=first,
+                   first_write_line=first_line), followed
 
 
 def missing_companions_text(missing) -> str:
