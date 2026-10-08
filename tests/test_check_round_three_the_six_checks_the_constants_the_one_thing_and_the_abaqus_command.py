@@ -116,7 +116,7 @@ def test_no_row_of_the_digest_table_has_a_blank_run_and_a_blank_run_is_not_print
     assert "run  (" not in lines[0]
 
 
-# ---- 5. GREEN needs the Abaqus comparison: the command exists and says so
+# ---- 5. a verified result needs the Abaqus comparison: the command exists and says what it does
 def _flags_of_all():
     return subprocess.run([sys.executable, str(REPO / "umat-oti"), "all", "--help"], capture_output=True, text=True, cwd="/").stdout
 
@@ -140,7 +140,7 @@ def test_the_green_needs_abaqus_line_is_printed_only_after_an_amber_verdict_with
     check._RUN.update(source=tmp_path / "u.for", deck=None, out=tmp_path / "o", final=final, match=None, elsewhere=None)
     check.print_corpus_record()
     out = capsys.readouterr().out
-    assert ("GREEN needs the Abaqus comparison" in out) is says
+    assert ("To call this file verified, the six-check Abaqus comparison is needed" in out) is says
     if says:
         assert "umat-oti all" in out and "--abaqus" in out
 
@@ -151,7 +151,7 @@ def test_a_finite_strain_amber_next_step_is_the_command_not_a_rewrite_of_the_mod
     page = render_verdict(record, "pass23", "umat-oti all /x/u.for --out /x/o_abaqus --abaqus")
     nxt = [ln for ln in page.splitlines() if ln.startswith("Next:")][0]
     assert "set it up as a small" not in page
-    assert "GREEN for your version needs the Abaqus comparison" in nxt and "umat-oti all /x/u.for" in nxt
+    assert "a verified result for your version needs the six-check Abaqus comparison" in nxt and "umat-oti all /x/u.for" in nxt
 
 
 # ---- 6. words
