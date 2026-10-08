@@ -616,7 +616,12 @@ def redirect_indirect(text: str, directory: Path, *, staged: Sequence[str] = (),
                 # system is case-sensitive and one source includes
                 # 'param_umat.inc' in one routine and 'PARAM_UMAT.INC' in
                 # another
-                for variant in {path.name, path.name.lower(), path.name.upper()}:
+                names = {path.name, path.name.lower(), path.name.upper()}
+                # ...and under the relative path a transformed build writes
+                # it ('dependencies/PARAM_UMAT.INC'), which its INCLUDE names
+                names |= {written for written in _INCLUDE.findall(text)
+                          if Path(written).name.lower() == path.name.lower()}
+                for variant in names:
                     extra[variant] = body
         if count:
             pointed[opened.name] = target

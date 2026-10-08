@@ -166,3 +166,19 @@ def test_a_long_staged_path_is_wrapped_and_still_evaluates_to_the_path(tmp_path)
     assert done.returncode == 0, done.stderr
     out = subprocess.run(["./t"], cwd=tmp_path, capture_output=True, text=True).stdout.strip()
     assert out == pointed["fibers.inp"]
+
+
+def test_the_include_is_also_written_under_the_relative_name_a_transformed_build_uses(tmp_path):
+    repo = tmp_path / "owner__repo"
+    repo.mkdir()
+    (repo / "param_umat.inc").write_text("      PARAMETER (DIR1='fibers.inp')\n")
+    (repo / "fibers.inp").write_text("1\n")
+    text = JPS.replace("INCLUDE 'param_umat.inc'", "INCLUDE 'dependencies/PARAM_UMAT.INC'")
+    (repo / "umat.for").write_text(text)
+    job = tmp_path / "job"
+    stage(repo / "umat.for", job, roots=[repo])
+    # the include is found beside the source by base name through the roots, as the job's own copy is
+    (repo / "dependencies").mkdir()
+    (repo / "dependencies" / "PARAM_UMAT.INC").write_text("      PARAMETER (DIR1='fibers.inp')\n")
+    _, extra, pointed = redirect_indirect(text, job, staged=["fibers.inp"], include_dirs=[repo])
+    assert "dependencies/PARAM_UMAT.INC" in extra and pointed
