@@ -1748,6 +1748,74 @@
      "text": "sudo apt-get install -y gfortran"
     }
    ]
+  },
+  "skip:tests/test_abaqus_utility_stubs.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which it needs to compile the SPRIND/SINV/ROTSIG stubs beside a small program and compare them with 148 tensors measured on the real Abaqus (tests/fixtures/utility_semantics). CI installs gfortran, so it runs there.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "skip:tests/test_init_probe_compiler.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "New test; the gfortran-dependent cases (clean source, secondary agreement, fallback when ifort cannot be built) skip only without gfortran, which compiles the probe. CI installs gfortran, so they run there.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "skip:tests/test_init_probe_compiler.py:<module>:mark.skipif:9652259c": {
+   "verdict": "justified",
+   "reason": "New test; the cases asserting that ifort is the primary probe (planted uninitialised read flagged by decided_by == ifort) skip only without ifort. ifort is the licensed Intel compiler the Abaqus solver uses and is not installed in CI; those assertions were run on the Abaqus machine. The logic that does not need ifort (the gfortran decision when the primary cannot be built, and the planted error under gfortran) runs in CI in the same file.",
+   "evidence": [
+    {
+     "in": "tests/test_init_probe_compiler.py",
+     "text": "needs_ifort = pytest.mark.skipif(shutil.which(\"ifort\") is None, reason=\"needs ifort\")"
+    }
+   ]
+  },
+  "skip:tests/test_transform_ntens_follows_the_deck.py:<module>:mark.skipif:09b7dec1": {
+   "verdict": "justified",
+   "reason": "New test over the three real sources the pass23 guard refused; skips only when the discovery cache is absent (it is a local acquisition of third-party repositories, never in CI). The synthetic-repository tests of the same behaviour in the same file (CPE4, CPS4, CAX4, C3D8, the planted wrong mappings) have no such condition and run in CI.",
+   "evidence": [
+    {
+     "in": "tests/test_transform_ntens_follows_the_deck.py",
+     "text": "@pytest.mark.skipif(not CACHE.is_dir(), reason=\"needs the discovery cache\")"
+    }
+   ]
+  },
+  "skip:tests/test_transform_ntens_follows_the_deck.py:test_the_three_sources_the_pass23_guard_refused_are_now_transformed_at_the_element:call:skip:7a6790e9": {
+   "verdict": "justified",
+   "reason": "Skips only when one of the three named sources is missing from a partial local cache; with the file present the assertion is unconditional. Same cache condition as the module-level skip above.",
+   "evidence": [
+    {
+     "in": "tests/test_transform_ntens_follows_the_deck.py",
+     "text": "pytest.skip(\"source not in the cache\")"
+    }
+   ]
+  },
+  "broad_except:tools/transform_all.py:_ntens_of:except Exception:100e5848": {
+   "verdict": "justified",
+   "reason": "Falls through to the previous reading of the element (the proposal's pairing, then the triage row, then the default 6, recorded as such), which was the only behaviour before this change; a planner error therefore never hides a source, it only reverts to the old NTENS, and the verification's guard (ntens_mismatch) still refuses a transform whose NTENS differs from the element's.",
+   "evidence": [
+    {
+     "in": "tools/transform_all.py",
+     "text": "The older reading (the proposal's pairing) is kept as the fallback where the planner names no"
+    }
+   ]
+  },
+  "mock:tests/test_init_probe_compiler.py:test_where_the_primary_cannot_be_built_the_gfortran_set_decides:monkeypatch.setattr:1a16d6e3": {
+   "verdict": "justified",
+   "reason": "Replaces build_history_replay by a wrapper that reports 'ifort is not on PATH' for compiler=ifort only and calls the real function for gfortran, so the real gfortran probe is built and run on the planted uninitialised read and must still flag STRESS(1); this is the only way to exercise the fallback on a machine that has ifort."
+  },
+  "mock:tests/test_transform_ntens_follows_the_deck.py:test_a_deliberately_wrong_element_mapping_is_caught_by_the_guard:monkeypatch.setattr:c6c08d1b": {
+   "verdict": "justified",
+   "reason": "The planted error itself: maps CPE4 to the 6-component geometry in experiment.geometry_for so the transform NTENS comes out 6 while the planner's is 4; the real ntens_mismatch guard must then refuse. Only the element table is wrong; the guard under test is the real code."
   }
  }
 }

@@ -764,6 +764,26 @@
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_commented_out_include_is_not_a_dependency",
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_the_registry_moves_a_transformed_but_unrunnable_source_and_leaves_run_states_alone"
    ]
+  },
+  {
+   "commit": "76170fb",
+   "selected_by": "manual",
+   "bug": "The D-12 init probe of the original was built with gfortran and the ifort set was used only if gfortran could not build the file, while Abaqus builds the original with ifort and its own flags, so a verdict could rest on a compiler the solver never used. The primary probe is now ifort with the Abaqus flags (-init=zero/huge/minus_huge); the gfortran set is recorded as the secondary and decides only where the primary cannot be built or run. Measured on all 166 rows that reach D-12: no verdict changed.",
+   "tests": [
+    "tests/test_init_probe_compiler.py::test_the_primary_probe_is_the_solvers_compiler_and_flags_a_real_uninitialised_read",
+    "tests/test_init_probe_compiler.py::test_where_the_primary_cannot_be_built_the_gfortran_set_decides",
+    "tests/test_corpus_features_third_init.py::test_abaqus_side_flags_what_zero_vs_snan_missed"
+   ]
+  },
+  {
+   "commit": "f0f0bbd",
+   "selected_by": "manual",
+   "bug": "The transform chose the NTENS of the element from the proposals pairing while the verification chose it from the experiment planner, which picked a different deck for four sources (PhaseFieldComp 6 vs 4, Bilinear-CZM 2 vs 3, czmHealing 6 vs 2, plate_with_notch 6 vs 4): the stored transform was built for another NTENS than the element calls the UMAT with and the verification refused it. Both now read the element through experiment.deck_element.",
+   "tests": [
+    "tests/test_transform_ntens_follows_the_deck.py::test_the_transform_ntens_is_the_deck_elements",
+    "tests/test_transform_ntens_follows_the_deck.py::test_a_stored_transform_at_the_wrong_ntens_is_refused_never_run",
+    "tests/test_transform_ntens_follows_the_deck.py::test_a_deliberately_wrong_element_mapping_is_caught_by_the_guard"
+   ]
   }
  ],
  "excluded": [
