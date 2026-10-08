@@ -1978,6 +1978,16 @@
      "text": "sudo apt-get install -y gfortran"
     }
    ]
+  },
+  "skip:tests/test_the_replay_stages_the_data_files_the_job_staged.py:<module>:mark.skipif:6824f295#2": {
+   "verdict": "justified",
+   "reason": "New case in a file whose first skipif is already reviewed: it compiles the rewritten include with gfortran and prints the PARAMETER to show that the wrapped literal evaluates to the staged path; needs gfortran, which CI installs.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
   }
  }
 }
