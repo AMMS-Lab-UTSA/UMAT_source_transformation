@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-manifest/1",
- "generated": "2026-10-08T11:03:39+00:00",
+ "generated": "2026-10-08T11:27:35+00:00",
  "what_this_is": "one row per acquired corpus source plus one per discovered-but-not-acquired candidate; every pipeline stage and feature cell carries a status, a reason and an evidence locator. Skipped never counts as verified.",
  "roots": {
   "campaign": "$UMAT_OTI_WORKSPACE/corpus_campaign",
@@ -15,7 +15,7 @@
  "inputs": {
   "registry": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b17/paper_results/corpus/corpus_registry.json",
-   "sha256": "f5c96c86c06bf628f231b54a80a46ccbc0ab0c0e500b65a29d2f0948754808c8"
+   "sha256": "744edcd7bc3fee2d8559b45e477a3077e1e4b0ee3b4ebe28a47bf481f76e02ca"
   },
   "triage": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b17/paper_results/discovery/discovery_triage.json",
@@ -12591,18 +12591,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module DefUtils",
-      "module StressLocal",
-      "module Adaptive",
-      "module MaterialModels",
-      "module Constitutive",
-      "module ModelLumping",
-      "module MainUtils",
-      "module Types",
-      "module Integration",
-      "module LinearAlgebra"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module Adaptive",
       "module Constitutive",
@@ -15270,12 +15259,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module MKL_RCI",
-      "module MKL_RCI_TYPE",
-      "include mkl_rci.f90",
-      "include mkl_lapack.f90"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "include mkl_lapack.f90",
       "include mkl_rci.f90",
@@ -15433,8 +15417,8 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
-    "kind": "external",
+    "terminal_state": "transform_refused",
+    "kind": "internal",
     "stage": "",
     "key": "",
     "gate_mechanically_informative": "",
@@ -15446,8 +15430,8 @@
     "verification_fingerprint": ""
    },
    "origins": {
-    "material_data_origin": "",
-    "experiment_origin": "",
+    "material_data_origin": "author_deck",
+    "experiment_origin": "author",
     "material_data_ref": "",
     "council_deck_ref": "",
     "council_fingerprint": "",
@@ -15461,8 +15445,8 @@
     "domain_not_enforced": "",
     "pairing_changed": null,
     "licence_hold": "",
-    "tier": "",
-    "tier_basis": "",
+    "tier": "author_deck",
+    "tier_basis": "in the deck-only D2; material data author_deck, experiment author",
     "counted_in_tier": null,
     "not_counted_in_tier_reason": ""
    },
@@ -15473,8 +15457,8 @@
      "evidence": "repo:paper_results/discovery/discovery_triage.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f"
     },
     "eligible": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "verified",
+     "reason": "adequately specified genuine UMAT (D2)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f"
     },
     "attempted": {
@@ -15483,36 +15467,36 @@
      "evidence": "corpus_run:transform_all_pass24.json"
     },
     "transformed": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f"
     },
     "compiled": {
-     "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f",
      "layouts": {}
     },
     "original_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f"
     },
     "oti_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f"
     },
     "primal_agreed": {
-     "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f"
     }
    },
    "features": {
     "primal_stress_state": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f",
      "reference": null,
      "max_error": null,
@@ -15520,8 +15504,8 @@
      "history": []
     },
     "ddsdde": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f",
      "reference": null,
      "max_error": null,
@@ -15610,14 +15594,14 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+    "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
     "fd_steps": [],
     "states_checked": null,
     "states_agreeing": null,
-    "primal_stress_state": "blocked"
+    "primal_stress_state": "unsupported"
    },
    "later_pass": null,
    "data_quality": []
@@ -198697,16 +198681,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module DefUtils",
-      "module Adaptive",
-      "module MaterialModels",
-      "module StressLocal",
-      "module MainUtils",
-      "module Types",
-      "module Integration",
-      "module LinearAlgebra"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module Adaptive",
       "module DefUtils",
@@ -201231,15 +201206,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module DefUtils",
-      "module Adaptive",
-      "module MaterialModels",
-      "module StressLocal",
-      "module Types",
-      "module Integration",
-      "module LinearAlgebra"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module Adaptive",
       "module DefUtils",
@@ -268626,10 +268593,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module ABUM_ST_MOD",
-      "module CG_MOD"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module ABUM_ST_MOD",
       "module CG_MOD"
@@ -268809,8 +268773,8 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
-    "kind": "external",
+    "terminal_state": "transform_refused",
+    "kind": "internal",
     "stage": "",
     "key": "",
     "gate_mechanically_informative": "",
@@ -268822,8 +268786,8 @@
     "verification_fingerprint": ""
    },
    "origins": {
-    "material_data_origin": "",
-    "experiment_origin": "",
+    "material_data_origin": "author_deck",
+    "experiment_origin": "author",
     "material_data_ref": "",
     "council_deck_ref": "",
     "council_fingerprint": "",
@@ -268837,8 +268801,8 @@
     "domain_not_enforced": "",
     "pairing_changed": null,
     "licence_hold": "",
-    "tier": "",
-    "tier_basis": "",
+    "tier": "author_deck",
+    "tier_basis": "in the deck-only D2; material data author_deck, experiment author",
     "counted_in_tier": null,
     "not_counted_in_tier_reason": ""
    },
@@ -268849,8 +268813,8 @@
      "evidence": "repo:paper_results/discovery/discovery_triage.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f"
     },
     "eligible": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "verified",
+     "reason": "adequately specified genuine UMAT (D2)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=sourceforge.net__abumpack_svn_r233/abcg1.f"
     },
     "attempted": {
@@ -268859,36 +268823,36 @@
      "evidence": "corpus_run:transform_all_pass24.json"
     },
     "transformed": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "unsupported",
+     "reason": "transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
      "evidence": "corpus_run:transform_all_pass24.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f"
     },
     "compiled": {
-     "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "unsupported",
+     "reason": "upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
      "evidence": "corpus_run:transform_all_pass24.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f",
      "layouts": {}
     },
     "original_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "unsupported",
+     "reason": "upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
      "evidence": "corpus_run:transform_all_pass24.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f"
     },
     "oti_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "unsupported",
+     "reason": "upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
      "evidence": "corpus_run:transform_all_pass24.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f"
     },
     "primal_agreed": {
-     "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "unsupported",
+     "reason": "upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
      "evidence": "corpus_run:transform_all_pass24.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f"
     }
    },
    "features": {
     "primal_stress_state": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
      "evidence": "corpus_run:transform_all_pass24.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f",
      "reference": null,
      "max_error": null,
@@ -268896,8 +268860,8 @@
      "history": []
     },
     "ddsdde": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
      "evidence": "corpus_run:transform_all_pass24.json#source=sourceforge.net__abumpack_svn_r233/abcg1.f",
      "reference": null,
      "max_error": null,
@@ -268986,14 +268950,14 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
+    "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the ",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
     "fd_steps": [],
     "states_checked": null,
     "states_agreeing": null,
-    "primal_stress_state": "blocked"
+    "primal_stress_state": "unsupported"
    },
    "later_pass": null,
    "data_quality": [
@@ -286651,8 +286615,6 @@
     "required_files": {
      "companions": [],
      "missing_companions": [
-      "module IF_Const",
-      "module IF_Prec_Core",
       "module PH_Mat_Eval"
      ],
      "unresolved_by_resolver": [
@@ -287049,14 +287011,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module AP_Inp_Script",
-      "module AP_Inp_Param",
-      "module AP_Inp_Def",
-      "module IF_Err_Brg",
-      "module IF_Prec_Core",
-      "module AP_Brg_L3"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module AP_Brg_L3",
       "module AP_Inp_Def",
@@ -292554,7 +292509,7 @@
     "means": "every source the acquisition brought back (registry records)"
    },
    "D2_eligible": {
-    "count": 264,
+    "count": 266,
     "means": "adequately specified genuine UMATs (registry D2)"
    },
    "discovered_not_acquired": {
@@ -292576,9 +292531,9 @@
      "undefined_in_original": 0
     },
     "eligible": {
-     "verified": 264,
+     "verified": 266,
      "failed": 0,
-     "blocked": 95,
+     "blocked": 93,
      "unsupported": 0,
      "not_applicable": 60,
      "not_attempted": 0,
@@ -292600,8 +292555,8 @@
     "transformed": {
      "verified": 298,
      "failed": 0,
-     "blocked": 21,
-     "unsupported": 83,
+     "blocked": 19,
+     "unsupported": 85,
      "not_applicable": 17,
      "not_attempted": 0,
      "conflict": 0,
@@ -292611,8 +292566,8 @@
     "compiled": {
      "verified": 278,
      "failed": 20,
-     "blocked": 21,
-     "unsupported": 83,
+     "blocked": 19,
+     "unsupported": 85,
      "not_applicable": 17,
      "not_attempted": 0,
      "conflict": 0,
@@ -292622,8 +292577,8 @@
     "original_executed": {
      "verified": 172,
      "failed": 13,
-     "blocked": 98,
-     "unsupported": 88,
+     "blocked": 96,
+     "unsupported": 90,
      "not_applicable": 45,
      "not_attempted": 3,
      "conflict": 0,
@@ -292633,8 +292588,8 @@
     "oti_executed": {
      "verified": 171,
      "failed": 1,
-     "blocked": 98,
-     "unsupported": 88,
+     "blocked": 96,
+     "unsupported": 90,
      "not_applicable": 45,
      "not_attempted": 16,
      "conflict": 0,
@@ -292644,8 +292599,8 @@
     "primal_agreed": {
      "verified": 143,
      "failed": 10,
-     "blocked": 98,
-     "unsupported": 88,
+     "blocked": 96,
+     "unsupported": 90,
      "not_applicable": 45,
      "not_attempted": 24,
      "conflict": 0,
@@ -292655,7 +292610,7 @@
    },
    "D2_eligible": {
     "discovered": {
-     "verified": 264,
+     "verified": 266,
      "failed": 0,
      "blocked": 0,
      "unsupported": 0,
@@ -292666,7 +292621,7 @@
      "undefined_in_original": 0
     },
     "eligible": {
-     "verified": 264,
+     "verified": 266,
      "failed": 0,
      "blocked": 0,
      "unsupported": 0,
@@ -292677,7 +292632,7 @@
      "undefined_in_original": 0
     },
     "attempted": {
-     "verified": 264,
+     "verified": 266,
      "failed": 0,
      "blocked": 0,
      "unsupported": 0,
@@ -292691,7 +292646,7 @@
      "verified": 184,
      "failed": 0,
      "blocked": 0,
-     "unsupported": 80,
+     "unsupported": 82,
      "not_applicable": 0,
      "not_attempted": 0,
      "conflict": 0,
@@ -292702,7 +292657,7 @@
      "verified": 183,
      "failed": 1,
      "blocked": 0,
-     "unsupported": 80,
+     "unsupported": 82,
      "not_applicable": 0,
      "not_attempted": 0,
      "conflict": 0,
@@ -292713,7 +292668,7 @@
      "verified": 163,
      "failed": 13,
      "blocked": 0,
-     "unsupported": 85,
+     "unsupported": 87,
      "not_applicable": 0,
      "not_attempted": 3,
      "conflict": 0,
@@ -292724,7 +292679,7 @@
      "verified": 162,
      "failed": 1,
      "blocked": 0,
-     "unsupported": 85,
+     "unsupported": 87,
      "not_applicable": 0,
      "not_attempted": 16,
      "conflict": 0,
@@ -292735,7 +292690,7 @@
      "verified": 135,
      "failed": 10,
      "blocked": 0,
-     "unsupported": 85,
+     "unsupported": 87,
      "not_applicable": 0,
      "not_attempted": 24,
      "conflict": 0,
@@ -292756,9 +292711,9 @@
      "undefined_in_original": 0
     },
     "eligible": {
-     "verified": 264,
+     "verified": 266,
      "failed": 0,
-     "blocked": 95,
+     "blocked": 93,
      "unsupported": 0,
      "not_applicable": 60,
      "not_attempted": 24,
@@ -292780,8 +292735,8 @@
     "transformed": {
      "verified": 298,
      "failed": 0,
-     "blocked": 21,
-     "unsupported": 83,
+     "blocked": 19,
+     "unsupported": 85,
      "not_applicable": 17,
      "not_attempted": 24,
      "conflict": 0,
@@ -292791,8 +292746,8 @@
     "compiled": {
      "verified": 278,
      "failed": 20,
-     "blocked": 21,
-     "unsupported": 83,
+     "blocked": 19,
+     "unsupported": 85,
      "not_applicable": 17,
      "not_attempted": 24,
      "conflict": 0,
@@ -292802,8 +292757,8 @@
     "original_executed": {
      "verified": 172,
      "failed": 13,
-     "blocked": 98,
-     "unsupported": 88,
+     "blocked": 96,
+     "unsupported": 90,
      "not_applicable": 45,
      "not_attempted": 27,
      "conflict": 0,
@@ -292813,8 +292768,8 @@
     "oti_executed": {
      "verified": 171,
      "failed": 1,
-     "blocked": 98,
-     "unsupported": 88,
+     "blocked": 96,
+     "unsupported": 90,
      "not_applicable": 45,
      "not_attempted": 40,
      "conflict": 0,
@@ -292824,8 +292779,8 @@
     "primal_agreed": {
      "verified": 143,
      "failed": 10,
-     "blocked": 98,
-     "unsupported": 88,
+     "blocked": 96,
+     "unsupported": 90,
      "not_applicable": 45,
      "not_attempted": 48,
      "conflict": 0,
@@ -292839,8 +292794,8 @@
     "primal_stress_state": {
      "verified": 127,
      "failed": 10,
-     "blocked": 97,
-     "unsupported": 88,
+     "blocked": 95,
+     "unsupported": 90,
      "not_applicable": 46,
      "not_attempted": 19,
      "conflict": 0,
@@ -292850,8 +292805,8 @@
     "ddsdde": {
      "verified": 120,
      "failed": 0,
-     "blocked": 97,
-     "unsupported": 88,
+     "blocked": 95,
+     "unsupported": 90,
      "not_applicable": 46,
      "not_attempted": 66,
      "conflict": 0,
@@ -292952,7 +292907,7 @@
      "verified": 121,
      "failed": 10,
      "blocked": 0,
-     "unsupported": 85,
+     "unsupported": 87,
      "not_applicable": 0,
      "not_attempted": 19,
      "conflict": 0,
@@ -292963,7 +292918,7 @@
      "verified": 114,
      "failed": 0,
      "blocked": 0,
-     "unsupported": 85,
+     "unsupported": 87,
      "not_applicable": 0,
      "not_attempted": 64,
      "conflict": 0,
@@ -292976,7 +292931,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -292987,7 +292942,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -292998,7 +292953,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293009,7 +292964,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293020,7 +292975,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293031,7 +292986,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293042,7 +292997,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293053,7 +293008,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 264,
+     "not_attempted": 266,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293063,8 +293018,8 @@
     "primal_stress_state": {
      "verified": 127,
      "failed": 10,
-     "blocked": 97,
-     "unsupported": 88,
+     "blocked": 95,
+     "unsupported": 90,
      "not_applicable": 46,
      "not_attempted": 43,
      "conflict": 0,
@@ -293074,8 +293029,8 @@
     "ddsdde": {
      "verified": 120,
      "failed": 0,
-     "blocked": 97,
-     "unsupported": 88,
+     "blocked": 95,
+     "unsupported": 90,
      "not_applicable": 46,
      "not_attempted": 90,
      "conflict": 0,
@@ -293175,7 +293130,7 @@
   "funnel": {
    "D1_acquired": {
     "discovered": 419,
-    "eligible": 264,
+    "eligible": 266,
     "attempted": 419,
     "transformed": 298,
     "compiled": 278,
@@ -293195,9 +293150,9 @@
     "denominator": 419
    },
    "D2_eligible": {
-    "discovered": 264,
-    "eligible": 264,
-    "attempted": 264,
+    "discovered": 266,
+    "eligible": 266,
+    "attempted": 266,
     "transformed": 184,
     "compiled": 183,
     "original_executed": 163,
@@ -293213,11 +293168,11 @@
     "feature:residual_sens": 0,
     "feature:global_sens": 0,
     "feature:cli_driver": 0,
-    "denominator": 264
+    "denominator": 266
    },
    "D0_discovered_files": {
     "discovered": 443,
-    "eligible": 264,
+    "eligible": 266,
     "attempted": 419,
     "transformed": 298,
     "compiled": 278,
@@ -293249,7 +293204,7 @@
     "passed": 117,
     "failed": 0,
     "unresolved": 8,
-    "not_run": 139
+    "not_run": 141
    },
    "passed_with_primal_not_verified": {
     "D1_acquired": 14,
@@ -293432,8 +293387,8 @@
     "permitted": 51
    },
    "D2": {
-    "unknown": 248,
-    "permitted": 16
+    "unknown": 249,
+    "permitted": 17
    },
    "D1_with_licence_file_in_cache": 51,
    "D1_by_spdx_metadata": {
@@ -293489,32 +293444,32 @@
    },
    "D2": {
     "concrete_geomaterial": 13,
-    "other_incl_hyperelasticity": 30,
+    "other_incl_hyperelasticity": 31,
     "linear_elastic": 12,
     "damage_phase_field": 14,
     "growth": 134,
     "rate_independent_plasticity": 22,
     "viscoelastic": 11,
     "crystal_plasticity": 15,
-    "": 13
+    "": 14
    },
    "D2_fine": {
     "concrete_geomaterial": 13,
     "hyperelasticity": 16,
-    "other": 14,
+    "other": 15,
     "linear_elastic": 12,
     "damage_phase_field": 14,
     "growth": 134,
     "rate_independent_plasticity": 22,
     "viscoelastic": 11,
     "crystal_plasticity": 15,
-    "": 13
+    "": 14
    },
    "D2_by_source": {
     "B3_code_evidence": 189,
-    "E_fallback": 51,
+    "E_fallback": 52,
     "B3_identity_growth_as_growth": 11,
-    "missing": 13
+    "missing": 14
    },
    "D2_identity_growth_scaffolds": 11,
    "review_D1": {
@@ -293539,7 +293494,7 @@
      "": 14
     },
     "D2": {
-     "other / unclassified": 13,
+     "other / unclassified": 14,
      "hyperelasticity": 18,
      "elasticity": 12,
      "damage / phase field": 17,
@@ -293548,7 +293503,7 @@
      "viscoelasticity / rate dependent": 12,
      "crystal plasticity": 15,
      "plasticity": 20,
-     "": 13
+     "": 14
     }
    }
   },
@@ -293561,7 +293516,7 @@
    "features": "summary.features counts the Abaqus-pipeline (store) build only; lifted/provider cells are in features_other_builds"
   },
   "denominators_note": {
-   "eligible_now": 264,
+   "eligible_now": 266,
    "eligible_now_means": "adequately specified genuine UMATs in the registry as built for pass24",
    "earlier_registry": "repo:paper_results/corpus/corpus_registry.json@f0f0731",
    "eligible_earlier": 260,
@@ -293751,6 +293706,7 @@
    ],
    "added": [
     "BBahtiri__ABAQUS-Multiphysics-Diffusion-UEL/Diffusion_3D.for",
+    "InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f",
     "KnutAM__MaterialModels/models/GenFiniteStrain/src/GeneralFiniteStrain.for",
     "MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage/UMAT_visco_FGJD_2026.for",
     "MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage/UMAT_viscohybrid_FGJD_2026.for",
@@ -293772,6 +293728,7 @@
     "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for",
     "ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
     "peer-open-source__xara/SRC/domain/peri/umat.for",
+    "sourceforge.net__abumpack_svn_r233/abcg1.f",
     "sourceforge.net__abumpack_svn_r233/tests/elastic/el-st.f",
     "sourceforge.net__abumpack_svn_r233/tests/gtn/gtn-st-dl.f",
     "sourceforge.net__abumpack_svn_r233/tests/gtn/gtn-st-lm.f",
@@ -293847,8 +293804,8 @@
     "agrees": true
    },
    "adequately_specified": {
-    "registry": 264,
-    "manifest": 264,
+    "registry": 266,
+    "manifest": 266,
     "agrees": true
    },
    "transformed_true": {

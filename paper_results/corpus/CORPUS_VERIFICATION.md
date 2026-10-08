@@ -5,8 +5,8 @@ Every acquired source has a record here, and each one is named by its path insid
 ## Census: the pass23 population and the new sources, kept apart
 
 * pass23 population (405 sources): **106 of 242 (as published)**.
-* the same population with the callee rule applied: **106 of 251 = 242 - 0 + 9** (left: 0, entered: 9).
-* new, not yet attempted: **14** sources ({'transform_refused': 11, 'primal_disagreed': 1, 'experiment_not_generated': 1, 'external_dependency_unavailable': 1}), outside both lines above. The size of this registry and its count of eligible sources are not the denominator.
+* the same population with the callee rule applied: **106 of 252 = 242 - 0 + 10** (left: 0, entered: 10).
+* new, not yet attempted: **14** sources ({'transform_refused': 12, 'primal_disagreed': 1, 'experiment_not_generated': 1}), outside both lines above. The size of this registry and its count of eligible sources are not the denominator.
 
 ## Where every number below comes from
 
@@ -39,24 +39,24 @@ There are two populations in this report and they are never pooled. Every rate b
 
 **D1 -- 419 acquired sources.** Everything the acquisition brought back, whatever it turned out to be. This is the honest denominator for "what happened to the corpus we collected".
 
-**D2 -- 264 adequately specified genuine UMATs.** The subset of D1 that presents the Abaqus UMAT interface, is a distinct member of the corpus rather than a second copy of another one, has a constitutive model inside it, builds as its author published it, has everything it USEs or INCLUDEs published beside it, and has material constants published somewhere in its repository. This is the honest denominator for "what happened to the UMATs that could be driven at all".
+**D2 -- 266 adequately specified genuine UMATs.** The subset of D1 that presents the Abaqus UMAT interface, is a distinct member of the corpus rather than a second copy of another one, has a constitutive model inside it, builds as its author published it, has everything it USEs or INCLUDEs published beside it, and has material constants published somewhere in its repository. This is the honest denominator for "what happened to the UMATs that could be driven at all".
 
 **Nothing internal may shrink D2.** Every exclusion from it is a fact about somebody else's published repository, and each one names the evidence that established it. Nothing this project failed to do removes a source from D2: a source whose transform this project refused, whose deck this project could not generate, whose experiment this project could not make informative, all stay in D2 and count against us. That is why there are two denominators rather than one number.
 
 | | reached the `verified` rung | verified on every gate | denominator |
 | --- | ---: | ---: | ---: |
 | D1 acquired sources | 112 | 112 | 419 |
-| D2 adequately specified genuine UMATs | 106 | 106 | 264 |
+| D2 adequately specified genuine UMATs | 106 | 106 | 266 |
 
 **Verified on every gate is the stricter number and it is the one to quote.** The two columns differ by the 0 entries that reached the batch's `verified` rung with one of the six evidence gates not reading true; they are named below.
 
 * 112 of 419 acquired sources (D1) -- 26.7% of acquired sources (D1)
-* 106 of 264 adequately specified genuine UMATs (D2) -- 40.2% of adequately specified genuine UMATs (D2)
+* 106 of 266 adequately specified genuine UMATs (D2) -- 39.8% of adequately specified genuine UMATs (D2)
 
 Against the looser rung instead:
 
 * 112 of 419 acquired sources (D1) -- 26.7% of acquired sources (D1)
-* 106 of 264 adequately specified genuine UMATs (D2) -- 40.2% of adequately specified genuine UMATs (D2)
+* 106 of 266 adequately specified genuine UMATs (D2) -- 39.8% of adequately specified genuine UMATs (D2)
 
 No figure above may be quoted without the words after it. They are answers to different questions and the larger one is not the better one.
 
@@ -69,8 +69,8 @@ Over D1, the 419 acquired sources. The three lines are never added together into
 | | entries in D1 |
 | --- | ---: |
 | reached the `verified` rung | 112 |
-| blocked outside this repository | 155 |
-| work remaining here | 152 |
+| blocked outside this repository | 153 |
+| work remaining here | 154 |
 
 Of the 112 on the first line, 112 read true on all six evidence gates. The rung and the gates are different questions and this table asks the rung's, because it is the one whose three lines partition D1.
 
@@ -82,7 +82,7 @@ Of the 112 on the first line, 112 read true on all six evidence gates. The rung 
 | this file's Abaqus entry point is not a UMAT | **EXTERNAL** | 47 |
 | incomplete_or_corrupt_source | **EXTERNAL** | 17 |
 | line-for-line identical to another acquired source | neither -- a second copy | 13 |
-| external_dependency_unavailable | **EXTERNAL** | 6 |
+| external_dependency_unavailable | **EXTERNAL** | 4 |
 | this file presents the Abaqus UMAT interface and publishes no constitu | **EXTERNAL** | 3 |
 
 A second copy is not an external blocker and is not counted as one: nothing about it is blocked, its one answer is already counted against the copy that carries it, and filing it under "somebody else's problem" would inflate how much of the corpus is.
@@ -94,7 +94,7 @@ EXTERNAL means the answer lies in what somebody published and no further enginee
 | terminal state | external or internal | what it means | of D1 | of D2 |
 | --- | --- | --- | ---: | ---: |
 | `fully_verified` | VERIFIED | both builds ran, agreed over the whole history, and the tangent matched a converged difference | 112 | 106 |
-| `transform_refused` | **INTERNAL** | the transform could not convert it -- our work | 83 | 80 |
+| `transform_refused` | **INTERNAL** | the transform could not convert it -- our work | 85 | 82 |
 | `missing_material_data` | **EXTERNAL** | nobody published what this material is made of | 71 | 0 |
 | `not_a_umat` | **EXTERNAL** | the file's Abaqus entry point is something else | 47 | 0 |
 | `incomplete_or_corrupt_source` | **EXTERNAL** | the file does not compile as published | 17 | 0 |
@@ -103,9 +103,9 @@ EXTERNAL means the answer lies in what somebody published and no further enginee
 | `undefined_in_original` | **EXTERNAL** | the published routine reads a value it never sets, and its stress or tangent changes with how memory happens to be initialised -- there is no single answer to verify against | 11 | 10 |
 | `tangent_not_verified` | **INTERNAL** | the tangent was not verified: either a converged difference disagreed with it, or the difference settled nothing -- ours | 9 | 8 |
 | `derivative_truncated` | **INTERNAL** | the converted source drops a derivative on the way to the stress -- ours | 9 | 9 |
-| `external_dependency_unavailable` | **EXTERNAL** | a module or include it needs was never published beside it | 7 | 0 |
 | `experiment_not_informative` | **INTERNAL** | both builds agreed, over an experiment in which the material did not do what it is for -- ours | 7 | 7 |
 | `informativeness_not_established` | **INTERNAL** | nobody measured whether the experiment exercised anything -- ours | 5 | 5 |
+| `external_dependency_unavailable` | **EXTERNAL** | a module or include it needs was never published beside it | 5 | 0 |
 | `primal_control_not_decided` | **INTERNAL** | the routine-level replay agreed and the Abaqus control produced no comparison -- ours | 5 | 5 |
 | `unsupported_formulation` | **INTERNAL** | no element here drives that formulation -- ours | 5 | 5 |
 | `experiment_not_generated` | **INTERNAL** | this harness builds no experiment this source will run -- ours | 3 | 3 |
@@ -113,7 +113,7 @@ EXTERNAL means the answer lies in what somebody published and no further enginee
 | `transformed_job_failed` | **INTERNAL** | the converted build did not run -- ours | 1 | 1 |
 | `support_build_failed` | **INTERNAL** | the transform's own modules did not compile -- ours | 1 | 1 |
 
-D1 column sums to 419; D2 column sums to 264.
+D1 column sums to 419; D2 column sums to 266.
 
 ## What is left here, by cluster
 
@@ -121,7 +121,7 @@ Each of these is a limitation of this pipeline, not of the corpus. Largest first
 
 | cluster | sources in D1 | of which in D2 |
 | --- | ---: | ---: |
-| `transform_refused` | 83 | 80 |
+| `transform_refused` | 85 | 82 |
 | `original_job_failed` | 12 | 12 |
 | `primal_disagreed` | 12 | 12 |
 | `tangent_not_verified` | 9 | 8 |
@@ -140,17 +140,17 @@ Each of these is a limitation of this pipeline, not of the corpus. Largest first
 
 | what the file is | external or internal | sources |
 | --- | --- | ---: |
-| `genuine_umat` | **INTERNAL** | 80 |
+| `genuine_umat` | **INTERNAL** | 82 |
 | `helper_or_module_only` | **EXTERNAL** | 14 |
 | `incomplete_or_corrupt_source` | **EXTERNAL** | 13 |
-| `missing_external_dependency` | **EXTERNAL** | 6 |
+| `missing_external_dependency` | **EXTERNAL** | 4 |
 | `duplicate_of_another_source` | neither -- a second copy | 4 |
 | `other_abaqus_routine` | **EXTERNAL** | 2 |
 | `published_stub_no_constitutive_content` | **EXTERNAL** | 2 |
 
 `published_stub_no_constitutive_content` is EXTERNAL as a cause AND as a terminal state. A file that presents the UMAT interface and assigns neither STRESS nor DDSDDE anywhere is not a model this project failed to convert -- there is nothing there to convert. It used to come back `transform_refused`, which is INTERNAL and glossed "the transform could not convert it, our work", because `from_transform_failure` has no parameter for this class; the registry now routes it, and only where the classification is confident.
 
-27 of them are held at `genuine_umat` because the offline compile did not settle whether the published text builds. That is the safe direction: it counts the work as ours.
+28 of them are held at `genuine_umat` because the offline compile did not settle whether the published text builds. That is the safe direction: it counts the work as ours.
 
 ## Why the results file holds more rows than the store holds entries
 
@@ -228,7 +228,7 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `GuGuaTT__STEEL-3dPointClouds/AutoGen/ALLcombinedSolid_DMN.for` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: GuGuaTT__STEEL-3dPointClouds publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in GuGuaTT__STEEL-3dPointClouds, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at  |
 | `HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS |
 | `InstituteOfMechanics__Paraqus/examples/example_abaqus_extrusion_umat.f` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: InstituteOfMechanics__Paraqus publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 2 .inp file(s) in InstituteOfMechanics__Paraqus, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT a |
-| `InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or na |
+| `InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its director |
 | `InstituteOfMechanics__Thermomechanical_Gradient_Enhanced_Damage_UMAT/src/UMAT_DamThermMech_1_H.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: HelperLiftingError: Missing helper INCLUDE 'SMAAspUserArrays.hdr' relative to <work>/out/dependencies/UMAT_DamThermMech_1_H.f; classification: SUBROUTINE UMAT at line 27 takes 37 arguments and is called by nothing else in this file; ifort -syntax-only accepted the published text as fixed form |
 | `Jeff97__General-shape-control-of-shell/Abaqus_Files/Alex_Shocked/Growth-Alex.for` | `undefined_in_original` | EXTERNAL | yes | terminal state `undefined_in_original` (external; somebody else has to move next); recorded reason: undefined_in_original (D-12): STRESS(1), STRESS(2), STRESS(3), STRESS(4), STRESS(5), STRESS(6) differ between the original built with ifort -init=zero / -init=huge / -init=minus_huge (the compiler and flags the solver builds the original with). STRESS or DDSDDE is undefined behaviour in the ORIGINAL |
 | `Jeff97__General-shape-control-of-shell/Abaqus_Files/Beetle_Taxi/Growth-Car.for` | `undefined_in_original` | EXTERNAL | yes | terminal state `undefined_in_original` (external; somebody else has to move next); recorded reason: undefined_in_original (D-12): STRESS(1), STRESS(2), STRESS(3), STRESS(4), STRESS(5), STRESS(6) differ between the original built with ifort -init=zero / -init=huge / -init=minus_huge (the compiler and flags the solver builds the original with). STRESS or DDSDDE is undefined behaviour in the ORIGINAL |
@@ -461,7 +461,7 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `shayansss__bioumat/SUBROUTINES.FOR` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: shayansss__bioumat publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in shayansss__bioumat, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at line 122 takes 37 ar |
 | `shayansss__hml/NONLIPLS.for` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: shayansss__hml publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in shayansss__hml, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at line 198 takes 37 arguments  |
 | `simoneponcioni__HFE/02_CODE/abq/UMAT_BIPHASIC.f` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: simoneponcioni__HFE publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 13 .inp file(s) in simoneponcioni__HFE, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at line 141 takes 37 |
-| `sourceforge.net__abumpack_svn_r233/abcg1.f` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at li |
+| `sourceforge.net__abumpack_svn_r233/abcg1.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What t |
 | `sourceforge.net__abumpack_svn_r233/tests/elastic/el-st.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 239, first stress expression at line 249, last stress update at line 253, STRESS extraction at li |
 | `sourceforge.net__abumpack_svn_r233/tests/gtn/gtn-st-dl.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_ROTTEN2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_RO |
 | `sourceforge.net__abumpack_svn_r233/tests/gtn/gtn-st-lm.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_ROTTEN2', 'ABUM_ST_PGL']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 417.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_H |
@@ -515,7 +515,7 @@ every verified count split by where the material data and the experiment came fr
 
 | tier | eligible | Abaqus six-gate | routine level (D-8) |
 | --- | ---: | ---: | ---: |
-| `author_deck` | 264 (0 interpreted) | 106 (0 interpreted) | 114 (0 interpreted) |
+| `author_deck` | 266 (0 interpreted) | 106 (0 interpreted) | 114 (0 interpreted) |
 | `author_published_outside_deck+author_experiment` | 0 (0 interpreted) | 0 (0 interpreted) | 0 (0 interpreted) |
 | `author_published_outside_deck+council_experiment` | 23 (3 interpreted) | n/e | 0 (0 interpreted) |
 | `council_chosen` | 30 (2 interpreted) | n/e | 0 (0 interpreted) |
