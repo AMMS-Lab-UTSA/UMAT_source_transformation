@@ -28,7 +28,8 @@ from typing import Optional
 
 from pathlib import Path
 
-from umat_oti.abaqus.elements import SUPPORTED, UnsupportedElement, geometry_for
+from umat_oti.abaqus.elements import (SUPPORTED, UnsupportedElement, WEDGE_ELEMENTS,
+                                      geometry_for)
 
 _KEYWORD = re.compile(r"^\s*\*(?!\*)\s*([^,\n]+)(.*)$")
 _PARAMETER = re.compile(r"([A-Za-z][\w \-]*)\s*=\s*([^,]+)")
@@ -314,6 +315,28 @@ def choose(author_elements, *, provenance: str = "",
         return _cohesive_choice(kinds, provenance, temperature)
     if family in ("shell", "membrane"):
         return _plane_stress_substitute(kinds, family, provenance, ntens_hint)
+
+    # B20 rule H1: a model the author meshed with wedges ONLY is run on the
+    # wedge. The number and the places of the integration points (2 for C3D6,
+    # 9 for C3D15) are part of what such a routine sees through NPT and COORDS.
+    # A deck that mixes wedges with hexahedra for this material keeps the
+    # hexahedron family below, so no other row moves.
+    if (family == "three-dimensional continuum"
+            and all(kind in WEDGE_ELEMENTS for kind in kinds)):
+        quadratic = all(kind.startswith("C3D15") for kind in kinds)
+        plain, hybrid_name = (("C3D15", "C3D15H") if quadratic
+                              else ("C3D6", "C3D6H"))
+        element = hybrid_name if any(hybrid(kind) for kind in kinds) else plain
+        return Formulation(
+            author_elements=kinds, family=family, element=element,
+            provenance=provenance,
+            reason=(f"the author's deck runs this material on "
+                    f"{', '.join(kinds)}, which are wedges; the verification "
+                    f"runs the wedge itself ({element}), whose integration "
+                    f"points ({geometry_for(element).note}) and layout are the "
+                    f"ones the routine is called at, NTENS="
+                    f"{geometry_for(element).ntens} as for any continuum "
+                    f"element"))
 
     choice = _VERIFICATION_ELEMENT.get(family)
     if choice is None:
@@ -1052,6 +1075,11 @@ class Orientation:
     axes: tuple[float, ...] = ()
     rotation: tuple[int, float] = (3, 0.0)
     provenance: str = ""
+    #: B20 rule H4d: the SYSTEM keyword the author wrote (RECTANGULAR,
+    #: CYLINDRICAL, SPHERICAL). Karakalas' ``system=CYLINDRICAL`` was emitted
+    #: as RECTANGULAR with the same six numbers, which Abaqus rejects ("points
+    #: A, B and the origin should not lie on a straight line").
+    system: str = "RECTANGULAR"
 
     @property
     def known(self) -> bool:
@@ -1084,6 +1112,7 @@ def read_orientation(deck_text: str, material: str = "") -> Orientation:
     different material.
     """
     frames: dict[str, tuple[list[float], tuple[int, float]]] = {}
+    systems: dict[str, str] = {}
     section_orientation = ""
     ply_angle: Optional[float] = None
     section_line = ""
@@ -1102,6 +1131,7 @@ def read_orientation(deck_text: str, material: str = "") -> Orientation:
             parameters = _parameters(found.group(2))
             if keyword == "ORIENTATION":
                 name = parameters.get("NAME", "").upper()
+                systems[name] = parameters.get("SYSTEM", "RECTANGULAR").upper()
                 pending = []
                 mode = "orientation"
                 continue
@@ -1153,7 +1183,10 @@ def read_orientation(deck_text: str, material: str = "") -> Orientation:
               f"axis {axis}")
     if ply_angle:
         detail += f"; the ply is turned a further {ply_angle:g} ({section_line})"
-    return Orientation(tuple(axes), (axis, total), detail)
+    system = systems.get(chosen, "RECTANGULAR") or "RECTANGULAR"
+    if system != "RECTANGULAR":
+        detail += f"; SYSTEM={system}"
+    return Orientation(tuple(axes), (axis, total), detail, system)
 
 
 #: ``*INITIAL CONDITIONS, TYPE=TEMPERATURE`` with a set name and a value.

@@ -200,6 +200,14 @@ class VerificationManifest:
     #: author did not.
     orientation_axes: Optional[tuple[float, ...]] = None
     orientation_rotation: Optional[tuple[int, float]] = None
+    #: The author's ``*ORIENTATION, SYSTEM=`` keyword (B20 rule H4d).
+    orientation_system: str = "RECTANGULAR"
+    #: The author's deck says ``*INITIAL CONDITIONS, TYPE=STRESS, USER``, which
+    #: asks Abaqus to call the source's own SIGINI (B20 rule H4c).
+    initial_stress_from_user_subroutine: bool = False
+    #: The author's ``*USER MATERIAL, HYBRID FORMULATION=`` option (B20 rule
+    #: H4e): TOTAL or INCREMENTAL, or "" when the deck states none.
+    hybrid_formulation: str = ""
     unsymmetric: bool = False
 
     # ---- what to run -------------------------------------------------------

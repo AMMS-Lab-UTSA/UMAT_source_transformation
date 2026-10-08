@@ -131,6 +131,49 @@ _TET10 = _TET4 + tuple(
          _mid(_TET4[2], _TET4[0]), _mid(_TET4[0], _TET4[3]),
          _mid(_TET4[1], _TET4[3]), _mid(_TET4[2], _TET4[3])], start=5))
 
+#: The six-node wedge (triangular prism), B20 rule H1: bottom triangle 1-2-3
+#: and the top triangle 4-5-6 directly above it. C3D6 integrates at 2 points
+#: and C3D15 at 9, not at the 8 of a hexahedron, which is why a routine that
+#: indexes by NPT cannot be run on a hexahedron in its place.
+_WEDGE6 = _numbered([(0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0),
+                     (0.0, 0.0, 1.0), (1.0, 0.0, 1.0), (0.0, 1.0, 1.0)])
+
+#: C3D15 adds nine edge midpoints: 7, 8, 9 on the edges 1-2, 2-3, 3-1 of the
+#: bottom triangle, 10, 11, 12 on 4-5, 5-6, 6-4 of the top one, and 13, 14,
+#: 15 on the verticals 1-4, 2-5, 3-6 (the order Abaqus reads them in).
+_WEDGE_MIDSIDE_EDGES = ((1, 2), (2, 3), (3, 1), (4, 5), (5, 6), (6, 4),
+                        (1, 4), (2, 5), (3, 6))
+_WEDGE15 = _WEDGE6 + tuple(
+    (index, *_mid(_WEDGE6[a - 1], _WEDGE6[b - 1]))
+    for index, (a, b) in enumerate(_WEDGE_MIDSIDE_EDGES, start=7))
+
+#: The wedge element types, which are run as themselves when the author's deck
+#: uses nothing else for the material (formulation.choose).
+WEDGE_ELEMENTS = ("C3D6", "C3D6H", "C3D15", "C3D15H")
+
+
+def with_midside_nodes(element_type: str, corners) -> tuple:
+    """The nodes of ``element_type`` from the author's corner nodes.
+
+    A C3D15's midside nodes are the edge midpoints: this harness keeps the
+    corners of one element of the author's mesh and does not carry its edge
+    curvature (a straight-edged wedge is the same element for a material
+    point). Elements with no midside nodes come back unchanged.
+    """
+    name = str(element_type or "").strip().upper()
+    corners = tuple(corners)
+    if name not in ("C3D15", "C3D15H"):
+        return corners
+    if len(corners) < 6:
+        raise UnsupportedElement(
+            f"{name} needs the six corner nodes of the author's element; "
+            f"{len(corners)} were given")
+    corners = corners[:6]
+    mids = [(index, *_mid(corners[a - 1], corners[b - 1]))
+            for index, (a, b) in enumerate(_WEDGE_MIDSIDE_EDGES, start=7)]
+    return corners + tuple(mids)
+
+
 _QUAD4 = _numbered([(0.0, 0.0, 0.0), (1.0, 0.0, 0.0),
                     (1.0, 1.0, 0.0), (0.0, 1.0, 0.0)])
 
@@ -194,6 +237,10 @@ SUPPORTED: dict[str, ElementGeometry] = {
         _continuum("C3D8H", _HEX8, "hybrid: for a nearly incompressible material"),
         _continuum("C3D4", _TET4, "constant strain, one integration point"),
         _continuum("C3D4H", _TET4, "hybrid constant-strain tetrahedron"),
+        _continuum("C3D6", _WEDGE6, "wedge, 2 integration points"),
+        _continuum("C3D6H", _WEDGE6, "hybrid wedge, 2 integration points"),
+        _continuum("C3D15", _WEDGE15, "quadratic wedge, 9 integration points"),
+        _continuum("C3D15H", _WEDGE15, "hybrid quadratic wedge"),
         _continuum("C3D10", _TET10),
         _continuum("C3D10H", _TET10),
         _continuum("C3D20", _HEX20),

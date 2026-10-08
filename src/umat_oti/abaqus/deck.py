@@ -195,6 +195,8 @@ def _material_block(manifest: VerificationManifest) -> list[str]:
     header = f"*USER MATERIAL, CONSTANTS={len(manifest.props)}"
     if manifest.unsymmetric:
         header += ", UNSYMM"
+    if getattr(manifest, "hybrid_formulation", ""):
+        header += f", HYBRID FORMULATION={manifest.hybrid_formulation}"
     lines.append(header)
     # Eight to a line, which is the fixed-format limit Abaqus reads.
     values = [_fmt(value) for value in manifest.props]
@@ -212,16 +214,19 @@ def _initial_state(manifest: VerificationManifest) -> list[str]:
     Five mholla growth UMATs failed exactly that way while their two siblings
     that do not read state verified cleanly.
     """
+    stress = (["*INITIAL CONDITIONS, TYPE=STRESS, USER"]
+              if getattr(manifest, "initial_stress_from_user_subroutine", False)
+              else [])
     if manifest.initial_state_from_user_subroutine:
-        return ["*INITIAL CONDITIONS, TYPE=SOLUTION, USER"]
+        return ["*INITIAL CONDITIONS, TYPE=SOLUTION, USER"] + stress
     if not any(manifest.initial_statev):
-        return []
+        return stress
     values = [_fmt(value) for value in manifest.initial_statev]
     lines = ["*INITIAL CONDITIONS, TYPE=SOLUTION"]
     for start in range(0, len(values), 7):
         prefix = "ONE," if start == 0 else ""
         lines.append(prefix + ", ".join(values[start:start + 7]) + ",")
-    return lines
+    return lines + stress
 
 
 def _orientation(manifest: VerificationManifest) -> list[str]:
@@ -237,7 +242,8 @@ def _orientation(manifest: VerificationManifest) -> list[str]:
             raise ValueError("an orientation takes six numbers: a point on "
                              "the local 1-axis and a point in the 1-2 plane")
         axis, angle = manifest.orientation_rotation or (3, 0.0)
-        return ["*ORIENTATION, NAME=LOCAL, SYSTEM=RECTANGULAR",
+        return [f"*ORIENTATION, NAME=LOCAL, SYSTEM="
+                f"{getattr(manifest, 'orientation_system', 'RECTANGULAR') or 'RECTANGULAR'}",
                 ", ".join(_fmt(value) for value in axes),
                 f"{int(axis)}, {_fmt(float(angle))}"]
     if manifest.orientation is None:
