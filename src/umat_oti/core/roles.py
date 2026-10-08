@@ -607,6 +607,53 @@ def defined_function_names(source_text: str) -> frozenset[str]:
     return frozenset(_function_spans(source_text))
 
 
+#: Timing and wall-clock library calls: they hand elapsed time back to the
+#: program for reporting and never take part in the constitutive response.
+TIMER_CALLS = frozenset({
+    "CPU_TIME", "SYSTEM_CLOCK", "DATE_AND_TIME", "DTIME", "ETIME", "SECOND",
+    "CLOCK", "ITIME", "IDATE", "TIMER"})
+_TIMER_CALL_STATEMENT = re.compile(
+    r"^\s*(?:\d+\s+)?CALL\s+(?P<callee>[A-Za-z_]\w*)\s*\((?P<args>.*)\)\s*$",
+    re.IGNORECASE)
+_TYPE_DECLARATION_START = re.compile(
+    r"^\s*(?:REAL|DOUBLE\s+PRECISION|INTEGER|LOGICAL|COMPLEX|DIMENSION|CHARACTER)\b",
+    re.IGNORECASE)
+_IDENTIFIER = re.compile(r"[A-Za-z_]\w*")
+
+
+def timer_only_names(source_text: str | None) -> frozenset[str]:
+    """Names that occur in executable code only as arguments of a timing call.
+
+    ``CALL CPU_TIME(COMP_TIME(1))`` stores a clock reading. Promoting
+    ``COMP_TIME`` to the differentiated type turns that call into one that
+    hands a hypercomplex element to a routine reading a REAL, and the
+    transform (rightly) refuses it; but nothing differentiated ever reaches
+    ``COMP_TIME``, so the variable has no business being promoted. A name
+    counts only when EVERY occurrence outside comments, strings and
+    declarations is an argument of such a call: any other use, including one on
+    a continuation line this scan cannot classify, keeps the name out.
+    """
+    if not source_text:
+        return frozenset()
+    in_timer: set[str] = set()
+    elsewhere: set[str] = set()
+    for raw in source_text.splitlines():
+        if raw[:1] in ("c", "C", "*", "!"):
+            continue
+        code = strip_inline_comment(raw).strip()
+        if not code:
+            continue
+        code = re.sub(r"'[^']*'|\"[^\"]*\"", " ", code)
+        if _TYPE_DECLARATION_START.match(code):
+            continue
+        call = _TIMER_CALL_STATEMENT.match(code)
+        if call and call.group("callee").upper() in TIMER_CALLS:
+            in_timer.update(n.upper() for n in _IDENTIFIER.findall(call.group("args")))
+            continue
+        elsewhere.update(n.upper() for n in _IDENTIFIER.findall(code))
+    return frozenset(in_timer - elsewhere)
+
+
 def call_names_that_are_not_variables(source_text: str | None) -> frozenset[str]:
     """Names that read as ``NAME(...)`` here but are calls, not arrays.
 
@@ -674,6 +721,7 @@ def _suggest_variable_roles(analysis: dict[str, Any],
     not_variables = (call_names_that_are_not_variables(source_text)
                      if source_text is not None else frozenset())
     common_names = common_block_names(source_text)
+    timer_names = timer_only_names(source_text) if source_text is not None else frozenset()
     module_names = module_variable_names(source_text)
     data_names = data_initialised_names(source_text)
     parameter_names = parameter_constant_names(source_text)
@@ -720,6 +768,15 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                    else "a function this source defines")
                 + ". Promoting it renames the call itself, and the renamed "
                   "name is declared nowhere."
+            )
+        elif role in ("Promote", "Unknown") and name in timer_names:
+            role = "Keep real"
+            notes = (
+                f"{name} occurs only as an argument of a timing call "
+                "(CPU_TIME, SYSTEM_CLOCK, DATE_AND_TIME, DTIME, ...), so it "
+                "holds a clock reading and nothing differentiated reaches it. "
+                "Promoting it would hand a hypercomplex element to a routine "
+                "that reads a REAL."
             )
         elif role in ("Promote", "Seed", "Unknown") and name in parameter_names:
             role = "Keep real"
