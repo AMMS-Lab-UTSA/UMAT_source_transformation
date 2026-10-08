@@ -1954,6 +1954,10 @@
      "text": "sudo apt-get install -y gfortran"
     }
    ]
+  },
+  "mock:tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py:_check:monkeypatch.setattr:3da27a3b": {
+   "verdict": "justified",
+   "reason": "Replaces build_history_replay by a wrapper that reports 'ifort is not on PATH' for ifort only and calls the real function for gfortran, so the real gfortran probe is built and run on the planted source (a stub left unentered completes; a stub on the UMAT path stops with status 8); it lets CI, which has no ifort, exercise the stubs. The stubs, the replay driver and the init-probe classification are the real code."
   }
  }
 }
