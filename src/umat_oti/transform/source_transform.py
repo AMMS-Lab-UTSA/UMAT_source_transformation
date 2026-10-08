@@ -2983,7 +2983,7 @@ def _used_modules_not_defined_here(source_text: str) -> list[str]:
     """
     defined = {
         match.group(1).upper()
-        for match in re.finditer(r"^\s*MODULE\s+([A-Za-z_]\w*)\s*$", source_text,
+        for match in re.finditer(r"^\s*MODULE\s+([A-Za-z_]\w*)\s*(?:!.*)?$", source_text,
                                  flags=re.IGNORECASE | re.MULTILINE)
     }
     used: list[str] = []
@@ -8498,6 +8498,63 @@ def value_actuals_left_real_in_lifted_helpers(
     return found
 
 
+_EXPLICIT_REAL_DECLARATION = re.compile(
+    r"^\s*(?:DOUBLE\s*PRECISION|REAL(?:\s*\*\s*\d+|\s*\([^)]*\))?)\s*(?:,[^:]*)?(?:::)?\s*(.+)$",
+    re.IGNORECASE)
+
+
+def real_variable_actuals_in_lifted_helpers(
+    lifted_helper_source: str, oti_helper_dummies: dict[str, list[str | None]],
+) -> list[tuple[str, str, str]]:
+    """A variable the calling helper declares REAL, handed to another helper's hypercomplex dummy.
+
+    :func:`value_actuals_left_real_in_lifted_helpers` examines literals only.
+    Inside the lifted helpers most names are hypercomplex through the IMPLICIT
+    statement the lifter writes, so the variables worth asking about are the
+    ones the helper declares REAL or DOUBLE PRECISION explicitly (luisez1988's
+    NorSand passes ``p, q, eta`` so declared to GETPANDQ_OTI, which writes
+    hypercomplex results into them). The implicit interface of an external
+    subprogram hides the mismatch from the compiler. Per calling routine; only
+    explicit REAL declarations count, so nothing typed by IMPLICIT is flagged.
+
+    Returns (callee, argument, dummy) triples, like the literal check.
+    """
+    dummies = {key.upper(): value for key, value in oti_helper_dummies.items()}
+    if not dummies:
+        return []
+    found: list[tuple[str, str, str]] = []
+    real_names: set[str] = set()
+    for line in logical_lines_from_text(lifted_helper_source, "free"):
+        text = line.text
+        if _UNIT_HEADER.match(text):
+            real_names = set()
+            continue
+        declaration = _EXPLICIT_REAL_DECLARATION.match(text)
+        if declaration and not re.match(r"^\s*REAL\s*\(\s*(?:KIND\s*=\s*)?[^)]*\)\s*FUNCTION", text, re.IGNORECASE):
+            for item in split_top_level(declaration.group(1)):
+                name = _helper_argument_base_name(item.split("=", 1)[0])
+                if name:
+                    real_names.add(name)
+            continue
+        match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)\)\s*$", text, re.IGNORECASE)
+        if not match:
+            continue
+        expected = dummies.get(match.group(1).upper()) or []
+        actuals = list(split_top_level(match.group(2)))
+        for position, dummy in enumerate(expected):
+            if dummy is None or position >= len(actuals):
+                continue
+            actual = actuals[position].strip()
+            if _DESIGNATOR_ACTUAL.match(actual) and _helper_argument_base_name(actual) in real_names:
+                found.append((match.group(1).upper(), actual, str(dummy).upper()))
+    return found
+
+
+_UNIT_HEADER = re.compile(
+    r"^\s*(?:(?:PURE|IMPURE|ELEMENTAL|RECURSIVE)\s+)*(?:SUBROUTINE|(?:[\w(), *]*\s)?FUNCTION)\s+[A-Za-z_]\w*",
+    re.IGNORECASE)
+
+
 #: A signed numeric literal, or arithmetic of nothing else.
 _REAL_OR_INTEGER_LITERAL_ONLY = re.compile(
     r"^[\s()+\-*/]*\d[\d.]*(?:[DEQdeq][+-]?\d+)?(?:_\w+)?"
@@ -8786,6 +8843,8 @@ def _semantic_checks(
     reversed_leak = real_arguments_into_oti_helper_dummies(
         transformed_source, form, lifted_helper_source, type_name)
     reversed_leak += value_actuals_left_real_in_lifted_helpers(
+        lifted_helper_source, oti_typed_dummies_of_lifted_helpers(lifted_helper_source))
+    reversed_leak += real_variable_actuals_in_lifted_helpers(
         lifted_helper_source, oti_typed_dummies_of_lifted_helpers(lifted_helper_source))
     for callee, argument, dummy in reversed_leak[:6]:
         warnings.append(
