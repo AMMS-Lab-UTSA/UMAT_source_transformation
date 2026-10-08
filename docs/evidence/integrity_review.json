@@ -1904,6 +1904,26 @@
      "text": "assert len(missing) == 13, len(missing)"
     }
    ]
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_relative_paths_and_another_working_directory_are_resolved_before_anything_is_written:monkeypatch.setattr:54ed4bb8": {
+   "verdict": "justified",
+   "reason": "The patched name is a machine fact or a slow step (the abaqus launcher lookup, the tool runner, the log of the converted file, the recorded result, the scanner); the code under test, verify_command.main and its path handling, stays real. Abaqus and the three tools are not run in an offline test, so the test only checks that relative paths are resolved into the scratch folder; the real-Abaqus runs of the command are separate."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_relative_paths_and_another_working_directory_are_resolved_before_anything_is_written:monkeypatch.setattr:5f5eab26": {
+   "verdict": "justified",
+   "reason": "The patched name is a machine fact or a slow step (the abaqus launcher lookup, the tool runner, the log of the converted file, the recorded result, the scanner); the code under test, verify_command.main and its path handling, stays real. Abaqus and the three tools are not run in an offline test, so the test only checks that relative paths are resolved into the scratch folder; the real-Abaqus runs of the command are separate."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_relative_paths_and_another_working_directory_are_resolved_before_anything_is_written:monkeypatch.setattr:6b314945": {
+   "verdict": "justified",
+   "reason": "The patched name is a machine fact or a slow step (the abaqus launcher lookup, the tool runner, the log of the converted file, the recorded result, the scanner); the code under test, verify_command.main and its path handling, stays real. Abaqus and the three tools are not run in an offline test, so the test only checks that relative paths are resolved into the scratch folder; the real-Abaqus runs of the command are separate."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_relative_paths_and_another_working_directory_are_resolved_before_anything_is_written:monkeypatch.setattr:d96b5fc9": {
+   "verdict": "justified",
+   "reason": "The patched name is a machine fact or a slow step (the abaqus launcher lookup, the tool runner, the log of the converted file, the recorded result, the scanner); the code under test, verify_command.main and its path handling, stays real. Abaqus and the three tools are not run in an offline test, so the test only checks that relative paths are resolved into the scratch folder; the real-Abaqus runs of the command are separate."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_relative_paths_and_another_working_directory_are_resolved_before_anything_is_written:monkeypatch.setattr:f2988ad1": {
+   "verdict": "justified",
+   "reason": "The patched name is a machine fact or a slow step (the abaqus launcher lookup, the tool runner, the log of the converted file, the recorded result, the scanner); the code under test, verify_command.main and its path handling, stays real. Abaqus and the three tools are not run in an offline test, so the test only checks that relative paths are resolved into the scratch folder; the real-Abaqus runs of the command are separate."
   }
  }
 }

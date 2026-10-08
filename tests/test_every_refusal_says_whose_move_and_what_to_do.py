@@ -179,3 +179,15 @@ def test_no_card_or_question_shows_internal_words_a_user_does_not_know():
                         r"\b(the|a) module\b|\bmodules\b|small-strain", re.I)
     assert banned.findall(text) == [], banned.findall(text)
     assert text.count("finite-strain") <= text.count("(finite-strain)") + 0, "finite-strain is always defined where it is used"
+
+
+def test_the_unshaped_variable_and_the_value_in_a_declaration_refusals_name_the_variable_and_one_step():
+    shape = card_for("transform_refused", "Promoted variable STRAININC is indexed in a stress region but has no "
+                     "confirmed shape (first indexed at line 96).")
+    assert shape.rule.startswith("rule:") and shape.whose_move == "the author of this UMAT"
+    assert "STRAININC" in shape.sentence and "DIMENSION STRAININC(6)" in shape.next_action
+    kept = card_for("transform_refused", "HelperLiftingError: KGTN gives TOL a value in its declaration "
+                    "('double precision :: tol =1e-8') and also writes it. That value is an implied SAVE initial value.")
+    assert kept.rule.startswith("rule:") and kept.whose_move == "the author of this UMAT"
+    assert "TOL" in kept.sentence and "TOL = ..." in kept.next_action
+    assert "SAVE" not in kept.sentence + kept.next_action
