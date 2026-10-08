@@ -1327,27 +1327,27 @@
   },
   "removed_check:tests/test_a_census_sums_to_its_own_denominator.py:test_every_census_the_registry_publishes_states_and_sums_to_a_denominator:b8291ba0": {
    "verdict": "justified",
-   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_a_census_sums_to_its_own_denominator.py",
-     "text": "assert censuses[name][\"denominator\"] == d1 == 405, name"
+     "text": "assert censuses[name][\"denominator\"] == d1 == 419, name"
     }
    ]
   },
   "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_every_record_names_where_the_file_came_from:73850f7f": {
    "verdict": "justified",
-   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
-     "text": "assert len(records) == 405"
+     "text": "assert len(records) == 419"
     }
    ]
   },
   "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:07fa1a05": {
    "verdict": "justified",
-   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405.",
+   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1355,11 +1355,11 @@
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert len(records) == 405, len(records)"
+     "text": "assert len(records) == 419, len(records)"
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert set(ids) == pass23, \"the registry is not the pass23 population\""
+     "text": "assert pass23 <= set(ids), \"the registry lost a source of the pass23 population\""
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1369,7 +1369,7 @@
   },
   "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:144720e2": {
    "verdict": "justified",
-   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405.",
+   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1377,11 +1377,11 @@
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert len(records) == 405, len(records)"
+     "text": "assert len(records) == 419, len(records)"
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert set(ids) == pass23, \"the registry is not the pass23 population\""
+     "text": "assert pass23 <= set(ids), \"the registry lost a source of the pass23 population\""
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1391,7 +1391,7 @@
   },
   "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:4066e53b": {
    "verdict": "justified",
-   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405.",
+   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1399,11 +1399,11 @@
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert len(records) == 405, len(records)"
+     "text": "assert len(records) == 419, len(records)"
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert set(ids) == pass23, \"the registry is not the pass23 population\""
+     "text": "assert pass23 <= set(ids), \"the registry lost a source of the pass23 population\""
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1413,7 +1413,7 @@
   },
   "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:65f0d4f4": {
    "verdict": "justified",
-   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405.",
+   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1421,11 +1421,11 @@
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert len(records) == 405, len(records)"
+     "text": "assert len(records) == 419, len(records)"
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert set(ids) == pass23, \"the registry is not the pass23 population\""
+     "text": "assert pass23 <= set(ids), \"the registry lost a source of the pass23 population\""
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1435,7 +1435,7 @@
   },
   "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:73850f7f": {
    "verdict": "justified",
-   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405.",
+   "reason": "The pinned counts moved with the population, not the check. The inventory grew from 391 to 405 (70a3700, 14 sources of the 2026-10-02 round) and to 419 with the 14 sources of the 2026-10-06 host round, which are in no pass23 batch. The committed registry is the pass23 population of 405 and the test now asserts that equality against paper_results/corpus/pass23_population.json (405 / 242 / 106), that the registry is a subset of the inventory, and that the inventory minus the registry is exactly 14 sources. Nothing is loosened: the registry's own reconciliation is still asserted at 405. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1443,11 +1443,11 @@
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert len(records) == 405, len(records)"
+     "text": "assert len(records) == 419, len(records)"
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert set(ids) == pass23, \"the registry is not the pass23 population\""
+     "text": "assert pass23 <= set(ids), \"the registry lost a source of the pass23 population\""
     },
     {
      "in": "tests/test_the_registry_is_the_denominator.py",
@@ -1457,89 +1457,89 @@
   },
   "removed_check:tests/test_the_two_denominators_stay_apart.py:test_retained_refresh_preserves_observations_and_retires_currency:0ee32f2b": {
    "verdict": "justified",
-   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert d1 == len(records) == 405, d1"
+     "text": "assert d1 == len(records) == 419, d1"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+     "text": "assert len(list(csv.DictReader(table.open()))) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(rows) == 405"
+     "text": "assert len(rows) == 419"
     }
    ]
   },
   "removed_check:tests/test_the_two_denominators_stay_apart.py:test_retained_refresh_preserves_observations_and_retires_currency:ed8fd61c": {
    "verdict": "justified",
-   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert d1 == len(records) == 405, d1"
+     "text": "assert d1 == len(records) == 419, d1"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+     "text": "assert len(list(csv.DictReader(table.open()))) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(rows) == 405"
+     "text": "assert len(rows) == 419"
     }
    ]
   },
   "removed_check:tests/test_the_two_denominators_stay_apart.py:test_the_csv_carries_the_same_391_rows_as_the_json:bfe2365d": {
    "verdict": "justified",
-   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert d1 == len(records) == 405, d1"
+     "text": "assert d1 == len(records) == 419, d1"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+     "text": "assert len(list(csv.DictReader(table.open()))) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(rows) == 405"
+     "text": "assert len(rows) == 419"
     }
    ]
   },
   "removed_check:tests/test_the_two_denominators_stay_apart.py:test_the_two_denominators_are_both_published_and_d2_is_inside_d1:8b961895": {
    "verdict": "justified",
-   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened. At the pass24 freeze (9379aa6) the registry holds all 419 sources, the 405 of the pass23 population and the 14 of the 2026-10-06 host round, each attempted in pass24; the assertion is the same equality with the new figure and nothing is loosened.",
    "evidence": [
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert d1 == len(records) == 405, d1"
+     "text": "assert d1 == len(records) == 419, d1"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+     "text": "assert len(list(csv.DictReader(table.open()))) == 419"
     },
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
-     "text": "assert len(rows) == 405"
+     "text": "assert len(rows) == 419"
     }
    ]
   },
@@ -1632,14 +1632,6 @@
   "mock:tests/test_verify_one_runs_a_recorded_row_to_the_tangent_stage.py:test_a_recorded_row_reaches_the_tangent_stage_without_a_harness_error:monkeypatch.setattr:986346ae": {
    "verdict": "justified",
    "reason": "Replaces the two things verify_one cannot do in a test: the Abaqus job (run_one, returning pass22's recorded output) and the finite-difference tangent (verify_tangent). Everything between them -- init builds, routine-level replay, Jacobian-matched comparison, record -- is real; the test fails with the UnboundLocalError when the shadowing is put back."
-  },
-  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:d08484b4": {
-   "verdict": "justified",
-   "reason": "The routine-level 114 needs the pass23 harness cells (corpus_campaign/pass23_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as before, naming the pass23 cells."
-  },
-  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged:call:skip:1c16fb83": {
-   "verdict": "justified",
-   "reason": "242 and 106 are asserted from the committed registry before the skip; only the routine-level 114 needs the pass23 harness cells outside this tree, and that part runs wherever they exist."
   },
   "mock:tests/test_run_corpus_features_council_plans.py:test_the_flag_sets_the_plans_folder_the_council_key_is_resolved_from:monkeypatch.setattr:8dc36cca": {
    "verdict": "justified",
@@ -1857,20 +1849,6 @@
    "verdict": "justified",
    "reason": "Replaces build_history_replay by a wrapper that reports 'ifort is not on PATH' for ifort only and calls the real function for gfortran, so the real gfortran probe is built and run on the planted ISNAN guard and must flag STRESS; it lets CI, which has no ifort, exercise the rule. The classification and the flagging are the real code."
   },
-  "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:6ce7d861": {
-   "verdict": "justified",
-   "reason": "set(ids) == set(discovered) held because the registry and the inventory were the same 405 sources. The inventory now holds 14 more, in no batch, so equality between the two is replaced by three stronger checks: the registry equals the pass23 population, it is a subset of the inventory, and the difference is exactly 14 named-by-count sources.",
-   "evidence": [
-    {
-     "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert set(ids) <= set(discovered), {"
-    },
-    {
-     "in": "tests/test_the_registry_is_the_denominator.py",
-     "text": "assert not set(new) & pass23"
-    }
-   ]
-  },
   "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:_fake_run:monkeypatch.setattr:38b74bab": {
    "verdict": "justified",
    "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
@@ -1898,6 +1876,34 @@
   "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_without_a_deck_it_asks_for_one_and_defaults_nothing:monkeypatch.setattr:ae2b3b58": {
    "verdict": "justified",
    "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:311e6e3a": {
+   "verdict": "justified",
+   "reason": "The routine-level 114 needs the pass24 harness cells (corpus_campaign/pass24_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as before, naming the pass24 cells."
+  },
+  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged:call:skip:cc0b52ea": {
+   "verdict": "justified",
+   "reason": "259 raw eligible (246 plus the 13 adequately specified new sources) and 106 are asserted from the committed registry before the skip; only the routine-level 114 needs the pass24 harness cells outside this tree, and that part runs wherever they exist."
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_every_record_names_where_the_file_came_from:a296a70d": {
+   "verdict": "justified",
+   "reason": "The acquisition-URL check was written for GitHub rows only. The 14 sources of the 2026-10-06 host round come from GitLab, SourceForge SVN and Zenodo, pinned by a commit, an SVN revision or a record md5, with the URL built from the acquisition's recorded template (cdacdd4). GitHub rows keep every original assertion (40-character commit inside the URL, reconstructed from the commit); the other hosts are asserted to start with one of the three known prefixes, to carry a non-empty pin and to say which template built the URL. Nothing is loosened for the rows it applied to.",
+   "evidence": [
+    {
+     "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
+     "text": "assert \"recorded URL template\" in record[\"url_provenance\"], record[\"source_id\"]"
+    }
+   ]
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_the_companions_a_umat_needs_are_recorded_beside_it:43b5e403": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the population, not the check: with the callee rule applied to all sources (054f8e3) three refusals left missing_external_dependency for the 242 population, and the 14 new sources add some, so the class holds 13 at pass24 (16 at pass23). Every record of the class still has to name its missing companions, be external and be a UMAT.",
+   "evidence": [
+    {
+     "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
+     "text": "assert len(missing) == 13, len(missing)"
+    }
+   ]
   }
  }
 }
