@@ -365,6 +365,9 @@ class DeckMaterial:
     #: whether it asks for ``TYPE=STRESS, USER`` (the source's SIGINI).
     initial_state_values: tuple[float, ...] = ()
     user_initial_stress: bool = False
+    #: B20 rule H4e: ``HYBRID FORMULATION=`` on this block's ``*USER MATERIAL``
+    #: line (TOTAL or INCREMENTAL), as the author wrote it, or "".
+    hybrid_formulation: str = ""
     #: The ``*PARAMETER`` names this block's data lines were written in terms
     #: of and which were resolved from the deck's own definitions, in the order
     #: they appear. Recorded because a constant read through a substitution is
@@ -419,6 +422,8 @@ class DeckMaterial:
                 **({"initial_state_values": list(self.initial_state_values)}
                    if self.initial_state_values else {}),
                 **({"user_initial_stress": True} if self.user_initial_stress else {}),
+                **({"hybrid_formulation": self.hybrid_formulation}
+                   if self.hybrid_formulation else {}),
                 "substituted": list(self.substituted),
                 "unresolved": list(self.unresolved),
                 "unresolved_includes": list(self.unresolved_includes),
@@ -647,6 +652,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
     substituted: list[str] = []
     unresolved: list[str] = []
     unsymm = False
+    hybrid_option = ""
     user_state = False
     user_stress = False
     solution_values: list[float] = []
@@ -686,6 +692,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
             found.append(DeckMaterial(
                 deck=Path(deck), name=name, constants=constants, depvar=depvar,
                 values=tuple(published), unsymmetric=unsymm,
+                hybrid_formulation=hybrid_option,
                 elements=tuple(kinds), sections=(where,) if where else (),
                 explicit=where.startswith("line "),
                 substituted=tuple(dict.fromkeys(substituted)),
@@ -716,6 +723,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 name = parameters.get("NAME", "")
                 in_material = True
                 depvar, constants, values, unsymm = 0, 0, [], False
+                hybrid_option = ""
                 packed, garbled = [], False
                 broke, data_lines = [], 0
                 substituted, unresolved = [], []
@@ -737,6 +745,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 # wrote a question mark.
                 constants = _whole(parameters.get("CONSTANTS", ""))
                 unsymm = "UNSYMM" in keyword_match.group(2).upper()
+                hybrid_option = parameters.get("HYBRIDFORMULATION", "").upper()
                 broke, data_lines = [], 0
                 mode = "props"
             elif keyword == "INITIALCONDITIONS":
@@ -876,6 +885,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
                           if kind.upper() in lowest_label), default=0),
                      steps=steps, step_periods=tuple(periods), nlgeom=nlgeom,
                      user_initial_state=user_state,
+                     hybrid_formulation=material.hybrid_formulation,
                      initial_state_values=tuple(solution_values),
                      user_initial_stress=user_stress,
                      substituted=material.substituted,

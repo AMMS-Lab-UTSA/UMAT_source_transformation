@@ -147,3 +147,20 @@ def test_the_authors_orientation_system_is_kept(tmp_path, system):
     assert found.found, found.experiment.refusal
     assert found.manifest.orientation_system == system
     assert f"*ORIENTATION, NAME=LOCAL, SYSTEM={system}" in generate_deck(found.manifest)
+
+
+@pytest.mark.parametrize("option,expected", [(", HYBRID FORMULATION = TOTAL", "TOTAL"),
+                                             (", hybrid formulation=incremental", "INCREMENTAL"),
+                                             ("", "")])
+def test_the_hybrid_formulation_option_is_carried_as_written_and_never_added(tmp_path, option, expected):
+    text = deck(1).replace("*User Material, constants=2", f"*User Material, constants=2{option}")
+    r = repo(tmp_path, PLAIN, {"job.inp": text})
+    found = plan(r / "umat.for", r)
+    assert found.found, found.experiment.refusal
+    assert found.manifest.hybrid_formulation == expected
+    generated = generate_deck(found.manifest)
+    line = next(l for l in generated.splitlines() if l.startswith("*USER MATERIAL"))
+    if expected:
+        assert f"HYBRID FORMULATION={expected}" in line
+    else:
+        assert "HYBRID" not in line                    # nothing is added when the author's line has none

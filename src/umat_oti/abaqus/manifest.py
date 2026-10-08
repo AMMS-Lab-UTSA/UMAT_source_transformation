@@ -205,6 +205,9 @@ class VerificationManifest:
     #: The author's deck says ``*INITIAL CONDITIONS, TYPE=STRESS, USER``, which
     #: asks Abaqus to call the source's own SIGINI (B20 rule H4c).
     initial_stress_from_user_subroutine: bool = False
+    #: The author's ``*USER MATERIAL, HYBRID FORMULATION=`` option (B20 rule
+    #: H4e): TOTAL or INCREMENTAL, or "" when the deck states none.
+    hybrid_formulation: str = ""
     unsymmetric: bool = False
 
     # ---- what to run -------------------------------------------------------
