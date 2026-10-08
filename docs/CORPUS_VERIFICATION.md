@@ -18,10 +18,14 @@ new sources are reported apart; none of the three is pooled with another:
 
 - **106 of 242 as published** (the pass23 population and the pass23 adequacy
   test). Unchanged from pass23: the same 106 sources, none lost, none gained.
-- **106 of 246 with the revised callee rule** (242 - 0 + 4): a callee counts as
-  unpublished only if it is absent from the repository at the pinned commit, so
-  Diffusion_3D, GeneralFiniteStrain and the two bmmbUPF discs (Sub_MechDisc,
-  Sub_TransDisc) enter the eligible set; none left. All four are
+- **106 of 251 with the revised callee rule** (242 - 0 + 9): a callee, module
+  or include counts as unpublished only if it is absent from the repository
+  at the pinned commit (the discovery cache is partial, so absence is
+  confirmed against the upstream tree: `paper_results/corpus/upstream_callee_check.json`),
+  so nine sources enter the eligible set and none left: Diffusion_3D,
+  GeneralFiniteStrain, the two bmmbUPF discs (Sub_MechDisc, Sub_TransDisc),
+  frodal HypoImp, the two mauroarcidiacono UMATs (their `core.for` includes are
+  in the upstream tree), ngrilli HCPnoTwin and xara peri/umat. All nine are
   `transform_refused`. The pass count did not change, only the denominator.
 - **The 14 new sources** are attempted in pass24 and reported apart, never in
   either line: 13 are adequately specified (11 `transform_refused`, 1

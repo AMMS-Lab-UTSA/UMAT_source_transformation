@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-manifest/1",
- "generated": "2026-10-08T06:40:17+00:00",
+ "generated": "2026-10-08T11:03:39+00:00",
  "what_this_is": "one row per acquired corpus source plus one per discovered-but-not-acquired candidate; every pipeline stage and feature cell carries a status, a reason and an evidence locator. Skipped never counts as verified.",
  "roots": {
   "campaign": "$UMAT_OTI_WORKSPACE/corpus_campaign",
@@ -15,7 +15,7 @@
  "inputs": {
   "registry": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b17/paper_results/corpus/corpus_registry.json",
-   "sha256": "977d630be4991018c4fe3861fd16c9cc8e74185f3553784042d73e4cb35fadd6"
+   "sha256": "f5c96c86c06bf628f231b54a80a46ccbc0ab0c0e500b65a29d2f0948754808c8"
   },
   "triage": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b17/paper_results/discovery/discovery_triage.json",
@@ -203535,10 +203535,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module PolynomialRoots",
-      "include ./Dependencies/quartic.f90"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "include ./Dependencies/quartic.f90",
       "module PolynomialRoots"
@@ -203697,8 +203694,8 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
-    "kind": "external",
+    "terminal_state": "transform_refused",
+    "kind": "internal",
     "stage": "",
     "key": "",
     "gate_mechanically_informative": "",
@@ -203710,8 +203707,8 @@
     "verification_fingerprint": ""
    },
    "origins": {
-    "material_data_origin": "",
-    "experiment_origin": "",
+    "material_data_origin": "author_deck",
+    "experiment_origin": "author",
     "material_data_ref": "",
     "council_deck_ref": "",
     "council_fingerprint": "",
@@ -203725,8 +203722,8 @@
     "domain_not_enforced": "",
     "pairing_changed": null,
     "licence_hold": "",
-    "tier": "",
-    "tier_basis": "",
+    "tier": "author_deck",
+    "tier_basis": "in the deck-only D2; material data author_deck, experiment author",
     "counted_in_tier": null,
     "not_counted_in_tier_reason": ""
    },
@@ -203737,8 +203734,8 @@
      "evidence": "repo:paper_results/discovery/discovery_triage.json#source=frodal__SCMM-hypo/HypoImp.f"
     },
     "eligible": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "verified",
+     "reason": "adequately specified genuine UMAT (D2)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=frodal__SCMM-hypo/HypoImp.f"
     },
     "attempted": {
@@ -203747,36 +203744,36 @@
      "evidence": "corpus_run:transform_all_pass24.json"
     },
     "transformed": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=frodal__SCMM-hypo/HypoImp.f"
     },
     "compiled": {
-     "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=frodal__SCMM-hypo/HypoImp.f",
      "layouts": {}
     },
     "original_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=frodal__SCMM-hypo/HypoImp.f"
     },
     "oti_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=frodal__SCMM-hypo/HypoImp.f"
     },
     "primal_agreed": {
-     "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=frodal__SCMM-hypo/HypoImp.f"
     }
    },
    "features": {
     "primal_stress_state": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=frodal__SCMM-hypo/HypoImp.f",
      "reference": null,
      "max_error": null,
@@ -203784,8 +203781,8 @@
      "history": []
     },
     "ddsdde": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=frodal__SCMM-hypo/HypoImp.f",
      "reference": null,
      "max_error": null,
@@ -203874,14 +203871,14 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+    "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
     "fd_steps": [],
     "states_checked": null,
     "states_agreeing": null,
-    "primal_stress_state": "blocked"
+    "primal_stress_state": "unsupported"
    },
    "later_pass": null,
    "data_quality": [
@@ -217498,20 +217495,12 @@
      "routine": "UMAT",
      "interface": "UMAT",
      "line": 1964,
-     "evidence": "SUBROUTINE UMAT(STRESS, STATEV, DDSDDE, SSE, SPD, SCD, &",
+     "evidence": "the published source, line 259: Syntax error, found IDENTIFIER 'CONTIG' when expecting one of: :: ( , [ /",
      "is_umat": true
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module DefUtils",
-      "module Adaptive",
-      "module MaterialModels",
-      "module StressLocal",
-      "module Types",
-      "module Integration",
-      "module LinearAlgebra"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module Adaptive",
       "module DefUtils",
@@ -217805,7 +217794,7 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
+    "terminal_state": "incomplete_or_corrupt_source",
     "kind": "external",
     "stage": "",
     "key": "",
@@ -217846,7 +217835,7 @@
     },
     "eligible": {
      "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "attempted": {
@@ -217856,35 +217845,35 @@
     },
     "transformed": {
      "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "corpus_run:transform_all_pass24.json#source=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "compiled": {
      "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "upstream stage `transformed` is blocked: incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "corpus_run:transform_all_pass24.json#source=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90",
      "layouts": {}
     },
     "original_executed": {
      "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "corpus_run:transform_all_pass24.json#source=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "oti_executed": {
      "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "corpus_run:transform_all_pass24.json#source=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "primal_agreed": {
      "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "corpus_run:transform_all_pass24.json#source=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90"
     }
    },
    "features": {
     "primal_stress_state": {
      "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "corpus_run:transform_all_pass24.json#source=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90",
      "reference": null,
      "max_error": null,
@@ -217893,7 +217882,7 @@
     },
     "ddsdde": {
      "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
      "evidence": "corpus_run:transform_all_pass24.json#source=jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90",
      "reference": null,
      "max_error": null,
@@ -217982,7 +217971,7 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
+    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift.",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
@@ -241049,19 +241038,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "include utils.for",
-      "include lubksb.for",
-      "include ludcmp.for",
-      "include kinharden.for",
-      "include iteration.for",
-      "include latentharden.for",
-      "include strainrate.for",
-      "include gslpinit.for",
-      "include slipsys.for",
-      "include rotation.for",
-      "include noncubiccrystal.for"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "include gslpinit.for",
       "include iteration.for",
@@ -241282,8 +241259,8 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
-    "kind": "external",
+    "terminal_state": "transform_refused",
+    "kind": "internal",
     "stage": "",
     "key": "",
     "gate_mechanically_informative": "",
@@ -241295,8 +241272,8 @@
     "verification_fingerprint": ""
    },
    "origins": {
-    "material_data_origin": "",
-    "experiment_origin": "",
+    "material_data_origin": "author_deck",
+    "experiment_origin": "author",
     "material_data_ref": "",
     "council_deck_ref": "",
     "council_fingerprint": "",
@@ -241310,8 +241287,8 @@
     "domain_not_enforced": "",
     "pairing_changed": null,
     "licence_hold": "",
-    "tier": "",
-    "tier_basis": "",
+    "tier": "author_deck",
+    "tier_basis": "in the deck-only D2; material data author_deck, experiment author",
     "counted_in_tier": null,
     "not_counted_in_tier_reason": ""
    },
@@ -241322,8 +241299,8 @@
      "evidence": "repo:paper_results/discovery/discovery_triage.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for"
     },
     "eligible": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "verified",
+     "reason": "adequately specified genuine UMAT (D2)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for"
     },
     "attempted": {
@@ -241332,36 +241309,36 @@
      "evidence": "corpus_run:transform_all_pass24.json"
     },
     "transformed": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for"
     },
     "compiled": {
-     "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for",
      "layouts": {}
     },
     "original_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for"
     },
     "oti_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for"
     },
     "primal_agreed": {
-     "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for"
     }
    },
    "features": {
     "primal_stress_state": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for",
      "reference": null,
      "max_error": null,
@@ -241369,8 +241346,8 @@
      "history": []
     },
     "ddsdde": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for",
      "reference": null,
      "max_error": null,
@@ -241459,14 +241436,14 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+    "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
     "fd_steps": [],
     "states_checked": null,
     "states_agreeing": null,
-    "primal_stress_state": "blocked"
+    "primal_stress_state": "unsupported"
    },
    "later_pass": null,
    "data_quality": []
@@ -241551,19 +241528,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "include utils.for",
-      "include lubksb.for",
-      "include ludcmp.for",
-      "include kinharden.for",
-      "include iteration.for",
-      "include latentharden.for",
-      "include strainrate.for",
-      "include gslpinit.for",
-      "include slipsys.for",
-      "include rotation.for",
-      "include noncubiccrystal.for"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "include gslpinit.for",
       "include iteration.for",
@@ -241780,8 +241745,8 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
-    "kind": "external",
+    "terminal_state": "transform_refused",
+    "kind": "internal",
     "stage": "",
     "key": "",
     "gate_mechanically_informative": "",
@@ -241793,8 +241758,8 @@
     "verification_fingerprint": ""
    },
    "origins": {
-    "material_data_origin": "",
-    "experiment_origin": "",
+    "material_data_origin": "author_deck",
+    "experiment_origin": "author",
     "material_data_ref": "",
     "council_deck_ref": "",
     "council_fingerprint": "",
@@ -241808,8 +241773,8 @@
     "domain_not_enforced": "",
     "pairing_changed": null,
     "licence_hold": "",
-    "tier": "",
-    "tier_basis": "",
+    "tier": "author_deck",
+    "tier_basis": "in the deck-only D2; material data author_deck, experiment author",
     "counted_in_tier": null,
     "not_counted_in_tier_reason": ""
    },
@@ -241820,8 +241785,8 @@
      "evidence": "repo:paper_results/discovery/discovery_triage.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for"
     },
     "eligible": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "verified",
+     "reason": "adequately specified genuine UMAT (D2)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for"
     },
     "attempted": {
@@ -241830,36 +241795,36 @@
      "evidence": "corpus_run:transform_all_pass24.json"
     },
     "transformed": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for"
     },
     "compiled": {
-     "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for",
      "layouts": {}
     },
     "original_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for"
     },
     "oti_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for"
     },
     "primal_agreed": {
-     "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for"
     }
    },
    "features": {
     "primal_stress_state": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for",
      "reference": null,
      "max_error": null,
@@ -241867,8 +241832,8 @@
      "history": []
     },
     "ddsdde": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for",
      "reference": null,
      "max_error": null,
@@ -241957,14 +241922,14 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
+    "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it.",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
     "fd_steps": [],
     "states_checked": null,
     "states_agreeing": null,
-    "primal_stress_state": "blocked"
+    "primal_stress_state": "unsupported"
    },
    "later_pass": null,
    "data_quality": []
@@ -245131,7 +245096,7 @@
     "tier": "council_chosen",
     "tier_basis": "missing_material_data for its deck; constants council_chosen (corpus_campaign/material_data/d21_council_constants.jsonl#key=b1248da414bb41bcf4593878, worst confidence chosen); experiment council (pairing refusal no_deck_names_this_source) -- D-19/D-21",
     "counted_in_tier": false,
-    "not_counted_in_tier_reason": "R6.6: the author-deck rows have not been re-run at the council harness fingerprint | R6.5_template: Vera has not accepted the template | R6.5_instance: Vera has not accepted this instance | primal_stress_state: no cell for any set | ddsdde: no cell for any set"
+    "not_counted_in_tier_reason": "R6.6: the author-deck rows have not been re-run at the council harness fingerprint | R6.5_template: Vera has not accepted the template | R6.5_instance: Vera has not accepted this instance"
    },
    "pipeline": {
     "discovered": {
@@ -247904,7 +247869,7 @@
     "tier": "council_chosen",
     "tier_basis": "missing_material_data for its deck; constants council_chosen (corpus_campaign/material_data/d21_council_constants.jsonl#key=679b326e01ca023a942084a9, worst confidence chosen); experiment council (pairing refusal no_deck_names_this_source) -- D-19/D-21",
     "counted_in_tier": false,
-    "not_counted_in_tier_reason": "R6.6: the author-deck rows have not been re-run at the council harness fingerprint | R6.5_template: Vera has not accepted the template | R6.5_instance: Vera has not accepted this instance | primal_stress_state: no cell for any set | ddsdde: no cell for any set"
+    "not_counted_in_tier_reason": "R6.6: the author-deck rows have not been re-run at the council harness fingerprint | R6.5_template: Vera has not accepted the template | R6.5_instance: Vera has not accepted this instance"
    },
    "pipeline": {
     "discovered": {
@@ -252159,7 +252124,7 @@
     "tier": "council_chosen",
     "tier_basis": "missing_material_data for its deck; constants council_chosen (corpus_campaign/material_data/d21_council_constants.jsonl#key=bcd3b30146b1729c4f76109a, worst confidence chosen); experiment council (pairing refusal no_deck_names_this_source) -- D-19/D-21",
     "counted_in_tier": false,
-    "not_counted_in_tier_reason": "R6.6: the author-deck rows have not been re-run at the council harness fingerprint | R6.5_template: Vera has not accepted the template | R6.5_instance: Vera has not accepted this instance | primal_stress_state: no cell for any set | ddsdde: no cell for any set"
+    "not_counted_in_tier_reason": "R6.6: the author-deck rows have not been re-run at the council harness fingerprint | R6.5_template: Vera has not accepted the template | R6.5_instance: Vera has not accepted this instance"
    },
    "pipeline": {
     "discovered": {
@@ -260295,23 +260260,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "include xDir0ET.f",
-      "include xNorm0ET.f",
-      "include xDir1.f",
-      "include xNorm1.f",
-      "include xDir2.f",
-      "include xNorm2.f",
-      "include xDir2c.f",
-      "include xNorm2c.f",
-      "include xDir4.f",
-      "include xNorm4.f",
-      "include xDirAlphaUranium.f",
-      "include xNormAlphaUranium.f",
-      "include xTwinDirAlphaUranium.f",
-      "include xTwinNormAlphaUranium.f",
-      "include CoheleBulkMap.f"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "include CoheleBulkMap.f",
       "include xDir0ET.f",
@@ -260552,8 +260501,8 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
-    "kind": "external",
+    "terminal_state": "transform_refused",
+    "kind": "internal",
     "stage": "",
     "key": "",
     "gate_mechanically_informative": "",
@@ -260565,8 +260514,8 @@
     "verification_fingerprint": ""
    },
    "origins": {
-    "material_data_origin": "",
-    "experiment_origin": "",
+    "material_data_origin": "author_deck",
+    "experiment_origin": "author",
     "material_data_ref": "",
     "council_deck_ref": "",
     "council_fingerprint": "",
@@ -260580,8 +260529,8 @@
     "domain_not_enforced": "",
     "pairing_changed": null,
     "licence_hold": "",
-    "tier": "",
-    "tier_basis": "",
+    "tier": "author_deck",
+    "tier_basis": "in the deck-only D2; material data author_deck, experiment author",
     "counted_in_tier": null,
     "not_counted_in_tier_reason": ""
    },
@@ -260592,8 +260541,8 @@
      "evidence": "repo:paper_results/discovery/discovery_triage.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for"
     },
     "eligible": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "verified",
+     "reason": "adequately specified genuine UMAT (D2)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for"
     },
     "attempted": {
@@ -260602,36 +260551,36 @@
      "evidence": "corpus_run:transform_all_pass24.json"
     },
     "transformed": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for"
     },
     "compiled": {
-     "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
      "layouts": {}
     },
     "original_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for"
     },
     "oti_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for"
     },
     "primal_agreed": {
-     "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for"
     }
    },
    "features": {
     "primal_stress_state": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
      "reference": null,
      "max_error": null,
@@ -260639,8 +260588,8 @@
      "history": []
     },
     "ddsdde": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
      "evidence": "corpus_run:transform_all_pass24.json#source=ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
      "reference": null,
      "max_error": null,
@@ -260729,14 +260678,14 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
+    "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
     "fd_steps": [],
     "states_checked": null,
     "states_agreeing": null,
-    "primal_stress_state": "blocked"
+    "primal_stress_state": "unsupported"
    },
    "later_pass": null,
    "data_quality": []
@@ -261984,9 +261933,7 @@
     },
     "required_files": {
      "companions": [],
-     "missing_companions": [
-      "module kvisual"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module kvisual"
      ],
@@ -262100,8 +262047,8 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
-    "kind": "external",
+    "terminal_state": "transform_refused",
+    "kind": "internal",
     "stage": "",
     "key": "",
     "gate_mechanically_informative": "",
@@ -262113,8 +262060,8 @@
     "verification_fingerprint": ""
    },
    "origins": {
-    "material_data_origin": "",
-    "experiment_origin": "",
+    "material_data_origin": "author_deck",
+    "experiment_origin": "author",
     "material_data_ref": "",
     "council_deck_ref": "",
     "council_fingerprint": "",
@@ -262128,8 +262075,8 @@
     "domain_not_enforced": "",
     "pairing_changed": null,
     "licence_hold": "",
-    "tier": "",
-    "tier_basis": "",
+    "tier": "author_deck",
+    "tier_basis": "in the deck-only D2; material data author_deck, experiment author",
     "counted_in_tier": null,
     "not_counted_in_tier_reason": ""
    },
@@ -262140,8 +262087,8 @@
      "evidence": "repo:paper_results/discovery/discovery_triage.json#source=peer-open-source__xara/SRC/domain/peri/umat.for"
     },
     "eligible": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "verified",
+     "reason": "adequately specified genuine UMAT (D2)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=peer-open-source__xara/SRC/domain/peri/umat.for"
     },
     "attempted": {
@@ -262150,36 +262097,36 @@
      "evidence": "corpus_run:transform_all_pass24.json"
     },
     "transformed": {
-     "status": "blocked",
-     "reason": "external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "unsupported",
+     "reason": "transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
      "evidence": "corpus_run:transform_all_pass24.json#source=peer-open-source__xara/SRC/domain/peri/umat.for"
     },
     "compiled": {
-     "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "unsupported",
+     "reason": "upstream stage `transformed` is unsupported: transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
      "evidence": "corpus_run:transform_all_pass24.json#source=peer-open-source__xara/SRC/domain/peri/umat.for",
      "layouts": {}
     },
     "original_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "unsupported",
+     "reason": "upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
      "evidence": "corpus_run:transform_all_pass24.json#source=peer-open-source__xara/SRC/domain/peri/umat.for"
     },
     "oti_executed": {
-     "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "unsupported",
+     "reason": "upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
      "evidence": "corpus_run:transform_all_pass24.json#source=peer-open-source__xara/SRC/domain/peri/umat.for"
     },
     "primal_agreed": {
-     "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "unsupported",
+     "reason": "upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
      "evidence": "corpus_run:transform_all_pass24.json#source=peer-open-source__xara/SRC/domain/peri/umat.for"
     }
    },
    "features": {
     "primal_stress_state": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
      "evidence": "corpus_run:transform_all_pass24.json#source=peer-open-source__xara/SRC/domain/peri/umat.for",
      "reference": null,
      "max_error": null,
@@ -262187,8 +262134,8 @@
      "history": []
     },
     "ddsdde": {
-     "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+     "status": "unsupported",
+     "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
      "evidence": "corpus_run:transform_all_pass24.json#source=peer-open-source__xara/SRC/domain/peri/umat.for",
      "reference": null,
      "max_error": null,
@@ -262277,14 +262224,14 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
+    "reason": "upstream stage `primal_agreed` is unsupported: upstream stage `oti_executed` is unsupported: upstream stage `original_executed` is unsupported: upstream stage `compiled` is unsupported: upstream stage `transformed` is unsupported: transform_refused: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
     "fd_steps": [],
     "states_checked": null,
     "states_agreeing": null,
-    "primal_stress_state": "blocked"
+    "primal_stress_state": "unsupported"
    },
    "later_pass": null,
    "data_quality": []
@@ -286279,7 +286226,7 @@
      "routine": "UMAT",
      "interface": "UMAT",
      "line": 105,
-     "evidence": "SUBROUTINE UMAT( &",
+     "evidence": "the published source, line 106: Syntax error, found '(' when expecting one of: ) ,",
      "is_umat": true
     },
     "required_files": {
@@ -286289,10 +286236,7 @@
       "zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Code_Templates/RT_Global_Types.f90",
       "zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Code_Templates/RT_Com_Types.f90"
      ],
-     "missing_companions": [
-      "module IF_Prec_Core",
-      "module IF_Err_Brg"
-     ],
+     "missing_companions": [],
      "unresolved_by_resolver": [
       "module IF_Err_Brg",
       "module IF_Prec_Core"
@@ -286437,7 +286381,7 @@
     }
    },
    "registry": {
-    "terminal_state": "external_dependency_unavailable",
+    "terminal_state": "incomplete_or_corrupt_source",
     "kind": "external",
     "stage": "",
     "key": "",
@@ -286478,7 +286422,7 @@
     },
     "eligible": {
      "status": "blocked",
-     "reason": "external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "repo:paper_results/corpus/corpus_registry.json#source_id=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90"
     },
     "attempted": {
@@ -286488,35 +286432,35 @@
     },
     "transformed": {
      "status": "blocked",
-     "reason": "external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "corpus_run:transform_all_pass24.json#source=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90"
     },
     "compiled": {
      "status": "blocked",
-     "reason": "upstream stage `transformed` is blocked: external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "upstream stage `transformed` is blocked: incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "corpus_run:transform_all_pass24.json#source=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90",
      "layouts": {}
     },
     "original_executed": {
      "status": "blocked",
-     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "corpus_run:transform_all_pass24.json#source=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90"
     },
     "oti_executed": {
      "status": "blocked",
-     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "corpus_run:transform_all_pass24.json#source=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90"
     },
     "primal_agreed": {
      "status": "blocked",
-     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "corpus_run:transform_all_pass24.json#source=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90"
     }
    },
    "features": {
     "primal_stress_state": {
      "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "corpus_run:transform_all_pass24.json#source=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90",
      "reference": null,
      "max_error": null,
@@ -286525,7 +286469,7 @@
     },
     "ddsdde": {
      "status": "blocked",
-     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+     "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
      "evidence": "corpus_run:transform_all_pass24.json#source=zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90",
      "reference": null,
      "max_error": null,
@@ -286614,7 +286558,7 @@
     "counts_as_verified": false,
     "rule": "tools/verify_store_in_abaqus.py gate derivatives_verified: OTI DDSDDE vs a central difference of the original with restored state, plateau taken from the OTI-vs-FD error over the step ladder, relative tolerance TANGENT_TOLERANCE against the column; rejected by decision D-4 (needs an FD-only plateau of >= 3 steps and entrywise agreement) -- shown, never counted as verified",
     "tangent_verdict": "",
-    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: external_dependency_unavailable: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
+    "reason": "upstream stage `primal_agreed` is blocked: upstream stage `oti_executed` is blocked: upstream stage `original_executed` is blocked: upstream stage `compiled` is blocked: upstream stage `transformed` is blocked: incomplete_or_corrupt_source: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)",
     "evidence": "",
     "worst_relative": null,
     "tolerance_relative": null,
@@ -292610,7 +292554,7 @@
     "means": "every source the acquisition brought back (registry records)"
    },
    "D2_eligible": {
-    "count": 259,
+    "count": 264,
     "means": "adequately specified genuine UMATs (registry D2)"
    },
    "discovered_not_acquired": {
@@ -292632,9 +292576,9 @@
      "undefined_in_original": 0
     },
     "eligible": {
-     "verified": 259,
+     "verified": 264,
      "failed": 0,
-     "blocked": 100,
+     "blocked": 95,
      "unsupported": 0,
      "not_applicable": 60,
      "not_attempted": 0,
@@ -292656,8 +292600,8 @@
     "transformed": {
      "verified": 298,
      "failed": 0,
-     "blocked": 26,
-     "unsupported": 78,
+     "blocked": 21,
+     "unsupported": 83,
      "not_applicable": 17,
      "not_attempted": 0,
      "conflict": 0,
@@ -292667,8 +292611,8 @@
     "compiled": {
      "verified": 278,
      "failed": 20,
-     "blocked": 26,
-     "unsupported": 78,
+     "blocked": 21,
+     "unsupported": 83,
      "not_applicable": 17,
      "not_attempted": 0,
      "conflict": 0,
@@ -292678,8 +292622,8 @@
     "original_executed": {
      "verified": 172,
      "failed": 13,
-     "blocked": 103,
-     "unsupported": 83,
+     "blocked": 98,
+     "unsupported": 88,
      "not_applicable": 45,
      "not_attempted": 3,
      "conflict": 0,
@@ -292689,8 +292633,8 @@
     "oti_executed": {
      "verified": 171,
      "failed": 1,
-     "blocked": 103,
-     "unsupported": 83,
+     "blocked": 98,
+     "unsupported": 88,
      "not_applicable": 45,
      "not_attempted": 16,
      "conflict": 0,
@@ -292700,8 +292644,8 @@
     "primal_agreed": {
      "verified": 143,
      "failed": 10,
-     "blocked": 103,
-     "unsupported": 83,
+     "blocked": 98,
+     "unsupported": 88,
      "not_applicable": 45,
      "not_attempted": 24,
      "conflict": 0,
@@ -292711,7 +292655,7 @@
    },
    "D2_eligible": {
     "discovered": {
-     "verified": 259,
+     "verified": 264,
      "failed": 0,
      "blocked": 0,
      "unsupported": 0,
@@ -292722,7 +292666,7 @@
      "undefined_in_original": 0
     },
     "eligible": {
-     "verified": 259,
+     "verified": 264,
      "failed": 0,
      "blocked": 0,
      "unsupported": 0,
@@ -292733,7 +292677,7 @@
      "undefined_in_original": 0
     },
     "attempted": {
-     "verified": 259,
+     "verified": 264,
      "failed": 0,
      "blocked": 0,
      "unsupported": 0,
@@ -292747,7 +292691,7 @@
      "verified": 184,
      "failed": 0,
      "blocked": 0,
-     "unsupported": 75,
+     "unsupported": 80,
      "not_applicable": 0,
      "not_attempted": 0,
      "conflict": 0,
@@ -292758,7 +292702,7 @@
      "verified": 183,
      "failed": 1,
      "blocked": 0,
-     "unsupported": 75,
+     "unsupported": 80,
      "not_applicable": 0,
      "not_attempted": 0,
      "conflict": 0,
@@ -292769,7 +292713,7 @@
      "verified": 163,
      "failed": 13,
      "blocked": 0,
-     "unsupported": 80,
+     "unsupported": 85,
      "not_applicable": 0,
      "not_attempted": 3,
      "conflict": 0,
@@ -292780,7 +292724,7 @@
      "verified": 162,
      "failed": 1,
      "blocked": 0,
-     "unsupported": 80,
+     "unsupported": 85,
      "not_applicable": 0,
      "not_attempted": 16,
      "conflict": 0,
@@ -292791,7 +292735,7 @@
      "verified": 135,
      "failed": 10,
      "blocked": 0,
-     "unsupported": 80,
+     "unsupported": 85,
      "not_applicable": 0,
      "not_attempted": 24,
      "conflict": 0,
@@ -292812,9 +292756,9 @@
      "undefined_in_original": 0
     },
     "eligible": {
-     "verified": 259,
+     "verified": 264,
      "failed": 0,
-     "blocked": 100,
+     "blocked": 95,
      "unsupported": 0,
      "not_applicable": 60,
      "not_attempted": 24,
@@ -292836,8 +292780,8 @@
     "transformed": {
      "verified": 298,
      "failed": 0,
-     "blocked": 26,
-     "unsupported": 78,
+     "blocked": 21,
+     "unsupported": 83,
      "not_applicable": 17,
      "not_attempted": 24,
      "conflict": 0,
@@ -292847,8 +292791,8 @@
     "compiled": {
      "verified": 278,
      "failed": 20,
-     "blocked": 26,
-     "unsupported": 78,
+     "blocked": 21,
+     "unsupported": 83,
      "not_applicable": 17,
      "not_attempted": 24,
      "conflict": 0,
@@ -292858,8 +292802,8 @@
     "original_executed": {
      "verified": 172,
      "failed": 13,
-     "blocked": 103,
-     "unsupported": 83,
+     "blocked": 98,
+     "unsupported": 88,
      "not_applicable": 45,
      "not_attempted": 27,
      "conflict": 0,
@@ -292869,8 +292813,8 @@
     "oti_executed": {
      "verified": 171,
      "failed": 1,
-     "blocked": 103,
-     "unsupported": 83,
+     "blocked": 98,
+     "unsupported": 88,
      "not_applicable": 45,
      "not_attempted": 40,
      "conflict": 0,
@@ -292880,8 +292824,8 @@
     "primal_agreed": {
      "verified": 143,
      "failed": 10,
-     "blocked": 103,
-     "unsupported": 83,
+     "blocked": 98,
+     "unsupported": 88,
      "not_applicable": 45,
      "not_attempted": 48,
      "conflict": 0,
@@ -292895,8 +292839,8 @@
     "primal_stress_state": {
      "verified": 127,
      "failed": 10,
-     "blocked": 102,
-     "unsupported": 83,
+     "blocked": 97,
+     "unsupported": 88,
      "not_applicable": 46,
      "not_attempted": 19,
      "conflict": 0,
@@ -292906,8 +292850,8 @@
     "ddsdde": {
      "verified": 120,
      "failed": 0,
-     "blocked": 102,
-     "unsupported": 83,
+     "blocked": 97,
+     "unsupported": 88,
      "not_applicable": 46,
      "not_attempted": 66,
      "conflict": 0,
@@ -293008,7 +292952,7 @@
      "verified": 121,
      "failed": 10,
      "blocked": 0,
-     "unsupported": 80,
+     "unsupported": 85,
      "not_applicable": 0,
      "not_attempted": 19,
      "conflict": 0,
@@ -293019,7 +292963,7 @@
      "verified": 114,
      "failed": 0,
      "blocked": 0,
-     "unsupported": 80,
+     "unsupported": 85,
      "not_applicable": 0,
      "not_attempted": 64,
      "conflict": 0,
@@ -293032,7 +292976,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293043,7 +292987,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293054,7 +292998,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293065,7 +293009,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293076,7 +293020,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293087,7 +293031,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293098,7 +293042,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293109,7 +293053,7 @@
      "blocked": 0,
      "unsupported": 0,
      "not_applicable": 0,
-     "not_attempted": 259,
+     "not_attempted": 264,
      "conflict": 0,
      "inconclusive": 0,
      "undefined_in_original": 0
@@ -293119,8 +293063,8 @@
     "primal_stress_state": {
      "verified": 127,
      "failed": 10,
-     "blocked": 102,
-     "unsupported": 83,
+     "blocked": 97,
+     "unsupported": 88,
      "not_applicable": 46,
      "not_attempted": 43,
      "conflict": 0,
@@ -293130,8 +293074,8 @@
     "ddsdde": {
      "verified": 120,
      "failed": 0,
-     "blocked": 102,
-     "unsupported": 83,
+     "blocked": 97,
+     "unsupported": 88,
      "not_applicable": 46,
      "not_attempted": 90,
      "conflict": 0,
@@ -293231,7 +293175,7 @@
   "funnel": {
    "D1_acquired": {
     "discovered": 419,
-    "eligible": 259,
+    "eligible": 264,
     "attempted": 419,
     "transformed": 298,
     "compiled": 278,
@@ -293251,9 +293195,9 @@
     "denominator": 419
    },
    "D2_eligible": {
-    "discovered": 259,
-    "eligible": 259,
-    "attempted": 259,
+    "discovered": 264,
+    "eligible": 264,
+    "attempted": 264,
     "transformed": 184,
     "compiled": 183,
     "original_executed": 163,
@@ -293269,11 +293213,11 @@
     "feature:residual_sens": 0,
     "feature:global_sens": 0,
     "feature:cli_driver": 0,
-    "denominator": 259
+    "denominator": 264
    },
    "D0_discovered_files": {
     "discovered": 443,
-    "eligible": 259,
+    "eligible": 264,
     "attempted": 419,
     "transformed": 298,
     "compiled": 278,
@@ -293305,7 +293249,7 @@
     "passed": 117,
     "failed": 0,
     "unresolved": 8,
-    "not_run": 134
+    "not_run": 139
    },
    "passed_with_primal_not_verified": {
     "D1_acquired": 14,
@@ -293488,8 +293432,8 @@
     "permitted": 51
    },
    "D2": {
-    "unknown": 244,
-    "permitted": 15
+    "unknown": 248,
+    "permitted": 16
    },
    "D1_with_licence_file_in_cache": 51,
    "D1_by_spdx_metadata": {
@@ -293546,29 +293490,29 @@
    "D2": {
     "concrete_geomaterial": 13,
     "other_incl_hyperelasticity": 30,
-    "linear_elastic": 11,
-    "damage_phase_field": 13,
+    "linear_elastic": 12,
+    "damage_phase_field": 14,
     "growth": 134,
     "rate_independent_plasticity": 22,
     "viscoelastic": 11,
-    "crystal_plasticity": 12,
+    "crystal_plasticity": 15,
     "": 13
    },
    "D2_fine": {
     "concrete_geomaterial": 13,
     "hyperelasticity": 16,
     "other": 14,
-    "linear_elastic": 11,
-    "damage_phase_field": 13,
+    "linear_elastic": 12,
+    "damage_phase_field": 14,
     "growth": 134,
     "rate_independent_plasticity": 22,
     "viscoelastic": 11,
-    "crystal_plasticity": 12,
+    "crystal_plasticity": 15,
     "": 13
    },
    "D2_by_source": {
     "B3_code_evidence": 189,
-    "E_fallback": 46,
+    "E_fallback": 51,
     "B3_identity_growth_as_growth": 11,
     "missing": 13
    },
@@ -293597,12 +293541,12 @@
     "D2": {
      "other / unclassified": 13,
      "hyperelasticity": 18,
-     "elasticity": 11,
-     "damage / phase field": 16,
+     "elasticity": 12,
+     "damage / phase field": 17,
      "growth / morphoelasticity": 133,
      "concrete / geomaterials": 11,
      "viscoelasticity / rate dependent": 12,
-     "crystal plasticity": 12,
+     "crystal plasticity": 15,
      "plasticity": 20,
      "": 13
     }
@@ -293617,7 +293561,7 @@
    "features": "summary.features counts the Abaqus-pipeline (store) build only; lifted/provider cells are in features_other_builds"
   },
   "denominators_note": {
-   "eligible_now": 259,
+   "eligible_now": 264,
    "eligible_now_means": "adequately specified genuine UMATs in the registry as built for pass24",
    "earlier_registry": "repo:paper_results/corpus/corpus_registry.json@f0f0731",
    "eligible_earlier": 260,
@@ -293816,6 +293760,7 @@
     "bmmbUPF__abaqusIVD/Sub_TransDisc.f",
     "cbgeo-archives__hpc-scripts/abaqus/wellbore.f",
     "cfietek__Damage-Modeling-in-Metal-Additive-Manufacturing-Process-Simulations/UMAT-JC-C-T-Damage.for",
+    "frodal__SCMM-hypo/HypoImp.f",
     "gitlab.com__breyne__umat-metplast/lib/umat/umat_base.f",
     "gitlab.com__ntnu-physmet__continuum-plasticity/umatYLD2004.for",
     "gitlab.com__ntnu-physmet__crystal-plasticity/Rate Dependent Model/umatCP_RD2.for",
@@ -293823,6 +293768,10 @@
     "gitlab.com__ntnu-physmet__project_metplast__crystal_plasticity/Facet/umat_Facet.for",
     "gitlab.com__vikramroy_barc__metplast_umat-generator/lib/umat/umat_base.f",
     "laufogh__fe-large-displacement/constitutive/hypoplasticity-staubach/HPP_Staubach_implicit.f",
+    "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for",
+    "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for",
+    "ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
+    "peer-open-source__xara/SRC/domain/peri/umat.for",
     "sourceforge.net__abumpack_svn_r233/tests/elastic/el-st.f",
     "sourceforge.net__abumpack_svn_r233/tests/gtn/gtn-st-dl.f",
     "sourceforge.net__abumpack_svn_r233/tests/gtn/gtn-st-lm.f",
@@ -293898,8 +293847,8 @@
     "agrees": true
    },
    "adequately_specified": {
-    "registry": 259,
-    "manifest": 259,
+    "registry": 264,
+    "manifest": 264,
     "agrees": true
    },
    "transformed_true": {

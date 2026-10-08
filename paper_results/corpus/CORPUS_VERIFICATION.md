@@ -5,7 +5,7 @@ Every acquired source has a record here, and each one is named by its path insid
 ## Census: the pass23 population and the new sources, kept apart
 
 * pass23 population (405 sources): **106 of 242 (as published)**.
-* the same population with the callee rule applied: **106 of 246 = 242 - 0 + 4** (left: 0, entered: 4).
+* the same population with the callee rule applied: **106 of 251 = 242 - 0 + 9** (left: 0, entered: 9).
 * new, not yet attempted: **14** sources ({'transform_refused': 11, 'primal_disagreed': 1, 'experiment_not_generated': 1, 'external_dependency_unavailable': 1}), outside both lines above. The size of this registry and its count of eligible sources are not the denominator.
 
 ## Where every number below comes from
@@ -39,24 +39,24 @@ There are two populations in this report and they are never pooled. Every rate b
 
 **D1 -- 419 acquired sources.** Everything the acquisition brought back, whatever it turned out to be. This is the honest denominator for "what happened to the corpus we collected".
 
-**D2 -- 259 adequately specified genuine UMATs.** The subset of D1 that presents the Abaqus UMAT interface, is a distinct member of the corpus rather than a second copy of another one, has a constitutive model inside it, builds as its author published it, has everything it USEs or INCLUDEs published beside it, and has material constants published somewhere in its repository. This is the honest denominator for "what happened to the UMATs that could be driven at all".
+**D2 -- 264 adequately specified genuine UMATs.** The subset of D1 that presents the Abaqus UMAT interface, is a distinct member of the corpus rather than a second copy of another one, has a constitutive model inside it, builds as its author published it, has everything it USEs or INCLUDEs published beside it, and has material constants published somewhere in its repository. This is the honest denominator for "what happened to the UMATs that could be driven at all".
 
 **Nothing internal may shrink D2.** Every exclusion from it is a fact about somebody else's published repository, and each one names the evidence that established it. Nothing this project failed to do removes a source from D2: a source whose transform this project refused, whose deck this project could not generate, whose experiment this project could not make informative, all stay in D2 and count against us. That is why there are two denominators rather than one number.
 
 | | reached the `verified` rung | verified on every gate | denominator |
 | --- | ---: | ---: | ---: |
 | D1 acquired sources | 112 | 112 | 419 |
-| D2 adequately specified genuine UMATs | 106 | 106 | 259 |
+| D2 adequately specified genuine UMATs | 106 | 106 | 264 |
 
 **Verified on every gate is the stricter number and it is the one to quote.** The two columns differ by the 0 entries that reached the batch's `verified` rung with one of the six evidence gates not reading true; they are named below.
 
 * 112 of 419 acquired sources (D1) -- 26.7% of acquired sources (D1)
-* 106 of 259 adequately specified genuine UMATs (D2) -- 40.9% of adequately specified genuine UMATs (D2)
+* 106 of 264 adequately specified genuine UMATs (D2) -- 40.2% of adequately specified genuine UMATs (D2)
 
 Against the looser rung instead:
 
 * 112 of 419 acquired sources (D1) -- 26.7% of acquired sources (D1)
-* 106 of 259 adequately specified genuine UMATs (D2) -- 40.9% of adequately specified genuine UMATs (D2)
+* 106 of 264 adequately specified genuine UMATs (D2) -- 40.2% of adequately specified genuine UMATs (D2)
 
 No figure above may be quoted without the words after it. They are answers to different questions and the larger one is not the better one.
 
@@ -69,8 +69,8 @@ Over D1, the 419 acquired sources. The three lines are never added together into
 | | entries in D1 |
 | --- | ---: |
 | reached the `verified` rung | 112 |
-| blocked outside this repository | 160 |
-| work remaining here | 147 |
+| blocked outside this repository | 155 |
+| work remaining here | 152 |
 
 Of the 112 on the first line, 112 read true on all six evidence gates. The rung and the gates are different questions and this table asks the rung's, because it is the one whose three lines partition D1.
 
@@ -80,9 +80,9 @@ Of the 112 on the first line, 112 read true on all six evidence gates. The rung 
 | --- | --- | ---: |
 | missing_material_data | **EXTERNAL** | 69 |
 | this file's Abaqus entry point is not a UMAT | **EXTERNAL** | 47 |
-| incomplete_or_corrupt_source | **EXTERNAL** | 15 |
-| external_dependency_unavailable | **EXTERNAL** | 13 |
+| incomplete_or_corrupt_source | **EXTERNAL** | 17 |
 | line-for-line identical to another acquired source | neither -- a second copy | 13 |
+| external_dependency_unavailable | **EXTERNAL** | 6 |
 | this file presents the Abaqus UMAT interface and publishes no constitu | **EXTERNAL** | 3 |
 
 A second copy is not an external blocker and is not counted as one: nothing about it is blocked, its one answer is already counted against the copy that carries it, and filing it under "somebody else's problem" would inflate how much of the corpus is.
@@ -94,16 +94,16 @@ EXTERNAL means the answer lies in what somebody published and no further enginee
 | terminal state | external or internal | what it means | of D1 | of D2 |
 | --- | --- | --- | ---: | ---: |
 | `fully_verified` | VERIFIED | both builds ran, agreed over the whole history, and the tangent matched a converged difference | 112 | 106 |
-| `transform_refused` | **INTERNAL** | the transform could not convert it -- our work | 78 | 75 |
+| `transform_refused` | **INTERNAL** | the transform could not convert it -- our work | 83 | 80 |
 | `missing_material_data` | **EXTERNAL** | nobody published what this material is made of | 71 | 0 |
 | `not_a_umat` | **EXTERNAL** | the file's Abaqus entry point is something else | 47 | 0 |
-| `incomplete_or_corrupt_source` | **EXTERNAL** | the file does not compile as published | 15 | 0 |
-| `external_dependency_unavailable` | **EXTERNAL** | a module or include it needs was never published beside it | 14 | 0 |
+| `incomplete_or_corrupt_source` | **EXTERNAL** | the file does not compile as published | 17 | 0 |
 | `original_job_failed` | **INTERNAL** | the original did not run -- ours until proven otherwise | 12 | 12 |
 | `primal_disagreed` | **INTERNAL** | the two builds compute different stress -- ours | 12 | 12 |
 | `undefined_in_original` | **EXTERNAL** | the published routine reads a value it never sets, and its stress or tangent changes with how memory happens to be initialised -- there is no single answer to verify against | 11 | 10 |
 | `tangent_not_verified` | **INTERNAL** | the tangent was not verified: either a converged difference disagreed with it, or the difference settled nothing -- ours | 9 | 8 |
 | `derivative_truncated` | **INTERNAL** | the converted source drops a derivative on the way to the stress -- ours | 9 | 9 |
+| `external_dependency_unavailable` | **EXTERNAL** | a module or include it needs was never published beside it | 7 | 0 |
 | `experiment_not_informative` | **INTERNAL** | both builds agreed, over an experiment in which the material did not do what it is for -- ours | 7 | 7 |
 | `informativeness_not_established` | **INTERNAL** | nobody measured whether the experiment exercised anything -- ours | 5 | 5 |
 | `primal_control_not_decided` | **INTERNAL** | the routine-level replay agreed and the Abaqus control produced no comparison -- ours | 5 | 5 |
@@ -113,7 +113,7 @@ EXTERNAL means the answer lies in what somebody published and no further enginee
 | `transformed_job_failed` | **INTERNAL** | the converted build did not run -- ours | 1 | 1 |
 | `support_build_failed` | **INTERNAL** | the transform's own modules did not compile -- ours | 1 | 1 |
 
-D1 column sums to 419; D2 column sums to 259.
+D1 column sums to 419; D2 column sums to 264.
 
 ## What is left here, by cluster
 
@@ -121,7 +121,7 @@ Each of these is a limitation of this pipeline, not of the corpus. Largest first
 
 | cluster | sources in D1 | of which in D2 |
 | --- | ---: | ---: |
-| `transform_refused` | 78 | 75 |
+| `transform_refused` | 83 | 80 |
 | `original_job_failed` | 12 | 12 |
 | `primal_disagreed` | 12 | 12 |
 | `tangent_not_verified` | 9 | 8 |
@@ -140,17 +140,17 @@ Each of these is a limitation of this pipeline, not of the corpus. Largest first
 
 | what the file is | external or internal | sources |
 | --- | --- | ---: |
-| `genuine_umat` | **INTERNAL** | 75 |
+| `genuine_umat` | **INTERNAL** | 80 |
 | `helper_or_module_only` | **EXTERNAL** | 14 |
-| `missing_external_dependency` | **EXTERNAL** | 13 |
-| `incomplete_or_corrupt_source` | **EXTERNAL** | 11 |
+| `incomplete_or_corrupt_source` | **EXTERNAL** | 13 |
+| `missing_external_dependency` | **EXTERNAL** | 6 |
 | `duplicate_of_another_source` | neither -- a second copy | 4 |
 | `other_abaqus_routine` | **EXTERNAL** | 2 |
 | `published_stub_no_constitutive_content` | **EXTERNAL** | 2 |
 
 `published_stub_no_constitutive_content` is EXTERNAL as a cause AND as a terminal state. A file that presents the UMAT interface and assigns neither STRESS nor DDSDDE anywhere is not a model this project failed to convert -- there is nothing there to convert. It used to come back `transform_refused`, which is INTERNAL and glossed "the transform could not convert it, our work", because `from_transform_failure` has no parameter for this class; the registry now routes it, and only where the classification is confident.
 
-23 of them are held at `genuine_umat` because the offline compile did not settle whether the published text builds. That is the safe direction: it counts the work as ours.
+27 of them are held at `genuine_umat` because the offline compile did not settle whether the published text builds. That is the safe direction: it counts the work as ours.
 
 ## Why the results file holds more rows than the store holds entries
 
@@ -338,7 +338,7 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `damin225__short-crack-propagation-3d/input_clean/umat.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: HelperLiftingError: RotMatrixToAngles applies ATAN2 to a differentiated value at line 7000: 'angle(1) = datan2(crot(2,3)/sth, crot(1,3)/sth)'. The OTI algebra declares no ATAN2 over the type and none can be written inside an expression here -- a reduction over a run-time extent needs a loop, which i; cla |
 | `davidmorinNTNU__ABAQUS_subroutines/V_UMAT/UMAT.f` | `primal_control_not_decided` | INTERNAL | yes | terminal state `primal_control_not_decided` (internal; this project has to move next); recorded reason: the Jacobian-matched control did not decide the primal gate (routine-level replay agreed): the Jacobian-matched job did not complete: jacobian_matched.dat was not written, so Abaqus never reached its input processor: the user-subroutine build failed before the analysis began (jacobian_matched_us |
 | `ekurth__NEML/util/abaqus/nemlumat.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 281, first stress expression at line 290, last stress update at line 290, STRESS extraction at li |
-| `frodal__SCMM-hypo/HypoImp.f` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYL |
+| `frodal__SCMM-hypo/HypoImp.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the U |
 | `gitlab.com__breyne__umat-metplast/lib/umat/umat_base.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: STRESS_OTI is passed to VOIGT_TO_NATURAL, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply VOIGT_TO_N |
 | `gitlab.com__ntnu-physmet__continuum-plasticity/umatYLD2004.for` | `primal_disagreed` | INTERNAL | yes | terminal state `primal_disagreed` (internal; this project has to move next); recorded reason: STATEV(7) differs by 1.526e-09 of its own scale against 1e-10; classification: SUBROUTINE umat at line 35 takes 37 arguments and is called by nothing else in this file; the offline compile did not settle whether the published text builds, so the refusal stays this project's |
 | `gitlab.com__ntnu-physmet__crystal-plasticity/Rate Dependent Model/umatCP_RD2.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: HelperLiftingError: rotm2euler applies ATAN2 to a differentiated value at line 1953: 'ANG1 = atan2(Q(3,1)/STH,-Q(3,2)/STH)'. The OTI algebra declares no ATAN2 over the type and none can be written inside an expression here -- a reduction over a run-time extent needs a loop, which is a statement. Lef; cla |
@@ -364,7 +364,7 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `jacojvr__UMATs/UMAT_framework/umat_iso.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['FISOTROPIC', 'SHEARMOD']. The completed JSON rewrites those calls, so pass-through is unsafe. (FISOTROPIC is first called at line 57.) What to do: put the file that defines FISOTROPIC, SHEARMOD beside the UMAT or name its directory i |
 | `jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/official_examples/umat/umat_elastic_official.f` | `original_job_failed` | INTERNAL | yes | terminal state `original_job_failed` (internal; this project has to move next); recorded reason: original.dat was not written, so Abaqus never reached its input processor: the user-subroutine build failed before the analysis began (original_user.f(38): error #6410: This name has not been declared as an array or a function.   [PROPS]; original_user.f(39): error #6410: This name has not been declare |
 | `jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/official_examples/umat/umat_mises_plasticity_official.f` | `original_job_failed` | INTERNAL | yes | terminal state `original_job_failed` (internal; this project has to move next); recorded reason: original.dat was not written, so Abaqus never reached its input processor: the user-subroutine build failed before the analysis began (original_user.f(44): error #6410: This name has not been declared as an array or a function.   [PROPS]; original_user.f(45): error #6410: This name has not been declare |
-| `jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran  |
+| `jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90` | `incomplete_or_corrupt_source` | EXTERNAL | no | terminal state `incomplete_or_corrupt_source` (external; somebody else has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran sou |
 | `jgomezc1__ABAQUS-US/INPUT_FILES/UEL8_ECL_AXY.for` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 59; the SUBROUTINE UMAT at line 272 is called by UEL and is that routine's own callee, not this file's entry point; classification: this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 59; the SUBROUTINE UMAT a |
 | `jgomezc1__ABAQUS-US/SAMPLE/UEL9_VPDCO.for` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 72; the SUBROUTINE UMAT at line 435 is called by UEL and is that routine's own callee, not this file's entry point; classification: this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 72; the SUBROUTINE UMAT a |
 | `jgomezc1__ABAQUS-US/UELS/UEL8_ECL.for` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 58; the SUBROUTINE UMAT at line 271 is called by UEL and is that routine's own callee, not this file's entry point; classification: this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 58; the SUBROUTINE UMAT a |
@@ -416,8 +416,8 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `matmodlab__matmodlab2/matmodlab2/umat/umats/umat_neohooke.f90` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: matmodlab__matmodlab2 publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in matmodlab__matmodlab2, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE umat at line 8 takes 3 |
 | `matmodlab__matmodlab2/matmodlab2/umat/umats/umat_stub.f90` | `published_stub_no_constitutive_content` | EXTERNAL | no | terminal state `published_stub_no_constitutive_content` (external; somebody else has to move next); recorded reason: anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in |
 | `matmodlab__matmodlab2/matmodlab2/umat/umats/umat_thermoelastic.f90` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: matmodlab__matmodlab2 publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in matmodlab__matmodlab2, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at line 1 takes 3 |
-| `mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the clo |
-| `mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the clo |
+| `mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes i |
+| `mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes i |
 | `mholla__BMMB24/simulations/input files/umat_transverseIsotropicStretch.f` | `tangent_not_verified` | INTERNAL | yes | terminal state `tangent_not_verified` (internal; this project has to move next); recorded reason: 0 of 4 chosen states judged (every entry resolved and every column smooth); 2 are needed. Unresolved at the chosen states, not failed; classification: SUBROUTINE umat at line 21 takes 37 arguments and is called by nothing else in this file; the offline compile did not settle whether the published text |
 | `mholla__SOFT24/simulations/UMAT_axon_tension.f` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: mholla__SOFT24 publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in mholla__SOFT24, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE umat at line 35 takes 37 arguments a |
 | `mholla__growth/umats/umat_area_morph_Abaqus.f` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: no material published in mholla__growth can feed this routine. It reads PROPS(1:7) and writes STATEV(1:3). Searched: 23 .inp file(s) in mholla__growth, carrying 20 *USER MATERIAL block(s) whose constant counts are 3, 5, 6, 8, 9, 11, 12, 17; and every .md, .rst and .txt in the repository for a statem |
@@ -440,11 +440,11 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `mrkearden__abaqus_umat/ElasticSolve.F90` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran  |
 | `mrkearden__abaqus_umat/PlasticSolve.F90` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where dec |
 | `mrkearden__abaqus_umat/UMAT.F90` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the co |
-| `ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KC |
+| `ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEI |
 | `nsundar__PFM_UMAT_ElastoPlastic/UMAT_phasefield_plasticity.f` | `support_build_failed` | INTERNAL | yes | terminal state `support_build_failed` (internal; this project has to move next); recorded reason: umat_oti_helpers.f90 did not compile with Abaqus's own compile line (exit 1); classification: SUBROUTINE umat at line 13 takes 37 arguments and is called by nothing else in this file; the offline compile did not settle whether the published text builds, so the refusal stays this project's; the offline |
 | `patrickstaubach__abaqus-explicit/examples/_pile_driving/HPP_Staubach_explicit.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path but  |
 | `patrickstaubach__abaqus-explicit/src/HPP_Staubach_explicit.f` | `transform_refused` | INTERNAL | no | terminal state `transform_refused` (internal; this project has to move next); recorded reason: MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path but  |
-| `peer-open-source__xara/SRC/domain/peri/umat.for` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call i |
+| `peer-open-source__xara/SRC/domain/peri/umat.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BO |
 | `phhannequart__UMAT_sma_hannequart/UMAT_sma_hannequart.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: STRESS is declared as a scalar in UMAT at line 31, so this routine has a one-component interface (a truss or uniaxial material). The transform seeds and extracts NTENS components of STRESS, which a scalar does not have, and the emitted STRESS_OTI(I) would not compile. What to do: a one-component interfac |
 | `philipcardiff__paper-code-vertex-centred-elastoplastic/src/abaqusUMATs/abaqusUmatLinearElastic/abaqusUmatLinearElastic.f` | `incomplete_or_corrupt_source` | EXTERNAL | no | terminal state `incomplete_or_corrupt_source` (external; somebody else has to move next); recorded reason: Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 84, first stress expression at line 92, last stress update at line 92, STRESS extract |
 | `prashanthgadwala__ferrite-fortran-integration_using_Julia/src/Material_Models/umat.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: HelperLiftingError: Unsupported DATA statement shape: 'I_mat(1,:) /1.D0, 0.D0, 0.D0/'. A lifted helper turns DATA into assignments and handles whole arrays and name/value lists, not array sections. What to do: write that DATA as assignments (or one whole-array DATA) in the source.; classification: SUBROU |
@@ -504,7 +504,7 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `zenodo.org__13354078/multisurface-plasticity-master-2D/src/umat.f90` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: RES_OTI is passed to UPDATE, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply UPDATE's source with th |
 | `zenodo.org__13980989/src/labtools/EXAMPLES/SDCHABOX_2D/jobs/umatAba.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: anchors not located: unclassified_file_io -- Classify file I/O at lines [114, 115, 116, 117]. What to do: set transformation_anchors.file_io_regions in the contract.; classification: SUBROUTINE umat at line 3 takes 37 arguments and is called by nothing else in this file; the offline compile did not settl |
 | `zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/Adapters/UMAT_Adapter.f90` | `published_stub_no_constitutive_content` | EXTERNAL | no | terminal state `published_stub_no_constitutive_content` (external; somebody else has to move next); recorded reason: anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in |
-| `zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90` | `external_dependency_unavailable` | EXTERNAL | no | terminal state `external_dependency_unavailable` (external; somebody else has to move next); recorded reason: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DST |
+| `zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90` | `incomplete_or_corrupt_source` | EXTERNAL | no | terminal state `incomplete_or_corrupt_source` (external; somebody else has to move next); recorded reason: anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN |
 | `zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives |
 | `zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- |
 | `zorkzou__UniMoVib/src/math.f90` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither S |
@@ -515,7 +515,7 @@ every verified count split by where the material data and the experiment came fr
 
 | tier | eligible | Abaqus six-gate | routine level (D-8) |
 | --- | ---: | ---: | ---: |
-| `author_deck` | 259 (0 interpreted) | 106 (0 interpreted) | 114 (0 interpreted) |
+| `author_deck` | 264 (0 interpreted) | 106 (0 interpreted) | 114 (0 interpreted) |
 | `author_published_outside_deck+author_experiment` | 0 (0 interpreted) | 0 (0 interpreted) | 0 (0 interpreted) |
 | `author_published_outside_deck+council_experiment` | 23 (3 interpreted) | n/e | 0 (0 interpreted) |
 | `council_chosen` | 30 (2 interpreted) | n/e | 0 (0 interpreted) |

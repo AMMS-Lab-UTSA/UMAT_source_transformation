@@ -1,7 +1,7 @@
 {
  "records": 419,
- "registry_generated": "2026-10-08T06:38:56+00:00",
- "registry_sha256": "977d630be4991018c4fe3861fd16c9cc8e74185f3553784042d73e4cb35fadd6",
+ "registry_generated": "2026-10-08T11:00:41+00:00",
+ "registry_sha256": "f5c96c86c06bf628f231b54a80a46ccbc0ab0c0e500b65a29d2f0948754808c8",
  "rows": [
   {
    "all_gates_true": false,
@@ -415,7 +415,7 @@
    "run": "pass24",
    "sha256": "12f89da76d47e7eaa0fd27df263251616fca1fe7b99d03882254ef223554992f",
    "source_id": "zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90",
-   "state": "external_dependency_unavailable"
+   "state": "incomplete_or_corrupt_source"
   },
   {
    "all_gates_true": false,
@@ -1279,7 +1279,7 @@
    "run": "pass24",
    "sha256": "3487b2dd0f8be0571c3b300e6a53cad6098c43498e043f400aa742b3ea2d1432",
    "source_id": "jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90",
-   "state": "external_dependency_unavailable"
+   "state": "incomplete_or_corrupt_source"
   },
   {
    "all_gates_true": false,
@@ -1531,7 +1531,7 @@
    "run": "pass24",
    "sha256": "3d989868b80ff356ff8788ef5ecea91c8661743018096d8ef7715ee9ae9d7ab9",
    "source_id": "peer-open-source__xara/SRC/domain/peri/umat.for",
-   "state": "external_dependency_unavailable"
+   "state": "transform_refused"
   },
   {
    "all_gates_true": false,
@@ -2179,7 +2179,7 @@
    "run": "pass24",
    "sha256": "5104439785250e014fcabf727b88e1384ab8d113577d9e978492c4c9af42deb0",
    "source_id": "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for",
-   "state": "external_dependency_unavailable"
+   "state": "transform_refused"
   },
   {
    "all_gates_true": false,
@@ -6283,7 +6283,7 @@
    "run": "pass24",
    "sha256": "d636237a925b51c63b78d289a0c9d928a7a1126b20b434818772d6526934d2fd",
    "source_id": "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for",
-   "state": "external_dependency_unavailable"
+   "state": "transform_refused"
   },
   {
    "all_gates_true": false,
@@ -6841,7 +6841,7 @@
    "run": "pass24",
    "sha256": "e57ae8f60361bedda921bf99d191b524c155af6d02b1cfec2028df5c34c33ac6",
    "source_id": "ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
-   "state": "external_dependency_unavailable"
+   "state": "transform_refused"
   },
   {
    "all_gates_true": true,
@@ -7381,7 +7381,7 @@
    "run": "pass24",
    "sha256": "fd2c19d7adb617049b563e9c462821ab888db878f55364f172f328ba9522e46a",
    "source_id": "frodal__SCMM-hypo/HypoImp.f",
-   "state": "external_dependency_unavailable"
+   "state": "transform_refused"
   },
   {
    "all_gates_true": false,
