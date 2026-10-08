@@ -66,7 +66,7 @@ def test_the_deck_only_column_is_the_d8_figure():
     fam = _families()
     records = json.loads(REGISTRY.read_text(encoding="utf-8"))["records"]
     denom, abaqus, routine = ct.deck_counts(records, fam, CELLS)
-    assert (sum(denom.values()), sum(abaqus.values()), sum(routine.values())) == (264, 106, 114)
+    assert (sum(denom.values()), sum(abaqus.values()), sum(routine.values())) == (266, 106, 114)
     # the same figure from a registry that carries the tier columns, with a
     # council row added beside it: the deck column does not move
     tiered = [r.as_dict() for r in reg.apply_origins(
@@ -79,7 +79,7 @@ def test_the_deck_only_column_is_the_d8_figure():
                              adequacy_tier="council_chosen").as_dict())
     again = ct.deck_counts(tiered, fam, CELLS)
     assert (sum(again[0].values()), sum(again[1].values()), sum(again[2].values())) == \
-        (264, 106, 114)
+        (266, 106, 114)
     tiers = ct.tier_counts(tiered, fam, CELLS)
     # the committed registry is built with the S2 options, so it carries its
     # own council_chosen rows (30 at pass21); the added row is one more

@@ -1,7 +1,7 @@
 {
  "records": 419,
- "registry_generated": "2026-10-08T11:00:41+00:00",
- "registry_sha256": "f5c96c86c06bf628f231b54a80a46ccbc0ab0c0e500b65a29d2f0948754808c8",
+ "registry_generated": "2026-10-08T11:27:08+00:00",
+ "registry_sha256": "744edcd7bc3fee2d8559b45e477a3077e1e4b0ee3b4ebe28a47bf481f76e02ca",
  "rows": [
   {
    "all_gates_true": false,
@@ -469,7 +469,7 @@
    "run": "pass24",
    "sha256": "170a0349477a27639b320ecfdbd79a38ac255d1acb64879661a76219a5ddbe0d",
    "source_id": "InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f",
-   "state": "external_dependency_unavailable"
+   "state": "transform_refused"
   },
   {
    "all_gates_true": true,
@@ -5617,7 +5617,7 @@
    "run": "pass24",
    "sha256": "c06e68a7819449e2f530aa8196dafe49b019f697a9d1be0eb793d65ae5985293",
    "source_id": "sourceforge.net__abumpack_svn_r233/abcg1.f",
-   "state": "external_dependency_unavailable"
+   "state": "transform_refused"
   },
   {
    "all_gates_true": false,

@@ -75,13 +75,13 @@ def test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged():
     cells = (reg._read_rows(PASS23_CELLS) if PASS23_CELLS.is_file() else None)
     tiers = reg.tier_summary(records, cells)["tiers"]
     deck = tiers[reg.TIER_AUTHOR_DECK]
-    assert deck["eligible"] == 264
+    assert deck["eligible"] == 266
     assert deck["verified_abaqus"] == 106
     if cells is None:
         pytest.skip("pass24 harness cells not on this machine; 242/106 checked")
     assert deck["verified_routine"] == 114
     # the deck-only D2 itself is untouched
-    assert sum(1 for r in records if r.adequately_specified) == 264
+    assert sum(1 for r in records if r.adequately_specified) == 266
     assert {r.adequacy_tier for r in records if r.adequately_specified} == {"author_deck"}
 
 

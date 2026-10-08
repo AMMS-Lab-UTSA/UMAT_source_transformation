@@ -18,19 +18,34 @@ new sources are reported apart; none of the three is pooled with another:
 
 - **106 of 242 as published** (the pass23 population and the pass23 adequacy
   test). Unchanged from pass23: the same 106 sources, none lost, none gained.
-- **106 of 251 with the revised callee rule** (242 - 0 + 9): a callee, module
-  or include counts as unpublished only if it is absent from the repository
-  at the pinned commit (the discovery cache is partial, so absence is
-  confirmed against the upstream tree: `paper_results/corpus/upstream_callee_check.json`),
-  so nine sources enter the eligible set and none left: Diffusion_3D,
+- **106 of 252 with the revised callee rule** (242 - 0 + 10): a callee, module
+  or include counts as unpublished only if its absence from the repository at
+  the pinned commit is confirmed (the discovery cache is partial, so absence is
+  checked against the upstream tree: `paper_results/corpus/upstream_callee_check.json`).
+  Ten sources enter the eligible set and none left: Diffusion_3D,
   GeneralFiniteStrain, the two bmmbUPF discs (Sub_MechDisc, Sub_TransDisc),
   frodal HypoImp, the two mauroarcidiacono UMATs (their `core.for` includes are
-  in the upstream tree), ngrilli HCPnoTwin and xara peri/umat. All nine are
-  `transform_refused`. The pass count did not change, only the denominator.
+  in the upstream tree), ngrilli HCPnoTwin, xara peri/umat, and IoM
+  Phase_Trafos umat_main (its only missing names are MKL, a library ruled like
+  BLAS/LAPACK). All ten are `transform_refused`. The pass count did not change,
+  only the denominator.
+- **How "in the repository" is decided.** A module is found by its `MODULE`
+  statement, a callee by its `SUBROUTINE`/`FUNCTION`/`ENTRY` (or generic
+  `INTERFACE` name), an include by FILE NAME: `INCLUDE './x/body.f'` is matched
+  to a file called `body.f`, the copy in the includer's own directory first,
+  then the one with the fewest path parts, and the path written in the INCLUDE
+  is not checked. Where two differently placed files share a name, the nearest
+  wins; this is an ambiguity of the method, not a finding. A name counts as
+  unpublished only if its absence from the upstream tree at the pinned commit
+  was confirmed (`paper_results/corpus/upstream_callee_check.json`); absence
+  that is unconfirmed (an svn snapshot that cannot be fetched) keeps the source
+  in the population. MKL names are a library, ruled like BLAS/LAPACK: neither
+  resolved nor external.
 - **The 14 new sources** are attempted in pass24 and reported apart, never in
-  either line: 13 are adequately specified (11 `transform_refused`, 1
-  `primal_disagreed`, 1 `experiment_not_generated`), 1 is
-  `external_dependency_unavailable`; none is verified.
+  either line: 14 are adequately specified (12 `transform_refused`, 1
+  `primal_disagreed`, 1 `experiment_not_generated`), none is
+  `external_dependency_unavailable` (abumpack abcg1.f, an svn snapshot that
+  cannot be fetched, stays in because its absence is unconfirmed); none is verified.
 
 The eligible denominator (D2) of the pass23 population is 242: adequately
 specified genuine UMATs with an author's deck. Two counts are reported:
