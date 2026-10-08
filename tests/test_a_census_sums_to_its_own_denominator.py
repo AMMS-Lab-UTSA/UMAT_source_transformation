@@ -167,7 +167,7 @@ def test_every_census_the_registry_publishes_states_and_sums_to_a_denominator():
     d1 = registry()["summary"]["acquired"]
     for name in ("terminal_state", "whose_move_it_is", "entry_interface",
                  "transformed", "compiled", "adequately_specified"):
-        assert censuses[name]["denominator"] == d1 == 405, name
+        assert censuses[name]["denominator"] == d1 == 419, name
 
 
 def test_a_census_over_a_field_that_stops_covering_its_records_stops_the_build():

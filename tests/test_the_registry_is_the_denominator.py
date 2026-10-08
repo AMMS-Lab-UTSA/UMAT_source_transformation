@@ -240,10 +240,10 @@ def test_the_registry_holds_every_one_of_the_391_discovered_sources():
     """(The name keeps the figure of 391 the test was written for.) The acquisition triage lists 419 sources: the 405 of the pass23 population
     (391 until tools/ingest_discovery_round.py added the 14 the 2026-10-02 round
     accepted) and 14 more from the 2026-10-06 host round. ``corpus_registry.json``
-    is the pass23 registry and carries exactly the 405; the 14 are in no batch,
-    so a registry rebuilt from the inventory gives them the state
-    ``not_attempted`` and the census reports them apart from the 242. The test
-    pins every one of these numbers, so none can drift without being noticed.
+    is the pass24 registry: it carries the 405 of the pass23 population and the
+    14 of the host round, all 419 attempted in pass24, and the census reports
+    the 14 apart from the 242. The test pins every one of these numbers, so
+    none can drift without being noticed.
 
     The registry is checked against the INVENTORY because a registry built
     from a batch agrees with the batch by construction, and would go on
@@ -259,21 +259,21 @@ def test_the_registry_holds_every_one_of_the_391_discovered_sources():
 
     payload = json.loads(REGISTRY.read_text(encoding="utf-8"))
     records = payload["records"]
-    assert len(records) == 405, len(records)
+    assert len(records) == 419, len(records)
 
     ids = [r["source_id"] for r in records]
-    assert len(set(ids)) == 405, "a source appears twice"
-    assert set(ids) == pass23, "the registry is not the pass23 population"
-    assert set(ids) <= set(discovered), {
-        "a record, not in the inventory": sorted(set(ids) - set(discovered))[:5]}
-    new = sorted(set(discovered) - set(ids))
+    assert len(set(ids)) == 419, "a source appears twice"
+    assert pass23 <= set(ids), "the registry lost a source of the pass23 population"
+    assert set(ids) == set(discovered), {
+        "a record, not in the inventory": sorted(set(ids) - set(discovered))[:5],
+        "an inventory row, not in the registry": sorted(set(discovered) - set(ids))[:5]}
+    new = sorted(set(ids) - pass23)
     assert len(new) == 14, new
-    assert not set(new) & pass23
 
     # the committed registry's own reconciliation, taken when it was built
     reconciliation = payload["summary"]["inventory"]
-    assert reconciliation["discovered_sources"] == 405
-    assert reconciliation["in_the_registry"] == 405
+    assert reconciliation["discovered_sources"] == 419
+    assert reconciliation["in_the_registry"] == 419
     assert reconciliation["in_a_batch_but_not_the_inventory"] == []
     assert reconciliation["in_the_inventory_but_in_no_batch"] == []
 

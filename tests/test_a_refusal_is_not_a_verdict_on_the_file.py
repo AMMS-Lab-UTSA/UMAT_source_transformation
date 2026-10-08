@@ -115,7 +115,7 @@ def test_a_refused_umat_that_builds_stays_this_project_s_problem():
     ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 60, len(ours)
+    assert len(ours) == 75, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -154,15 +154,15 @@ def test_the_refusal_classes_partition_every_refusal():
             record["refusal_class"], 0) + 1
     assert sum(counts.values()) == len(rows), (counts, len(rows))
     assert counts == {
-        GENUINE_UMAT: 60,
-        MISSING_EXTERNAL_DEPENDENCY: 16,
+        GENUINE_UMAT: 75,
+        MISSING_EXTERNAL_DEPENDENCY: 13,
         HELPER_OR_MODULE_ONLY: 14,
         INCOMPLETE_OR_CORRUPT: 11,
         DUPLICATE_SOURCE: 4,
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 109
+    assert sum(counts.values()) == 121
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
@@ -279,7 +279,7 @@ def test_a_compile_that_settles_nothing_leaves_the_work_ours():
     settled nothing.)"""
     unsure = [r for r in refusals()
               if r["refusal_class_confident"] is False]
-    assert len(unsure) == 12, [r["source_id"] for r in unsure]
+    assert len(unsure) == 23, [r["source_id"] for r in unsure]
     for record in unsure:
         # One of the twelve is a second copy of another of them. A duplicate
         # keeps the underlying answer -- "as a file it is genuine_umat" is
@@ -340,16 +340,25 @@ def test_every_record_names_where_the_file_came_from():
     rather than recorded, because a derived URL presented as a recorded one is
     a difference a reader cannot detect."""
     records = registry()["records"]
-    assert len(records) == 405
+    assert len(records) == 419
     for record in records:
         assert record["repository"], record["source_id"]
         assert record["cache_path"] == record["source_id"]
-        assert len(record["commit"]) == 40, record["source_id"]
         assert record["license_spdx"], record["source_id"]
         assert len(record["sha256"]) == 64, record["source_id"]
-        assert record["acquisition_url"].startswith("https://github.com/")
-        assert record["commit"] in record["acquisition_url"]
-        assert "reconstructed from the commit" in record["url_provenance"]
+        if record["acquisition_url"].startswith("https://github.com/"):
+            assert len(record["commit"]) == 40, record["source_id"]
+            assert record["commit"] in record["acquisition_url"]
+            assert "reconstructed from the commit" in record["url_provenance"]
+        else:
+            # the 14 sources of the 2026-10-06 host round (GitLab, SourceForge
+            # SVN, Zenodo): pinned by a commit, an SVN revision or a Zenodo
+            # record md5, with the URL built from the acquisition's template
+            assert record["acquisition_url"].startswith((
+                "https://gitlab.com/", "https://svn.code.sf.net/",
+                "https://zenodo.org/")), record["source_id"]
+            assert record["commit"], record["source_id"]
+            assert "recorded URL template" in record["url_provenance"], record["source_id"]
     assert registry()["summary"]["records_without_an_acquisition_url"] == []
 
 
@@ -361,7 +370,7 @@ def test_the_companions_a_umat_needs_are_recorded_beside_it():
     are ours."""
     missing = [r for r in refusals()
                if r["refusal_class"] == MISSING_EXTERNAL_DEPENDENCY]
-    assert len(missing) == 16, len(missing)
+    assert len(missing) == 13, len(missing)
     for record in missing:
         assert record["missing_companions"], record["source_id"]
         assert record["terminal_state"] == "external_dependency_unavailable"
