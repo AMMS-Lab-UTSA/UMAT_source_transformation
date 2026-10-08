@@ -5626,6 +5626,20 @@ def _rewrite_lifted_helper_call(
         opener = re.match(r"^(\s*CALL\s+)([A-Z_][A-Z0-9_]*)(\s*\(.*)$",
                           line, flags=re.IGNORECASE)
         if not opener:
+            # ... and a CALL whose name is followed by nothing but a comment
+            # (stripped before this function sees the line), with the
+            # argument list on the continuation line:
+            #
+            #       CALL STRESS_UPDATE  ! ITERATIVE STRESS UPDATE METHOD
+            #      1 (STAT_VAR,EQPLAS,STRESS,DDSDDE,ITER)
+            #
+            # The name is the whole of this physical line, so the opener
+            # above, which wants a "(", never matched and the OTI actuals on
+            # the next line went to the untransformed routine (theysy MML_U2:
+            # the first call returned a stress of 0.0 against 221.37).
+            opener = re.match(r"^(\s*CALL\s+)([A-Z_][A-Z0-9_]*)(\s*)$",
+                              line, flags=re.IGNORECASE)
+        if not opener:
             return line
         callee = opener.group(2).upper()
         if callee not in lifted_helper_names:
@@ -8094,9 +8108,12 @@ def oti_arguments_into_untransformed_calls(
     defined = _routines_carrying_the_oti_type(transformed_source, form)
     found: list[tuple[str, str]] = []
     seen: set[tuple[str, str]] = set()
-    for line in transformed_source.splitlines():
-        if _is_commented(line):
-            continue
+    # Statements, not physical lines: a CALL whose argument list continues on
+    # the next line (or whose name is followed by a comment and a continuation,
+    # theysy's MML_U2) carries its OTI actuals where a per-line reading never
+    # looked.
+    for logical in logical_lines_from_text(transformed_source, form):
+        line = logical.text
         match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)$",
                          line.replace("\t", " "), flags=re.IGNORECASE)
         if not match:
