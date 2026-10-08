@@ -195,6 +195,8 @@ def _material_block(manifest: VerificationManifest) -> list[str]:
     header = f"*USER MATERIAL, CONSTANTS={len(manifest.props)}"
     if manifest.unsymmetric:
         header += ", UNSYMM"
+    if getattr(manifest, "hybrid_formulation", ""):
+        header += f", HYBRID FORMULATION={manifest.hybrid_formulation}"
     lines.append(header)
     # Eight to a line, which is the fixed-format limit Abaqus reads.
     values = [_fmt(value) for value in manifest.props]

@@ -1254,6 +1254,7 @@ def plan(source: Path, repository: Path, name: str = "",
         # B20 rule H4c: what the author's deck says the state and the stress
         # start from, carried as written. Nothing is defaulted.
         initial_stress_from_user_subroutine=material.user_initial_stress,
+        hybrid_formulation=material.hybrid_formulation,
         initial_statev=(tuple(material.initial_state_values)
                         if (material.initial_state_values
                             and not material.user_initial_state) else ()),
