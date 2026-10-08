@@ -80,6 +80,13 @@ def test_modules_and_includes_are_looked_up_in_the_repository_and_the_compilers_
     assert set(found.unpublished) == {"module gonemod", "include absent.inc"}
 
 
+def test_a_statement_that_starts_with_the_letters_use_is_not_a_use_statement(tmp_path):
+    # UserVar(...) = phi was read as "USE rVar" (MCM-QMUL PhaseFieldComp)
+    repo(tmp_path, {"umat.for": HEAD + "      UserVar(1,2,3)=phi\n      userdata = 1\n      END\n"})
+    found = verdict(tmp_path, "umat.for")
+    assert found.verdict == "resolved" and found.unpublished == ()
+
+
 def test_a_commented_out_include_is_not_a_dependency(tmp_path):
     body = HEAD + "c      include 'common_cart.inc'\n!      include 'other.inc'\n      END\n"
     repo(tmp_path, {"umat.for": body})
@@ -132,11 +139,17 @@ def test_the_callees_the_transformer_names_are_looked_up_too(tmp_path):
     assert rl.names_in_refusal("STRESS_OTI is passed to SOLVER, which was neither") == ("SOLVER",)
 
 
-def test_blas_and_lapack_names_are_external_under_the_rule_and_counted_apart(tmp_path):
-    repo(tmp_path, {"umat.for": HEAD + "      CALL DGESV(N,1)\n      CALL SHEARMOD(1)\n      END\n"})
+def test_blas_and_lapack_are_neither_resolved_nor_external_and_unconfirmed_ptk_names_do_not_count(tmp_path):
+    repo(tmp_path, {"umat.for": HEAD + "      CALL DGESV(N,1)\n      CALL SHEARMOD(1)\n"
+                    "      CALL PTKCOMPUTE(1)\n      CALL PtkGetDataAccess(1)\n      END\n"})
     found = verdict(tmp_path, "umat.for")
-    assert found.unpublished == ("call DGESV", "call SHEARMOD")
+    assert found.unpublished == ("call SHEARMOD",)
     assert found.unpublished_library == ("call DGESV",)
+    assert found.unconfirmed == ("PTKCOMPUTE",)
+    # canary: with only the library call the source is resolved, not external
+    repo(tmp_path, {"umat.for": HEAD + "      CALL DGESV(N,1)\n      END\n"}, name="owner__repo")
+    rl._INDEXES.clear()
+    assert verdict(tmp_path, "umat.for").verdict == "resolved"
 
 
 # -- the registry applies it to the states the refusal path does not reach ----------------

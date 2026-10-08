@@ -1,0 +1,89 @@
+{
+ "_about": "B17 Vera item 2: the discovery cache is partial, so a callee 'not in the repository' is confirmed against the upstream tree at the pinned commit (shallow fetch, read-only, scratch deleted). A call name counts as unpublished in the registry only when it is listed under 'absent' here. Checked 2026-10-07 for the 8 non-library sources the cache-only lookup would have removed from the 242: every callee name is defined upstream (present_upstream), so none of them leaves. MCM-QMUL was removed from the list by a bug (UserVar(..)= read as USE rVar), not by absence.",
+ "checked": {
+  "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for": {
+   "repository": "AlexSTA1993/numerical_geolab",
+   "commit": "21ad30f9314caccf5262912b9b1cdb088e204e30",
+   "absent": [],
+   "present_upstream": {
+    "GETNFNH": "numerical_geolab_materials/UMATERIALS/CAUCHY3D-ASYMCAMCLAY/hyplast_material_Cauchy3D-Asym_CamClay.for",
+    "USERMATMEL": "numerical_geolab_materials/UMATERIALS/CORE/V1_2018-07-13/hyplast_core.for",
+    "USERMATMPL": "numerical_geolab_materials/UMATERIALS/CORE/V1_2018-07-13/hyplast_core.for"
+   }
+  },
+  "JuliaFEM__UMAT.jl/umat_models/drucker_prager_plasticity.f90": {
+   "repository": "JuliaFEM/UMAT.jl",
+   "commit": "091d34e317da0ac34271168de1288157718af5fd",
+   "absent": [],
+   "present_upstream": {
+    "WRITEOUT": "umat_models/drucker_prager_plasticity_deriv.f90",
+    "INVERT": "umat_models/drucker_prager_plasticity_deriv.f90",
+    "DEVSTRESS": "umat_models/drucker_prager_plasticity_deriv.f90",
+    "DF_DERIVATIVES": "umat_models/drucker_prager_plasticity_deriv.f90",
+    "DFDSIGMA": "umat_models/drucker_prager_plasticity_deriv.f90"
+   }
+  },
+  "RickAlb__UMAT-DFD-Lebedev/all_subroutines/UMAT_DFD_LEB.for": {
+   "repository": "RickAlb/UMAT-DFD-Lebedev",
+   "commit": "c31b6bc474aa1832b2df48ee20e43bc22d2f02e5",
+   "absent": [],
+   "present_upstream": {
+    "FULLSTRESSVEC": "all_subroutines/util_subs.for",
+    "PRINTSTRESS": "all_subroutines/util_subs.for",
+    "ASCII2STRING": "all_subroutines/util_subs.for",
+    "STRING2ASCII": "all_subroutines/util_subs.for",
+    "IDENTITY": "all_subroutines/util_subs.for",
+    "POLDECOMP": "all_subroutines/util_subs.for",
+    "BDET": "all_subroutines/util_subs.for",
+    "VOIGTTENS2VEC": "all_subroutines/util_subs.for",
+    "READINTPOINTS": "all_subroutines/spherequad.for",
+    "LEBEDEVINTEGR": "all_subroutines/spherequad.for",
+    "EXPORTPOINTS": "all_subroutines/util_subs.for",
+    "SSEFIB": "all_subroutines/fibers.for",
+    "STRESSFIB": "all_subroutines/fibers.for",
+    "STIFFFIB": "all_subroutines/fibers.for",
+    "DEVETENS": "all_subroutines/util_subs.for",
+    "SYM4TENS66": "all_subroutines/util_subs.for",
+    "DYAD6": "all_subroutines/util_subs.for",
+    "STATCOND": "all_subroutines/util_subs.for"
+   }
+  },
+  "ekurth__NEML/util/abaqus/nemlumat.f": {
+   "repository": "ekurth/NEML",
+   "commit": "afdb6bd91e713e8cadbfb1f5d2812e499b1d96df",
+   "absent": [],
+   "present_upstream": {
+    "UPDATE_SD_NEMLMODEL": "src/cinterface.cxx",
+    "DESTROY_NEMLMODEL": "src/cinterface.cxx"
+   }
+  },
+  "jacojvr__UMATs/UMAT_framework/umat_comb.f": {
+   "repository": "jacojvr/UMATs",
+   "commit": "878141ea5a028bccb808f1fde83c9502e374a0a3",
+   "absent": [],
+   "present_upstream": {
+    "CYCLREVERSAL": "combinedhard/cyclicrevarsal01.f",
+    "FCOMBINED": "combinedhard/combinedlinear.f",
+    "SHEARMOD": "shearmodule/shearvarshni.f"
+   }
+  },
+  "jacojvr__UMATs/UMAT_framework/umat_iso.f": {
+   "repository": "jacojvr/UMATs",
+   "commit": "878141ea5a028bccb808f1fde83c9502e374a0a3",
+   "absent": [],
+   "present_upstream": {
+    "FISOTROPIC": "isotropichard/linearharden.f",
+    "SHEARMOD": "shearmodule/shearvarshni.f"
+   }
+  },
+  "thelfer__tfel/mtest/tests/mtest/castem/umat.f": {
+   "repository": "thelfer/tfel",
+   "commit": "a1e7a2ad2f7b43da8de4b8668fb42383657830ed",
+   "absent": [],
+   "present_upstream": {
+    "MOONEY": "mtest/tests/mtest/castem/mooney.f",
+    "NEOHOO": "mtest/tests/mtest/castem/neohoo.f"
+   }
+  }
+ }
+}

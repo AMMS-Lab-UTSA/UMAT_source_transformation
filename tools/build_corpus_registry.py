@@ -1366,8 +1366,16 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             # and named includes that sit in comments or in the Abaqus
             # include directory.
             looked = lookup_dependencies(source, cache, reason=record.reason)
+            # The cache is partial (jacojvr holds 5 files, bennifuchs 6), so a
+            # CALL name counts as unpublished only where its absence from the
+            # upstream tree at the pinned commit was confirmed
+            # (upstream_callee_check.json). Modules and includes keep the
+            # evidence they always had.
+            confirmed = upstream_absent_calls(record.source_id)
             missing = [name for name in looked.unpublished
-                       if name.split(" ", 1)[-1].lower() not in INTRINSIC_MODULES]
+                       if name.split(" ", 1)[-1].lower() not in INTRINSIC_MODULES
+                       and (not name.startswith("call ")
+                            or name.split(" ", 1)[1] in confirmed)]
             record.missing_companions = missing_companions_text(missing)
 
             verdict = classify_refusal(
@@ -1585,6 +1593,20 @@ class SourceRulingConflict(RuntimeError):
     """A reviewed per-source ruling and a source-text rule disagree."""
 
 
+UPSTREAM_CALLEE_CHECK = REPO / "paper_results/corpus/upstream_callee_check.json"
+_UPSTREAM: dict = {}
+
+
+def upstream_absent_calls(source_id: str, path: Optional[Path] = None) -> frozenset:
+    """CALL names confirmed absent from the upstream tree for this source."""
+    path = Path(path or UPSTREAM_CALLEE_CHECK)
+    if str(path) not in _UPSTREAM:
+        _UPSTREAM[str(path)] = (json.loads(path.read_text(encoding="utf-8")).get("checked", {})
+                                if path.is_file() else {})
+    return frozenset(n.upper() for n in
+                     _UPSTREAM[str(path)].get(source_id, {}).get("absent", ()))
+
+
 #: States the B17 G3a rule may move to ``external_dependency_unavailable``. They
 #: are the states a source reaches WITHOUT an Abaqus run, so an unpublished
 #: dependency is the reason it cannot have one. A source with a run behind it
@@ -1757,6 +1779,12 @@ def _adequacy(record: Record) -> tuple:
     (``adequacy_tier``, set by :func:`apply_origins`), and every verified
     count is split by tier (:func:`tier_summary`).
     """
+    if record.terminal_state == "not_attempted":
+        # A source no batch has a row for (the 14 of the 2026-10-06 host round)
+        # is new and not yet attempted: neither in nor out of the adequately
+        # specified set, and never part of the pass23 population of 242.
+        return (None, "new, not yet attempted: no batch has produced a row for "
+                      "this source, so nothing about it is established", "")
     if not record.sha256:
         return (None, "the acquisition inventory names this source but the "
                       "cache does not hold it, so nothing about it was "
@@ -2362,6 +2390,7 @@ def summarise(records: list) -> dict:
                                  if r.adequacy_kind not in ("external",
                                                             "duplicate"))
     return {
+        "census": pass23_census(records),
         "acquired": len(records),
         "genuine_umats": len(umats),
         "adequately_specified_genuine_umats": len(adequate),
@@ -2565,6 +2594,71 @@ def refresh_retained(payload: dict) -> tuple:
     return records, refreshed
 
 
+PASS23_POPULATION = REPO / "paper_results/corpus/pass23_population.json"
+
+
+def pass23_census(records, population_path: Optional[Path] = None) -> dict:
+    """The pass23 population and the new sources, as separate lines.
+
+    The rebuilt registry holds more records than the 405 of pass23 (the 2026-10-06
+    host round added 14, not yet attempted). Nobody may read the size of the
+    rebuilt registry, or its count of eligible sources, as the denominator: the
+    denominator of the published figure is the pass23 population of 242, and the
+    revised line is that population after the callee rule, with the sources that
+    left and entered named.
+    """
+    path = Path(population_path or PASS23_POPULATION)
+    if not path.is_file():
+        return {}
+    base = json.loads(path.read_text(encoding="utf-8"))
+    published = set(base["eligible_source_ids"])
+    in_base = set(base["source_ids"])
+    by_id = {r.source_id: r for r in records}
+    now = {r.source_id for r in records
+           if r.source_id in in_base and r.adequately_specified}
+    left, entered = sorted(published - now), sorted(now - published)
+    verified = len([r for r in records
+                    if r.source_id in in_base and r.adequately_specified
+                    and r.terminal_state == FULLY_VERIFIED])
+    new = sorted(r.source_id for r in records if r.source_id not in in_base)
+    return {
+        "pass23_population": {
+            "acquired": len(in_base), "eligible_as_published": base["eligible"],
+            "verified": base["verified"],
+            "line_as_published": f"{base['verified']} of {base['eligible']} (as published)",
+            "line_revised": (f"{verified} of {len(now)} = {base['eligible']} - "
+                             f"{len(left)} + {len(entered)}"),
+            "left_the_242": left, "entered": entered,
+            "left_with_state": {s: by_id[s].terminal_state for s in left if s in by_id},
+        },
+        "new_not_yet_attempted": {
+            "count": len(new),
+            "states": dict(Counter(by_id[s].terminal_state for s in new)),
+            "sources": new,
+            "means": "sources of the 2026-10-06 host round: in no pass23 batch, "
+                     "state not_attempted, outside both the 242 and its "
+                     "revised line",
+        },
+    }
+
+
+def _census_lines(census: dict) -> list:
+    if not census:
+        return []
+    base, fresh = census["pass23_population"], census["new_not_yet_attempted"]
+    return [
+        "## Census: the pass23 population and the new sources, kept apart", "",
+        f"* pass23 population ({base['acquired']} sources): "
+        f"**{base['line_as_published']}**.",
+        f"* the same population with the callee rule applied: "
+        f"**{base['line_revised']}** (left: {len(base['left_the_242'])}, "
+        f"entered: {len(base['entered'])}).",
+        f"* new, not yet attempted: **{fresh['count']}** sources "
+        f"({fresh['states']}), outside both lines above. The size of this "
+        "registry and its count of eligible sources are not the denominator.",
+        ""]
+
+
 def markdown(records: list, summary: dict) -> str:
     inputs = summary.get("inputs") or {}
     denominators = summary.get("denominators") or {}
@@ -2592,6 +2686,7 @@ def markdown(records: list, summary: dict) -> str:
         "registry keyed on the basename would hold one row where the corpus "
         "holds " + str(worst_count) + " files.",
         "",
+        *_census_lines(summary.get("census") or {}),
         "## Where every number below comes from",
         "",
         "| input | file |",
@@ -3354,6 +3449,14 @@ def main(argv: Optional[list] = None) -> int:
     write_registry(records, payload, args.json_path, args.csv_path,
                    args.markdown)
 
+    census = summary.get("census") or {}
+    if census:
+        base, fresh = census["pass23_population"], census["new_not_yet_attempted"]
+        print(f"  pass23 population ({base['acquired']} sources): "
+              f"{base['line_as_published']}")
+        print(f"  pass23 population, callee rule applied: {base['line_revised']}")
+        print(f"  new, not yet attempted ({fresh['count']} sources, "
+              f"outside both lines above): {fresh['states']}")
     print(f"  {summary['acquired']} artefacts, {summary['genuine_umats']} UMATs, "
           f"{summary['fully_verified']} fully verified")
     if summary.get("refusals_by_class"):
