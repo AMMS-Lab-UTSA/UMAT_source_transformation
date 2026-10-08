@@ -34,6 +34,12 @@ if not COUNT_TARGET.is_file():
 _spec = importlib.util.spec_from_file_location("count_target", COUNT_TARGET)
 ct = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ct)
+# count_target.py is a campaign-level script whose UMAT constant names the
+# campaign worktree; the tools under test are those of THIS checkout, or the
+# module registered as build_corpus_registry would be another checkout's and
+# every later test in the process would import it.
+ct.UMAT = REPO
+sys.modules.pop("build_corpus_registry", None)
 reg = ct._registry_tool()
 
 
