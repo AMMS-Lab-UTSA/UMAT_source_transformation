@@ -847,6 +847,15 @@
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_statement_that_starts_with_the_letters_use_is_not_a_use_statement",
     "tests/test_the_registry_is_the_denominator.py::test_the_census_keeps_the_pass23_population_and_the_new_sources_apart"
    ]
+  },
+  {
+   "commit": "419c87f",
+   "selected_by": "manual",
+   "bug": "The registry searched only the main file for STRESS/DDSDDE assignments, so a UMAT whose body is INCLUDEd (bmmbUPF Sub_TransDisc) recorded writes_ddsdde False, and it counted modules and includes missing that the partial discovery cache lacked but the upstream tree publishes (mauro, frodal, ngrilli, xara), leaving them external; the search now follows quoted includes and upstream-published names are not missing.",
+   "tests": [
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_the_output_search_follows_quoted_includes_the_way_the_callee_rule_does",
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_name_the_upstream_tree_publishes_is_not_missing_because_the_cache_is_partial"
+   ]
   }
  ],
  "excluded": [
