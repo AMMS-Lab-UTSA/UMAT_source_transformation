@@ -884,6 +884,14 @@
     "tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py::test_a_stubbed_routine_that_is_entered_stops_the_run_with_status_8",
     "tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py::test_a_source_that_defines_its_own_array_access_gets_no_second_definition"
    ]
+  },
+  {
+   "commit": "3be31c8",
+   "selected_by": "manual",
+   "bug": "The generated deck's *USER MATERIAL line dropped the HYBRID FORMULATION option the author's deck states (TOTAL on the FGJD viscoelastic decks): the hybrid-element run of the paired deck failed at increment 1 without it. The option is now carried as written and never added when the author's line has none.",
+   "tests": [
+    "tests/test_the_deck_the_author_ran_is_what_is_paired_and_generated.py::test_the_hybrid_formulation_option_is_carried_as_written_and_never_added"
+   ]
   }
  ],
  "excluded": [

@@ -1958,6 +1958,26 @@
   "mock:tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py:_check:monkeypatch.setattr:3da27a3b": {
    "verdict": "justified",
    "reason": "Replaces build_history_replay by a wrapper that reports 'ifort is not on PATH' for ifort only and calls the real function for gfortran, so the real gfortran probe is built and run on the planted source (a stub left unentered completes; a stub on the UMAT path stops with status 8); it lets CI, which has no ifort, exercise the stubs. The stubs, the replay driver and the init-probe classification are the real code."
+  },
+  "skip:tests/test_the_gfortran_replay_builds_what_the_solvers_compile_line_builds.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "New test; the two cases that skip build a replay of a small planted source with gfortran (one with the added flags, which must build; one with the old flags, which must not). CI installs gfortran, so both run there. The flag-selection and include-quoting cases of the same file have no such condition.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "skip:tests/test_the_gfortran_replay_builds_what_the_solvers_compile_line_builds.py:<module>:mark.skipif:6824f295#2": {
+   "verdict": "justified",
+   "reason": "New test; the two cases that skip build a replay of a small planted source with gfortran (one with the added flags, which must build; one with the old flags, which must not). CI installs gfortran, so both run there. The flag-selection and include-quoting cases of the same file have no such condition.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
   }
  }
 }
