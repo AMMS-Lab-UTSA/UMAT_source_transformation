@@ -1870,6 +1870,34 @@
      "text": "assert not set(new) & pass23"
     }
    ]
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:_fake_run:monkeypatch.setattr:38b74bab": {
+   "verdict": "justified",
+   "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:_fake_run:monkeypatch.setattr:5683a528": {
+   "verdict": "justified",
+   "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:_fake_run:monkeypatch.setattr:5943135a": {
+   "verdict": "justified",
+   "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:_fake_run:monkeypatch.setattr:7f8e3bec": {
+   "verdict": "justified",
+   "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:_fake_run:monkeypatch.setattr:c3053ef3": {
+   "verdict": "justified",
+   "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:_main:monkeypatch.setattr:f5fa434e": {
+   "verdict": "justified",
+   "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
+  },
+  "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_without_a_deck_it_asks_for_one_and_defaults_nothing:monkeypatch.setattr:ae2b3b58": {
+   "verdict": "justified",
+   "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
   }
  }
 }

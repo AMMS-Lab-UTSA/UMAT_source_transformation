@@ -833,7 +833,7 @@
    "bug": "check printed sentences with the word GREEN outside a green banner, and offered `umat-oti all ... --abaqus` as the way to a verified result although it only runs the file in Abaqus and records whether the job finished (the six-check comparison is not part of it); a user's --dependency-root was dropped from the suggested command.",
    "tests": [
     "tests/test_the_word_green_is_only_in_a_green_banner_and_the_abaqus_command_promises_no_verification.py::test_the_word_green_occurs_only_in_the_banner_of_a_green_verdict",
-    "tests/test_the_word_green_is_only_in_a_green_banner_and_the_abaqus_command_promises_no_verification.py::test_the_command_sentence_says_what_the_command_does_and_never_promises_a_verified_result",
+    "tests/test_the_word_green_is_only_in_a_green_banner_and_the_abaqus_command_promises_no_verification.py::test_the_command_sentence_says_what_the_command_does_and_what_it_needs",
     "tests/test_the_word_green_is_only_in_a_green_banner_and_the_abaqus_command_promises_no_verification.py::test_check_prints_the_command_sentence_after_an_amber_verdict_and_passes_the_dependency_roots_through"
    ],
    "selected_by": "manual"
