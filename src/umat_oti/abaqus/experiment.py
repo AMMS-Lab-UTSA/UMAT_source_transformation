@@ -2283,16 +2283,66 @@ def cohesive_softened(records: Sequence[dict]) -> Finding:
                    f"not reach the softening branch", drop)
 
 
-def direct_strain_produced_shear(records: Sequence[dict]) -> Finding:
+def _global_frame(strain: Sequence[float], stress: Sequence[float],
+                  angle: float) -> tuple[list, list]:
+    """Strain and stress of a plane-stress / plane-strain record in the LOADING's
+    frame, given the angle (radians) of the material axis 1 from global x.
+
+    A UMAT on an oriented element is handed STRAN and STRESS in the material's
+    own frame. A pure global direct strain therefore arrives with a local shear
+    that is never zero, and a local stress shear is nonzero even for an isotropic
+    material (it is just the rotated stress). The rotation is undone here:
+    strain with engineering shear gamma, stress with tensor shear."""
+    c, s = math.cos(angle), math.sin(angle)
+    e1, e2, g = strain[0], strain[1], strain[2]
+    s1, s2, tau = stress[0], stress[1], stress[2]
+    strain_g = [c * c * e1 + s * s * e2 - c * s * g,
+                s * s * e1 + c * c * e2 + c * s * g,
+                2 * c * s * (e1 - e2) + (c * c - s * s) * g]
+    stress_g = [c * c * s1 + s * s * s2 - 2 * c * s * tau,
+                s * s * s1 + c * c * s2 + 2 * c * s * tau,
+                c * s * (s1 - s2) + (c * c - s * s) * tau]
+    return strain_g, stress_g
+
+
+def material_axis_angle(manifest) -> float:
+    """Angle (radians, about the global 3 axis) of the material axis 1, or 0.0.
+
+    From the manifest's orientation: the direction of the point ``a`` of
+    *ORIENTATION from the origin, plus the extra rotation about axis 3. Anything
+    else (a rotation about another axis, an ``a`` out of the plane) is not read
+    and gives 0.0, which leaves the check as it was."""
+    if manifest is None or getattr(manifest, "orientation_axes", None) is None:
+        return 0.0
+    axes = tuple(float(v) for v in manifest.orientation_axes)
+    if len(axes) < 3 or abs(axes[2]) > 1e-12:
+        return 0.0
+    base = math.atan2(axes[1], axes[0]) if (axes[0] or axes[1]) else 0.0
+    axis, degrees = getattr(manifest, "orientation_rotation", None) or (3, 0.0)
+    if int(axis) != 3:
+        return 0.0
+    return base + math.radians(float(degrees))
+
+
+def direct_strain_produced_shear(records: Sequence[dict],
+                                 manifest=None) -> Finding:
     """Did a pure direct strain produce a shear stress?
 
     The observable that says a material's own axes reached the routine. In a
     frame aligned with the loading there is no such coupling; in a rotated one
     there always is, and a build that lost the rotation returns zero here and
     agrees with nothing.
+
+    Read in the LOADING's frame (B20): the routine receives STRAN and STRESS in
+    the material's frame, so with a ply at 30 degrees no increment has zero local
+    shear and the check had nothing to evaluate (PLANESTRESS-ORTHOTROPIC). When
+    the manifest names a rotation about the 3 axis, both are rotated back to
+    the global frame before the same test is applied; with no rotation the code
+    path is the old one, unchanged.
     """
     from umat_oti.abaqus.activation import strain_at
 
+    angle = material_axis_angle(manifest)
     results = _results(records)
     best = 0.0
     for record in results:
@@ -2300,9 +2350,13 @@ def direct_strain_produced_shear(records: Sequence[dict]) -> Finding:
         stress = _values(record, "STRESS")
         if len(stress) < 3 or len(separation) < 3:
             continue
+        tolerance = 1e-12
+        if angle:
+            separation, stress = _global_frame(separation, stress, angle)
+            tolerance = max(1e-12, 1e-9 * max(abs(v) for v in separation[:2]))
         direct = max(abs(value) for value in separation[:2])
         shear = max(abs(value) for value in separation[2:])
-        if direct <= 0.0 or shear > 1e-12:
+        if direct <= 0.0 or shear > tolerance:
             continue
         size = max(abs(value) for value in stress) or 1.0
         best = max(best, max(abs(value) for value in stress[2:]) / size)
@@ -2364,7 +2418,7 @@ def assess(family: Family, records: Sequence[dict],
     elif family.name == "cohesive":
         findings.append(cohesive_softened(records))
     elif family.name == "oriented":
-        findings.append(direct_strain_produced_shear(records))
+        findings.append(direct_strain_produced_shear(records, manifest))
     for statement in DECLARED_ONLY.get(family.name, ()):
         findings.append(Finding(statement[:40], None, statement))
     return tuple(findings)
