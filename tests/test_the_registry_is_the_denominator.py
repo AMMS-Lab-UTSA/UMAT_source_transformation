@@ -270,8 +270,12 @@ def test_the_registry_holds_every_one_of_the_391_discovered_sources():
     assert len(new) == 14, new
     assert not set(new) & pass23
 
+    # the committed registry's own reconciliation, taken when it was built
     reconciliation = payload["summary"]["inventory"]
+    assert reconciliation["discovered_sources"] == 405
+    assert reconciliation["in_the_registry"] == 405
     assert reconciliation["in_a_batch_but_not_the_inventory"] == []
+    assert reconciliation["in_the_inventory_but_in_no_batch"] == []
 
 
 def test_the_census_keeps_the_pass23_population_and_the_new_sources_apart(tmp_path):
