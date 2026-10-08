@@ -233,20 +233,29 @@ def _inventory_ids():
                 if str(row.get("source") or "").strip()]
 
 
-def test_the_registry_holds_every_one_of_the_391_discovered_sources():
-    """Measured on the built registry: the acquisition triage lists 405
-    discovered sources (391 until tools/ingest_discovery_round.py added the 14
-    the 2026-10-02 round accepted; the name keeps the old figure),
-    ``corpus_registry.json`` carries 405 records, and the
-    two sets are equal -- no source in the inventory is missing a record, and
-    no record names a source the inventory never discovered.
+POPULATION = REPO / "paper_results/corpus/pass23_population.json"
 
-    405 is also what the transform batch happens to carry, which is exactly
-    why this has to be checked against the INVENTORY. A registry built from
-    the batch agrees with the batch by construction, and would go on agreeing
-    on the day a run stopped attempting a source."""
+
+def test_the_inventory_is_the_pass23_population_of_405_plus_the_14_new_sources():
+    """The acquisition triage lists 419 sources: the 405 of the pass23 population
+    (391 until tools/ingest_discovery_round.py added the 14 the 2026-10-02 round
+    accepted) and 14 more from the 2026-10-06 host round. ``corpus_registry.json``
+    is the pass23 registry and carries exactly the 405; the 14 are in no batch,
+    so a registry rebuilt from the inventory gives them the state
+    ``not_attempted`` and the census reports them apart from the 242. The test
+    pins every one of these numbers, so none can drift without being noticed.
+
+    The registry is checked against the INVENTORY because a registry built
+    from a batch agrees with the batch by construction, and would go on
+    agreeing on the day a run stopped attempting a source."""
     discovered = _inventory_ids()
-    assert len(discovered) == 405, len(discovered)
+    assert len(discovered) == 419, len(discovered)
+
+    population = json.loads(POPULATION.read_text(encoding="utf-8"))
+    pass23 = set(population["source_ids"])
+    assert len(pass23) == population["acquired"] == 405
+    assert population["eligible"] == len(population["eligible_source_ids"]) == 242
+    assert population["verified"] == 106
 
     payload = json.loads(REGISTRY.read_text(encoding="utf-8"))
     records = payload["records"]
@@ -254,16 +263,41 @@ def test_the_registry_holds_every_one_of_the_391_discovered_sources():
 
     ids = [r["source_id"] for r in records]
     assert len(set(ids)) == 405, "a source appears twice"
-    assert set(ids) == set(discovered), {
-        "in the inventory, no record": sorted(set(discovered) - set(ids))[:5],
-        "a record, not in the inventory": sorted(set(ids) - set(discovered))[:5],
-    }
+    assert set(ids) == pass23, "the registry is not the pass23 population"
+    assert set(ids) <= set(discovered), {
+        "a record, not in the inventory": sorted(set(ids) - set(discovered))[:5]}
+    new = sorted(set(discovered) - set(ids))
+    assert len(new) == 14, new
+    assert not set(new) & pass23
 
     reconciliation = payload["summary"]["inventory"]
-    assert reconciliation["discovered_sources"] == 405
-    assert reconciliation["in_the_registry"] == 405
     assert reconciliation["in_a_batch_but_not_the_inventory"] == []
-    assert reconciliation["in_the_inventory_but_in_no_batch"] == []
+
+
+def test_the_census_keeps_the_pass23_population_and_the_new_sources_apart(tmp_path):
+    """Rebuilt with the new sources in the inventory, the registry holds more
+    records than the population; the census prints the published line, the
+    revised line and the new sources as separate lines, and the new sources are
+    neither eligible nor excluded."""
+    from build_corpus_registry import pass23_census
+    transform, abaqus = write(tmp_path)
+    inventory = [r["source"] for r in TRANSFORM["rows"]] + ["owner__e/new.f"]
+    records = build(transform, abaqus, None, inventory_ids=inventory)
+    population = tmp_path / "pass23.json"
+    ids = [r["source"] for r in TRANSFORM["rows"]]
+    population.write_text(json.dumps({
+        "acquired": 4, "eligible": 2, "verified": 1, "source_ids": ids,
+        "eligible_source_ids": ids[:2]}), encoding="utf-8")
+    census = pass23_census(records, population)
+    base = census["pass23_population"]
+    assert base["line_as_published"] == "1 of 2 (as published)"
+    assert base["acquired"] == 4
+    assert census["new_not_yet_attempted"]["sources"] == ["owner__e/new.f"]
+    assert census["new_not_yet_attempted"]["states"] == {"not_attempted": 1}
+    new = {r.source_id: r for r in records}["owner__e/new.f"]
+    assert new.adequately_specified is None
+    assert "not yet attempted" in new.adequacy_basis
+    assert "owner__e/new.f" not in base["left_the_242"] + base["entered"]
 
 
 def test_a_discovered_source_no_batch_ever_mentioned_still_gets_a_record(tmp_path):
