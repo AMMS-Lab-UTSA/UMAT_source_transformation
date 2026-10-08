@@ -55,6 +55,12 @@ Canary: a source that calls a stubbed SUBROUTINE on the UMAT path stops with sta
 that dereferences the null result fails.
 A/B: only sources referencing those names change; every row that links today is byte-identical.
 
+Closed list as implemented (all documented interfaces except the last two, which the same source calls only
+from UEPACTIVATIONSETUP): PtkSetMeshAndEventSeries, PtkSetEventSeriesProperties, PtkCompute,
+getEventSeriesSliceProperties, getEventSeriesSliceLG, PtkGetDataAccess, PtkGetNumIntersectedElements,
+SMAFloatArrayCreateSP/DP, SMAIntArrayCreate, SMAFloatArrayAccess, SMAIntArrayAccess, SetTableCollection,
+GetParameterTable.
+
 ## H4. Deck pairing and generation carry what the author's deck says
 
 (a) Pairing by the routine's own dimensioning. A routine that dimensions arrays by `(NSTATV - a)/b` accepts only a
