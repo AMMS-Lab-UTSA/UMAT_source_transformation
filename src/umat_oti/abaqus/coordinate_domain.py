@@ -61,7 +61,7 @@ _CORNERS: dict[str, int] = {
     "C3D8": 8, "C3D8H": 8, "C3D8R": 8, "C3D8I": 8,
     "C3D20": 8, "C3D20H": 8, "C3D20R": 8, "C3D20RH": 8,
     "C3D4": 4, "C3D4H": 4, "C3D10": 4, "C3D10H": 4, "C3D10M": 4,
-    "C3D6": 6, "C3D6H": 6, "C3D15": 6,
+    "C3D6": 6, "C3D6H": 6, "C3D15": 6, "C3D15H": 6,
     "CPE4": 4, "CPE4H": 4, "CPE4R": 4, "CPE8": 4, "CPE8R": 4, "CPE8H": 4,
     "CPS4": 4, "CPS4R": 4, "CPS8": 4, "CPS8R": 4,
     "CAX4": 4, "CAX4H": 4, "CAX4R": 4, "CAX8": 4, "CAX8R": 4,
@@ -357,7 +357,37 @@ class AuthorElement:
                             sum(w * corner[axis] for w, corner
                                 in zip(weights, corners)) / 8.0
                             for axis in range(3)))
+        if len(self.nodes) == 6 and self.element_type in ("C3D6", "C3D6H", "C3D15",
+                                                           "C3D15H"):
+            points.extend(self._wedge_gauss_points())
         return tuple(points)
+
+    def _wedge_gauss_points(self) -> list:
+        """Where a wedge's material points sit (B20 H1).
+
+        C3D6 integrates at the triangle's centroid on zeta = -/+ 1/sqrt(3);
+        C3D15 at the three triangle points (1/6,1/6), (2/3,1/6), (1/6,2/3) on
+        zeta = -sqrt(3/5), 0, +sqrt(3/5). Mapped with the wedge's linear
+        shape functions on the six corners, so the positions a divisor has
+        to be defined at are the ones the routine is called at.
+        """
+        corners = [(node[1], node[2], node[3]) for node in self.nodes]
+        quadratic = self.element_type.startswith("C3D15")
+        triangle = ([(1.0 / 6.0, 1.0 / 6.0), (2.0 / 3.0, 1.0 / 6.0),
+                     (1.0 / 6.0, 2.0 / 3.0)] if quadratic
+                    else [(1.0 / 3.0, 1.0 / 3.0)])
+        zetas = ([-math.sqrt(0.6), 0.0, math.sqrt(0.6)] if quadratic
+                 else [-1.0 / math.sqrt(3.0), 1.0 / math.sqrt(3.0)])
+        found = []
+        for xi, eta in triangle:
+            bottom = (1.0 - xi - eta, xi, eta)
+            for zeta in zetas:
+                lo, hi = (1.0 - zeta) / 2.0, (1.0 + zeta) / 2.0
+                weights = tuple(w * lo for w in bottom) + tuple(w * hi for w in bottom)
+                found.append(tuple(
+                    sum(w * corner[axis] for w, corner in zip(weights, corners))
+                    for axis in range(3)))
+        return found
 
     def as_dict(self) -> dict:
         return {"number": self.number, "element_type": self.element_type,

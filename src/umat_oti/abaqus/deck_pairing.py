@@ -156,6 +156,22 @@ class Demand:
     props_exact: bool = False
     statev_exact: bool = False
     evidence: tuple[str, ...] = ()
+    #: ``(a, b)`` for every ``(NSTATV - a)/b`` the routine dimensions an array
+    #: by (B20 rule H4a). The routine is written for a *DEPVAR that leaves at
+    #: least one whole group: ``(10 - 4)/7`` is zero branches and zero-sized
+    #: arrays, the very first call returns infinities.
+    statev_grids: tuple[tuple[int, int], ...] = ()
+
+    def grid_refusal(self, depvar: int) -> str:
+        """Why a *DEPVAR leaves a ``(NSTATV - a)/b`` dimension with no group, or ""."""
+        for offset, size in self.statev_grids:
+            if (depvar - offset) // size < 1:
+                return (f"the routine dimensions its arrays by "
+                        f"(NSTATV - {offset})/{size}, which is zero "
+                        f"groups for this block's *DEPVAR {depvar}: it "
+                        f"is written for a DEPVAR of at least "
+                        f"{offset + size}")
+        return ""
 
     def admits(self, constants: int, depvar: int) -> tuple[bool, str]:
         """Can a block of this size feed this routine, and if not, why not?
@@ -187,6 +203,9 @@ class Demand:
         if depvar < self.nstatv:
             return False, (f"the routine subscripts STATEV({self.nstatv}) and "
                            f"this block declares only *DEPVAR {depvar}")
+        grid = self.grid_refusal(depvar)
+        if grid:
+            return False, grid
         if not constants:
             return False, ("this block states no usable constant count, so it "
                            "publishes no material")
@@ -202,7 +221,12 @@ class Demand:
         return {"nprops": self.nprops, "nstatv": self.nstatv,
                 "props_exact": self.props_exact,
                 "statev_exact": self.statev_exact,
-                "evidence": list(self.evidence)}
+                "evidence": list(self.evidence),
+                **({"statev_grids": [list(g) for g in self.statev_grids]}
+                   if self.statev_grids else {})}
+
+
+_STATEV_GRID = re.compile(r"\(\s*NSTATV\s*-\s*(\d+)\s*\)\s*/\s*(\d+)", re.IGNORECASE)
 
 
 def demanded(source_text: str) -> Demand:
@@ -255,11 +279,17 @@ def demanded(source_text: str) -> Demand:
             # An index EXPRESSION: the routine reads PROPS at positions its
             # own literal subscripts do not name.
             variable[key].add(text)
+    grids: list = []
+    for line in _code_lines(source_text):
+        for offset, size in _STATEV_GRID.findall(line):
+            grid = (int(offset), int(size))
+            if grid[1] > 0 and grid not in grids:
+                grids.append(grid)
     return Demand(
         nprops=highest["PROPS"], nstatv=highest["STATEV"],
         props_exact=bool(highest["PROPS"]) and not variable["PROPS"],
         statev_exact=bool(highest["STATEV"]) and not variable["STATEV"],
-        evidence=tuple(evidence[-4:]))
+        evidence=tuple(evidence[-4:]), statev_grids=tuple(grids))
 
 
 # ---------------------------------------------------------------------------
@@ -330,6 +360,14 @@ class DeckMaterial:
     nlgeom: bool = False
     step_periods: tuple[float, ...] = ()
     user_initial_state: bool = False
+    #: B20 rule H4c. The values the deck lists on ``*INITIAL CONDITIONS,
+    #: TYPE=SOLUTION`` (no USER), as the old route already read them, and
+    #: whether it asks for ``TYPE=STRESS, USER`` (the source's SIGINI).
+    initial_state_values: tuple[float, ...] = ()
+    user_initial_stress: bool = False
+    #: B20 rule H4e: ``HYBRID FORMULATION=`` on this block's ``*USER MATERIAL``
+    #: line (TOTAL or INCREMENTAL), as the author wrote it, or "".
+    hybrid_formulation: str = ""
     #: The ``*PARAMETER`` names this block's data lines were written in terms
     #: of and which were resolved from the deck's own definitions, in the order
     #: they appear. Recorded because a constant read through a substitution is
@@ -381,6 +419,11 @@ class DeckMaterial:
                 "nlgeom": self.nlgeom,
                 "step_periods": list(self.step_periods),
                 "user_initial_state": self.user_initial_state,
+                **({"initial_state_values": list(self.initial_state_values)}
+                   if self.initial_state_values else {}),
+                **({"user_initial_stress": True} if self.user_initial_stress else {}),
+                **({"hybrid_formulation": self.hybrid_formulation}
+                   if self.hybrid_formulation else {}),
                 "substituted": list(self.substituted),
                 "unresolved": list(self.unresolved),
                 "unresolved_includes": list(self.unresolved_includes),
@@ -609,7 +652,11 @@ def materials_in(deck: Path, text: Optional[str] = None,
     substituted: list[str] = []
     unresolved: list[str] = []
     unsymm = False
+    hybrid_option = ""
     user_state = False
+    user_stress = False
+    solution_values: list[float] = []
+    solution_taken = False
     mode = ""
     pending_static = False
     element_count = 0
@@ -645,6 +692,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
             found.append(DeckMaterial(
                 deck=Path(deck), name=name, constants=constants, depvar=depvar,
                 values=tuple(published), unsymmetric=unsymm,
+                hybrid_formulation=hybrid_option,
                 elements=tuple(kinds), sections=(where,) if where else (),
                 explicit=where.startswith("line "),
                 substituted=tuple(dict.fromkeys(substituted)),
@@ -675,12 +723,21 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 name = parameters.get("NAME", "")
                 in_material = True
                 depvar, constants, values, unsymm = 0, 0, [], False
+                hybrid_option = ""
                 packed, garbled = [], False
                 broke, data_lines = [], 0
                 substituted, unresolved = [], []
                 mode = ""
             elif keyword == "DEPVAR":
                 mode = "depvar"
+            elif keyword == "USERMATERIAL" and parameters.get(
+                    "TYPE", "MECHANICAL").upper() != "MECHANICAL":
+                # B20 rule H4b: ``TYPE=THERMAL`` (and any other type) belongs
+                # to UMATHT or another user subroutine, never to a UMAT's
+                # PROPS. theCoMMaNDlab Crohns_motility keeps a 6-constant
+                # MECHANICAL block and a 2-constant THERMAL one in one
+                # material; the second used to overwrite the first.
+                mode = "other_user_material"
             elif keyword == "USERMATERIAL":
                 # ``constants=?`` is what three mholla decks publish: a
                 # template the author never filled in. It is not a count, and
@@ -688,13 +745,22 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 # wrote a question mark.
                 constants = _whole(parameters.get("CONSTANTS", ""))
                 unsymm = "UNSYMM" in keyword_match.group(2).upper()
+                hybrid_option = parameters.get("HYBRIDFORMULATION", "").upper()
                 broke, data_lines = [], 0
                 mode = "props"
             elif keyword == "INITIALCONDITIONS":
-                if parameters.get("TYPE", "").upper() == "SOLUTION":
-                    user_state = user_state or (
-                        "USER" in keyword_match.group(2).upper())
+                kind = parameters.get("TYPE", "").upper()
+                asks_user = "USER" in keyword_match.group(2).upper()
                 mode = ""
+                if kind == "SOLUTION":
+                    user_state = user_state or asks_user
+                    # The first card that lists values (as the old route
+                    # reads them); the set name on its first data line is
+                    # not a number and is skipped.
+                    if not asks_user and not solution_taken:
+                        mode = "initial_solution"
+                elif kind == "STRESS" and asks_user:
+                    user_stress = True
             elif keyword == "ELEMENT":
                 mode = "element"
                 element_block_type = parameters.get("TYPE", "").upper()
@@ -714,6 +780,17 @@ def materials_in(deck: Path, text: Optional[str] = None,
             numbers = _numbers(line)
             if len(numbers) >= 2:
                 periods.append(numbers[1])
+            continue
+        if mode == "initial_solution":
+            for token in line.split(","):
+                token = token.strip()
+                if not token:
+                    continue
+                try:
+                    solution_values.append(float(token))
+                except ValueError:
+                    continue
+            solution_taken = True
             continue
         if mode == "element":
             head = line.split(",")[0].strip()
@@ -808,6 +885,9 @@ def materials_in(deck: Path, text: Optional[str] = None,
                           if kind.upper() in lowest_label), default=0),
                      steps=steps, step_periods=tuple(periods), nlgeom=nlgeom,
                      user_initial_state=user_state,
+                     hybrid_formulation=material.hybrid_formulation,
+                     initial_state_values=tuple(solution_values),
+                     user_initial_stress=user_stress,
                      substituted=material.substituted,
                      unresolved=material.unresolved,
                      unresolved_includes=material.unresolved_includes,
@@ -1330,7 +1410,9 @@ def pair(source: Path, repository: Path,
     for material in materials:
         ok, why_not = demand.admits(material.constants, material.depvar)
         surplus = ""
-        if not ok and material.constants > demand.nprops and material.depvar >= demand.nstatv:
+        if (not ok and material.constants > demand.nprops
+                and material.depvar >= demand.nstatv
+                and not demand.grid_refusal(material.depvar)):
             # Over-supply is re-admitted on the same naming evidence that
             # re-admits under-supply, and for the same reason: a block in the
             # source's own directory is the author's material even when it

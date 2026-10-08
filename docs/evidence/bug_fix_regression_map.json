@@ -954,6 +954,24 @@
     "tests/test_an_internal_procedure_of_an_unlifted_host_may_not_read_the_host.py::test_an_internal_function_that_reads_only_its_arguments_is_lifted",
     "tests/test_an_internal_procedure_of_an_unlifted_host_may_not_read_the_host.py::test_the_true_end_of_a_host_with_internal_subroutines_is_found"
    ]
+  },
+  {
+   "commit": "f0943eb",
+   "selected_by": "manual",
+   "bug": "The replay driver could not link a source that references Abaqus-internal PTK/SMA routines (Worlthen array_with_two_pixel_z: an undefined reference to geteventseriessliceproperties_, ptkgetdataaccess_, smafloatarraycreatesp_, smafloatarrayaccess_ ...), so the init probe and the routine-level replay never ran for it and the row read primal_disagreed. The routines are now linked to stubs that give them no semantics: one that is entered stops the replay with status 8, and the two array-access functions return the null address.",
+   "tests": [
+    "tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py::test_symbols_that_are_only_linked_let_the_replay_complete",
+    "tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py::test_a_stubbed_routine_that_is_entered_stops_the_run_with_status_8",
+    "tests/test_internal_ptk_and_sma_symbols_are_linked_to_aborting_stubs.py::test_a_source_that_defines_its_own_array_access_gets_no_second_definition"
+   ]
+  },
+  {
+   "commit": "3be31c8",
+   "selected_by": "manual",
+   "bug": "The generated deck's *USER MATERIAL line dropped the HYBRID FORMULATION option the author's deck states (TOTAL on the FGJD viscoelastic decks): the hybrid-element run of the paired deck failed at increment 1 without it. The option is now carried as written and never added when the author's line has none.",
+   "tests": [
+    "tests/test_the_deck_the_author_ran_is_what_is_paired_and_generated.py::test_the_hybrid_formulation_option_is_carried_as_written_and_never_added"
+   ]
   }
  ],
  "excluded": [
@@ -1136,6 +1154,10 @@
   {
    "commit": "f0b0931",
    "reason": "Audit record for 9379aa6. 'refusal', 'refusals' and 'stale' name registry classes and review entries that were replaced; no defect is corrected."
+  },
+  {
+   "commit": "3e09981",
+   "reason": "Part of the new data-file redirect of rule H2 (written before it, in the same batch); 'fixed' in the message is 'fixed-form', the statement layout the wrapped literal has to fit, not a corrected behaviour of shipped code."
   }
  ],
  "changelog_fixed": {

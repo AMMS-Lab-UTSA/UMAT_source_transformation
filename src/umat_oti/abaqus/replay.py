@@ -368,6 +368,88 @@ SUBROUTINE GETRANK(IRANK)
   INTEGER :: IRANK
   IRANK = 0
 END SUBROUTINE GETRANK
+SUBROUTINE PTKSETMESHANDEVENTSERIES
+  ! B20 rule H3. The Abaqus-internal PTK / SMA routines have documented
+  ! interfaces (PtkUtilitySubs.hdr, SMAAspUserArrays.hdr, SMAAspUserSubroutines.hdr)
+  ! and no documented semantics a replay could reproduce, so they are NOT given
+  ! any. A replay that completes with these linked proved that none of the
+  ! routines below was entered, except SMAFloatArrayAccess / SMAIntArrayAccess,
+  ! which return the null address: a pointee read would crash, never read
+  ! invented data. Entering any other one stops the run with status 8.
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL PTKSETMESHANDEVENTSERIES ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END SUBROUTINE PTKSETMESHANDEVENTSERIES
+SUBROUTINE PTKSETEVENTSERIESPROPERTIES
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL PTKSETEVENTSERIESPROPERTIES ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END SUBROUTINE PTKSETEVENTSERIESPROPERTIES
+SUBROUTINE PTKCOMPUTE
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL PTKCOMPUTE ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END SUBROUTINE PTKCOMPUTE
+SUBROUTINE GETEVENTSERIESSLICEPROPERTIES
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL GETEVENTSERIESSLICEPROPERTIES ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END SUBROUTINE GETEVENTSERIESSLICEPROPERTIES
+SUBROUTINE GETEVENTSERIESSLICELG
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL GETEVENTSERIESSLICELG ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END SUBROUTINE GETEVENTSERIESSLICELG
+FUNCTION PTKGETDATAACCESS(CNAME)
+  INTEGER(8) :: PTKGETDATAACCESS
+  CHARACTER(*) :: CNAME
+  PTKGETDATAACCESS = 0_8
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL PTKGETDATAACCESS ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END FUNCTION PTKGETDATAACCESS
+FUNCTION PTKGETNUMINTERSECTEDELEMENTS(CNAME)
+  INTEGER(8) :: PTKGETNUMINTERSECTEDELEMENTS
+  CHARACTER(*) :: CNAME
+  PTKGETNUMINTERSECTEDELEMENTS = 0_8
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL PTKGETNUMINTERSECTEDELEMENTS ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END FUNCTION PTKGETNUMINTERSECTEDELEMENTS
+FUNCTION SMAFLOATARRAYCREATESP(ID)
+  INTEGER(8) :: SMAFLOATARRAYCREATESP
+  INTEGER :: ID
+  SMAFLOATARRAYCREATESP = 0_8
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL SMAFLOATARRAYCREATESP ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END FUNCTION SMAFLOATARRAYCREATESP
+FUNCTION SMAFLOATARRAYCREATEDP(ID)
+  INTEGER(8) :: SMAFLOATARRAYCREATEDP
+  INTEGER :: ID
+  SMAFLOATARRAYCREATEDP = 0_8
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL SMAFLOATARRAYCREATEDP ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END FUNCTION SMAFLOATARRAYCREATEDP
+FUNCTION SMAINTARRAYCREATE(ID)
+  INTEGER(8) :: SMAINTARRAYCREATE
+  INTEGER :: ID
+  SMAINTARRAYCREATE = 0_8
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL SMAINTARRAYCREATE ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END FUNCTION SMAINTARRAYCREATE
+FUNCTION SMAFLOATARRAYACCESS(ID)
+  ! The documented result is "an address that can be associated with a
+  ! Fortran pointer". No array with this ID exists in a replay: the null address.
+  INTEGER(8) :: SMAFLOATARRAYACCESS
+  INTEGER :: ID
+  SMAFLOATARRAYACCESS = 0_8
+END FUNCTION SMAFLOATARRAYACCESS
+FUNCTION SMAINTARRAYACCESS(ID)
+  INTEGER(8) :: SMAINTARRAYACCESS
+  INTEGER :: ID
+  SMAINTARRAYACCESS = 0_8
+END FUNCTION SMAINTARRAYACCESS
+SUBROUTINE SETTABLECOLLECTION
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL SETTABLECOLLECTION ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END SUBROUTINE SETTABLECOLLECTION
+SUBROUTINE GETPARAMETERTABLE
+  WRITE(0,'(A)') 'ABAQUS-INTERNAL GETPARAMETERTABLE ENTERED IN A REPLAY: NO DOCUMENTED SEMANTICS, NONE INVENTED'
+  STOP 8
+END SUBROUTINE GETPARAMETERTABLE
 SUBROUTINE GETSENSORVALUE(SENSORNAME, VALUE)
   ! Abaqus reads a sensor's current value out of the analysis. Five corpus
   ! files carry the author's UAMP amplitude subroutine in the same compilation
@@ -849,6 +931,21 @@ def without_the_authors_program(text: str,
     return "".join(out), tuple(removed)
 
 
+_CPP_INCLUDE = re.compile(r"^(\s*#\s*include\s+)'([^'\n]+)'", re.MULTILINE)
+
+
+def requote_cpp_includes(text: str) -> tuple:
+    """``#include 'f'`` -> ``#include "f"`` for gfortran's preprocessor.
+
+    Returns ``(text, note)``; ``note`` is "" when nothing was changed.
+    """
+    found = _CPP_INCLUDE.findall(text)
+    if not found:
+        return text, ""
+    return (_CPP_INCLUDE.sub(lambda m: f'{m.group(1)}"{m.group(2)}"', text),
+            f"{len(found)} single-quoted #include name(s) double-quoted for gfortran's cpp")
+
+
 def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
                  name: str = "REPLAY", extra: Sequence[Path] = (),
                  flags: Sequence[str] = (), timeout: int = 900,
@@ -887,6 +984,12 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
         # computed -- an output statement with no IOSTAT= assigns nothing --
         # but "the same routine" is the claim this comparison rests on.
         text, silenced = silence_console_writes(text, form)
+        # B20 rule H3b: gfortran's preprocessor takes #include "f" or <f>, not
+        # the single-quoted form ifort's -fpp (the solver's) accepts. Only the
+        # quoting of the file name changes, and only when -cpp was asked for.
+        requoted = ""
+        if "-cpp" in flags:
+            text, requoted = requote_cpp_includes(text)
         without, removed = without_the_authors_program(text, form)
         if quad:
             from umat_oti.corpus_features.drivers import quadify
@@ -896,12 +999,13 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
             cleaned.append(replacement)
             removed_programs.extend(f"{unit.name}:PROGRAM {name}" for name in removed)
             continue
-        if not removed and not silenced:
+        if not removed and not silenced and not requoted:
             cleaned.append(unit)
             continue
         if not removed:
             without = text
-            removed = [f"{len(silenced)} console write(s)"]
+            removed = ([f"{len(silenced)} console write(s)"] if silenced else []) + (
+                [requoted] if requoted else [])
         # Indexed, because two helper files in one bundle can share a name
         # and the second would otherwise overwrite the first's cleaned copy.
         replacement = work_dir / f"noprogram_{index}_{unit.name}"
@@ -947,6 +1051,13 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
         used = "stub: IMPLICIT REAL*16 (quad reference)"
     else:
         used = _install_header(work_dir)
+        # B20 rule H3: the other public headers a source includes
+        # (aba_ptk_enums.inc, PtkUtilitySubs.hdr, SMAAspUserSubroutines.hdr),
+        # in every casing, as the history builds already install them. An
+        # existing file is never overwritten, so an author's own include of
+        # the same name stays the author's.
+        from umat_oti.abaqus.single_call import install_headers
+        install_headers(work_dir)
     includes = [f"-I{work_dir}"]
 
     # Order is load-bearing, not cosmetic. A compiler processes these in the

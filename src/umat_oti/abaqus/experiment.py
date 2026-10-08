@@ -44,7 +44,7 @@ from typing import Any, Callable, Optional, Sequence
 
 from umat_oti.abaqus import time_scale
 from umat_oti.abaqus.coordinate_domain import statements
-from umat_oti.abaqus.elements import geometry_for
+from umat_oti.abaqus.elements import WEDGE_ELEMENTS, geometry_for, with_midside_nodes
 from umat_oti.abaqus.manifest import (LoadingSegment, VerificationManifest,
                                       cohesive_open_and_release, let_time_pass,
                                       off_axis, separate, simple_shear,
@@ -1260,6 +1260,11 @@ def plan(source: Path, repository: Path, name: str = "",
     node_provenance = ""
     if placement.found and placement.coordinate_dependent:
         corners = placement.element.nodes[:geometry.node_count]
+        if geometry.name in WEDGE_ELEMENTS:
+            # B20 H1: a quadratic wedge's midside nodes are the edge
+            # midpoints of the author's six corners.
+            corners = with_midside_nodes(geometry.name,
+                                         placement.element.nodes[:6])
         if len(corners) == geometry.node_count:
             nodes = tuple(corners)
             node_provenance = (
@@ -1310,6 +1315,18 @@ def plan(source: Path, repository: Path, name: str = "",
                                 if material.substituted and material.usable
                                 else "")),
         initial_state_from_user_subroutine=material.user_initial_state,
+        # B20 rule H4c: what the author's deck says the state and the stress
+        # start from, carried as written. Nothing is defaulted.
+        initial_stress_from_user_subroutine=material.user_initial_stress,
+        hybrid_formulation=material.hybrid_formulation,
+        initial_statev=(tuple(material.initial_state_values)
+                        if (material.initial_state_values
+                            and not material.user_initial_state) else ()),
+        initial_statev_provenance=(
+            f"{Path(material.deck).name}: *INITIAL CONDITIONS, TYPE=SOLUTION "
+            f"lists {', '.join(f'{v:g}' for v in material.initial_state_values)}"
+            if (material.initial_state_values
+                and not material.user_initial_state) else ""),
         node_coordinates=nodes,
         node_provenance=node_provenance,
         plane_strain_directions=restraints.everywhere,
@@ -1324,6 +1341,7 @@ def plan(source: Path, repository: Path, name: str = "",
     if frame.known:
         base = replace(base, orientation_axes=frame.axes,
                        orientation_rotation=frame.rotation,
+                       orientation_system=frame.system,
                        orientation_provenance=(
                            f"{Path(material.deck).name}: {frame.provenance}"))
     family = classify(

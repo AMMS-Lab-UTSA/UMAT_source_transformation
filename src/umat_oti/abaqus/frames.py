@@ -259,6 +259,9 @@ POINTS_PER_ELEMENT = {
     "C3D8": 8, "C3D8H": 8, "C3D8R": 1,
     "C3D20": 27, "C3D20H": 27, "C3D20R": 8,
     "C3D4": 1, "C3D4H": 1, "C3D10": 4, "C3D10H": 4,
+    # Wedges (B20 H1): two points through the thickness of the triangle's
+    # centroid for the 6-node element, three by three for the 15-node one.
+    "C3D6": 2, "C3D6H": 2, "C3D15": 9, "C3D15H": 9,
     "CPE4": 4, "CPE4H": 4, "CPE4R": 1, "CPE3": 1, "CPE8": 9, "CPE8R": 4,
     "CPS4": 4, "CPS4R": 1, "CPS3": 1, "CPS8": 9, "CPS8R": 4,
     "CAX4": 4, "CAX4H": 4, "CAX4R": 1, "CAX3": 1, "CAX8": 9, "CAX8R": 4,
