@@ -2425,7 +2425,7 @@ def perturbation_scale(entry: dict) -> float:
     return 1.0
 
 
-def replay_flags(form: str, work_dir: Path) -> tuple[str, ...]:
+def replay_flags(form: str, work_dir: Path, source=None) -> tuple[str, ...]:
     """gfortran flags for replaying a source in the form the triage found it in.
 
     The form is not cosmetic: compiling fixed-form Fortran as free-form turns
@@ -2442,8 +2442,36 @@ def replay_flags(form: str, work_dir: Path) -> tuple[str, ...]:
     passed and gfortran infers each file's form from its suffix -- which is
     what the offline gate has always done, and why it did not hit this.
     """
-    return ("-ffixed-line-length-132", "-ffree-line-length-none",
-            "-std=legacy", "-O2", "-w", f"-J{Path(work_dir)}")
+    flags = ("-ffixed-line-length-132", "-ffree-line-length-none",
+             "-std=legacy", "-O2", "-w", f"-J{Path(work_dir)}")
+    return flags + replay_extension_flags(source)
+
+
+_DIRECTIVE = re.compile(r"^\s*#\s*(include|define|if|ifdef|ifndef|undef|elif|else|endif)\b",
+                        re.MULTILINE)
+_CRAY_POINTER = re.compile(r"^\s*(?:\d+\s+)?POINTER\s*\(\s*\w+\s*,\s*\w+\s*\)",
+                           re.IGNORECASE | re.MULTILINE)
+
+
+def replay_extension_flags(source) -> tuple:
+    """What the solver's compile line does for this text and gfortran does not (B20 H3b).
+
+    ``-cpp`` when the source has a preprocessor directive (Abaqus compiles with
+    ``-fpp``), ``-fcray-pointer`` when it declares a Cray pointer. Nothing is
+    added for a source with neither, so every other replay build is unchanged.
+    """
+    if source is None:
+        return ()
+    try:
+        text = Path(source).read_text(errors="replace")
+    except OSError:
+        return ()
+    extra = []
+    if _DIRECTIVE.search(text):
+        extra.append("-cpp")
+    if _CRAY_POINTER.search(text):
+        extra.append("-fcray-pointer")
+    return tuple(extra)
 
 
 def tangent_verdict(comparison: dict, *, tolerance: float = TANGENT_TOLERANCE,
@@ -5188,7 +5216,7 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
     staging = stage_replay_data(Path(original), work_dir, data_roots)
     outcome["data_files"] = staging.as_dict()
     build = build_replay(Path(original), work_dir, name=manifest.name,
-                         flags=replay_flags(form, work_dir), timeout=timeout)
+                         flags=replay_flags(form, work_dir, original), timeout=timeout)
     outcome["replay_header"] = build.header
     if not build.ok:
         outcome["reason"] = build.reason or "the replay driver did not build"
@@ -5234,7 +5262,7 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
         write_state(record["entry"], quad_dir / STATE_FILE)
         stage_replay_data(Path(original), quad_dir, data_roots)
         qbuild = build_replay(Path(original), quad_dir, name=manifest.name,
-                              flags=replay_flags(form, quad_dir), timeout=timeout, quad=True)
+                              flags=replay_flags(form, quad_dir, original), timeout=timeout, quad=True)
         note: dict[str, Any] = {"status": "unavailable", "reason": qbuild.reason}
         # Vera B10 condition A: every staged include must be the promoted
         # copy, else the reference is mixed-precision and is refused.
@@ -5479,7 +5507,7 @@ def _verify_tangent_at(manifest: VerificationManifest, original: Path,
     work_dir.mkdir(parents=True, exist_ok=True)
     write_state(record["entry"], work_dir / STATE_FILE)
     build = build_replay(Path(original), work_dir, name=manifest.name,
-                         flags=replay_flags(form, work_dir), timeout=timeout)
+                         flags=replay_flags(form, work_dir, original), timeout=timeout)
     outcome["replay_header"] = build.header
     if not build.ok:
         outcome["reason"] = build.reason or "the replay driver did not build"
