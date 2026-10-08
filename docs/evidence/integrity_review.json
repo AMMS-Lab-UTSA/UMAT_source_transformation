@@ -1934,6 +1934,24 @@
      "text": "assert len(silent) == 14, len(silent)"
     }
    ]
+  },
+  "skip:tests/test_the_b20_separate_line_rules.py:<module>:mark.skipif:691820b2": {
+   "verdict": "justified",
+   "reason": "The one skipif guards the A/B test that reads the machine-local pass24 evidence (corpus_run/pass24/results/store_verification.jsonl, 298 records, which is not in the repository). Every other test in the module is self-contained and runs unconditionally; on the machine that produced the evidence the skip does not fire (the A/B ran: 112 of 112 verified rows byte-identical).",
+   "evidence": [
+    {
+     "in": "tests/test_the_b20_separate_line_rules.py",
+     "text": "@pytest.mark.skipif(not PASS24.exists(), reason=\"pass24 evidence is machine-local\")"
+    }
+   ]
+  },
+  "broad_except:tools/d28_compile_sweep.py:one:except Exception:fafe22f7": {
+   "verdict": "justified",
+   "reason": "A sweep over 372 rows must record a row-level failure (a compiler or file error on one source) and carry on to the rest, otherwise one bad source hides the others; the exception text is stored in the row's own result, never swallowed. The script writes no verdict into any store."
+  },
+  "broad_except:tools/d28_compile_sweep2.py:one:except Exception:fafe22f7": {
+   "verdict": "justified",
+   "reason": "A sweep over 372 rows must record a row-level failure (a compiler or file error on one source) and carry on to the rest, otherwise one bad source hides the others; the exception text is stored in the row's own result, never swallowed. The script writes no verdict into any store."
   }
  }
 }
