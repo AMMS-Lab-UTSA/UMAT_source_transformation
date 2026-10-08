@@ -1,5 +1,5 @@
 {
- "_about": "B17 Vera item 2: the discovery cache is partial, so a callee 'not in the repository' is confirmed against the upstream tree at the pinned commit (shallow fetch, read-only, scratch deleted). A call name counts as unpublished in the registry only when it is listed under 'absent' here. Checked 2026-10-07 for the 8 non-library sources the cache-only lookup would have removed from the 242: every callee name is defined upstream (present_upstream), so none of them leaves. MCM-QMUL was removed from the list by a bug (UserVar(..)= read as USE rVar), not by absence. Checked again 2026-10-08 (B18) for every source external_dependency_unavailable on a module or include name: 'present_upstream_names' lists the names the pinned upstream tree does define or contain (an include by file name, a module by its MODULE statement); the registry treats those as published. Names ABSENT upstream (stdlib_kinds, MKL_RCI*, mkl_*.f90, Elmer modules in mrkearden/abaqus_umat) stay unpublished. sourceforge.net/abumpack_svn_r233 is an svn snapshot that cannot be fetched this way: it stays external.",
+ "_about": "B17 Vera item 2: the discovery cache is partial, so a callee 'not in the repository' is confirmed against the upstream tree at the pinned commit (shallow fetch, read-only, scratch deleted). A call name counts as unpublished in the registry only when it is listed under 'absent' here. Checked 2026-10-07 for the 8 non-library sources the cache-only lookup would have removed from the 242: every callee name is defined upstream (present_upstream), so none of them leaves. MCM-QMUL was removed from the list by a bug (UserVar(..)= read as USE rVar), not by absence. Checked again 2026-10-08 (B18) for every source external_dependency_unavailable on a module or include name: 'present_upstream_names' lists the names the pinned upstream tree does define or contain (an include by file name, a module by its MODULE statement); the registry treats those as published. Names ABSENT upstream (stdlib_kinds, MKL_RCI*, mkl_*.f90, Elmer modules in mrkearden/abaqus_umat) stay unpublished. sourceforge.net/abumpack_svn_r233 is an svn snapshot that cannot be fetched this way: it stays external. B18 amendment 3: a module/include name counts as unpublished only if listed in 'absent_names_confirmed'; MKL names are a library and never count.",
  "checked": {
   "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for": {
    "repository": "AlexSTA1993/numerical_geolab",
@@ -253,6 +253,150 @@
    "present_upstream_names": {
     "module IF_Prec_Core": "ufc_core/L1_IF/Precision/IF_Prec_Core.f90",
     "module IF_Err_Brg": "ufc_core/L1_IF/Error/IF_Err_Brg.f90"
+   },
+   "absent_names_confirmed": []
+  },
+  "lbrassart__chemo-vp-efftemp/UMAT.for": {
+   "repository": "lbrassart/chemo-vp-efftemp",
+   "commit": "71f81d939b12e39461de7b79f6252ab0ac3cd33c",
+   "absent": [],
+   "present_upstream": {},
+   "absent_names_confirmed": [
+    "data file Temp_water_distrib.txt"
+   ],
+   "note": "upstream tree (9 files) holds no Temp_water_distrib.txt; Extract_mn_w.py writes it as an output. Absence confirmed; the source's external state rests on the unpublished input data, not on a callee, and is unchanged."
+  },
+  "sourceforge.net__abumpack_svn_r233/abcg1.f": {
+   "repository": "sourceforge.net/abumpack_svn_r233",
+   "commit": "svn:r233",
+   "absent": [],
+   "present_upstream": {},
+   "absent_names_confirmed": [],
+   "note": "svn snapshot, cannot be fetched this way: absence of CG_CPP, CG_RGO2 and the modules is UNCONFIRMED, so under amendment 3 the source stays in the population."
+  },
+  "Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/plasticity_xx15.F90": {
+   "repository": "Batmanabcdefg/ParaFEM-lite",
+   "commit": "bf353d506407cec184d3edfee48ef08caabc3e9a",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "include mpif.h"
+   ]
+  },
+  "CriticalSoilModels__incremental-driver/src/elastic.f90": {
+   "repository": "CriticalSoilModels/incremental-driver",
+   "commit": "0b2c3c9044b17fc2f7424bb86592e0a8e3e19b13",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "module stdlib_kinds"
+   ]
+  },
+  "ElmerCSC__elmerfem/fem/src/modules/ElasticSolve.F90": {
+   "repository": "ElmerCSC/elmerfem",
+   "commit": "8ae4a05b8d0d048772b1730f0b234c842725a53f",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module DefUtils": "fem/src/DefUtils.F90",
+    "module StressLocal": "fem/src/Stress.F90",
+    "module Adaptive": "fem/src/Adaptive.F90",
+    "module MaterialModels": "fem/src/MaterialModels.F90",
+    "module Constitutive": "fem/src/Constitutive.F90",
+    "module ModelLumping": "fem/src/ModelLumping.F90",
+    "module MainUtils": "fem/src/MainUtils.F90",
+    "module Types": "fem/src/Types.F90",
+    "module Integration": "fem/src/Integration.F90",
+    "module LinearAlgebra": "fem/src/LinearAlgebra.F90"
+   },
+   "absent_names_confirmed": []
+  },
+  "Worlthen__20220314-abqus-simulation/abaqus/original/array_with_two_pixel_z.for": {
+   "repository": "Worlthen/20220314-abqus-simulation",
+   "commit": "f16335015561428046ea4e21f71827382894b2e8",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "include PtkUtilitySubs.hdr"
+   ]
+  },
+  "brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90": {
+   "repository": "brizzer/elmerfem_piezo",
+   "commit": "9910affa795afecc77a08cfce20d79065183a22d",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module DefUtils": "fem/src/DefUtils.F90",
+    "module Adaptive": "fem/src/Adaptive.F90",
+    "module MaterialModels": "fem/src/MaterialModels.F90",
+    "module StressLocal": "fem/src/Stress.F90",
+    "module MainUtils": "fem/src/MainUtils.F90",
+    "module Types": "fem/src/Types.F90",
+    "module Integration": "fem/src/Integration.F90",
+    "module LinearAlgebra": "fem/src/LinearAlgebra.F90"
+   },
+   "absent_names_confirmed": []
+  },
+  "core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90": {
+   "repository": "core-marine-dev/elmerfem",
+   "commit": "4cc5d87035abeb760ab42d508e96ee2e60687de2",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module DefUtils": "fem/src/DefUtils.F90",
+    "module Adaptive": "fem/src/Adaptive.F90",
+    "module MaterialModels": "fem/src/MaterialModels.F90",
+    "module StressLocal": "fem/src/Stress.F90",
+    "module Types": "fem/src/Types.F90",
+    "module Integration": "fem/src/Integration.F90",
+    "module LinearAlgebra": "fem/src/LinearAlgebra.F90"
+   },
+   "absent_names_confirmed": []
+  },
+  "mrkearden__abaqus_umat/PlasticSolve.F90": {
+   "repository": "mrkearden/abaqus_umat",
+   "commit": "a17b506af8569ea7ce7b76875a091c8f86b82939",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "module DefUtils",
+    "module Adaptive",
+    "module MaterialModels",
+    "module StressLocal",
+    "module Types",
+    "module Integration",
+    "module LinearAlgebra"
+   ]
+  },
+  "zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90": {
+   "repository": "zning8251-jpg/ufc-fem-kernel",
+   "commit": "d6097bf413b7ef90a1e065976590c54b44c47a8e",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module IF_Const": "tests/mock_modules.f90",
+    "module IF_Prec_Core": "ufc_core/L1_IF/Precision/IF_Prec_Core.f90"
+   },
+   "absent_names_confirmed": [
+    "module PH_Mat_Eval"
+   ]
+  },
+  "zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90": {
+   "repository": "zning8251-jpg/ufc-fem-kernel",
+   "commit": "d6097bf413b7ef90a1e065976590c54b44c47a8e",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module AP_Inp_Script": "ufc_core/L6_AP/Input/Script/AP_Inp_Script.f90",
+    "module AP_Inp_Param": "ufc_core/L6_AP/Input/Parser/AP_Inp_Param.f90",
+    "module AP_Inp_Def": "ufc_core/L6_AP/Input/AP_Inp_Def.f90",
+    "module IF_Err_Brg": "ufc_core/L1_IF/Error/IF_Err_Brg.f90",
+    "module IF_Prec_Core": "ufc_core/L1_IF/Precision/IF_Prec_Core.f90",
+    "module AP_Brg_L3": "ufc_core/L6_AP/Bridge/AP_Brg_L3.f90"
    },
    "absent_names_confirmed": []
   }
