@@ -164,6 +164,7 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
         if indirect_pointed:
             probed.write_text(indirect_text, encoding="utf-8")
             for name, body in extra_files.items():
+                (work_dir / name).parent.mkdir(parents=True, exist_ok=True)
                 (work_dir / name).write_text(body, encoding="utf-8")
             report["data_files_pointed_indirect"] = indirect_pointed
 
