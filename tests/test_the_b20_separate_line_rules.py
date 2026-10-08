@@ -379,7 +379,7 @@ def test_the_relabel_rule_text_is_carried_in_the_code():
 
 # ---- A/B on the stored pass24 evidence ----------------------------------------
 
-PASS24 = Path("/home/ammslab3/softwarex_work/corpus_run/pass24/results/store_verification.jsonl")
+PASS24 = D.PASS24 / "results" / "store_verification.jsonl"
 
 
 @pytest.mark.skipif(not PASS24.exists(), reason="pass24 evidence is machine-local")
