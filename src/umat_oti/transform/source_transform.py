@@ -8769,6 +8769,7 @@ def _semantic_checks(
             transformed_source,
             config,
             last_stress_update_line=last_stress_update_line,
+            extraction_line=ddsdde_output_line,
         ),
         # The companion question. The check above asks whether the old writes
         # to DDSDDE are gone; this one asks whether anything still reads the
@@ -9777,6 +9778,7 @@ def _old_ddsdde_assignments_disabled(
     config: dict[str, Any],
     *,
     last_stress_update_line: int = 0,
+    extraction_line: int = 0,
 ) -> bool:
     assignments = _dict(config.get("analysis")).get("assignments_to_ddsdde", []) if config else []
     regions = _regions_from_config(config) if config else {}
@@ -9791,15 +9793,33 @@ def _old_ddsdde_assignments_disabled(
     }
     if not expected_disabled:
         return True
-    active = [
-        (line_number, _canonical_fortran_text(line))
-        for line_number, line in _active_lines_with_numbers(transformed_source)
-    ]
+    # Only the selected routine's own statements; an assignment
+    # to a dummy that happens to be called DDSDDE in another routine of the file is
+    # that routine's variable.
+    raw_active = _active_lines_in_selected_subroutine(
+        _active_lines_with_numbers(transformed_source), _selected_umat(config))
+    active = [(line_number, _canonical_fortran_text(line)) for line_number, line in raw_active]
     if last_stress_update_line > 0:
+        window_start = last_stress_update_line
+        # An assignment that lies BEFORE the full-array DDSDDE extraction, on a stretch no
+        # statement can leave early, is overwritten by it: the guard is about a write that
+        # survives the extraction. It fails closed on every way out the routine has -- RETURN,
+        # any GO TO (plain, computed, assigned), ENTRY, an arithmetic IF, an alternate RETURN
+        # label, an ERR=/END=/EOR= branch -- and on STOP, which costs nothing to refuse.
+        if extraction_line > last_stress_update_line:
+            leaves = re.compile(
+                r"\b(?:RETURN|GO\s*TO|ENTRY|STOP)\b"
+                r"|^\s*(?:\d+\s+)?(?:ELSE\s*)?IF\s*\(.*\)\s*\d+\s*,\s*\d+\s*,\s*\d+\s*$"
+                r"|\b(?:ERR|END|EOR)\s*=\s*\d+"
+                r"|^\s*(?:\d+\s+)?CALL\b.*,\s*\*\s*\d+",
+                re.IGNORECASE)
+            if not any(leaves.search(line) for line_number, line in raw_active
+                       if last_stress_update_line <= line_number < extraction_line):
+                window_start = extraction_line
         active = [
             (line_number, text)
             for line_number, text in active
-            if line_number >= last_stress_update_line
+            if line_number >= window_start
         ]
     # No dominance escape hatch. An earlier version accepted a surviving
     # assignment when the OTI extraction appeared to dominate every RETURN,
