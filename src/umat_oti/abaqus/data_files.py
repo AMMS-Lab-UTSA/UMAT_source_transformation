@@ -599,7 +599,12 @@ def redirect_indirect(text: str, directory: Path, *, staged: Sequence[str] = (),
                 continue
             body, count = substitute(body)
             if count:
-                extra[path.name] = body
+                # under every casing the sources include it by: the file
+                # system is case-sensitive and one source includes
+                # 'param_umat.inc' in one routine and 'PARAM_UMAT.INC' in
+                # another
+                for variant in {path.name, path.name.lower(), path.name.upper()}:
+                    extra[variant] = body
         if count:
             pointed[opened.name] = target
     return text, extra, pointed
