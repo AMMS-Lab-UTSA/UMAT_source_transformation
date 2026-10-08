@@ -584,11 +584,24 @@ def redirect_indirect(text: str, directory: Path, *, staged: Sequence[str] = (),
         if not opened.indirect or not opened.literal or opened.name not in allowed:
             continue
         target = "../" * 10 + str(directory / opened.name).lstrip("/")
-        pattern = re.compile(
-            r"(\bPARAMETER\s*\([^)]*?\b" + r"[A-Za-z_]\w*\s*=\s*)(['\"])"
-            + re.escape(opened.literal) + r"\2", re.IGNORECASE)
+        quoted = re.compile(r"(PARAMETER\s*\(.*?=\s*)(['\"])" + re.escape(opened.literal) + r"\2",
+                            re.IGNORECASE)
+
         def substitute(body: str):
-            return pattern.subn(lambda m: f"{m.group(1)}'{target}'", body, count=1)
+            # Line by line, and wrapped by the same concatenation the literal
+            # OPEN names use, because the staged path does not fit in what is
+            # left of a fixed-form statement.
+            lines = body.splitlines()
+            form = "free" if any(line.rstrip().endswith("&") for line in lines) else "fixed"
+            for index, line in enumerate(lines):
+                hit = quoted.search(line)
+                if not hit:
+                    continue
+                literal_text = f"{hit.group(2)}{opened.literal}{hit.group(2)}"
+                rewritten = _rewrite_line(line, literal_text, target, form)
+                lines[index:index + 1] = rewritten
+                return "\n".join(lines) + ("\n" if body.endswith("\n") else ""), 1
+            return body, 0
         if not opened.defined_in:
             text, count = substitute(text)
         else:

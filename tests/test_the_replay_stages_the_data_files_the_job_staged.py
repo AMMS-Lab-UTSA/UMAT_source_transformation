@@ -123,7 +123,8 @@ def test_a_name_held_in_a_parameter_is_found_staged_and_pointed_at(tmp_path):
     new_text, extra, pointed = redirect_indirect(text, job, staged=["fibers.inp"],
                                                  include_dirs=[repo])
     literal = pointed["fibers.inp"]
-    assert "param_umat.inc" in extra and literal in extra["param_umat.inc"]
+    assert "param_umat.inc" in extra
+    assert literal in extra["param_umat.inc"].replace("'//\n     &'", "")   # wrapped by concatenation
     assert extra["PARAM_UMAT.INC"] == extra["param_umat.inc"]       # every casing the sources use
     scratch = "/tmp/someuser_original_12345"
     assert os.path.normpath(f"{scratch}/{literal}") == str((job / "fibers.inp").resolve())
@@ -141,3 +142,27 @@ def test_a_parameter_with_no_matching_file_is_not_pointed_at(tmp_path):
     new_text, extra, pointed = redirect_indirect(text, tmp_path / "job", staged=[],
                                                  include_dirs=[repo])
     assert pointed == {} and extra == {} and new_text == text
+
+
+@pytest.mark.skipif(shutil.which("gfortran") is None, reason="needs gfortran")
+def test_a_long_staged_path_is_wrapped_and_still_evaluates_to_the_path(tmp_path):
+    import subprocess
+    repo = tmp_path / "owner__repo"
+    repo.mkdir()
+    (repo / "umat.for").write_text(JPS)
+    (repo / "param_umat.inc").write_text(
+        "      CHARACTER(256) DIR1\n      PARAMETER (DIR1='fibers.inp')\n")
+    (repo / "fibers.inp").write_text("1, 1.d0, 0.d0, 0.d0\n")
+    job = tmp_path / ("a_deliberately_long_directory_name_" * 3) / "job"
+    job.mkdir(parents=True)
+    text = (repo / "umat.for").read_text()
+    stage(repo / "umat.for", job, roots=[repo])
+    _, extra, pointed = redirect_indirect(text, job, staged=["fibers.inp"], include_dirs=[repo])
+    include = extra["param_umat.inc"]
+    assert max(len(line) for line in include.splitlines()) <= 72, include     # fixed-form safe
+    (tmp_path / "param_umat.inc").write_text(include)
+    (tmp_path / "t.f").write_text("      PROGRAM T\n      INCLUDE 'param_umat.inc'\n      WRITE(*,'(A)') TRIM(DIR1)\n      END\n")
+    done = subprocess.run(["gfortran", "-w", "t.f", "-o", "t"], cwd=tmp_path, capture_output=True, text=True)
+    assert done.returncode == 0, done.stderr
+    out = subprocess.run(["./t"], cwd=tmp_path, capture_output=True, text=True).stdout.strip()
+    assert out == pointed["fibers.inp"]
