@@ -364,6 +364,12 @@ def _definitions_in(path: Path) -> list[RoutineDefinition]:
             raw = expand_fixed_form_tabs(raw)
         if fixed and len(raw) > 5 and raw[5] not in {" ", "0"}:
             continue  # continuation line
+        if open_definition is not None and _END_RE.match(raw):
+            # an "END FUNCTION name" line is the end of the function, not the start of one
+            name, kind, start = open_definition
+            found.append(_make_definition(name, kind, path, start, index, lines, fixed))
+            open_definition = None
+            continue
         match = _DEF_RE.match(raw)
         if match:
             if open_definition is not None:
@@ -374,10 +380,6 @@ def _definitions_in(path: Path) -> list[RoutineDefinition]:
             kind = "subroutine" if match.group("kind") else "function"
             open_definition = (name, kind, index)
             continue
-        if open_definition is not None and _END_RE.match(raw):
-            name, kind, start = open_definition
-            found.append(_make_definition(name, kind, path, start, index, lines, fixed))
-            open_definition = None
     if open_definition is not None:
         name, kind, start = open_definition
         found.append(_make_definition(name, kind, path, start, len(lines), lines, fixed))

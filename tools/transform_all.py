@@ -860,7 +860,7 @@ def _wants_published_companions(reason: str) -> bool:
 
 _USE_NAME = re.compile(r"^\s*use\b\s*(?:,\s*(?:non_)?intrinsic\s*)?(?:::)?\s*([A-Za-z_]\w*)",
                        re.IGNORECASE | re.MULTILINE)
-_MODULE_NAME = re.compile(r"^\s*module\s+(?!procedure\b)([A-Za-z_]\w*)\s*$", re.IGNORECASE | re.MULTILINE)
+_MODULE_NAME = re.compile(r"^\s*module\s+(?!procedure\b)([A-Za-z_]\w*)\s*(?:!.*)?$", re.IGNORECASE | re.MULTILINE)
 _INTRINSIC_MODULES = {"ISO_C_BINDING", "ISO_FORTRAN_ENV", "IEEE_ARITHMETIC", "IEEE_EXCEPTIONS",
                       "IEEE_FEATURES", "OMP_LIB", "OMP_LIB_KINDS", "MPI"}
 
