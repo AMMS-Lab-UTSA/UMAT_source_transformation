@@ -1021,6 +1021,14 @@
   {
    "commit": "81dd0c1",
    "reason": "The record entry for 9626bdc itself: 'fix' and 'regression' in its message name the record being edited, not a corrected behaviour."
+  },
+  {
+   "commit": "9379aa6",
+   "reason": "Corpus freeze at pass24. 'refusals' names the registry's refusal classes whose pinned counts moved with the population (419 sources); no defect is corrected."
+  },
+  {
+   "commit": "f0b0931",
+   "reason": "Audit record for 9379aa6. 'refusal', 'refusals' and 'stale' name registry classes and review entries that were replaced; no defect is corrected."
   }
  ],
  "changelog_fixed": {
