@@ -346,6 +346,14 @@ class DeckMaterial:
     #: repository. This is where a refusal points: the author deferred the
     #: numbers to a file nobody committed.
     unresolved_includes: tuple[str, ...] = ()
+    #: The measured Abaqus card rules this block's data lines break (Abaqus/
+    #: Standard 2021, corpus_campaign/batches/B8/ada/props_card_probe/
+    #: measured_results.txt): a data line of more than eight values, a blank
+    #: line between data lines, and more data lines than CONSTANTS needs. A
+    #: block that breaks any of them is not read as a card deck at all: it is
+    #: neither zero-filled nor packed, it publishes no material vector, and
+    #: ``usable`` is False.
+    unreadable: tuple[str, ...] = ()
 
     @property
     def usable(self) -> bool:
@@ -359,6 +367,7 @@ class DeckMaterial:
         numbers asks this rather than reading ``values``.
         """
         return bool(self.values) and not self.unresolved \
+            and not self.unreadable \
             and len(self.values) == (self.constants or len(self.values))
 
     def as_dict(self) -> dict:
@@ -375,6 +384,7 @@ class DeckMaterial:
                 "substituted": list(self.substituted),
                 "unresolved": list(self.unresolved),
                 "unresolved_includes": list(self.unresolved_includes),
+                "unreadable": list(self.unreadable),
                 "usable": self.usable}
 
 
@@ -590,6 +600,12 @@ def materials_in(deck: Path, text: Optional[str] = None,
     values: list[float] = []
     packed: list[float] = []
     garbled = False
+    #: Measured card rules broken by this block's data lines (see
+    #: ``DeckMaterial.unreadable``), the data lines read so far, and whether a
+    #: blank line has been seen since the last of them.
+    broke: list[str] = []
+    data_lines = 0
+    blank_after_data = False
     substituted: list[str] = []
     unresolved: list[str] = []
     unsymm = False
@@ -623,6 +639,9 @@ def materials_in(deck: Path, text: Optional[str] = None,
             published = (packed if garbled else values)[:constants]
             if published and not unresolved and not garbled and len(published) < constants:
                 published = published + [0.0] * (constants - len(published))
+            # A block that breaks a measured card rule keeps the numbers as
+            # they were read (like a garbled block) and says it is
+            # ``unreadable``; ``usable`` is what callers must ask.
             found.append(DeckMaterial(
                 deck=Path(deck), name=name, constants=constants, depvar=depvar,
                 values=tuple(published), unsymmetric=unsymm,
@@ -630,23 +649,34 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 explicit=where.startswith("line "),
                 substituted=tuple(dict.fromkeys(substituted)),
                 unresolved=tuple(dict.fromkeys(unresolved)),
-                unresolved_includes=unresolved_includes))
+                unresolved_includes=unresolved_includes,
+                unreadable=tuple(broke)))
 
     for raw in lines:
         line = raw.rstrip()
-        if line.lstrip().startswith("**") or not line.strip():
+        if line.lstrip().startswith("**"):
+            continue
+        if not line.strip():
+            # A blank line is not a comment: between two data lines of a
+            # *USER MATERIAL block Abaqus 2021 stops with an error
+            # (measured_results.txt, M_blank_only and I_comment_between; a
+            # comment line alone, L_comment_only, is read through).
+            if mode == "props" and data_lines:
+                blank_after_data = True
             continue
         keyword_match = _KEYWORD.match(line)
         if keyword_match:
             keyword = "".join(keyword_match.group(1).split()).upper()
             parameters = _parameters(keyword_match.group(2))
             pending_static = False
+            blank_after_data = False
             if keyword == "MATERIAL":
                 flush()
                 name = parameters.get("NAME", "")
                 in_material = True
                 depvar, constants, values, unsymm = 0, 0, [], False
                 packed, garbled = [], False
+                broke, data_lines = [], 0
                 substituted, unresolved = [], []
                 mode = ""
             elif keyword == "DEPVAR":
@@ -658,6 +688,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 # wrote a question mark.
                 constants = _whole(parameters.get("CONSTANTS", ""))
                 unsymm = "UNSYMM" in keyword_match.group(2).upper()
+                broke, data_lines = [], 0
                 mode = "props"
             elif keyword == "INITIALCONDITIONS":
                 if parameters.get("TYPE", "").upper() == "SOLUTION":
@@ -735,6 +766,18 @@ def materials_in(deck: Path, text: Optional[str] = None,
                     garbled = True
             if len(card) > _CARD:
                 garbled = True
+            data_lines += 1
+            items = sum(1 for piece in resolved.split(",") if piece.strip())
+            if items > _CARD:
+                broke.append(f"a data line of {items} values (Abaqus reads "
+                             f"a card of eight)")
+            if blank_after_data:
+                broke.append("a blank line between data lines")
+                blank_after_data = False
+            needed = -(-constants // _CARD) if constants else 0
+            if needed and data_lines == needed + 1:
+                broke.append(f"more data lines than CONSTANTS={constants} "
+                             f"needs ({needed})")
             packed.extend(card)
             # Each data line is a card of eight: Abaqus fills a short line
             # with zeros, and a block that stops short of CONSTANTS= with
@@ -767,7 +810,8 @@ def materials_in(deck: Path, text: Optional[str] = None,
                      user_initial_state=user_state,
                      substituted=material.substituted,
                      unresolved=material.unresolved,
-                     unresolved_includes=material.unresolved_includes)
+                     unresolved_includes=material.unresolved_includes,
+                     unreadable=material.unreadable)
         for material in found)
 
 
@@ -1413,6 +1457,12 @@ def pair(source: Path, repository: Path,
         # repository whose only block is unresolved has to say so rather than
         # report that nothing was found.
         has_numbers = 1 if material.usable else 0
+        if not has_numbers and material.unreadable:
+            reasons.append(
+                f"{material.deck.name} declares {material.constants} "
+                f"constants but its data lines break Abaqus's card rules "
+                f"({'; '.join(dict.fromkeys(material.unreadable))}), so no "
+                f"vector is read from it")
         if not has_numbers and material.unresolved:
             reasons.append(
                 f"{material.deck.name} declares {material.constants} "

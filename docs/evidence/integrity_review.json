@@ -1738,6 +1738,16 @@
   "mock:tests/test_the_front_door_names_the_code_that_runs.py:test_a_stale_command_on_path_is_the_only_warning_so_doctor_says_first_that_all_else_is_fine:monkeypatch.setattr:aa212375": {
    "verdict": "justified",
    "reason": "Makes shutil.which find every tool except a fake older umat-oti, so the only warning is the one about the command on PATH; doctor's own printing and exit code are real."
+  },
+  "skip:tests/test_f2eval_second_order_coefficients.py:<module>:mark.skipif:8e9a4e8f": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which it needs to compile the generated order-2 OTI module and run x**y. CI installs gfortran, so it runs there. It tests x**y only (stated in the commit message that ports it).",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
   }
  }
 }

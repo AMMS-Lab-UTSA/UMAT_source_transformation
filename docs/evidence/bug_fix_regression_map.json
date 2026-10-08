@@ -736,6 +736,34 @@
     "tests/test_check_round_three_the_six_checks_the_constants_the_one_thing_and_the_abaqus_command.py::test_a_stress_value_count_mismatch_is_not_reported_as_missing_numbers",
     "tests/test_check_round_three_the_six_checks_the_constants_the_one_thing_and_the_abaqus_command.py::test_the_umat_verified_with_another_deck_is_amber_not_red_and_says_which_deck"
    ]
+  },
+  {
+   "commit": "dfb6ba7",
+   "selected_by": "manual",
+   "bug": "The generated second-order F2EVAL (two-argument OTI functions such as x**y) divided every second-order term by 1 because the shim's get_deriv_factor returned 1.0, so the pure e1e1 and e2e2 coefficients came out doubled; the divisor now comes from oti_directions.deriv_factor. Only x**y is tested.",
+   "tests": [
+    "tests/test_f2eval_second_order_coefficients.py::test_pow_oo_second_order_coefficients",
+    "tests/test_f2eval_second_order_coefficients.py::test_canary_old_divisor_is_detected"
+   ]
+  },
+  {
+   "commit": "1f94297",
+   "selected_by": "manual",
+   "bug": "The deck reader published a material vector from a *USER MATERIAL block whose data lines Abaqus 2021 does not read as written (a blank line between data lines is an error, more data lines than CONSTANTS needs is an error, and a line of more than eight values is not a card); such a block is now unusable and the pairing says which rule it broke. No pairing of the 405 sources changes.",
+   "tests": [
+    "tests/test_a_user_material_block_that_breaks_the_measured_card_rules_is_unusable.py::test_the_measured_layouts",
+    "tests/test_a_user_material_block_that_breaks_the_measured_card_rules_is_unusable.py::test_a_pairing_says_why_the_authors_block_is_not_read"
+   ]
+  },
+  {
+   "commit": "054f8e3",
+   "selected_by": "manual",
+   "bug": "The registry decided external_dependency_unavailable from USE and INCLUDE lines only, read from a stored audit: an external CALL to a routine no file of the repository defines left a source counted as ours, and an include that was commented out or an Abaqus-supplied header counted as missing. It now applies the rule 'a callee that is not in the repository and not an Abaqus utility is external; one that is in the repository is resolved' to every source.",
+   "tests": [
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_callee_in_a_sibling_file_is_resolved_and_the_same_source_without_it_is_external",
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_commented_out_include_is_not_a_dependency",
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_the_registry_moves_a_transformed_but_unrunnable_source_and_leaves_run_states_alone"
+   ]
   }
  ],
  "excluded": [
