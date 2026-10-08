@@ -75,6 +75,10 @@ the council route; `TYPE=STRESS, USER` is carried as `*INITIAL CONDITIONS, TYPE=
 `TYPE=SOLUTION, USER` is. Nothing is defaulted: an absent card stays absent.
 (d) `*ORIENTATION` keeps the author's SYSTEM keyword (RECTANGULAR, CYLINDRICAL, SPHERICAL) with the author's data
 lines; the generator no longer hard-codes RECTANGULAR.
+(e) `*USER MATERIAL` options. The paired deck's `HYBRID FORMULATION = TOTAL|INCREMENTAL` on the `*USER MATERIAL`
+line of the material is carried into the generated `*USER MATERIAL` line (added after the single-source run of
+the hybrid FGJD UMAT on cubeUH.inp failed at increment 1 without it: the generated line dropped the option the
+author's deck states). Nothing is added when the author's line has none.
 Canaries: DEPVAR 10 refused / 11 accepted for `/7`; a two-block material yields the six-constant block; a deck with
 SOLUTION values and with STRESS,USER regenerates them; CYLINDRICAL survives.
 A/B: pairing and generated decks of every source before/after: only sources with the construct differ.
