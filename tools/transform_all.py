@@ -304,9 +304,23 @@ def _ntens_of(row: dict[str, str], source: Optional[Path] = None,
     convergence failure does not.
 
     So it is read from the source, by the same function the verification uses
-    to choose the element. The two must agree or the comparison is between two
-    different questions, and reading them from one place is how they do.
+    to choose the element (``experiment.deck_element``, B17 rule G2b). The two
+    must agree or the comparison is between two different questions, and
+    reading them from one place is how they do. The older reading (the
+    proposal's pairing) is kept as the fallback where the planner names no
+    element.
     """
+    if source is not None and cache_root is not None:
+        # B17 rule G2b: the element the VERIFICATION drives (the experiment
+        # planner's deck and settle), read through the one function both use.
+        try:
+            from umat_oti.abaqus.experiment import ntens_of_deck_element
+            repository = Path(cache_root) / Path(source).relative_to(cache_root).parts[0]
+            ntens, why = ntens_of_deck_element(Path(source), repository)
+            if ntens:
+                return ntens, f"experiment planner: {why}"
+        except Exception:                          # noqa: BLE001 - fall through
+            pass
     if source is not None:
         try:
             from umat_oti.abaqus.elements import geometry_for

@@ -636,11 +636,9 @@ def prepare_original_source(source: Path, work: Path) -> tuple:
 
 
 def stub_block(source_text: str) -> str:
-    from umat_oti.abaqus.replay import _replay_utility_stubs
+    from umat_oti.abaqus.replay import utility_stub_block
     from umat_oti.abaqus.single_call import drop_stubs_defined_by
-    from umat_oti.validation.actual_umat_higher_order_generic import _abaqus_utility_stubs
-    stubs, _ = drop_stubs_defined_by(_abaqus_utility_stubs() + _replay_utility_stubs(),
-                                     source_text)
+    stubs, _ = drop_stubs_defined_by(utility_stub_block(), source_text)
     return stubs
 
 

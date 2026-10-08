@@ -275,12 +275,22 @@ def driver_source(name: str = "REPLAY", *, initialise_state: bool = False) -> st
     say so, because whether that call can link is a property of the source
     being compiled beside the driver, not of the driver.
     """
+    return _DRIVER % {"state": STATE_FILE, "name": name.upper()[:60],
+                      "sdvini": _SDVINI_CALL if initialise_state else "",
+                      "stubs": utility_stub_block()}
+
+
+def utility_stub_block() -> str:
+    """Every Abaqus-utility stub the replay drivers link, each defined once.
+
+    The shared block (``_abaqus_utility_stubs``) carries SPRIND, SPRINC and SINV
+    (B17 G2c); the replay block carries the rest. The two are concatenated
+    wherever a replay driver is built.
+    """
     from umat_oti.validation.actual_umat_higher_order_generic import (
         _abaqus_utility_stubs)
 
-    return _DRIVER % {"state": STATE_FILE, "name": name.upper()[:60],
-                      "sdvini": _SDVINI_CALL if initialise_state else "",
-                      "stubs": _abaqus_utility_stubs() + _replay_utility_stubs()}
+    return _abaqus_utility_stubs() + _replay_utility_stubs()
 
 
 def _replay_utility_stubs() -> str:
@@ -352,6 +362,12 @@ SUBROUTINE ROTSIG(S, R, OUTPUT, LSTR, NDI, NSHR)
   IF (NSHR >= 2) OUTPUT(NDI+2) = TR(1,3)/HALFSH
   IF (NSHR >= 3) OUTPUT(NDI+3) = TR(2,3)/HALFSH
 END SUBROUTINE ROTSIG
+SUBROUTINE GETRANK(IRANK)
+  ! The MPI rank of this process. The replay is one process: rank 0, which is
+  ! also what the solver reports for a single-process Standard analysis.
+  INTEGER :: IRANK
+  IRANK = 0
+END SUBROUTINE GETRANK
 SUBROUTINE GETSENSORVALUE(SENSORNAME, VALUE)
   ! Abaqus reads a sensor's current value out of the analysis. Five corpus
   ! files carry the author's UAMP amplitude subroutine in the same compilation
@@ -787,7 +803,7 @@ def without_the_authors_program(text: str,
     out: list[str] = []
     removed: list[str] = []
     inside = False
-    open_subprogram = False
+    open_subprogram = 0     # depth: an internal procedure after CONTAINS nests
     for line in text.splitlines(keepends=True):
         stripped = line.rstrip("\n")
         # A preprocessor line is not Fortran and must survive untouched: it is
@@ -806,12 +822,12 @@ def without_the_authors_program(text: str,
                 out.append(comment(line, " (the replay supplies its own PROGRAM)"))
                 continue
             if _SUBPROGRAM_START.match(stripped):
-                open_subprogram = True
+                open_subprogram += 1
                 out.append(line)
                 continue
             if _PROGRAM_END.match(stripped):
                 if open_subprogram:
-                    open_subprogram = False
+                    open_subprogram -= 1
                     out.append(line)
                     continue
                 # An END with no subprogram open closes an IMPLICIT main

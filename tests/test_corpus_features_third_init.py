@@ -94,9 +94,13 @@ def _abaqus_side(tmp_path, name):
 def test_abaqus_side_flags_what_zero_vs_snan_missed(tmp_path, name):
     check = _abaqus_side(tmp_path, name)
     assert check["established"], check
-    assert check["init_variants"] == ["zero", "snan", "inf"]
-    assert 1 in check["undefined"]["STRESS"], check["undefined"]
-    assert any(d["init_variant"] == "inf" for d in check["undefined"]["details"])
+    # B17 G2a: the ifort set the solver is built with decides; the gfortran
+    # zero/snan/inf set (these toys were made for) is the recorded secondary.
+    gnu = check if check.get("decided_by") == "gfortran" else check["secondary"]
+    assert gnu["init_variants"] == ["zero", "snan", "inf"]
+    assert 1 in gnu["undefined"]["STRESS"], gnu["undefined"]
+    assert any(d["init_variant"] == "inf" for d in gnu["undefined"]["details"])
+    assert 1 in check["undefined"]["STRESS"], check["undefined"]   # and the primary agrees
 
 
 @pytest.mark.skipif(shutil.which("gfortran") is None, reason="needs gfortran")
