@@ -132,6 +132,8 @@ def transform_umat_to_oti_from_config(
     output_dir: Path,
     ntens: int,
 ) -> TransformResult:
+    global _AUTHOR_SHADOWS_MAX
+    _AUTHOR_SHADOWS_MAX = "MAX" in _locals_colliding_with_the_oti_modules(source_text)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     if ntens <= 0:
@@ -789,6 +791,9 @@ OTI_MODULE_GENERICS = frozenset({"MIN", "MAX", "SIGN", "NINT", "INT", "MATMUL"})
 #: two keep the refusal and the rest are renamed on import.
 GENERICS_THE_TRANSFORM_CALLS_ITSELF = frozenset({"MIN", "MAX"})
 
+#: Set per transform: the author declares a variable MAX, so no emitted line may call MAX.
+_AUTHOR_SHADOWS_MAX = False
+
 def _locals_colliding_with_the_oti_modules(source_text: str) -> list[str]:
     """Author-declared names that the OTI modules also export."""
     found: set[str] = set()
@@ -882,6 +887,8 @@ def _readiness_blockers(
     for name in _locals_colliding_with_the_oti_modules(source_text):
         if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF:
             continue
+        if name == "MAX":
+            continue  # the emitted sqrt guard does not call MAX when the author owns the name
         blockers.append(
             f"{name} is declared as a variable here and is also a generic the "
             f"OTI support modules make public. The import is renamed for the "
@@ -3667,7 +3674,7 @@ def _transform_source_text(
             output.append(_module_use_line(
                 form, module_name, oti_directions,
                 [name for name in _locals_colliding_with_the_oti_modules(source_text)
-                 if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF],
+                 if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF or (name == "MAX" and _AUTHOR_SHADOWS_MAX)],
                 shadowed_intrinsics=_intrinsic_only_collisions(
                     lines[selected_routine_span[0] - 1:selected_routine_span[1]])))
         if line_number + 1 == declaration_insert_before:
@@ -5817,7 +5824,12 @@ def _normalize_safe_sqrt_intrinsics_in_oti_expression(line: str) -> str:
         if not _contains_oti_value_reference(argument):
             search_from = close_paren + 1
             continue
-        safe_argument = f"(((MAX(REAL({argument}), 1.0D-30)) - REAL({argument})) + ({argument}))"
+        if _AUTHOR_SHADOWS_MAX:
+            # max(x, c) = (x + c + |x - c|)/2, spelled without a call to MAX
+            safe_argument = (f"((0.5D0*(REAL({argument}) + 1.0D-30 + ABS(REAL({argument}) - 1.0D-30)) "
+                             f"- REAL({argument})) + ({argument}))")
+        else:
+            safe_argument = f"(((MAX(REAL({argument}), 1.0D-30)) - REAL({argument})) + ({argument}))"
         result = result[: open_paren + 1] + safe_argument + result[close_paren:]
         search_from = open_paren + 1 + len(safe_argument)
 
