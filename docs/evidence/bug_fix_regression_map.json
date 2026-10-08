@@ -663,7 +663,7 @@
    "selected_by": "manual",
    "bug": "When the pipeline's own deck reader disagreed with the card-by-card reader, check showed only a fact in the record; it now prints an amber note naming the constants. The compact view also named a constant by its position in the list of named constants instead of its slot number.",
    "tests": [
-    "tests/test_the_compact_check_view_fits_one_screen.py::test_a_block_abaqus_rejects_but_the_pipeline_reads_gets_an_amber_note_naming_the_constants",
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_a_block_the_pipeline_will_not_use_gets_an_amber_note_with_the_rule_and_what_abaqus_does",
     "tests/test_the_compact_check_view_fits_one_screen.py::test_two_readers_with_different_numbers_give_an_amber_note_naming_the_constants",
     "tests/test_the_compact_check_view_fits_one_screen.py::test_a_constant_is_named_by_its_slot_not_by_its_position_in_the_list_of_named_ones"
    ]
@@ -815,6 +815,17 @@
     "tests/test_a_timing_call_does_not_make_its_variable_differentiated.py::test_vendor_timers_pass_through_helper_lifting",
     "tests/test_a_timing_call_does_not_make_its_variable_differentiated.py::test_the_classifier_keeps_a_timer_variable_real",
     "tests/test_a_timing_call_does_not_make_its_variable_differentiated.py::test_canary_a_differentiated_value_handed_to_a_timer_is_still_refused"
+   ]
+  },
+  {
+   "commit": "6fdc32a",
+   "selected_by": "manual",
+   "bug": "After the pipeline's deck reader began to call a block with a ninth value on a line, a blank line between data lines or extra data lines unusable, the amber note about the two readers was lost and the user was not told why no constants were taken; check now says which rule tripped and what Abaqus itself does with the block.",
+   "tests": [
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_each_rule_the_pipeline_reader_applies_gives_an_amber_note_with_the_rule_and_what_abaqus_does[a data line of more than eight values]",
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_each_rule_the_pipeline_reader_applies_gives_an_amber_note_with_the_rule_and_what_abaqus_does[a blank line between data lines]",
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_each_rule_the_pipeline_reader_applies_gives_an_amber_note_with_the_rule_and_what_abaqus_does[more data lines than CONSTANTS needs]",
+    "tests/test_the_compact_check_view_fits_one_screen.py::test_a_normal_two_card_block_stays_fully_usable_and_has_no_note"
    ]
   }
  ],
