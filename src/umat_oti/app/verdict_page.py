@@ -35,7 +35,7 @@ from umat_oti.app.plain_language import (GATE_PLAIN, _verdict, may_say_verified,
 from umat_oti.app.refusal_cards import card_for, state_after_reading
 
 __all__ = ["verdict_for", "render_verdict", "VERIFIED_SENTENCE", "banner_for_card", "card_colour",
-           "elsewhere_texts", "ELSEWHERE_BANNER", "main"]
+           "elsewhere_texts", "ELSEWHERE_BANNER", "TRIAL_SENTENCE", "abaqus_hint", "main"]
 
 VERIFIED_SENTENCE = (
     "Both versions of your material ran and agreed on the stresses, and the "
@@ -132,6 +132,17 @@ def _reason_of(record: Any) -> str:
 
 ELSEWHERE_BANNER = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS CHECK COMMAND"
 
+#: What the Abaqus command check suggests does, said plainly: it runs the file and records whether the job
+#: finished (services/abaqus_trial.py: an explicit, unverified trial). The six checks that make a file
+#: verified are not part of it.
+TRIAL_SENTENCE = ("That command runs the file in Abaqus and records whether the job finished. The six-check "
+                  "comparison that makes a file verified is not part of it yet.")
+
+
+def abaqus_hint(command: str) -> str:
+    """The one sentence pair that offers the Abaqus command without promising a verified result."""
+    return f"If you have Abaqus, this runs your files there:  {command}  {TRIAL_SENTENCE}"
+
 
 def elsewhere_texts(elsewhere: str, other_deck: Optional[str] = None, command: Optional[str] = None) -> tuple:
     """(what happened, next step) for a file this check command cannot take but the corpus record verified.
@@ -148,10 +159,10 @@ def elsewhere_texts(elsewhere: str, other_deck: Optional[str] = None, command: O
         what += f"The full corpus run verified this exact file another way (run {elsewhere})."
     nxt = ("Nothing to do for this exact file: the corpus result stands."
            if not other_deck else
-           "Nothing is broken. To verify it with your deck, run the Abaqus comparison (GREEN needs it).")
+           "Nothing is broken. The verified result belongs to that other deck; with yours there is none yet.")
     if command:
-        nxt += (" If you change the file or the deck, GREEN for your version needs the Abaqus comparison; "
-                f"if you have Abaqus, run:  {command}")
+        nxt += (" If you change the file or the deck, a verified result for your version needs the six-check "
+                f"Abaqus comparison. {abaqus_hint(command)}")
     return what, nxt
 
 
@@ -211,7 +222,7 @@ def verdict_for(record: Any, elsewhere: Optional[str] = None, command: Optional[
                             "Abaqus checks were not run.")
                 action = ("Run the Abaqus check to verify the translated "
                           "routine against your original"
-                          + (f" (GREEN needs it; if you have Abaqus: {command})" if command else "")
+                          + (f" (a verified result needs the six-check Abaqus comparison. {abaqus_hint(command)})" if command else "")
                           + ". Until then call this 'derivatives checked numerically', not "
                           "'verified'.")
             else:
@@ -220,7 +231,7 @@ def verdict_for(record: Any, elsewhere: Optional[str] = None, command: Optional[
                             f"verified: {why}")
                 action = ("Run the full check (with Abaqus) before quoting "
                           "this as verified"
-                          + (f" (GREEN needs it; if you have Abaqus: {command})" if command else "")
+                          + (f" (a verified result needs the six-check Abaqus comparison. {abaqus_hint(command)})" if command else "")
                           + "; until then call it 'derivatives checked numerically'.")
         else:
             sentence, whose, action = (card.sentence, card.whose_move,

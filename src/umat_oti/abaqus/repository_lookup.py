@@ -65,13 +65,18 @@ ABAQUS_UTILITIES = frozenset({
     # source includes Abaqus's own PtkUtilitySubs.hdr to call them), and the
     # routines declared in Abaqus 2021's SMAUsubs/PublicInterfaces/*.hdr
     "SETTABLECOLLECTION", "GETPARAMETERTABLE", "GETPROPERTYTABLE",
-    "PTKSETMESHANDEVENTSERIES", "PTKSETEVENTSERIESPROPERTIES", "PTKCOMPUTE",
-    "PTKGETDATAACCESS", "PTKGETNUMINTERSECTEDELEMENTS",
-    "GETEVENTSERIESSLICEPROPERTIES", "GETEVENTSERIESSLICELG", "GETCOMMUNICATOR",
+    "PTKGETDATAACCESS", "PTKGETNUMINTERSECTEDELEMENTS", "GETCOMMUNICATOR",
     "SMAASPNUMERICLIMITSINTMAX", "SMAASPNUMERICLIMITSINTMIN",
     "SMAASPNUMERICLIMITSSIGNANDBL", "SMAASPNUMERICLIMITSSIGNANFLT",
     "POSFIL", "DBFILE", "STDB_GETRANKSIZE", "FILEOUT", "FLUSHBUFFER",
 })
+
+#: Ptk routines called beside the confirmed ones that no Abaqus header or
+#: reference this project holds declares (Vera, B17): neither resolved nor
+#: external, so they never make a source external; reported as unconfirmed.
+UNCONFIRMED_UTILITIES = frozenset({
+    "PTKSETMESHANDEVENTSERIES", "PTKSETEVENTSERIESPROPERTIES", "PTKCOMPUTE",
+    "GETEVENTSERIESSLICEPROPERTIES", "GETEVENTSERIESSLICELG"})
 
 #: Fortran intrinsic subroutines and the vendor timing/OS library every
 #: Fortran 90 compiler the corpus is built with supplies. Not repository code.
@@ -313,6 +318,8 @@ class Lookup:
     unpublished: tuple = ()
     #: the subset of ``unpublished`` that is a BLAS/LAPACK-style routine
     unpublished_library: tuple = ()
+    #: unconfirmed Ptk names (see UNCONFIRMED_UTILITIES): not counted either way
+    unconfirmed: tuple = ()
     #: files of the repository the lookups pulled in, in discovery order
     companions: tuple = ()
     files_searched: int = 0
@@ -325,6 +332,7 @@ class Lookup:
     def as_dict(self) -> dict:
         return {"verdict": self.verdict, "unpublished": list(self.unpublished),
                 "unpublished_library": list(self.unpublished_library),
+                "unconfirmed": list(self.unconfirmed),
                 "resolved": dict(self.resolved), "companions": list(self.companions),
                 "files_searched": self.files_searched, "rule": RULE}
 
@@ -367,6 +375,7 @@ def lookup(source: Path, cache_root: Path, *, reason: str = "",
     names: dict = {n: None for n in names_in_refusal(reason)}
     asked: set = set()
     unpublished: dict = {}
+    unconfirmed: dict = {}
 
     def rel(path: Path) -> str:
         return str(path.relative_to(cache_root))
@@ -417,15 +426,23 @@ def lookup(source: Path, cache_root: Path, *, reason: str = "",
                 continue
             if name in defined:
                 continue
+            if name in UNCONFIRMED_UTILITIES:
+                unconfirmed.setdefault(name, None)
+                continue
             pull("call", name, list(index.by_declared.get(name, ())), 0)
     # a routine some later file of the closure defined is defined for this source
     for key in list(unpublished):
         label, _, name = key.partition(" ")
         if label == "call" and name in defined:
             del unpublished[key]
-    result.unpublished = tuple(unpublished)
-    result.unpublished_library = tuple(
-        key for key in unpublished
-        if key.startswith("call ") and LIBRARY_ROUTINES.match(key.split(" ", 1)[1]))
+    # BLAS/LAPACK are a library, not an Abaqus utility and not a repository
+    # routine: neither resolved nor external (RULE_G3a item 2, Vera B17). A
+    # rule that treated them as unavailable would be a new rule made after
+    # seeing which sources it removes; it is not implemented.
+    library = {key: None for key in unpublished
+               if key.startswith("call ") and LIBRARY_ROUTINES.match(key.split(" ", 1)[1])}
+    result.unpublished_library = tuple(library)
+    result.unconfirmed = tuple(unconfirmed)
+    result.unpublished = tuple(key for key in unpublished if key not in library)
     result.companions = tuple(rel(p) for p in closure[1:])
     return result

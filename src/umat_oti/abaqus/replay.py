@@ -1628,6 +1628,32 @@ def run_history_replay(build: HistoryBuild, entries: Sequence[dict],
     return outcome
 
 
+#: Statuses the replay drivers' own stubs stop with: 4 SPRINC shape, 6 GETVRM,
+#: 7 SPRIND repeated value. A stop with one of them is a limit of the driver.
+DRIVER_LIMIT_STATUSES = (4, 6, 7)
+_RUNTIME_TRAP = re.compile(
+    r"forrtl|SIGFPE|Program received signal|Fortran runtime error|"
+    r"Segmentation|Aborted|floating invalid|floating divide", re.IGNORECASE)
+
+
+def stopped_by_the_authors_check(run, requested: int) -> bool:
+    """B17 rule G2d: did the author's own code end this poisoned replay early?
+
+    True iff fewer calls than ``requested`` were replayed, the process exited
+    normally (status >= 0: a plain STOP, or XIT / STDB_ABQERR called by the
+    author), the status is not one of the driver's own limits, and the output
+    carries no runtime-trap text. gfortran's trailing "Note: ... exceptions
+    are signalling" line is a note about flags, not a trap.
+    """
+    if run.ok or run.returncode is None or run.returncode < 0:
+        return False
+    if len(run.calls) >= requested or run.returncode in DRIVER_LIMIT_STATUSES:
+        return False
+    text = "\n".join(line for line in (run.tail or "").splitlines()
+                     if not line.lstrip().startswith("Note:"))
+    return _RUNTIME_TRAP.search(text) is None
+
+
 def _bits_differ(a: float, b: float) -> bool:
     return not (a == b or (a != a and b != b))
 

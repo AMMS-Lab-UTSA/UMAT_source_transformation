@@ -31,7 +31,7 @@ from typing import Iterable, Optional, Sequence
 #: A ``USE`` statement. Fortran allows ``USE, INTRINSIC ::`` and a rename list;
 #: only the module name is wanted. Anchored to the start of a statement so
 #: ``because`` and ``house`` inside an expression are not module names.
-_USE = re.compile(r"^\s*use\s*(?:,\s*(?:non_)?intrinsic\s*)?(?:::)?\s*"
+_USE = re.compile(r"^\s*use\b\s*(?:,\s*(?:non_)?intrinsic\s*)?(?:::)?\s*"
                   r"([A-Za-z_]\w*)", re.IGNORECASE)
 
 #: A Fortran ``INCLUDE`` line and the preprocessor's ``#include``. Abaqus
