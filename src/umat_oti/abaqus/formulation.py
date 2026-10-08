@@ -28,7 +28,8 @@ from typing import Optional
 
 from pathlib import Path
 
-from umat_oti.abaqus.elements import SUPPORTED, UnsupportedElement, geometry_for
+from umat_oti.abaqus.elements import (SUPPORTED, UnsupportedElement, WEDGE_ELEMENTS,
+                                      geometry_for)
 
 _KEYWORD = re.compile(r"^\s*\*(?!\*)\s*([^,\n]+)(.*)$")
 _PARAMETER = re.compile(r"([A-Za-z][\w \-]*)\s*=\s*([^,]+)")
@@ -314,6 +315,28 @@ def choose(author_elements, *, provenance: str = "",
         return _cohesive_choice(kinds, provenance, temperature)
     if family in ("shell", "membrane"):
         return _plane_stress_substitute(kinds, family, provenance, ntens_hint)
+
+    # B20 rule H1: a model the author meshed with wedges ONLY is run on the
+    # wedge. The number and the places of the integration points (2 for C3D6,
+    # 9 for C3D15) are part of what such a routine sees through NPT and COORDS.
+    # A deck that mixes wedges with hexahedra for this material keeps the
+    # hexahedron family below, so no other row moves.
+    if (family == "three-dimensional continuum"
+            and all(kind in WEDGE_ELEMENTS for kind in kinds)):
+        quadratic = all(kind.startswith("C3D15") for kind in kinds)
+        plain, hybrid_name = (("C3D15", "C3D15H") if quadratic
+                              else ("C3D6", "C3D6H"))
+        element = hybrid_name if any(hybrid(kind) for kind in kinds) else plain
+        return Formulation(
+            author_elements=kinds, family=family, element=element,
+            provenance=provenance,
+            reason=(f"the author's deck runs this material on "
+                    f"{', '.join(kinds)}, which are wedges; the verification "
+                    f"runs the wedge itself ({element}), whose integration "
+                    f"points ({geometry_for(element).note}) and layout are the "
+                    f"ones the routine is called at, NTENS="
+                    f"{geometry_for(element).ntens} as for any continuum "
+                    f"element"))
 
     choice = _VERIFICATION_ELEMENT.get(family)
     if choice is None:

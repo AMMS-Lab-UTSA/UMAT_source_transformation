@@ -44,7 +44,7 @@ from typing import Any, Callable, Optional, Sequence
 
 from umat_oti.abaqus import time_scale
 from umat_oti.abaqus.coordinate_domain import statements
-from umat_oti.abaqus.elements import geometry_for
+from umat_oti.abaqus.elements import WEDGE_ELEMENTS, geometry_for, with_midside_nodes
 from umat_oti.abaqus.manifest import (LoadingSegment, VerificationManifest,
                                       cohesive_open_and_release, let_time_pass,
                                       off_axis, separate, simple_shear,
@@ -1196,6 +1196,11 @@ def plan(source: Path, repository: Path, name: str = "",
     node_provenance = ""
     if placement.found and placement.coordinate_dependent:
         corners = placement.element.nodes[:geometry.node_count]
+        if geometry.name in WEDGE_ELEMENTS:
+            # B20 H1: a quadratic wedge's midside nodes are the edge
+            # midpoints of the author's six corners.
+            corners = with_midside_nodes(geometry.name,
+                                         placement.element.nodes[:6])
         if len(corners) == geometry.node_count:
             nodes = tuple(corners)
             node_provenance = (
