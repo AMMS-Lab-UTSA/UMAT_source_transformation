@@ -115,7 +115,9 @@ def test_a_refused_umat_that_builds_stays_this_project_s_problem():
     ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 75, len(ours)
+    # 80 = 75 + the five sources whose "missing" modules and includes the upstream tree
+    # turned out to publish (B18: frodal, mauro x2, ngrilli, xara)
+    assert len(ours) == 80, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -154,10 +156,10 @@ def test_the_refusal_classes_partition_every_refusal():
             record["refusal_class"], 0) + 1
     assert sum(counts.values()) == len(rows), (counts, len(rows))
     assert counts == {
-        GENUINE_UMAT: 75,
-        MISSING_EXTERNAL_DEPENDENCY: 13,
+        GENUINE_UMAT: 80,
+        MISSING_EXTERNAL_DEPENDENCY: 6,
         HELPER_OR_MODULE_ONLY: 14,
-        INCOMPLETE_OR_CORRUPT: 11,
+        INCOMPLETE_OR_CORRUPT: 13,
         DUPLICATE_SOURCE: 4,
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
@@ -279,7 +281,7 @@ def test_a_compile_that_settles_nothing_leaves_the_work_ours():
     settled nothing.)"""
     unsure = [r for r in refusals()
               if r["refusal_class_confident"] is False]
-    assert len(unsure) == 23, [r["source_id"] for r in unsure]
+    assert len(unsure) == 27, [r["source_id"] for r in unsure]
     for record in unsure:
         # One of the twelve is a second copy of another of them. A duplicate
         # keeps the underlying answer -- "as a file it is genuine_umat" is
@@ -370,7 +372,7 @@ def test_the_companions_a_umat_needs_are_recorded_beside_it():
     are ours."""
     missing = [r for r in refusals()
                if r["refusal_class"] == MISSING_EXTERNAL_DEPENDENCY]
-    assert len(missing) == 13, len(missing)
+    assert len(missing) == 6, len(missing)  # 13 before B18: seven are published upstream
     for record in missing:
         assert record["missing_companions"], record["source_id"]
         assert record["terminal_state"] == "external_dependency_unavailable"
