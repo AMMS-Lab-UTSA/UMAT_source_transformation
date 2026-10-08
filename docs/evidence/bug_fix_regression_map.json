@@ -1074,6 +1074,10 @@
   {
    "commit": "f0b0931",
    "reason": "Audit record for 9379aa6. 'refusal', 'refusals' and 'stale' name registry classes and review entries that were replaced; no defect is corrected."
+  },
+  {
+   "commit": "3e09981",
+   "reason": "Part of the new data-file redirect of rule H2 (written before it, in the same batch); 'fixed' in the message is 'fixed-form', the statement layout the wrapped literal has to fit, not a corrected behaviour of shipped code."
   }
  ],
  "changelog_fixed": {
