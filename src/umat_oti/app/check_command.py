@@ -323,11 +323,13 @@ def prepare_corpus_record(source: Path, deck: Optional[Path], *, suppress: bool)
 
 
 def abaqus_command() -> str:
-    """The command a user with Abaqus runs to get the Abaqus comparison GREEN needs, for THESE files."""
+    """The command that runs THESE files in Abaqus (an explicit, unverified trial: it records whether the job finished)."""
     source, deck = _RUN.get("source"), _RUN.get("deck")
     if source is None:
         return ""
     parts = [f"umat-oti all {source}"]
+    for root in _RUN.get("roots") or []:
+        parts.append(f"--dependency-root {root}")
     if _RUN.get("material_config"):
         parts.append(f"--material-config {_RUN['material_config']}")
     elif deck is not None:
@@ -341,7 +343,7 @@ def abaqus_command() -> str:
 def print_corpus_record() -> None:
     """The record line, AFTER the final verdict, in words that carry no colour and never read as the verdict.
 
-    Then, when the verdict is amber and nothing on record covers these files, how GREEN is reached.
+    Then, when the verdict is amber and nothing on record covers these files, what the Abaqus command does and does not do.
     """
     final = _RUN.get("final")
     if final is None:
@@ -356,8 +358,10 @@ def print_corpus_record() -> None:
                                                deck_name=Path(deck).name if deck else ""):
                 print(line)
         if final == "amber" and not _RUN.get("elsewhere") and abaqus_command():
-            print("GREEN needs the Abaqus comparison, which this check command does not run. If you have Abaqus, run:  "
-                  + abaqus_command())
+            from umat_oti.app.verdict_page import abaqus_hint
+
+            print("To call this file verified, the six-check Abaqus comparison is needed, and this check command does "
+                  "not run it. " + abaqus_hint(abaqus_command()))
     except Exception:                                   # a lookup must never stop a check
         return
 
@@ -445,6 +449,7 @@ def _check(argv: Optional[Sequence[str]] = None) -> int:
     print(f"Results go to: {out}   (what was read from your files: {inputs})")
     _RUN["out"] = out
     roots = [d.expanduser().resolve() for d in args.dependency_root]
+    _RUN["roots"] = roots
 
     deck, how, candidates = resolve_deck(source, args.target, args.deck)
     if deck is None and how in ("ambiguous", "folder"):

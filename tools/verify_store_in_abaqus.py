@@ -3206,7 +3206,8 @@ def _init_probe_set(original_probed, entries, work_dir, ntens, include_dirs, tim
                     label, compiler, variants) -> dict:
     """One compiler's init builds, run: the D-12 outcome of that set alone."""
     from umat_oti.abaqus.replay import (
-        build_history_replay, run_history_replay, undefined_outputs)
+        build_history_replay, run_history_replay, stopped_by_the_authors_check,
+        undefined_outputs)
 
     outcome: dict[str, Any] = {"ran": False, "pair": "", "built": False}
     built = []
@@ -3244,6 +3245,27 @@ def _init_probe_set(original_probed, entries, work_dir, ntens, include_dirs, tim
         outcome[name] = other.as_dict()
         if name in ("snan", "huge"):
             outcome["poison"] = other.as_dict()
+        if not other.ok and stopped_by_the_authors_check(other, len(entries)):
+            # B17 rule G2d: the author's own check (an ISNAN guard, XIT, a
+            # plain STOP) ended the poisoned replay while the zero build
+            # completed it: the increment it refused depends on the
+            # uninitialised value, so every output of that call is undefined.
+            done = len(other.calls)
+            for key, size in (("STRESS", ntens), ("STATEV", None), ("DDSDDE", ntens * ntens)):
+                if size is None:
+                    size = len(first.calls[done].get("STATEV") or ()) if done < len(first.calls) else 0
+                for k in range(1, size + 1):
+                    if k not in undefined[key]:
+                        undefined[key].append(k)
+            undefined["details"].append({
+                "output": "STRESS, STATEV and DDSDDE of the call that did not complete",
+                "first_call": done, "init_variant": name,
+                "zero_init": "completed", "snan_init": f"stopped by the author's check "
+                f"(exit {other.returncode}) after {done} of {len(entries)} calls"})
+            outcome.setdefault("author_guard_stops", []).append(
+                {"variant": name, "calls_replayed": done, "requested": len(entries),
+                 "returncode": other.returncode})
+            continue
         if not other.ok:
             # A poisoned value that crashes the run (an SNaN trapped, a huge
             # value overflowing) is itself a use of the undefined value; which
@@ -3259,6 +3281,10 @@ def _init_probe_set(original_probed, entries, work_dir, ntens, include_dirs, tim
                            if not undefined["details"] else
                            f"{len(undefined['details'])} output(s) differ between "
                            f"the init builds: undefined_in_original"))
+    if outcome.get("author_guard_stops"):
+        outcome["reason"] = (
+            "the author's own check stopped a poisoned build that the zero build "
+            "completed (rule G2d): " + outcome["reason"])
     return outcome
 
 
