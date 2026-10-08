@@ -9898,6 +9898,11 @@ def _statement_reads(statement: str, name: str) -> bool:
         _statement_without_inline_comment(statement)).strip()
     if not text or _NON_READING_STATEMENT.match(text):
         return False
+    # PRINT only displays the array: a value that is printed is not used by the
+    # model. (WRITE is deliberately not included: its unit may be an internal
+    # file that the model reads back.)
+    if re.match(r"^(?:\d+\s+)?PRINT\b", text, flags=re.IGNORECASE):
+        return False
     reference = re.compile(rf"(?<![%\w]){re.escape(name)}\b", re.IGNORECASE)
     inline_if = _split_inline_if_assignment(text)
     if inline_if is not None:
