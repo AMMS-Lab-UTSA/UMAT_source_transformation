@@ -172,3 +172,36 @@ def test_the_registry_moves_a_transformed_but_unrunnable_source_and_leaves_run_s
     assert all(r.kind == "external" for r in rows[:2])
     assert conflicts == [rows[4].source_id]
     assert "not in the repository and not an Abaqus utility" in rows[1].reason
+
+
+# -- B18: the output search follows quoted includes; the cache is not the repository ----
+def test_the_output_search_follows_quoted_includes_the_way_the_callee_rule_does(tmp_path):
+    import build_corpus_registry as reg
+    from umat_oti.corpus.entry_routines import umat_outputs_written
+    main = HEAD + "      INCLUDE 'ABA_PARAM.INC'\n      INCLUDE './x/body.f'\n      END\n"
+    repo(tmp_path, {"umat.for": main,
+                    "x/body.f": "      STRESS(1)=1.D0\n      INCLUDE 'back.f'\n",
+                    "x/back.f": "      DDSDDE(1,1)=2.D0\n      INCLUDE 'body.f'\n"})
+    source = tmp_path / "owner__repo" / "umat.for"
+    own = umat_outputs_written(main, path=source)
+    assert not own.writes_stress and not own.writes_ddsdde
+    found, followed = reg.outputs_following_includes(source, main, own, tmp_path)
+    assert found.writes_stress and found.writes_ddsdde
+    assert followed == ["owner__repo/x/body.f", "owner__repo/x/back.f"]   # the cycle ends
+    assert found.first_write.startswith("[body.f] ")
+    # canary: the include file removed -> nothing is found, as for the main file alone
+    (tmp_path / "owner__repo/x/body.f").unlink()
+    rl._INDEXES.clear()
+    found, followed = reg.outputs_following_includes(source, main, own, tmp_path)
+    assert not found.writes_ddsdde and followed == []
+
+
+def test_a_name_the_upstream_tree_publishes_is_not_missing_because_the_cache_is_partial(tmp_path):
+    import json
+    import build_corpus_registry as reg
+    check = tmp_path / "check.json"
+    check.write_text(json.dumps({"checked": {"o__r/umat.for": {
+        "absent": ["GONE"], "present_upstream_names": {"include core.for": "core.for"}}}}))
+    assert reg.upstream_present_names("o__r/umat.for", check) == frozenset({"include core.for"})
+    assert reg.upstream_absent_calls("o__r/umat.for", check) == frozenset({"GONE"})
+    assert reg.upstream_present_names("o__r/other.for", check) == frozenset()

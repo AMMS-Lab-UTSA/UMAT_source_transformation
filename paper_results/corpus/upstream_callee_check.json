@@ -1,5 +1,5 @@
 {
- "_about": "B17 Vera item 2: the discovery cache is partial, so a callee 'not in the repository' is confirmed against the upstream tree at the pinned commit (shallow fetch, read-only, scratch deleted). A call name counts as unpublished in the registry only when it is listed under 'absent' here. Checked 2026-10-07 for the 8 non-library sources the cache-only lookup would have removed from the 242: every callee name is defined upstream (present_upstream), so none of them leaves. MCM-QMUL was removed from the list by a bug (UserVar(..)= read as USE rVar), not by absence.",
+ "_about": "B17 Vera item 2: the discovery cache is partial, so a callee 'not in the repository' is confirmed against the upstream tree at the pinned commit (shallow fetch, read-only, scratch deleted). A call name counts as unpublished in the registry only when it is listed under 'absent' here. Checked 2026-10-07 for the 8 non-library sources the cache-only lookup would have removed from the 242: every callee name is defined upstream (present_upstream), so none of them leaves. MCM-QMUL was removed from the list by a bug (UserVar(..)= read as USE rVar), not by absence. Checked again 2026-10-08 (B18) for every source external_dependency_unavailable on a module or include name: 'present_upstream_names' lists the names the pinned upstream tree does define or contain (an include by file name, a module by its MODULE statement); the registry treats those as published. Names ABSENT upstream (stdlib_kinds, MKL_RCI*, mkl_*.f90, Elmer modules in mrkearden/abaqus_umat) stay unpublished. sourceforge.net/abumpack_svn_r233 is an svn snapshot that cannot be fetched this way: it stays external.",
  "checked": {
   "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for": {
    "repository": "AlexSTA1993/numerical_geolab",
@@ -84,6 +84,177 @@
     "MOONEY": "mtest/tests/mtest/castem/mooney.f",
     "NEOHOO": "mtest/tests/mtest/castem/neohoo.f"
    }
+  },
+  "CriticalSoilModels__critical-soil-models/src/models/bingham/umat_bingham.f90": {
+   "repository": "CriticalSoilModels/critical-soil-models",
+   "commit": "71aa203263f4a7671f4b07281ccd4c541833d064",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "module stdlib_kinds"
+   ]
+  },
+  "CriticalSoilModels__critical-soil-models/src/umat.f90": {
+   "repository": "CriticalSoilModels/critical-soil-models",
+   "commit": "71aa203263f4a7671f4b07281ccd4c541833d064",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "module stdlib_kinds"
+   ]
+  },
+  "InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f": {
+   "repository": "InstituteOfMechanics/Phase_Trafos_Carbon_Repartitioning",
+   "commit": "c6f6c96a195d90eea6328f3245bdbcae0f604cbb",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "module MKL_RCI",
+    "module MKL_RCI_TYPE",
+    "include mkl_rci.f90",
+    "include mkl_lapack.f90"
+   ]
+  },
+  "frodal__SCMM-hypo/HypoImp.f": {
+   "repository": "frodal/SCMM-hypo",
+   "commit": "7c710945e474093675dbbf2de0f6e90ba471fb10",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module PolynomialRoots": "Dependencies/quartic.f90",
+    "include ./Dependencies/quartic.f90": "Dependencies/quartic.f90"
+   },
+   "absent_names_confirmed": []
+  },
+  "jcmcmurry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90": {
+   "repository": "jcmcmurry/pipelining",
+   "commit": "8fface1a501b5050f58e7b902aacdcdde68e9648",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module DefUtils": "elmerfem/fem/src/DefUtils.F90",
+    "module Adaptive": "elmerfem/fem/src/Adaptive.F90",
+    "module MaterialModels": "elmerfem/fem/src/MaterialModels.F90",
+    "module StressLocal": "elmerfem/fem/src/Stress.F90",
+    "module Types": "elmerfem/fem/src/Types.F90",
+    "module Integration": "elmerfem/fem/src/Integration.F90",
+    "module LinearAlgebra": "elmerfem/fem/src/LinearAlgebra.F90"
+   },
+   "absent_names_confirmed": []
+  },
+  "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_abaqus.for": {
+   "repository": "mauroarcidiacono/Crystal-Plasticity-UMAT",
+   "commit": "78dbb262abd0e954fb484c229e8c678f3a620d50",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "include utils.for": "utils.for",
+    "include lubksb.for": "lubksb.for",
+    "include ludcmp.for": "ludcmp.for",
+    "include kinharden.for": "kinharden.for",
+    "include iteration.for": "iteration.for",
+    "include latentharden.for": "latentharden.for",
+    "include strainrate.for": "strainrate.for",
+    "include gslpinit.for": "gslpinit.for",
+    "include slipsys.for": "slipsys.for",
+    "include rotation.for": "rotation.for",
+    "include noncubiccrystal.for": "noncubiccrystal.for"
+   },
+   "absent_names_confirmed": []
+  },
+  "mauroarcidiacono__Crystal-Plasticity-UMAT/umat_standalone.for": {
+   "repository": "mauroarcidiacono/Crystal-Plasticity-UMAT",
+   "commit": "78dbb262abd0e954fb484c229e8c678f3a620d50",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "include utils.for": "utils.for",
+    "include lubksb.for": "lubksb.for",
+    "include ludcmp.for": "ludcmp.for",
+    "include kinharden.for": "kinharden.for",
+    "include iteration.for": "iteration.for",
+    "include latentharden.for": "latentharden.for",
+    "include strainrate.for": "strainrate.for",
+    "include gslpinit.for": "gslpinit.for",
+    "include slipsys.for": "slipsys.for",
+    "include rotation.for": "rotation.for",
+    "include noncubiccrystal.for": "noncubiccrystal.for"
+   },
+   "absent_names_confirmed": []
+  },
+  "mrkearden__abaqus_umat/ElasticSolve.F90": {
+   "repository": "mrkearden/abaqus_umat",
+   "commit": "a17b506af8569ea7ce7b76875a091c8f86b82939",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "module DefUtils",
+    "module Adaptive",
+    "module MaterialModels",
+    "module StressLocal",
+    "module Types",
+    "module Integration",
+    "module LinearAlgebra"
+   ]
+  },
+  "mrkearden__abaqus_umat/UMAT.F90": {
+   "repository": "mrkearden/abaqus_umat",
+   "commit": "a17b506af8569ea7ce7b76875a091c8f86b82939",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {},
+   "absent_names_confirmed": [
+    "module Types"
+   ]
+  },
+  "ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for": {
+   "repository": "ngrilli/Oxford_Crystal_Plasticity",
+   "commit": "85102ed35dc4592edc5fd4aaec542fa63e7162fd",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "include xDir0ET.f": "xDir0ET.f",
+    "include xNorm0ET.f": "xNorm0ET.f",
+    "include xDir1.f": "xDir1.f",
+    "include xNorm1.f": "xNorm1.f",
+    "include xDir2.f": "xDir2.f",
+    "include xNorm2.f": "xNorm2.f",
+    "include xDir2c.f": "xDir2c.f",
+    "include xNorm2c.f": "xNorm2c.f",
+    "include xDir4.f": "xDir4.f",
+    "include xNorm4.f": "xNorm4.f",
+    "include xDirAlphaUranium.f": "xDirAlphaUranium.f",
+    "include xNormAlphaUranium.f": "xNormAlphaUranium.f",
+    "include xTwinDirAlphaUranium.f": "xTwinDirAlphaUranium.f",
+    "include xTwinNormAlphaUranium.f": "xTwinNormAlphaUranium.f",
+    "include CoheleBulkMap.f": "ExampleInputFiles/DiscreteTwin/CoheleBulkMap.f"
+   },
+   "absent_names_confirmed": []
+  },
+  "peer-open-source__xara/SRC/domain/peri/umat.for": {
+   "repository": "peer-open-source/xara",
+   "commit": "c6c39b499fb19a3f349a540c88fb70ac02077b0d",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module kvisual": "SRC/domain/peri/uel.for"
+   },
+   "absent_names_confirmed": []
+  },
+  "zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90": {
+   "repository": "zning8251-jpg/ufc-fem-kernel",
+   "commit": "d6097bf413b7ef90a1e065976590c54b44c47a8e",
+   "absent": [],
+   "present_upstream": {},
+   "present_upstream_names": {
+    "module IF_Prec_Core": "ufc_core/L1_IF/Precision/IF_Prec_Core.f90",
+    "module IF_Err_Brg": "ufc_core/L1_IF/Error/IF_Err_Brg.f90"
+   },
+   "absent_names_confirmed": []
   }
  }
 }
