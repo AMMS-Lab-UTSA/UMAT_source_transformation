@@ -1107,6 +1107,45 @@ class Plan:
         }
 
 
+def deck_element(source: Path, repository: Path, source_text: Optional[str] = None):
+    """The deck a source is verified on and the element it runs there.
+
+    ONE decision, read once and used by both sides of the comparison (B17 rule
+    G2b): :func:`plan` takes the experiment's element from it, and the
+    transform (``tools/transform_all.py``) takes the NTENS it is built at from
+    it. Two readers of the same deck had picked different decks for some
+    sources, so a transform built at NTENS 6 was driven on a 4-component
+    element. Returns ``(pairing, settled, deck_text)``; ``settled`` is None
+    and ``deck_text`` empty when no deck is paired.
+    """
+    from umat_oti.abaqus import deck_pairing
+    from umat_oti.abaqus.formulation import settle, stated_temperature
+
+    source = Path(source)
+    text = source_text if source_text is not None else source.read_text(
+        errors="replace")
+    pairing = deck_pairing.pair(source, Path(repository), source_text=text)
+    if not pairing.found:
+        return pairing, None, ""
+    material = pairing.material
+    deck_text = Path(material.deck).read_text(errors="replace")
+    temperature, _why = stated_temperature(deck_text)
+    settled = settle(text, str(source), deck_text, str(material.deck),
+                     material.name, temperature=temperature)
+    return pairing, settled, deck_text
+
+
+def ntens_of_deck_element(source: Path, repository: Path,
+                          source_text: Optional[str] = None) -> tuple:
+    """``(ntens, evidence)`` of the element the deck runs this source on, or (0, "")."""
+    pairing, settled, _deck = deck_element(source, repository, source_text)
+    if settled is None or not settled.element:
+        return 0, ""
+    return (geometry_for(settled.element).ntens,
+            f"{Path(pairing.material.deck).name} / {settled.element}: "
+            f"{settled.agreement}"[:400])
+
+
 def plan(source: Path, repository: Path, name: str = "",
          source_text: Optional[str] = None) -> Plan:
     """Read one source and its repository, and decide the whole experiment.
@@ -1134,15 +1173,11 @@ def plan(source: Path, repository: Path, name: str = "",
     source = Path(source)
     text = source_text if source_text is not None else source.read_text(
         errors="replace")
-    pairing = deck_pairing.pair(source, Path(repository), source_text=text)
+    pairing, settled, deck_text = deck_element(source, repository, source_text=text)
     if not pairing.found:
         return Plan(source, Experiment(refusal=pairing.refusal), pairing)
     material = pairing.material
-    deck_text = Path(material.deck).read_text(errors="replace")
-
     temperature, temperature_why = stated_temperature(deck_text)
-    settled = settle(text, str(source), deck_text, str(material.deck),
-                     material.name, temperature=temperature)
     if not settled.element:
         return Plan(source, Experiment(refusal=settled.formulation.reason),
                     pairing, settled)

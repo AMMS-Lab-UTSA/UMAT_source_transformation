@@ -220,11 +220,9 @@ def driver_source(name: str = "REPLAY", source_text: str = "") -> str:
     ``source_text`` is the UMAT being replayed. Any Abaqus utility it defines
     itself is dropped from the stub block rather than defined twice.
     """
-    from umat_oti.abaqus.replay import _replay_utility_stubs
-    from umat_oti.validation.actual_umat_higher_order_generic import (
-        _abaqus_utility_stubs)
+    from umat_oti.abaqus.replay import utility_stub_block
 
-    stubs = _abaqus_utility_stubs() + _replay_utility_stubs()
+    stubs = utility_stub_block()
     if source_text:
         stubs, _ = drop_stubs_defined_by(stubs, source_text)
     return _DRIVER % {"state": STATE_FILE, "out": RESULT_FILE,

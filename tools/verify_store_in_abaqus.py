@@ -3125,85 +3125,140 @@ def init_variant_check(original_probed: Path, entries: Sequence[dict],
                        timeout: int = 900) -> dict:
     """D-12 in the Abaqus path: which outputs of the ORIGINAL are undefined.
 
-    The same probed source the solver compiled, built once per init build of
-    ``umat_oti.abaqus.replay.FINIT_BUILDS`` (zero / snan / +inf-77777-flipped
-    logicals: the set corpus_features uses, one shared definition) with
-    gfortran, and the zero build run twice (a difference there is hidden
-    state, never "undefined"). An output differing between the zero build and
-    ANY other build is undefined_in_original. Where gfortran cannot compile the
-    author's file, ifort with -init=zero / -init=huge / -init=minus_huge stands
-    in and says so: ifort's -init=snan traps on the first read (measured on 10
-    Jeff97 rows), which would report every such source as unbuildable rather
-    than as defective.
+    The same probed source the solver compiled, built once per init build and
+    the zero build run twice (a difference there is hidden state, never
+    "undefined"). An output differing between the zero build and ANY other
+    build is undefined_in_original.
+
+    B17 rule G2a (docs/evidence/b17_g2_rules.md): the PRIMARY probe is built
+    the way the solver builds the original -- ifort with the Abaqus flags and
+    ``-init=zero / huge / minus_huge`` (ifort's ``-init=snan`` traps on the
+    first read, measured on 10 Jeff97 rows, so it cannot be the poison). The
+    gfortran set of ``umat_oti.abaqus.replay.FINIT_BUILDS`` (zero / snan / +inf
+    with the integers and logicals flipped) is the SECONDARY probe: it decides
+    only where the primary could not be built or run (a build failed, the zero
+    build did not replay, a poisoned build stopped, the zero build was not
+    deterministic), and otherwise its verdict is recorded under
+    ``secondary`` and a disagreement is reported in ``probe_agreement``, never
+    resolved silently.
     """
     from umat_oti.abaqus.replay import (
-        FINIT_BUILDS, GFORTRAN_HISTORY_FLAGS, build_history_replay,
-        run_history_replay, undefined_outputs)
+        FINIT_BUILDS, GFORTRAN_HISTORY_FLAGS)
     from umat_oti.abaqus.single_call import ABAQUS_IFORT_FLAGS
 
-    outcome: dict[str, Any] = {"ran": False, "pair": ""}
     gnu = tuple(GFORTRAN_HISTORY_FLAGS)
     ifx = tuple(ABAQUS_IFORT_FLAGS)
-    sets = (("gfortran -finit " + " / ".join(n for n, _ in FINIT_BUILDS), "gfortran",
-             tuple((n, gnu + f) for n, f in FINIT_BUILDS)),
-            ("ifort -init=zero / -init=huge / -init=minus_huge (gfortran could not build "
-             "the source)", "ifort",
+    sets = (("ifort -init=zero / -init=huge / -init=minus_huge (the compiler and flags "
+             "the solver builds the original with)", "ifort",
              (("zero", ifx + ("-init=zero,arrays",)), ("huge", ifx + ("-init=huge,arrays",)),
-              ("minus_huge", ifx + ("-init=minus_huge,arrays",)))))
+              ("minus_huge", ifx + ("-init=minus_huge,arrays",)))),
+            ("gfortran -finit " + " / ".join(n for n, _ in FINIT_BUILDS), "gfortran",
+             tuple((n, gnu + f) for n, f in FINIT_BUILDS)))
+    results = []
     failures = []
     for label, compiler, variants in sets:
-        built = []
-        for name, flags in variants:
-            b = build_history_replay(original_probed, Path(work_dir) / f"{compiler}_{name}",
-                                     label=f"{name}_init", compiler=compiler,
-                                     flags=flags, include_dirs=include_dirs, timeout=timeout)
-            built.append((name, b))
-            if not b.ok:
-                break
-        if not all(b.ok for _, b in built) or len(built) < len(variants):
-            bad = next(b for _, b in built if not b.ok)
-            failures.append(f"{label}: {bad.reason}")
-            continue
-        (zname, zero), others = built[0], built[1:]
-        first = run_history_replay(zero, entries, Path(work_dir) / f"{compiler}_{zname}", timeout)
-        again = run_history_replay(zero, entries, Path(work_dir) / f"{compiler}_{zname}", timeout)
-        outcome.update(ran=True, pair=label, zero=first.as_dict(),
-                       init_variants=[n for n, _ in variants])
-        if not (first.ok and again.ok):
-            outcome["reason"] = f"the zero-init build did not replay: {first.reason or again.reason}"
-            outcome["established"] = False
-            return outcome
-        repeat = undefined_outputs(first.calls, again.calls, ntens)
-        if any(repeat[k] for k in ("STRESS", "STATEV", "DDSDDE")):
-            outcome.update(established=False, hidden_state=repeat,
-                           reason="the zero-init build is not deterministic: "
-                                  "hidden state, not an uninitialised variable")
-            return outcome
-        undefined: dict = {"STRESS": [], "STATEV": [], "DDSDDE": [], "details": []}
-        for name, build in others:
-            other = run_history_replay(build, entries, Path(work_dir) / f"{compiler}_{name}",
-                                       timeout)
-            outcome[name] = other.as_dict()
-            if name in ("snan", "huge"):
-                outcome["poison"] = other.as_dict()
-            if not other.ok:
-                # A poisoned value that crashes the run (an SNaN trapped, a huge
-                # value overflowing) is itself a use of the undefined value; which
-                # outputs it reaches is then not known, so nothing is established.
-                outcome.update(established=False,
-                               reason=f"the {name}-init build stopped: {other.reason}")
-                return outcome
-            undefined_outputs(first.calls, other.calls, ntens, into=undefined, variant=name)
-        for key in ("STRESS", "STATEV", "DDSDDE"):
-            undefined[key].sort()
-        outcome.update(established=True, undefined=undefined,
-                       reason=("every output bit-identical across all init builds"
-                               if not undefined["details"] else
-                               f"{len(undefined['details'])} output(s) differ between "
-                               f"the init builds: undefined_in_original"))
+        one = _init_probe_set(original_probed, entries, work_dir, ntens, include_dirs,
+                              timeout, label, compiler, variants)
+        results.append((compiler, one))
+        if one.get("built"):
+            failures.append(None)
+        else:
+            failures.append(f"{label}: {one.get('reason')}")
+    decided = next(((c, r) for c, r in results if r.get("established")), None)
+    primary_compiler, primary = results[0]
+    if decided is None:
+        # Neither set established anything: report the primary's account when it
+        # ran at all (the run-level reason), else the build failures.
+        out = dict(primary if primary.get("ran") else results[1][1])
+        out.setdefault("ran", False)
+        out["established"] = False
+        out["secondary"] = {k: results[1][1].get(k) for k in
+                            ("pair", "established", "reason", "built") if k in results[1][1]}
+        if not out.get("ran"):
+            out["pair"] = ""
+            out["reason"] = "no init build set could be built: " + "; ".join(
+                f for f in failures if f)
+        return out
+    compiler, out = decided
+    out = dict(out)
+    out["decided_by"] = compiler
+    other = [r for c, r in results if c != compiler]
+    if other:
+        sec = other[0]
+        out["secondary"] = {k: sec.get(k) for k in
+                            ("pair", "established", "reason", "undefined", "built",
+                             "init_variants")
+                            if k in sec}
+        if sec.get("established") and out.get("established"):
+            def flat(r):
+                u = r.get("undefined") or {}
+                return {k: list(u.get(k) or []) for k in ("STRESS", "STATEV", "DDSDDE")}
+            a, b = flat(out), flat(sec)
+            out["probe_agreement"] = {
+                "agree": bool(a["STRESS"] or a["DDSDDE"]) == bool(b["STRESS"] or b["DDSDDE"]),
+                "decided_by": compiler, "decided": a, "other": b}
+    if compiler != primary_compiler:
+        out["primary_failure"] = failures[0]
+    return out
+
+
+def _init_probe_set(original_probed, entries, work_dir, ntens, include_dirs, timeout,
+                    label, compiler, variants) -> dict:
+    """One compiler's init builds, run: the D-12 outcome of that set alone."""
+    from umat_oti.abaqus.replay import (
+        build_history_replay, run_history_replay, undefined_outputs)
+
+    outcome: dict[str, Any] = {"ran": False, "pair": "", "built": False}
+    built = []
+    for name, flags in variants:
+        b = build_history_replay(original_probed, Path(work_dir) / f"{compiler}_{name}",
+                                 label=f"{name}_init", compiler=compiler,
+                                 flags=flags, include_dirs=include_dirs, timeout=timeout)
+        built.append((name, b))
+        if not b.ok:
+            break
+    if not all(b.ok for _, b in built) or len(built) < len(variants):
+        bad = next(b for _, b in built if not b.ok)
+        outcome["reason"] = bad.reason
         return outcome
-    outcome.update(established=False,
-                   reason="no init build set could be built: " + "; ".join(failures))
+    outcome["built"] = True
+    (zname, zero), others = built[0], built[1:]
+    first = run_history_replay(zero, entries, Path(work_dir) / f"{compiler}_{zname}", timeout)
+    again = run_history_replay(zero, entries, Path(work_dir) / f"{compiler}_{zname}", timeout)
+    outcome.update(ran=True, pair=label, zero=first.as_dict(),
+                   init_variants=[n for n, _ in variants])
+    if not (first.ok and again.ok):
+        outcome["reason"] = f"the zero-init build did not replay: {first.reason or again.reason}"
+        outcome["established"] = False
+        return outcome
+    repeat = undefined_outputs(first.calls, again.calls, ntens)
+    if any(repeat[k] for k in ("STRESS", "STATEV", "DDSDDE")):
+        outcome.update(established=False, hidden_state=repeat,
+                       reason="the zero-init build is not deterministic: "
+                              "hidden state, not an uninitialised variable")
+        return outcome
+    undefined: dict = {"STRESS": [], "STATEV": [], "DDSDDE": [], "details": []}
+    for name, build in others:
+        other = run_history_replay(build, entries, Path(work_dir) / f"{compiler}_{name}",
+                                   timeout)
+        outcome[name] = other.as_dict()
+        if name in ("snan", "huge"):
+            outcome["poison"] = other.as_dict()
+        if not other.ok:
+            # A poisoned value that crashes the run (an SNaN trapped, a huge
+            # value overflowing) is itself a use of the undefined value; which
+            # outputs it reaches is then not known, so nothing is established.
+            outcome.update(established=False,
+                           reason=f"the {name}-init build stopped: {other.reason}")
+            return outcome
+        undefined_outputs(first.calls, other.calls, ntens, into=undefined, variant=name)
+    for key in ("STRESS", "STATEV", "DDSDDE"):
+        undefined[key].sort()
+    outcome.update(established=True, undefined=undefined,
+                   reason=("every output bit-identical across all init builds"
+                           if not undefined["details"] else
+                           f"{len(undefined['details'])} output(s) differ between "
+                           f"the init builds: undefined_in_original"))
     return outcome
 
 
@@ -4168,6 +4223,24 @@ def run_objectivity(manifest: VerificationManifest, original_call: dict,
     return answer
 
 
+def ntens_mismatch(stored_ntens: int, manifest) -> str:
+    """The refusal text when the stored transform's NTENS is not the element's, else "".
+
+    B17 rule G2b makes the transform read the element's NTENS from the same
+    function the experiment planner uses, so this is the guard that proves it:
+    a transform built at any other NTENS is refused, never run.
+    """
+    if not stored_ntens or stored_ntens == manifest.ntens:
+        return ""
+    return (
+        f"the stored transform was built for NTENS={stored_ntens} and this "
+        f"material is called with NTENS={manifest.ntens} on "
+        f"{manifest.element_type}. The seed directions would not "
+        f"correspond to the element's components, so the tangent it "
+        f"extracts would be the wrong derivatives in the right shape. "
+        f"Re-transform this source at NTENS={manifest.ntens}")
+
+
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
@@ -4252,15 +4325,10 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # history agreed exactly and the tangent was out by a factor of 5000, flat
     # across every step size.
     stored_ntens = int((getattr(stored, "metadata", {}) or {}).get("ntens") or 0)
-    if stored_ntens and stored_ntens != manifest.ntens:
-        seen["manifest_refusals"] = (
-            f"the stored transform was built for NTENS={stored_ntens} and this "
-            f"material is called with NTENS={manifest.ntens} on "
-            f"{manifest.element_type}. The seed directions would not "
-            f"correspond to the element's components, so the tangent it "
-            f"extracts would be the wrong derivatives in the right shape. "
-            f"Re-transform this source at NTENS={manifest.ntens}",)
-        return settle(seen["manifest_refusals"][0])
+    wrong = ntens_mismatch(stored_ntens, manifest)
+    if wrong:
+        seen["manifest_refusals"] = (wrong,)
+        return settle(wrong)
 
     original = Path(cache_root) / stored.source_id
     absent = [str(name) for path, name in
