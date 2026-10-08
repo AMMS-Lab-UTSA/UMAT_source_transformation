@@ -4961,7 +4961,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         form=source_form,
         tolerance=tangent_tolerance, timeout=timeout,
         original_history=compared_original,
-        frozen_states=(kept or {}).get("states") or None)
+        frozen_states=(kept or {}).get("states") or None,
+        data_roots=data_roots)
     if stopped_at >= 0:
         tangent["states_taken_from"] = (
             f"the {stopped_at} increments in which both builds produced "
@@ -5149,9 +5150,24 @@ def _one_ulp_floor(build, work_dir: Path, ntens: int, base: Sequence[float],
     return worst
 
 
+def stage_replay_data(original: Path, directory: Path, data_roots: Sequence[Path]):
+    """Stage the files the ORIGINAL opens into one replay directory (rule H2).
+
+    The same call the Abaqus job's staging makes: beside the source first,
+    then through its repository, matched on base name, written under the
+    literal name the source asks for. The replay runs with this directory as
+    its working directory, so no path rewrite is needed.
+    """
+    from umat_oti.abaqus.data_files import stage as stage_data_files
+
+    roots = [Path(root) for root in data_roots] or [Path(original).parent]
+    return stage_data_files(Path(original), Path(directory), roots=roots)
+
+
 def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict,
                     work_dir: Path, *, form: str, timeout: int,
-                    transformed: Optional[Path], increment) -> dict:
+                    transformed: Optional[Path], increment,
+                    data_roots: Sequence[Path] = ()) -> dict:
     """One chosen state under the D-4 gate: replay, sweep, judge, quad."""
     from umat_oti.abaqus import tangent_gate as gate
     from umat_oti.abaqus.replay import run_replay
@@ -5165,6 +5181,11 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
     work_dir = Path(work_dir)
     work_dir.mkdir(parents=True, exist_ok=True)
     write_state(record["entry"], work_dir / STATE_FILE)
+    # B20 rule H2: the replay runs in its own directory, so the data files the
+    # Abaqus job staged are staged here too, under the literal names the
+    # source opens. A file nobody published is never supplied.
+    staging = stage_replay_data(Path(original), work_dir, data_roots)
+    outcome["data_files"] = staging.as_dict()
     build = build_replay(Path(original), work_dir, name=manifest.name,
                          flags=replay_flags(form, work_dir), timeout=timeout)
     outcome["replay_header"] = build.header
@@ -5210,6 +5231,7 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
         quad_dir = work_dir / "quad"
         quad_dir.mkdir(parents=True, exist_ok=True)
         write_state(record["entry"], quad_dir / STATE_FILE)
+        stage_replay_data(Path(original), quad_dir, data_roots)
         qbuild = build_replay(Path(original), quad_dir, name=manifest.name,
                               flags=replay_flags(form, quad_dir), timeout=timeout, quad=True)
         note: dict[str, Any] = {"status": "unavailable", "reason": qbuild.reason}
@@ -5269,7 +5291,8 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
                    timeout: int = 900, states: int = 3,
                    transformed: Optional[Path] = None,
                    original_history: Optional[Sequence[dict]] = None,
-                   frozen_states: Optional[Sequence[dict]] = None) -> dict:
+                   frozen_states: Optional[Sequence[dict]] = None,
+                   data_roots: Sequence[Path] = ()) -> dict:
     """The OTI tangent against centred differences of the ORIGINAL, under D-4.
 
     The value under test is DDSDDE out of the transformed build's own probe
@@ -5338,7 +5361,7 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
             continue
         single = _judge_state_at(manifest, original, record, Path(work_dir) / f"state{order}",
                                  form=form, timeout=timeout, transformed=transformed,
-                                 increment=increment)
+                                 increment=increment, data_roots=data_roots)
         judgement = single.pop("judgement", None)
         judgements.append(judgement)
         activated = activated_by(records, position)

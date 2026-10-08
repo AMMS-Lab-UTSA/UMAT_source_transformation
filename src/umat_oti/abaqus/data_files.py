@@ -56,6 +56,14 @@ class Opened:
     name: str
     status: str
     required: bool
+    #: B20 rule H2: set when the name is not a literal in the OPEN but a
+    #: variable the source builds from PARAMETERs and strings (jpsferreira's
+    #: ``FILENAME = JOBDIR(:LENJOBDIR)//'/'//DIR1``). ``indirect`` is that
+    #: variable, ``literal`` the PARAMETER literal that carries the name and
+    #: ``defined_in`` the file it is written in ('' for the source itself).
+    indirect: str = ""
+    literal: str = ""
+    defined_in: str = ""
 
     @property
     def basename(self) -> str:
@@ -68,8 +76,12 @@ class Opened:
         return re.split(r"[\\/]", self.name)[-1]
 
     def as_dict(self) -> dict:
-        return {"name": self.name, "basename": self.basename,
-                "status": self.status, "required": self.required}
+        out = {"name": self.name, "basename": self.basename,
+               "status": self.status, "required": self.required}
+        if self.indirect:
+            out.update(indirect=self.indirect, literal=self.literal,
+                       defined_in=self.defined_in)
+        return out
 
 
 def _joined(literal: str) -> str:
@@ -107,12 +119,132 @@ def joined_statements(text: str) -> str:
     return "\n".join(out)
 
 
-def opened_files(text: str) -> tuple:
-    """Every file this source opens by a literal name, and whether it needs it."""
-    text = joined_statements(text)
+_PARAMETER_STMT = re.compile(r"\bPARAMETER\s*\((?P<body>.*?)\)\s*$",
+                             re.IGNORECASE | re.MULTILINE)
+_PARAM_ITEM = re.compile(r"([A-Za-z_]\w*)\s*=\s*('([^']*)'|\"([^\"]*)\")")
+_FILE_VARIABLE = re.compile(r"FILE\s*=\s*(?P<name>[A-Za-z_]\w*)\s*(?:,|$)",
+                            re.IGNORECASE)
+_ASSIGN = re.compile(r"^\s*(?:\d+\s+)?([A-Za-z_]\w*)\s*=\s*(.+?)\s*$", re.MULTILINE)
+_INCLUDE = re.compile(r"^\s*(?:#\s*include|include)\s+['\"<]([^'\">]+)['\">]",
+                      re.IGNORECASE | re.MULTILINE)
+
+
+def _find_include(name: str, dirs: Sequence[Path]) -> Optional[Path]:
+    for base in dirs:
+        base = Path(base)
+        candidate = base / name
+        if candidate.is_file():
+            return candidate
+        try:
+            for entry in base.iterdir():
+                if entry.name.lower() == name.lower() and entry.is_file():
+                    return entry
+        except OSError:
+            continue
+    return None
+
+
+def _texts_with_includes(text: str, include_dirs: Sequence[Path],
+                         depth: int = 3, _seen=None) -> list:
+    """``[(path or '', text)]`` for the source and every quoted include it reaches."""
+    seen = _seen if _seen is not None else set()
+    found = [("", text)]
+    for name in _INCLUDE.findall(text):
+        path = _find_include(name, include_dirs)
+        if path is None or path in seen:
+            continue
+        seen.add(path)
+        try:
+            body = path.read_text(errors="replace")
+        except OSError:
+            continue
+        found.append((str(path), body))
+        if depth > 1:
+            found += _texts_with_includes(body, include_dirs, depth - 1, seen)[1:]
+    return found
+
+
+def _split_concatenation(expression: str) -> list:
+    """Top-level pieces of ``a//b//c``, not splitting inside quotes or brackets."""
+    pieces: list = []
+    depth = 0
+    quote = ""
+    current = ""
+    i = 0
+    while i < len(expression):
+        ch = expression[i]
+        if quote:
+            current += ch
+            if ch == quote:
+                quote = ""
+        elif ch in "'\"":
+            quote = ch
+            current += ch
+        elif ch == "(":
+            depth += 1
+            current += ch
+        elif ch == ")":
+            depth -= 1
+            current += ch
+        elif ch == "/" and expression[i:i + 2] == "//" and depth == 0:
+            pieces.append(current.strip())
+            current = ""
+            i += 1
+        else:
+            current += ch
+        i += 1
+    pieces.append(current.strip())
+    return [p for p in pieces if p]
+
+
+def _resolve_variable(name: str, parameters: dict, assignments: dict,
+                      depth: int = 4) -> tuple:
+    """``(text, literal, defined_in, dropped)`` for a name built from strings.
+
+    Pieces that are string literals or PARAMETERs are kept; a piece the source
+    reads at run time (a directory from GETCWD, a slice of a variable) is
+    dropped and reported. Nothing is guessed.
+    """
+    if name.upper() in parameters:
+        value, where = parameters[name.upper()]
+        return value, value, where, False
+    if depth <= 0 or name.upper() not in assignments:
+        return "", "", "", True
+    for expression in assignments[name.upper()]:
+        text = ""
+        literal = ""
+        defined_in = ""
+        dropped = False
+        for piece in _split_concatenation(expression):
+            if piece[:1] in "'\"" and piece[-1:] == piece[:1]:
+                text += piece[1:-1]
+                continue
+            if re.fullmatch(r"[A-Za-z_]\w*", piece):
+                part, lit, where, gone = _resolve_variable(
+                    piece, parameters, assignments, depth - 1)
+                text += part
+                dropped = dropped or gone
+                if lit and not literal:
+                    literal, defined_in = lit, where
+                continue
+            dropped = True
+        if text.strip("/\\"):
+            return text, literal, defined_in, dropped
+    return "", "", "", True
+
+
+def opened_files(text: str, include_dirs: Sequence[Path] = ()) -> tuple:
+    """Every file this source opens by a literal name, and whether it needs it.
+
+    With ``include_dirs`` (B20 rule H2) a ``FILE=<variable>`` is also followed
+    through the PARAMETER declarations of the source and of its quoted
+    includes and through the variable's own assignments, so that a name held
+    in a PARAMETER is found. Without them the behaviour is the old one.
+    """
+    joined = joined_statements(text)
     found: list = []
     seen: set = set()
-    for match in _OPEN.finditer(text):
+    for match in _OPEN.finditer(joined):
         body = match.group("body")
         named = _FILE.search(body)
         if not named:
@@ -127,8 +259,44 @@ def opened_files(text: str) -> tuple:
             status = found_status.group(1).lower()
         found.append(Opened(name=name, status=status,
                             required=status in REQUIRED_STATUS))
-    return tuple(found)
+    if not include_dirs:
+        return tuple(found)
 
+    parameters: dict = {}
+    assignments: dict = {}
+    for where, body in _texts_with_includes(text, include_dirs):
+        flat = joined_statements(body)
+        for statement in _PARAMETER_STMT.finditer(flat):
+            for item in _PARAM_ITEM.finditer(statement.group("body")):
+                parameters.setdefault(item.group(1).upper(),
+                                      (item.group(3) if item.group(3) is not None
+                                       else item.group(4), where))
+        for target, expression in _ASSIGN.findall(flat):
+            if "'" in expression or '"' in expression or "//" in expression or \
+                    re.fullmatch(r"[A-Za-z_]\w*", expression.strip()):
+                assignments.setdefault(target.upper(), []).append(expression)
+    for match in _OPEN.finditer(joined):
+        body = match.group("body")
+        if _FILE.search(body):
+            continue
+        variable = _FILE_VARIABLE.search(body.strip())
+        if not variable:
+            continue
+        resolved, literal, where, dropped = _resolve_variable(
+            variable.group("name"), parameters, assignments)
+        resolved = resolved.lstrip("/\\") if dropped else resolved
+        if not resolved or resolved in seen:
+            continue
+        seen.add(resolved)
+        status = ""
+        found_status = _STATUS.search(body)
+        if found_status:
+            status = found_status.group(1).lower()
+        found.append(Opened(name=resolved, status=status,
+                            required=status in REQUIRED_STATUS,
+                            indirect=variable.group("name"), literal=literal,
+                            defined_in=where))
+    return tuple(found)
 
 
 #: Fixed-form statements end at column 72 unless the compiler is told
@@ -355,11 +523,11 @@ def stage(source: Path, job_dir: Path, *, roots: Sequence[Path] = ()) -> Staging
     except OSError as error:                       # pragma: no cover
         return Staging(searched=f"the source could not be read: {error}")
 
-    wanted = opened_files(text)
+    places = [source.parent, *[Path(root) for root in roots]]
+    wanted = opened_files(text, places)
     if not wanted:
         return Staging(searched="the source opens no file by a literal name")
 
-    places = [source.parent, *[Path(root) for root in roots]]
     staging = Staging(searched="; ".join(str(place) for place in places))
     missing: list = []
     optional: list = []
@@ -389,3 +557,49 @@ def stage(source: Path, job_dir: Path, *, roots: Sequence[Path] = ()) -> Staging
     staging.missing = tuple(missing)
     staging.optional_missing = tuple(optional)
     return staging
+
+
+def redirect_indirect(text: str, directory: Path, *, staged: Sequence[str] = (),
+                      include_dirs: Sequence[Path] = ()) -> tuple:
+    """Point a file named through a PARAMETER at the staged copy (B20 rule H2).
+
+    ``jpsferreira__UMAT-ABAQUS`` opens ``FILENAME = JOBDIR(:LENJOBDIR)//'/'//
+    DIR1`` with ``DIR1 = 'fibers.inp'`` a PARAMETER in an included file and
+    JOBDIR the working directory of the run, which for Abaqus/Standard is the
+    scratch directory it makes, not the job directory. The literal in the
+    PARAMETER is therefore made a relative path that climbs out of the scratch
+    directory and descends to the staged copy: ``JOBDIR//'/'//'../../../..
+    /<job dir>/fibers.inp'``. Only the literal changes, in a copy of the
+    include written beside the job (or in the source text when the PARAMETER
+    is there), and the same change is made for every build of a comparison.
+
+    Returns ``(new_text, extra_files, pointed)`` where ``extra_files`` maps a
+    file name to the text to write beside the job.
+    """
+    directory = Path(directory).resolve()
+    allowed = set(staged)
+    extra: dict = {}
+    pointed: dict = {}
+    for opened in opened_files(text, include_dirs):
+        if not opened.indirect or not opened.literal or opened.name not in allowed:
+            continue
+        target = "../" * 10 + str(directory / opened.name).lstrip("/")
+        pattern = re.compile(
+            r"(\bPARAMETER\s*\([^)]*?\b" + r"[A-Za-z_]\w*\s*=\s*)(['\"])"
+            + re.escape(opened.literal) + r"\2", re.IGNORECASE)
+        def substitute(body: str):
+            return pattern.subn(lambda m: f"{m.group(1)}'{target}'", body, count=1)
+        if not opened.defined_in:
+            text, count = substitute(text)
+        else:
+            path = Path(opened.defined_in)
+            try:
+                body = extra.get(path.name) or path.read_text(errors="replace")
+            except OSError:
+                continue
+            body, count = substitute(body)
+            if count:
+                extra[path.name] = body
+        if count:
+            pointed[opened.name] = target
+    return text, extra, pointed
