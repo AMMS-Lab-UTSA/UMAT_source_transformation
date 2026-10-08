@@ -972,6 +972,28 @@
    "tests": [
     "tests/test_the_deck_the_author_ran_is_what_is_paired_and_generated.py::test_the_hybrid_formulation_option_is_carried_as_written_and_never_added"
    ]
+  },
+  {
+   "commit": "9eb3202",
+   "selected_by": "manual",
+   "bug": "B20: Vera's five D-28 separate-line rules and the published-text-compiles relabel rule had no implementation; each is now an additional labelled verdict beside the published one (tools/d28_lines.py), with the canaries Vera specified.",
+   "tests": [
+    "tests/test_the_b20_separate_line_rules.py::test_the_double_epsilon_reproduces_the_published_comparison_exactly",
+    "tests/test_the_b20_separate_line_rules.py::test_canary_a_1e6_relative_error_fails_when_the_stiffness_is_modest",
+    "tests/test_the_b20_separate_line_rules.py::test_rule_4_canaries_a_real_error_of_1e12_S_fails_and_1e17_S_passes",
+    "tests/test_the_b20_separate_line_rules.py::test_rule_2_canary_a_nint_result_multiplied_into_stress_stays_flagged",
+    "tests/test_the_b20_separate_line_rules.py::test_rule_3_canary_a_cast_on_a_quantity_that_reaches_stress_flags",
+    "tests/test_the_b20_separate_line_rules.py::test_ab_the_112_verified_rows_are_byte_identical_under_the_rule_1_code_path"
+   ]
+  },
+  {
+   "commit": "301b97c",
+   "selected_by": "manual",
+   "bug": "B20: rule 2 amended by Vera after the first run; variant kept beside the first-written one.",
+   "tests": [
+    "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_the_same_store_into_a_different_slot_flags",
+    "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_nint_times_stress_still_flags"
+   ]
   }
  ],
  "excluded": [
