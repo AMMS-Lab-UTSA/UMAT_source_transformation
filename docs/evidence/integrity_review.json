@@ -1897,11 +1897,11 @@
   },
   "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_the_companions_a_umat_needs_are_recorded_beside_it:43b5e403": {
    "verdict": "justified",
-   "reason": "The pinned count moved with the population, not the check: with the callee rule applied to all sources (054f8e3) three refusals left missing_external_dependency for the 242 population, and the 14 new sources add some, so the class holds 13 at pass24 (16 at pass23). Every record of the class still has to name its missing companions, be external and be a UMAT.",
+   "reason": "The pinned count moved with the population, not the check: with the callee rule applied to all sources (054f8e3) three refusals left missing_external_dependency for the 242 population, and the 14 new sources add some, so the class held 13 at pass24 as first frozen (16 at pass23); it holds 6 after B18, because the upstream tree publishes the modules and includes the partial cache lacked for seven of them (419c87f). Every record of the class still has to name its missing companions, be external and be a UMAT.",
    "evidence": [
     {
      "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
-     "text": "assert len(missing) == 13, len(missing)"
+     "text": "assert len(missing) == 6, len(missing)"
     }
    ]
   },
