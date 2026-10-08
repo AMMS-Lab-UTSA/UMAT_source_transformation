@@ -5560,6 +5560,10 @@ def _wrap_real_assignment_rhs(line: str) -> str:
     rhs = match.group(3).strip()
     if lhs_name.endswith("_OTI") or lhs_name in {"OTI_HX", "OTI_HY", "OTI_HTR"} or rhs.upper().startswith("REAL("):
         return line
+    # A logical or character constant is not a number: REAL(.TRUE.) is a compile error
+    # (the condition of "IF (...OTI...) FULL = .TRUE." made the line look differentiated).
+    if re.fullmatch(r"\.(?:TRUE|FALSE)\.(?:_\w+)?|'[^']*'|\"[^\"]*\"", rhs, flags=re.IGNORECASE):
+        return line
     # This function is handed ONE physical line, and a statement may run over
     # several. Where the right-hand side's parentheses do not balance, the
     # statement continues onto lines this call cannot see, and closing the
