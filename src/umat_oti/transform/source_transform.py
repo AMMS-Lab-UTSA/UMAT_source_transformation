@@ -490,16 +490,16 @@ def transform_umat_to_oti_from_config(
     # has always emitted it; this one never did, so a source calling SIGN or
     # SQRT on a differentiated value compiled there and failed here.
     intrinsics_path = output_dir / "oti_intrinsics.f90"
+    searched = _without_comments(
+        transformed_source + "\n" + (lifted_helper_text or ""), parsed.form == "fixed")
     intrinsics_path.write_text(
         _emit_intrinsic_extensions(
             module_result.module_name, module_result.type_name,
-            sum_dim=bool(_SUM_WITH_DIM_RE.search(
-                transformed_source + "\n" + (lifted_helper_text or ""))),
-            atan2=_calls_on_oti_values("ATAN2", transformed_source + "\n" + (lifted_helper_text or ""))
-            and not complex_plan.active,
+            sum_dim=bool(_SUM_WITH_DIM_RE.search(searched)),
+            atan2=_calls_on_oti_values("ATAN2", searched) and not complex_plan.active,
             inverse_hyperbolic=tuple(
                 name for name in ("ASINH", "ACOSH", "ATANH")
-                if _calls_on_oti_values(name, transformed_source + "\n" + (lifted_helper_text or "")))),
+                if _calls_on_oti_values(name, searched))),
         encoding="utf-8")
     complex_used = complex_plan.active and complex_support.uses_complex_type(
         transformed_source, lifted_helper_text, type_name=module_result.type_name)
@@ -1530,6 +1530,19 @@ _INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "SUM", "PRODUCT"})
 #: renaming the import in a scope that owns the name (see
 #: ``_intrinsic_only_collisions``). SUM with DIM= or MASK= is still refused.
 _INTRINSICS_WITH_A_WHOLE_ARRAY_OTI_FORM = frozenset({"SUM"})
+
+def _without_comments(text: str, fixed: bool) -> str:
+    """``text`` with whole-line and trailing comments removed (a mention in prose is not a call)."""
+    kept = []
+    for line in text.split("\n"):
+        if fixed and line[:1] in ("C", "c", "*", "!"):
+            continue
+        stripped = line.lstrip()
+        if stripped.startswith("!"):
+            continue
+        kept.append(strip_inline_comment(line))
+    return "\n".join(kept)
+
 
 def _calls_on_oti_values(name: str, text: str) -> bool:
     """Whether ``NAME(...)`` is called with a hypercomplex shadow among its first 300 characters.
