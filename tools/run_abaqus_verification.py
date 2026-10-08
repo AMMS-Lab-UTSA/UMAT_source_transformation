@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from umat_oti.abaqus.compare import compare_primal          # noqa: E402
 from umat_oti.abaqus.data_files import (                          # noqa: E402
-    redirect as redirect_data_files, stage as stage_data_files)
+    redirect as redirect_data_files, redirect_indirect, stage as stage_data_files)
 from umat_oti.abaqus.deck import generate_deck, total_increments  # noqa: E402
 from umat_oti.abaqus.manifest import (                      # noqa: E402
     LoadingSegment, VerificationManifest)
@@ -155,6 +155,17 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
         if pointed:
             probed.write_text(pointed_text, encoding="utf-8")
         report["data_files_pointed"] = pointed
+        # B20 H2: a name held in a PARAMETER (and joined to the run's working
+        # directory by the source) is pointed at the staged copy as well.
+        indirect_text, extra_files, indirect_pointed = redirect_indirect(
+            probed.read_text(encoding="utf-8"), work_dir,
+            staged=list(staging.staged),
+            include_dirs=[Path(source).parent, *[Path(r) for r in data_roots]])
+        if indirect_pointed:
+            probed.write_text(indirect_text, encoding="utf-8")
+            for name, body in extra_files.items():
+                (work_dir / name).write_text(body, encoding="utf-8")
+            report["data_files_pointed_indirect"] = indirect_pointed
 
     result = run_job(work_dir, job, generate_deck(manifest), user_source=probed,
                      expected_increments=total_increments(manifest.loading),
