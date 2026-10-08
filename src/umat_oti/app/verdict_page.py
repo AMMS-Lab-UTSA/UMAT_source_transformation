@@ -132,15 +132,15 @@ def _reason_of(record: Any) -> str:
 
 ELSEWHERE_BANNER = "AMBER: VERIFIED ANOTHER WAY, NOT BY THIS CHECK COMMAND"
 
-#: What the Abaqus command check suggests does, said plainly: it runs the file and records whether the job
-#: finished (services/abaqus_trial.py: an explicit, unverified trial). The six checks that make a file
-#: verified are not part of it.
-TRIAL_SENTENCE = ("That command runs the file in Abaqus and records whether the job finished. The six-check "
-                  "comparison that makes a file verified is not part of it yet.")
+#: What the Abaqus command does, said plainly: ``umat-oti verify`` runs both versions of the file in Abaqus,
+#: in a scratch folder, and gives the same six checks the corpus uses.
+TRIAL_SENTENCE = ("That command runs both versions of your file in Abaqus, in a scratch folder, and applies the same "
+                  "six checks the corpus uses. It needs Abaqus, an Intel Fortran compiler and your deck with its "
+                  "material constants, and takes a few minutes.")
 
 
 def abaqus_hint(command: str) -> str:
-    """The one sentence pair that offers the Abaqus command without promising a verified result."""
+    """The one sentence pair that offers the Abaqus command and says what it needs."""
     return f"If you have Abaqus, this runs your files there:  {command}  {TRIAL_SENTENCE}"
 
 

@@ -99,6 +99,6 @@ def test_peak_is_explained_wherever_it_is_suggested():
 def test_help_lists_check_and_doctor_in_the_usage_line_and_the_command_list():
     done = subprocess.run([sys.executable, str(REPO / "umat-oti"), "--help"], capture_output=True, text=True, cwd="/")
     assert done.returncode == 0, done.stderr
-    assert "usage: umat-oti [-h] {check,doctor,all,transform,config,jacobian} ..." in done.stdout
+    assert "usage: umat-oti [-h] {check,verify,doctor,all,transform,config,jacobian} ..." in done.stdout
     commands = re.findall(r"^    (\w+) ", done.stdout, re.M)
-    assert commands[:2] == ["check", "doctor"] and "all" in commands
+    assert commands[:3] == ["check", "verify", "doctor"] and "all" in commands

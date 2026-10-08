@@ -323,20 +323,16 @@ def prepare_corpus_record(source: Path, deck: Optional[Path], *, suppress: bool)
 
 
 def abaqus_command() -> str:
-    """The command that runs THESE files in Abaqus (an explicit, unverified trial: it records whether the job finished)."""
+    """The command that gives THESE files the six checks in Abaqus: ``umat-oti verify UMAT DECK``.
+
+    The deck is the one given to this check, or the placeholder YOUR_DECK.inp when none was given.
+    """
     source, deck = _RUN.get("source"), _RUN.get("deck")
     if source is None:
         return ""
-    parts = [f"umat-oti all {source}"]
+    parts = [f"umat-oti verify {source} {deck if deck is not None else 'YOUR_DECK.inp'}"]
     for root in _RUN.get("roots") or []:
         parts.append(f"--dependency-root {root}")
-    if _RUN.get("material_config"):
-        parts.append(f"--material-config {_RUN['material_config']}")
-    elif deck is not None:
-        parts.append(f"--material-discovery-root {Path(deck).parent}")
-    out = _RUN.get("out")
-    parts.append(f"--out {out}_abaqus" if out else "--out NEW_FOLDER")
-    parts.append("--abaqus")
     return " ".join(parts)
 
 
