@@ -192,8 +192,63 @@ def module_variable_names(source_text: str | None) -> frozenset[str]:
 _DATA_STATEMENT = re.compile(r"^\s*data\s+(.*?)/", re.IGNORECASE)
 
 
+_INITIALISED_DECLARATION = re.compile(
+    r"^\s*(?:REAL|DOUBLE\s+PRECISION|INTEGER|LOGICAL|COMPLEX|DOUBLE\s+COMPLEX)"
+    r"(?:\s*\*\s*\d+|\s*\([^)]*\))?"
+    r"(?P<attributes>(?:\s*,\s*[A-Za-z_]\w*(?:\s*\([^)]*\))?)*)"
+    r"\s*::\s*(?P<entities>.+)$", re.IGNORECASE)
+
+
+def _declaration_initialised_names(source_text: str) -> frozenset[str]:
+    """Names initialised in their own declaration: ``DOUBLE PRECISION :: RESTOL = 1.0D-09``.
+
+    The same thing a DATA statement is for the transform: a value given at
+    compile time (and, for a name that is later assigned, an implied SAVE).
+    PARAMETER names are handled by their own rule, and INTENT attributes mark a
+    dummy argument, which cannot carry an initialiser. A pointer assignment
+    (``=>``) is not an initial value. Statements are read as logical lines, so
+    a declaration continued over several lines is seen whole.
+    """
+    from pathlib import Path
+
+    from umat_oti.fortran.normalize import detect_source_form
+    from umat_oti.fortran.parser import logical_lines_from_text
+
+    form = detect_source_form(Path("source.f"), source_text)
+    names: set[str] = set()
+    for line in logical_lines_from_text(source_text, form):
+        match = _INITIALISED_DECLARATION.match(line.text)
+        if not match:
+            continue
+        attributes = match.group("attributes").upper()
+        if re.search(r"\bPARAMETER\b|\bINTENT\b", attributes):
+            continue
+        entities = match.group("entities")
+        depth, start, parts = 0, 0, []
+        for index, char in enumerate(entities):
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth = max(0, depth - 1)
+            elif char == "," and depth == 0:
+                parts.append(entities[start:index])
+                start = index + 1
+        parts.append(entities[start:])
+        for part in parts:
+            head = re.match(r"^\s*([A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=(?!>)", part)
+            if head:
+                names.add(head.group(1).upper())
+    return frozenset(names)
+
+
 def data_initialised_names(source_text: str | None) -> frozenset[str]:
-    """Names given their value by a DATA statement.
+    """Names given their value by a DATA statement or by a declaration initialiser.
+
+    A declaration initialiser (``DOUBLE PRECISION :: RESTOL = 1.0D-09``) is
+    the same fact in other words, and was missed: the FGJD viscoelastic UMAT
+    tested ``ABS(NORMRES_OTI).LT.RESTOL_OTI`` against a shadow zeroed by the
+    emitter, so its Newton loop could never exit. The rest of this docstring is
+    written for DATA and holds for both.
 
     A DATA statement is not an assignment and no assignment scan sees it, so a
     name initialised that way and never written again looks, to everything
@@ -214,7 +269,7 @@ def data_initialised_names(source_text: str | None) -> frozenset[str]:
     """
     if not source_text:
         return frozenset()
-    names: set[str] = set()
+    names: set[str] = set(_declaration_initialised_names(source_text))
     for line in source_text.splitlines():
         stripped = line.strip()
         if stripped[:1] in ("c", "C", "*", "!") and not stripped[:4].lower().startswith("data"):
