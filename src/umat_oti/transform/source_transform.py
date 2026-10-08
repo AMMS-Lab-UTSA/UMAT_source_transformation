@@ -3547,6 +3547,12 @@ def _transform_source_text(
     )
     shadow_variables = sorted(shadow_variable_names)
     ddsdde_name = mappings.get("ddsdde", "DDSDDE")
+    # A state array that received a shadow (it is handed to a
+    # lifted helper beside promoted arguments) is copied in and written back like
+    # a promoted one; without this the shadow ran from zero and was never stored.
+    _sv = mappings.get("statev", "STATEV")
+    if _sv in shadow_variable_names and _sv not in roles["promote"]:
+        roles["promote"].add(_sv)
     # Which old-tangent lines the emitter will comment out, decided once so the
     # scratch analysis below and the loop that writes the file agree about it.
     disabled_old_region_lines = {
