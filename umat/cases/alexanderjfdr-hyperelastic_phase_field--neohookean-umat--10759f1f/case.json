@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "cf2fa7cc6ec992eb2afe74f9",
+  "registry_key": "893b2946cbdaf5eadd528872",
   "source_id": "AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for",
   "repository": "AlexanderJFDR/Hyperelastic_phase_field",
   "commit": "afb36a139062a9e83eb45ffd4376e7ee69e1d408",
@@ -14,8 +14,8 @@
   "url": "https://github.com/AlexanderJFDR/Hyperelastic_phase_field/blob/afb36a139062a9e83eb45ffd4376e7ee69e1d408/umat/NeoHookean_umat.for",
   "raw_url": "https://raw.githubusercontent.com/AlexanderJFDR/Hyperelastic_phase_field/afb36a139062a9e83eb45ffd4376e7ee69e1d408/umat/NeoHookean_umat.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
   },
   "sha256": "565d307f0679dcb9377d0ccf04e601082c115590707af15bb6d193a25ef836a9",
   "bytes": 3863,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "ec609ab41bb45a02",
-  "contract_transform_generation": "830e5ee95ce99cd2"
+  "transform_fingerprint": "50ae446f12de66d8",
+  "harness_fingerprint": "0b2c472c7085b594",
+  "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:cf2fa7cc6ec992eb2afe74f9",
+  "from": "transform_store:893b2946cbdaf5eadd528872",
   "files": [
    {
     "path": "NeoHookean_umat_oti.for",
@@ -94,8 +94,8 @@
   "family": "other / unclassified",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=cf2fa7cc6ec992eb2afe74f9",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=893b2946cbdaf5eadd528872",
    "material_provenance": "AlexanderJFDR__Hyperelastic_phase_field/umat/twist_umat.inp: twist_umat.inp *MATERIAL user_mat: 2 constants, *DEPVAR 0 -- a section in twist_umat.inp attaches user_mat to C3D8R; the deck's name 'twist_umat.inp' contains the whole of the source's stem 'umat'; the deck sits in the source's own directo",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -1037,8 +1037,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T135502",
-  "seconds": 12.8,
+  "run_id": "20261008T031608",
+  "seconds": 14.9,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -1050,10 +1050,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "41d123f112e93e91d0628e32da63b6564fa9e387f4abbe27eb73027959f90709",
+  "tree_sha256": "f551ef77fab2319da63647718185bb3a7902f3af54b95301d9c61d50f75d73c2",
   "location": "corpus_assets",
   "files": 47,
-  "bytes": 1241632
+  "bytes": 1241480
  },
  "tiers": {
   "ci": false,
@@ -1062,7 +1062,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f",
   "fetch": "python tools/corpus_cases.py fetch alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key cf2fa7cc6ec992eb2afe74f9 --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 893b2946cbdaf5eadd528872 --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -1070,12 +1070,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T13:55:15",
+ "date": "2026-10-08T03:16:23",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.0,
+    "seconds": 5.2,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -1187,7 +1187,7 @@
     }
    },
    "replay": {
-    "seconds": 1.5,
+    "seconds": 2.0,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

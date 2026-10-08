@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "2cf25c1443110de18ef2a48e",
+  "registry_key": "b4f958caf3950646b29254a7",
   "source_id": "mholla__growth/umats/umat_iso_morph.f",
   "repository": "mholla/growth",
   "commit": "e82fb8b3e29bd6ee5106d454d54814779fd18768",
@@ -14,8 +14,8 @@
   "url": "https://github.com/mholla/growth/blob/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_iso_morph.f",
   "raw_url": "https://raw.githubusercontent.com/mholla/growth/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_iso_morph.f",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
   },
   "sha256": "e2bbc942fc1875e5ec059aa33981ae911a9dedec71be49e44ad0996086c3a496",
   "bytes": 5941,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch mholla-growth--umat-iso-morph--bbb577de  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "ec609ab41bb45a02",
-  "contract_transform_generation": "830e5ee95ce99cd2"
+  "transform_fingerprint": "50ae446f12de66d8",
+  "harness_fingerprint": "0b2c472c7085b594",
+  "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:2cf25c1443110de18ef2a48e",
+  "from": "transform_store:b4f958caf3950646b29254a7",
   "files": [
    {
     "path": "compile_order.txt",
@@ -95,8 +95,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=2cf25c1443110de18ef2a48e",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=b4f958caf3950646b29254a7",
    "material_provenance": "mholla__growth/input_files/muffin_noload.inp: muffin_noload.inp *MATERIAL MAT: 3 constants, *DEPVAR 3 -- mholla__growth's README states that muffin_noload.inp runs with umat_iso_morph.f; a section in muffin_noload.inp attaches MAT to C3D8",
    "initial_state_from_user_subroutine": true,
    "terminal_state": "fully_verified"
@@ -530,8 +530,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T134858",
-  "seconds": 9.8,
+  "run_id": "20261008T035836",
+  "seconds": 12.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -543,10 +543,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "e7138458adb78e5014ff66c00a23ca54503693640b9cf38be16a386f56a1c870",
+  "tree_sha256": "5723926abe421ae7d1aafba3542bc7ad9e6f76e63aa756646f5b77369e8a9ae3",
   "location": "corpus_assets",
   "files": 29,
-  "bytes": 903564
+  "bytes": 903417
  },
  "tiers": {
   "ci": false,
@@ -555,7 +555,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only mholla-growth--umat-iso-morph--bbb577de",
   "fetch": "python tools/corpus_cases.py fetch mholla-growth--umat-iso-morph--bbb577de",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 2cf25c1443110de18ef2a48e --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key b4f958caf3950646b29254a7 --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -563,12 +563,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T13:49:08",
+ "date": "2026-10-08T03:58:49",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 3.8,
+    "seconds": 4.9,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -617,7 +617,7 @@
     }
    },
    "replay": {
-    "seconds": 1.4,
+    "seconds": 1.7,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

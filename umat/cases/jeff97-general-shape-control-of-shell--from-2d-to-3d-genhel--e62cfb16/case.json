@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "43cef76f23796fd907c85336",
+  "registry_key": "8029f1e60b64a012b0cb4477",
   "source_id": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto3D/From-2D-to-3D-Genhel.for",
   "repository": "Jeff97/General-shape-control-of-shell",
   "commit": "95cf95d2191c8b125fa96e898c2cf4d411fa0a7c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/General-shape-control-of-shell/blob/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto3D/From-2D-to-3D-Genhel.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/General-shape-control-of-shell/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto3D/From-2D-to-3D-Genhel.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
   },
   "sha256": "f91012ff75cd86c3470e4c5aef15bee16f578a640970819f3b63a0591381afd0",
   "bytes": 14033,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-3d-genhel--e62cfb16  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "ec609ab41bb45a02",
-  "contract_transform_generation": "830e5ee95ce99cd2"
+  "transform_fingerprint": "50ae446f12de66d8",
+  "harness_fingerprint": "0b2c472c7085b594",
+  "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:43cef76f23796fd907c85336",
+  "from": "transform_store:8029f1e60b64a012b0cb4477",
   "files": [
    {
     "path": "From-2D-to-3D-Genhel_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=43cef76f23796fd907c85336",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=8029f1e60b64a012b0cb4477",
    "material_provenance": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto3D/From-2D-to-3D-Genhel.inp: From-2D-to-3D-Genhel.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in From-2D-to-3D-Genhel.inp attaches NeoHookean to C3D20H; the deck's name 'From-2D-to-3D-Genhel.inp' contains the whole of the sour",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T135004",
-  "seconds": 17.4,
+  "run_id": "20261008T031727",
+  "seconds": 19.8,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "0772d8dd1751c9919dceea47fc914221c764ae7b7203df8b2a0d9e4e1eee5db0",
+  "tree_sha256": "ceb73af0a4e34a6f02251e0c886df51646978807a430feeae1f72cdb6ae74b43",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1147500
+  "bytes": 1147357
  },
  "tiers": {
   "ci": false,
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-general-shape-control-of-shell--from-2d-to-3d-genhel--e62cfb16",
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-3d-genhel--e62cfb16",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 43cef76f23796fd907c85336 --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 8029f1e60b64a012b0cb4477 --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(9)"
@@ -720,12 +720,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(9)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T13:50:22",
+ "date": "2026-10-08T03:17:47",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.5,
+    "seconds": 6.2,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -802,7 +802,7 @@
     }
    },
    "replay": {
-    "seconds": 1.4,
+    "seconds": 2.1,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
