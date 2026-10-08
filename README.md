@@ -59,7 +59,10 @@ needs Abaqus with an Intel Fortran compiler (the `abaqus` command must work),
 gfortran, this checkout, and a deck that carries the material constants after
 `*USER MATERIAL`; without one of these it stops with a card saying whose move
 it is and what to do. A run takes about two to three minutes for a small
-model. The "to call this file verified" sentence at the end of an amber
+model. Verified means the generated derivatives match finite differences of
+your routine's own stress response, in Abaqus, on the checks listed; it does
+not check your hand-written tangent (DDSDDE) or that the constitutive law is
+physically right. The "to call this file verified" sentence at the end of an amber
 `check` verdict gives this command with your file names filled in.
 
 The lower-level steps are still there: `umat-oti all my_umat.for --out DIR`

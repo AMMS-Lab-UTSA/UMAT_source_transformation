@@ -125,3 +125,33 @@ def test_the_run_is_green_only_when_every_one_of_the_six_gates_held(tmp_path, mo
     assert _fake_run(monkeypatch, tmp_path / "t", record) != 0
     assert "GREEN" not in capsys.readouterr().out
     assert render_verdict(full).splitlines()[1].startswith("GREEN")
+
+
+def test_a_green_result_states_what_verified_does_not_cover_and_other_results_do_not_carry_it(tmp_path, monkeypatch, capsys):
+    full = {"terminal_state": "fully_verified", "reason": "", "evidence": {g: True for g in GATES}}
+    (tmp_path / "g").mkdir()
+    assert _fake_run(monkeypatch, tmp_path / "g", full) == 0
+    out = capsys.readouterr().out
+    assert verify.LIMIT_PARAGRAPH in out
+    assert "hand-written tangent (DDSDDE)" in out and "physically right" in out
+    assert "GREEN" not in out.split("GREEN: VERIFIED", 1)[1]
+    (tmp_path / "r").mkdir()
+    red = {"terminal_state": "primal_disagreed", "reason": "", "evidence": {g: True for g in GATES}}
+    assert _fake_run(monkeypatch, tmp_path / "r", red) != 0
+    assert verify.LIMIT_PARAGRAPH not in capsys.readouterr().out
+
+
+def test_relative_paths_and_another_working_directory_are_resolved_before_anything_is_written(tmp_path, monkeypatch, capsys):
+    work = tmp_path / "w"
+    work.mkdir()
+    _files(work)
+    monkeypatch.chdir(work)
+    monkeypatch.setattr(verify.shutil, "which", lambda name: "/bin/true")
+    monkeypatch.setattr(verify, "_run", lambda *a, **k: 0)
+    monkeypatch.setattr(verify, "_row_of", lambda *a, **k: {"stage": "transformed"})
+    monkeypatch.setattr(verify, "_record_of", lambda layout: None)
+    monkeypatch.setattr("umat_oti.app.check_command.load_scanner", lambda: None)
+    verify.main(["u.for", "d.inp", "--out", "scratch"])
+    capsys.readouterr()
+    assert (work / "scratch" / "corpus" / "cache" / "yourfiles" / "u.for").is_file()
+    assert (work / "scratch" / "corpus" / "cache" / "yourfiles" / "d.inp").is_file()

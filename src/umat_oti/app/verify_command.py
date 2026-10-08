@@ -72,6 +72,12 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+#: Said under every green result of this command, in plain words.
+LIMIT_PARAGRAPH = ("What verified means here: the generated derivatives match finite differences of YOUR routine's "
+                   "own stress response, in Abaqus, on the checks listed. It does not check your hand-written "
+                   "tangent (DDSDDE) or that the constitutive law is physically right.")
+
+
 # ---------------------------------------------------------------------------------------------- layout
 class Layout:
     """Every path the tools are given: all of them under ``root``."""
@@ -318,6 +324,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     verdict = verdict_for(record)
     print("\n" + render_verdict(record))
+    if verdict["colour"] == "green":
+        print("\n" + LIMIT_PARAGRAPH)
     print(f"\nWhat was run: {SCRATCH_REPOSITORY}/{source.name} with {deck.name}, in {time.time() - started:.0f} s.")
     print(f"The full record of the six checks: {layout.results / 'store_verification.json'}")
     _cleanup(layout, args.keep_work)
