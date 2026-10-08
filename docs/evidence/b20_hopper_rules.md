@@ -61,6 +61,14 @@ getEventSeriesSliceProperties, getEventSeriesSliceLG, PtkGetDataAccess, PtkGetNu
 SMAFloatArrayCreateSP/DP, SMAIntArrayCreate, SMAFloatArrayAccess, SMAIntArrayAccess, SetTableCollection,
 GetParameterTable.
 
+H3b. The finite-difference replay is built with gfortran, which neither runs the C preprocessor on a `.for`
+file nor accepts Cray pointers by default, and installs only `aba_param.inc`. Rule: the replay build installs the
+other public Abaqus headers beside it (an existing file is never overwritten), and its flags gain `-cpp` when the
+source has a preprocessor directive line (`#include`, `#define`, `#if`...) and `-fcray-pointer` when it declares a
+Cray `POINTER(p, b)`, the two things the solver's own compile line (`-fpp`, ifort) does for the same text. A/B: the
+13 sources with directives and the sources with Cray pointers are listed with their states; none of the 112
+fully_verified has either.
+
 ## H4. Deck pairing and generation carry what the author's deck says
 
 (a) Pairing by the routine's own dimensioning. A routine that dimensions arrays by `(NSTATV - a)/b` accepts only a
