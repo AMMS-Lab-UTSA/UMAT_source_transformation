@@ -3446,7 +3446,10 @@ def jacobian_matched_verdict(history: Sequence[dict],
     """
     from umat_oti.abaqus.compare import STIFFNESS_ULPS, compare_calls
 
-    left, right, alignment = align_by_time(list(history), list(transformed_history))
+    # B20 rule H5: the control and the transformed run are paired on the same
+    # INCREMENT (start time and size), not on the start time alone.
+    left, right, alignment = align_by_time(list(history), list(transformed_history),
+                                           by_increment=True)
     outcome: dict[str, Any] = {}
     if alignment:
         outcome["alignment"] = alignment
@@ -3511,10 +3514,8 @@ def jacobian_matched_verdict(history: Sequence[dict],
 
 
 def _record_key(record: dict) -> tuple:
-    from umat_oti.abaqus.compare import SAME_TIME
-    return (int(record.get("step") or 0), int(record.get("element") or 0),
-            int(record.get("point") or 0),
-            round(float(record.get("time") or 0.0) / SAME_TIME))
+    from umat_oti.abaqus.compare import record_key
+    return record_key(record, by_increment=True)
 
 
 def _first_parting_time(history: Sequence[dict],

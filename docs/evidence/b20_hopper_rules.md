@@ -73,13 +73,20 @@ Canaries: DEPVAR 10 refused / 11 accepted for `/7`; a two-block material yields 
 SOLUTION values and with STRESS,USER regenerates them; CYLINDRICAL survives.
 A/B: pairing and generated decks of every source before/after: only sources with the construct differ.
 
-## H5. Records are paired by the increment, not by its start time alone
+## H5. The Jacobian-matched control is paired with the transformed run by the same increment
 
 Observation (Ritchie G9): `align_by_time` keys on (step, element, point, start time); Growth-CASE3 pairs a 5.0
-increment of one run with a 1.25 increment of the other.
-Rule: when both records carry their increment size (DTIME), they are paired only if the sizes agree
-(relative 1e-9); records that carry none pair as before. Reported with the existing "different increments" note.
-Expected: Growth-CASE3 then reads "not decided" (paths parted), not "disagree"; this alone is not a pass.
-Canary: two histories with equal start times and different DTIME pair nothing; equal DTIME pair as before.
-A/B: all stored histories (original vs transformed) of the 298 pass24 rows, old key vs new key: the number of
-pairs lost per row is reported; the 112 verified must lose none.
+increment of the control with a 1.25 increment of the transformed run that starts at the same time.
+Rule: in the comparison of the Jacobian-matched control with the transformed run (`jacobian_matched_verdict` and the
+first-parting-time helper) records are paired only if their increment sizes (DTIME, relative 1e-9) also agree;
+records that carry none pair as before. The alignment note says "and increment size". The informational FE
+comparison of the original with the converted run keeps the start-time key: the A/B shows one verified source
+(SeaShell) would lose 8 informational pairs there, and the informativeness test reads those aligned lists, so that
+comparison is outside this rule.
+Expected: Growth-CASE3 then reads "did not walk the same increments" (not decided), not "disagree"; this alone is
+not a pass: the control would have to follow the transformed run's incrementation, which is a gate-control redesign
+and is not part of this batch.
+Canary: two histories with equal start times and different DTIME pair nothing under the rule; equal DTIME pair
+as before; the default call (no flag) is unchanged.
+A/B: all stored histories of the 298 pass24 rows, control vs transformed, old key vs new key: only Growth-CASE3
+loses pairs (184 -> 176); none of the 112 verified loses one.
