@@ -16,7 +16,8 @@
     "props_count": 2,
     "props_values_agree_with_pipeline": true,
     "props_values_differ": null,
-    "props_values_found": true
+    "props_values_found": true,
+    "props_values_pipeline_refuses": null
   },
   "inputs": {
     "deck": "Wrinkle/l1-is-1--l2-is-12-H0001.inp",

@@ -289,9 +289,12 @@ def test_two_short_lines_for_a_block_that_fits_on_one_are_never_read_as_zeros(tm
         assert v.status == "MISSING" and v.needs_user and v.value is None, data
         assert "fits on 1 data line" in v.note
         assert 0.0 not in (r.material_config["props_values"] or [])
-        assert r.facts["props_values_agree_with_pipeline"] is False, (
-            "the pipeline's reader takes the first line and zero-fills the rest")
-        assert "the pipeline's own reader" in v.note
+        # the pipeline's own reader now refuses such a block (it has more data lines than CONSTANTS needs): it
+        # gives no numbers to compare, so the agreement is unknown (None) and the refusal is a fact of its own
+        assert r.facts["props_values_agree_with_pipeline"] is None
+        refusal = r.facts["props_values_pipeline_refuses"]
+        assert refusal["rules"] == ["more data lines than CONSTANTS=4 needs (1)"] or refusal["rules"][0].startswith("more data lines than CONSTANTS=4")
+        assert refusal["abaqus"][0]["does"] == "rejects"
 
 
 def test_a_short_line_leaves_the_slots_it_does_not_write_unwritten_not_zero(tmp_path):

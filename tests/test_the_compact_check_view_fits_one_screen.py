@@ -106,16 +106,18 @@ def _scan_with(tmp_path, constants, data):
     return mod.scan(src, deck)
 
 
-def test_a_block_abaqus_rejects_but_the_pipeline_reads_gets_an_amber_note_naming_the_constants(tmp_path):
+def test_a_block_the_pipeline_will_not_use_gets_an_amber_note_with_the_rule_and_what_abaqus_does(tmp_path):
+    """CONSTANTS=4 over two data lines: the pipeline refuses it and Abaqus rejects it; no constants are taken, the user is told whose move it is."""
     found = _scan_with(tmp_path, 4, "200000., 0.3,\n250., 2000.\n")
-    assert found.facts["props_values_agree_with_pipeline"] is False
-    assert [d["slot"] for d in found.facts["props_values_differ"]] == [1, 2]
+    assert found.facts["props_values_agree_with_pipeline"] is None
+    assert found.facts["props_values_pipeline_refuses"]["abaqus"][0]["does"] == "rejects"
     text = compact_intake(found)
     notes = [ln for ln in text.splitlines() if ln.startswith("Amber note:")]
     assert len(notes) == 1, text
-    assert "does not accept this constants block" in notes[0]
-    for pair in ("EMOD = 200000", "ENU = 0.3"):
-        assert pair in notes[0], notes[0]
+    assert "The pipeline will not use this material block: more data lines than CONSTANTS=4" in notes[0]
+    assert "Abaqus itself rejects it: stops with an input error (invalid data)" in notes[0]
+    assert "Whose move: you" in notes[0] and "--props" in notes[0]
+    assert "Constants: not found" in text and "Needs you (one thing first):" in text
 
 
 def test_two_readers_with_different_numbers_give_an_amber_note_naming_the_constants(tmp_path):
@@ -154,3 +156,54 @@ def test_the_compact_view_never_says_that_nothing_is_needed(tmp_path):
     for item in found.items:
         item.needs_user = False
     assert "Needs you: nothing" not in compact_intake(found)
+
+
+RULE_CASES = [
+    ("a data line of more than eight values", 4, "1., 2., 3., 4., 5., 6., 7., 8., 9.\n",
+     "a data line of 9 values", "accepts it: reads only the first eight values of that line and ignores the rest"),
+    ("a blank line between data lines", 10, "1., 2., 3., 4., 5., 6., 7., 8.,\n\n9., 10.\n",
+     "a blank line between data lines", "rejects it: stops with an input error (invalid data)"),
+    ("more data lines than CONSTANTS needs", 4, "200000., 0.3,\n250., 2000.\n",
+     "more data lines than CONSTANTS=4", "rejects it: stops with an input error (invalid data)"),
+]
+
+
+@pytest.mark.parametrize("name,constants,data,rule,abaqus", RULE_CASES, ids=[c[0] for c in RULE_CASES])
+def test_each_rule_the_pipeline_reader_applies_gives_an_amber_note_with_the_rule_and_what_abaqus_does(
+        tmp_path, name, constants, data, rule, abaqus):
+    found = _scan_with(tmp_path, constants, data)
+    assert found.facts["props_values_agree_with_pipeline"] is None
+    refusal = found.facts["props_values_pipeline_refuses"]
+    assert refusal and refusal["rules"][0].startswith(rule)
+    notes = [ln for ln in compact_intake(found).splitlines() if ln.startswith("Amber note:")]
+    assert len(notes) == 1
+    assert "The pipeline will not use this material block: " + rule in notes[0]
+    assert f"Abaqus itself {abaqus}" in notes[0]
+    assert "Whose move: you" in notes[0]
+
+
+@pytest.mark.parametrize("name,constants,data,rule,abaqus", RULE_CASES, ids=[c[0] for c in RULE_CASES])
+def test_the_final_verdict_for_such_a_deck_is_not_green_and_says_whose_move_it_is(
+        tmp_path, monkeypatch, capsys, name, constants, data, rule, abaqus):
+    from umat_oti.app import check_command as check
+    toy = TOY.replace("      ENU=PROPS(2)\n", "      ENU=PROPS(2)\n      H=PROPS(4)\n")
+    src = tmp_path / "toy3.for"
+    src.write_text(toy)
+    deck = tmp_path / "toy3.inp"
+    deck.write_text(f"*MATERIAL, NAME=M\n*USER MATERIAL, CONSTANTS={constants}\n{data}*DEPVAR\n1\n*STEP\n*STATIC\n0.1, 1.\n*END STEP\n")
+    monkeypatch.chdir(tmp_path)
+    code = check.main([str(src), "--deck", str(deck)])
+    out = capsys.readouterr().out
+    assert code == 3 and "GREEN" not in out
+    assert "BLUE: I NEED ONE THING FROM YOU" in out and "Whose move: you." in out
+    assert "Amber note: The pipeline will not use this material block: " + rule in out
+
+
+def test_a_normal_two_card_block_stays_fully_usable_and_has_no_note(tmp_path):
+    """CONSTANTS=9 as eight values then one: Abaqus's own layout, read by both readers, no note."""
+    found = _scan_with(tmp_path, 9, "1., 2., 3., 4., 5., 6., 7., 8.,\n9.\n")
+    assert found.facts["props_values_agree_with_pipeline"] is True
+    assert found.facts["props_values_pipeline_refuses"] is None
+    assert found.item("props_values").status == "FOUND" and not found.item("props_values").needs_user
+    text = compact_intake(found)
+    assert "Amber note" not in text and "Constants (9):" in text and "Needs you" not in text

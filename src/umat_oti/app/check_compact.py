@@ -78,6 +78,20 @@ def _constants_line(found: Any) -> str:
     return f"Constants ({len(vals)}): " + ", ".join(pairs) + _where(values)
 
 
+def _refusal_note(refuses: dict) -> str:
+    """The pipeline will not use this block; what Abaqus itself does; whose move it is."""
+    rules = "; ".join(refuses["rules"])
+    what = []
+    for entry in refuses["abaqus"]:
+        verb = {"accepts": "accepts it", "rejects": "rejects it"}.get(entry["does"], "treats it in a way not measured")
+        what.append(f"{verb}: {entry['how']}" if entry["how"] else verb)
+    abaqus = "; ".join(dict.fromkeys(what))
+    return (f"Amber note: The pipeline will not use this material block: {rules}. Abaqus itself {abaqus}. "
+            "No constants are taken from the block here. Whose move: you, either rewrite the block (at most eight "
+            "values per line, no blank line between data lines, no more data lines than CONSTANTS needs) or "
+            "type the constants with --props.")
+
+
 def amber_notes(found: Any) -> list:
     """Amber notes: where the pipeline's own deck reader disagrees with the card-by-card reader.
 
@@ -86,6 +100,9 @@ def amber_notes(found: Any) -> list:
     naming the constants, so the disagreement is not only a fact in the record.
     """
     facts = getattr(found, "facts", None) or {}
+    refuses = facts.get("props_values_pipeline_refuses")
+    if refuses:
+        return [_refusal_note(refuses)]
     differ = facts.get("props_values_differ") or []
     if facts.get("props_values_agree_with_pipeline") is not False:
         return []
