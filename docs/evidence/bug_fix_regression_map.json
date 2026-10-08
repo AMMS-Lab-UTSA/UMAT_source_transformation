@@ -784,6 +784,38 @@
     "tests/test_transform_ntens_follows_the_deck.py::test_a_stored_transform_at_the_wrong_ntens_is_refused_never_run",
     "tests/test_transform_ntens_follows_the_deck.py::test_a_deliberately_wrong_element_mapping_is_caught_by_the_guard"
    ]
+  },
+  {
+   "commit": "5182fe2",
+   "selected_by": "manual",
+   "bug": "A UMAT whose author named the 37 Abaqus arguments differently (sahmotaman subroutine umat(sigma, sv, C, ...)) was refused because the transform looked STRESS and DDSDDE up by name, although Abaqus matches the arguments by position. With exactly 37 dummies and neither STRESS nor DDSDDE, the staged copy now takes dummy k as the k-th Abaqus argument (renaming inside that routine only, other identifiers already carrying an Abaqus name moving to NAME_USR); ambiguous cases (keyword argument, CONTAINS, fixed-form line past column 72) are refused with the reason.",
+   "tests": [
+    "tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py::test_each_dummy_takes_the_name_of_its_position",
+    "tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py::test_a_local_that_already_carries_an_abaqus_name_is_moved_aside",
+    "tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py::test_the_renamed_umat_transforms_and_its_tangent_matches_the_authors",
+    "tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py::test_a_wrong_position_table_makes_the_behavioural_gate_fail"
+   ]
+  },
+  {
+   "commit": "e9631fc",
+   "selected_by": "manual",
+   "bug": "The dependency resolver read a free-form file with a .for suffix as fixed form, so it defined no routine, and ignored a quoted cpp #include \"name\", so the routines a source pulled in were invisible. It now uses the parser's own form evidence and follows a quoted #include (not #include <...>); a genuinely fixed-form .for file is still read as fixed.",
+   "tests": [
+    "tests/test_dependency_resolution_reads_free_form_for_files_and_cpp_includes.py::test_a_free_form_for_file_defines_its_routine",
+    "tests/test_dependency_resolution_reads_free_form_for_files_and_cpp_includes.py::test_a_quoted_cpp_include_names_a_file_to_resolve",
+    "tests/test_dependency_resolution_reads_free_form_for_files_and_cpp_includes.py::test_canary_a_fixed_form_for_file_is_still_fixed"
+   ]
+  },
+  {
+   "commit": "14e2cb0",
+   "selected_by": "manual",
+   "bug": "A variable that only receives a clock reading (CALL CPU_TIME(COMP_TIME(1))) was promoted to the differentiated type, so the transform refused the source for handing a hypercomplex element to the timer; vendor timers (DTIME, ETIME, SECOND, CLOCK, ITIME, IDATE, TIMER) were also refused as undefined callees during helper lifting. A name whose every executable use is a timing-call argument now stays real and those timers pass through lifting; any other use of the name, and any differentiated value handed to a timer, behaves as before.",
+   "tests": [
+    "tests/test_a_timing_call_does_not_make_its_variable_differentiated.py::test_a_name_that_only_receives_a_clock_reading_is_timer_only",
+    "tests/test_a_timing_call_does_not_make_its_variable_differentiated.py::test_vendor_timers_pass_through_helper_lifting",
+    "tests/test_a_timing_call_does_not_make_its_variable_differentiated.py::test_the_classifier_keeps_a_timer_variable_real",
+    "tests/test_a_timing_call_does_not_make_its_variable_differentiated.py::test_canary_a_differentiated_value_handed_to_a_timer_is_still_refused"
+   ]
   }
  ],
  "excluded": [
