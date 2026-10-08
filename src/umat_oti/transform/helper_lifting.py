@@ -1698,7 +1698,7 @@ def _expand_helper_includes(
 #: spelling. The same four the main pass blocks on
 #: (``_INTRINSICS_WITHOUT_AN_OTI_FORM`` in source_transform); MOD and SUM have
 #: expanders above and only reach here when the expander could not apply.
-_UNSUPPORTED_OVER_OTI = ("SUM", "PRODUCT", "MOD", "ATAN2")
+_UNSUPPORTED_OVER_OTI = ("SUM", "PRODUCT", "MOD")
 
 #: Of those, the ones oti_intrinsics now declares for a single whole-array
 #: argument. A DIM= or MASK= argument is still refused by name.

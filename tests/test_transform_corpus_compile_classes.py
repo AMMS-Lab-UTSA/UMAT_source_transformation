@@ -182,21 +182,30 @@ def test_sum_of_a_differentiated_array_transforms_and_builds(tmp_path):
     _assert_builds(_transform(tmp_path, body))
 
 
-def test_sum_with_dim_is_refused_by_name_with_a_remedy(tmp_path):
-    body = (HEADER +
+def _sum_body(reduction):
+    return (HEADER +
             "      DIMENSION A(3,3)\n"
             "      EMOD=PROPS(1)\n"
             "      A=0.D0\n"
             "      A(1,1)=DSTRAN(1)\n"
-            "      B=MAXVAL(SUM(A,DIM=1))\n"
+            f"      B=MAXVAL({reduction})\n"
             "      DO K1=1,NTENS\n"
             "        STRESS(K1)=STRESS(K1)+EMOD*DSTRAN(K1)*B\n"
             "      END DO\n" + TANGENT +
             "      RETURN\n      END\n")
-    result = _transform(tmp_path, body)
+
+
+def test_sum_with_a_mask_is_refused_by_name_with_a_remedy(tmp_path):
+    result = _transform(tmp_path, _sum_body("SUM(A,MASK=A.GT.0.D0)"))
     assert not result.ok
     assert "SUM" in result.reason and "DIM" in result.reason
     assert "line" in result.reason and "What to do" in result.reason
+
+
+def test_sum_with_a_keyword_dim_builds(tmp_path):
+    """B20: SUM(A, DIM=d) is a linear reduction and has an OTI form."""
+    _gfortran()
+    _assert_builds(_transform(tmp_path, _sum_body("SUM(A,DIM=1)")))
 
 
 # --- a REAL function handed a shadow ---------------------------------------

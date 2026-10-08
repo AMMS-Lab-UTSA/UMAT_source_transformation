@@ -491,8 +491,15 @@ def transform_umat_to_oti_from_config(
     # SQRT on a differentiated value compiled there and failed here.
     intrinsics_path = output_dir / "oti_intrinsics.f90"
     intrinsics_path.write_text(
-        _emit_intrinsic_extensions(module_result.module_name,
-                                   module_result.type_name),
+        _emit_intrinsic_extensions(
+            module_result.module_name, module_result.type_name,
+            sum_dim=bool(_SUM_WITH_DIM_RE.search(
+                transformed_source + "\n" + (lifted_helper_text or ""))),
+            atan2=_calls_on_oti_values("ATAN2", transformed_source + "\n" + (lifted_helper_text or ""))
+            and not complex_plan.active,
+            inverse_hyperbolic=tuple(
+                name for name in ("ASINH", "ACOSH", "ATANH")
+                if _calls_on_oti_values(name, transformed_source + "\n" + (lifted_helper_text or "")))),
         encoding="utf-8")
     complex_used = complex_plan.active and complex_support.uses_complex_type(
         transformed_source, lifted_helper_text, type_name=module_result.type_name)
@@ -1511,7 +1518,7 @@ def _local_newton_blockers(
 #: several corpus sources declare one, and a public generic of that name makes
 #: every one of them fail on its USE line with "The attributes of this name
 #: conflict with those made accessible by a USE statement".
-_INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "ATAN2", "SUM", "PRODUCT"})
+_INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "SUM", "PRODUCT"})
 
 #: Of those, the ones oti_intrinsics now declares for a single whole-array
 #: argument (SUM(array)). The paragraph above records why SUM was kept out;
@@ -1520,9 +1527,23 @@ _INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "ATAN2", "SUM", "PRODUCT"})
 #: ``_intrinsic_only_collisions``). SUM with DIM= or MASK= is still refused.
 _INTRINSICS_WITH_A_WHOLE_ARRAY_OTI_FORM = frozenset({"SUM"})
 
+def _calls_on_oti_values(name: str, text: str) -> bool:
+    """Whether ``NAME(...)`` is called with a hypercomplex shadow among its first 300 characters.
+
+    oti_intrinsics gains the OTI form of ATAN2 and the inverse hyperbolics only
+    for a file that hands them a shadow, so a file that calls them on reals
+    keeps an unchanged support module.
+    """
+    return bool(re.search(rf"(?<![A-Za-z0-9_%]){name}\s*\([\s\S]{{0,300}}?_OTI\b", text, re.IGNORECASE))
+
+
+#: SUM(array, DIM=d): a linear reduction oti_intrinsics also declares (ranks
+#: 2..6), emitted only for a source that uses it. MASK= is still refused.
+_SUM_WITH_DIM_RE = re.compile(r"(?<![A-Za-z0-9_%])SUM\s*\(.*\bDIM\s*=", re.IGNORECASE)
+
 #: Generics only ``oti_intrinsics`` exports (the algebra module does not), so
 #: a collision with a source's own name is renamed on that USE line alone.
-OTI_INTRINSICS_ONLY_GENERICS = frozenset({"SUM", "NORM2", "TINY", "LOG10"})
+OTI_INTRINSICS_ONLY_GENERICS = frozenset({"SUM", "NORM2", "TINY", "LOG10", "ATAN2", "ASINH", "ACOSH", "ATANH"})
 
 
 def _unsupported_intrinsic_blockers(source_text: str, roles: dict[str, set[str]], stress_regions: list[dict[str, Any]]) -> list[str]:
@@ -1581,9 +1602,11 @@ def _intrinsic_argument_mentions(upper_line: str, intrinsic: str, promoted: set[
         open_paren = search_from + match.end() - 1
         close_paren = _matching_paren_index(upper_line, open_paren)
         argument = upper_line[open_paren + 1:close_paren] if close_paren > 0 else upper_line[open_paren + 1:]
-        if multi_argument_only and len(split_top_level(argument)) == 1:
-            search_from = open_paren + 1
-            continue
+        if multi_argument_only:
+            parts = split_top_level(argument)
+            if len(parts) == 1 or (len(parts) == 2 and re.match(r"\s*DIM\s*=", parts[1], re.IGNORECASE)):
+                search_from = open_paren + 1
+                continue
         if any(token in promoted for token in re.findall(r"[A-Za-z_]\w*", argument)):
             return True
         search_from = open_paren + 1
