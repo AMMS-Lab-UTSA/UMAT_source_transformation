@@ -4777,6 +4777,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["evidence"]["mechanically_informative"] = informative
     record["mechanically_informative"] = {"informative": informative,
                                           "reason": informative_why}
+    # An inference is not a measurement: where a finding behind the gate was
+    # inferred (growth read from state targets), the gate is null and says so.
+    if any(entry.get("evidence") == "inferred_not_measured"
+           for entry in record.get("coverage") or ()):
+        record["mechanically_informative"]["evidence_class"] = "inferred_not_measured"
     seen["mechanically_informative"] = informative
     # Read from the grouping, not from the truncation flag. "No truncation
     # was applied" and "nothing in either history is non-finite" are

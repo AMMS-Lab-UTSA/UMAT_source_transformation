@@ -58,18 +58,55 @@ def test_the_targets_are_the_state_slots_assigned_from_a_name_the_clock_quantity
     assert ex.growth_target_slots(LOCAL_G.replace("TIME(1)+DTIME", "1.0")) == {}
 
 
-def test_a_target_that_grows_is_developed_and_the_same_run_with_no_growth_is_not():
+def test_a_target_that_grows_is_inferred_never_measured_and_the_gate_stays_null():
     targets = ex.growth_target_slots(LOCAL_G)
     grown = ex.growth_developed(_records(2.0), {}, total_time=10.0, targets=targets)
-    assert grown.met is True and grown.magnitude == pytest.approx(1.0, rel=1e-9)
-    assert "local variable" in grown.reason
-    # canary: the same plan on a source whose target does not move the tensor
+    # an inference is not a pass: met is None, whatever the targets say
+    assert grown.met is None and grown.evidence == "inferred_not_measured"
+    assert grown.reason.startswith("growth inferred from state targets, not measured")
+    assert grown.magnitude == pytest.approx(1.0, rel=1e-9) and "would meet" in grown.reason
+    # the same plan on a source whose target does not move the tensor is also only an inference
     flat = ex.growth_developed(_records(1.0), {}, total_time=10.0, targets=targets)
-    assert flat.met is False and flat.magnitude == 0.0
-    # and a run that covered a tenth of the clock sees a tenth of the target
-    short = ex.growth_developed(_records(1.05, steps=2, dt=0.5), {}, total_time=10.0,
-                                targets=targets)
-    assert short.met is False
+    assert flat.met is None and flat.evidence == "inferred_not_measured"
+    assert "would not meet" in flat.reason
+    # a measured finding says so
+    slot = ex.growth_developed(_records(1.0), {7: "STATEV(7)=G"}, total_time=10.0)
+    assert slot.evidence == "measured" and slot.met is False
+
+
+def test_the_instrument_still_returns_never_measured_without_slots_or_when_the_targets_do_not_depend_on_the_clock():
+    # no target slots and no clock slots
+    nothing = ex.growth_developed(_records(2.0), {}, total_time=10.0, targets={})
+    assert nothing.met is None and nothing.evidence == "measured"
+    assert "never measured" in nothing.reason
+    # targets that do not depend on the clock: the clock term is removed, so none are found
+    still = LOCAL_G.replace("TIME(1)+DTIME", "1.0")
+    assert ex.growth_target_slots(still) == {}
+    # a STATEV assigned from a name the clock quantity does NOT depend on is not a target
+    unrelated = LOCAL_G.replace("      STATEV(3)=COORDS(1)\n",
+                                "      Other=3.0*COORDS(1)\n      STATEV(3)=Other\n")
+    assert sorted(ex.growth_target_slots(unrelated)) == [7]
+
+
+def test_an_inferred_row_cannot_be_counted_fully_verified():
+    """The inferred finding is null, so the gate is null and the ladder cannot reach
+    verified; and the registry refuses a fully_verified row marked inferred."""
+    import build_corpus_registry as reg
+    finding = ex.growth_developed(_records(2.0), {}, total_time=10.0,
+                                  targets=ex.growth_target_slots(LOCAL_G))
+    assert finding.met is None
+    import verify_store_in_abaqus as vs
+    base = dict(material_found=True, support_ok=True, original_completed=True,
+                transformed_completed=True, primal_agrees=True, tangent_verified=True)
+    # the gate value the verification records for this finding is None -> not verified
+    assert vs.classify_stage(vs.StageEvidence(
+        **base, mechanically_informative=None)) == "informativeness_not_established"
+    # control: a MEASURED true still verifies
+    assert vs.classify_stage(vs.StageEvidence(
+        **base, mechanically_informative=True)) == "verified"
+    record = reg.Record(source_id="o__r/u.for", repository="o/r")
+    record.informativeness_evidence = "inferred_not_measured"
+    assert record.terminal_state != "fully_verified"
 
 
 def test_nothing_to_read_is_said_to_be_never_measured():
