@@ -832,12 +832,16 @@ def _first_indexed_use(source_text: str, name: str) -> str:
 
 
 def _first_data_line(source_text: str, name: str) -> str:
-    """" (DATA at line N)" for the first DATA statement naming NAME, or ""."""
-    pattern = re.compile(rf"^\s*DATA\b.*(?<![A-Za-z0-9_]){re.escape(name)}\b",
-                         re.IGNORECASE)
+    """" (DATA at line N)" or " (initialised at line N)" for the first statement giving NAME a value."""
+    data = re.compile(rf"^\s*DATA\b.*(?<![A-Za-z0-9_]){re.escape(name)}\b", re.IGNORECASE)
+    declaration = re.compile(rf"::.*(?<![A-Za-z0-9_]){re.escape(name)}\b[^=,]*=(?!>)", re.IGNORECASE)
     for number, line in enumerate(source_text.splitlines(), start=1):
-        if line[:1] not in "Cc*!" and pattern.search(line):
+        if line[:1] in "Cc*!":
+            continue
+        if data.search(line):
             return f" (DATA at line {number})"
+        if declaration.search(line):
+            return f" (initialised at line {number})"
     return ""
 
 
@@ -3228,13 +3232,14 @@ def _data_initialised_shadow_blockers(
     if not initialised:
         return []
     return [
-        f"{name} takes its starting value from a DATA statement and is also "
-        "assigned, so it needs an OTI shadow, and nothing carries a DATA "
-        "value into a shadow. The shadow would start at zero instead of the "
-        "declared value. DATA initialisation of a promoted variable is not "
-        f"supported{_first_data_line(source_text, name)}. What to do: replace "
-        f"the DATA statement for {name} with an assignment at the top of the "
-        "executable part (or a PARAMETER if it is never reassigned)."
+        f"{name} takes its starting value from a DATA statement or a "
+        "declaration initialiser and is also assigned, so it needs an OTI "
+        "shadow, and nothing carries that value into a shadow. The shadow "
+        "would start at zero instead of the declared value. Initialisation of "
+        f"a promoted variable is not supported{_first_data_line(source_text, name)}. "
+        f"What to do: replace the initialiser of {name} with an assignment at "
+        "the top of the executable part (or a PARAMETER if it is never "
+        "reassigned)."
         for name in sorted((roles["seed"] | roles["promote"]) & initialised)
     ]
 
