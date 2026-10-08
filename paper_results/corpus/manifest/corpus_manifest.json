@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-manifest/1",
- "generated": "2026-10-08T11:27:35+00:00",
+ "generated": "2026-10-08T12:06:42+00:00",
  "what_this_is": "one row per acquired corpus source plus one per discovered-but-not-acquired candidate; every pipeline stage and feature cell carries a status, a reason and an evidence locator. Skipped never counts as verified.",
  "roots": {
   "campaign": "$UMAT_OTI_WORKSPACE/corpus_campaign",
@@ -15,7 +15,7 @@
  "inputs": {
   "registry": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b17/paper_results/corpus/corpus_registry.json",
-   "sha256": "744edcd7bc3fee2d8559b45e477a3077e1e4b0ee3b4ebe28a47bf481f76e02ca"
+   "sha256": "7145b6a0448c076b98570bc75805cd508ce7e8d94dfdef54905dcbf9d0a4e3b0"
   },
   "triage": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b17/paper_results/discovery/discovery_triage.json",
