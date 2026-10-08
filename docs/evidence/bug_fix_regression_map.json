@@ -887,6 +887,15 @@
     "tests/test_the_b20_separate_line_rules.py::test_rule_3_canary_a_cast_on_a_quantity_that_reaches_stress_flags",
     "tests/test_the_b20_separate_line_rules.py::test_ab_the_112_verified_rows_are_byte_identical_under_the_rule_1_code_path"
    ]
+  },
+  {
+   "commit": "301b97c",
+   "selected_by": "manual",
+   "bug": "B20: rule 2 amended by Vera after the first run; variant kept beside the first-written one.",
+   "tests": [
+    "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_the_same_store_into_a_different_slot_flags",
+    "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_nint_times_stress_still_flags"
+   ]
   }
  ],
  "excluded": [
