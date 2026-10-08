@@ -1666,3 +1666,55 @@ def rule_4_jm_row(key: str, record: dict, scratch: Path, run: Path = PASS24) -> 
                                            ulps=floor.get("ulps") or _compare.STIFFNESS_ULPS,
                                            excluded=undefined_excluded(record))
     return row
+
+
+# ---------------------------------------------------------------------------
+# RULE 2, AMENDED VARIANT (Vera, written 2026-10-08 AFTER the first run)
+# ---------------------------------------------------------------------------
+
+def _norm(text: str) -> str:
+    return re.sub(r"\s+", "", text).upper()
+
+
+def rule_2_amended_static(original_text: str, truncations: Sequence[dict], entry_unit: str = "UMAT") -> dict:
+    """RULE (2) NINT, AMENDED (Vera, verbatim, written 2026-10-08 after the first run):
+
+    a REAL-expression use of v is admitted only as (a) a console WRITE or PRINT,
+    or (b) the idempotent store `STATEV(j) = FLOAT(v)`, `REAL(v)` or `DBLE(v)`
+    into the slot family v was read from; the dynamic condition is unchanged (v
+    takes one value over all calls and all FD runs); any other REAL use fails.
+    Canaries: the same store into a DIFFERENT slot that reaches STRESS must
+    flag; NINT x STRESS must still flag; UVC, Tissue x3 and NN_UMAT_Vahid must
+    stay derivative_truncated under this rule.
+    Line: "Benign NINT read-back: 0 rows under the rule as first written; 4
+    under the amended rule".
+
+    A separate, labelled variant: ``rule_2_static`` (as first written) is kept.
+    The slot family v was read from is the subscript text of the
+    STATEV_OTI(k) inside the truncation; a store is idempotent only into the
+    same subscript text.
+    """
+    base = rule_2_static(original_text, truncations, entry_unit)
+    out = {k: base[k] for k in ("targets", "pattern_offenders", "integer_typed") if k in base}
+    out["variant"] = "amended"
+    if base.get("pattern_offenders") or not base.get("targets") or "violations" not in base:
+        out["static_amended"] = False
+        out["reason"] = base.get("reason", "not the exact NINT read-back pattern")
+        return out
+    read_slot = {}
+    for t in truncations:
+        m = _NINT_PATTERN.match(_norm(t.get("text", "")))
+        if m:
+            read_slot[m.group(1)] = _norm(m.group(3))
+    remaining = []
+    for v in base["violations"]:
+        text = _norm(re.sub(r"^\d+\s+", "", v["text"]))
+        if v["context"] == "io_list":
+            continue
+        m = re.match(r"^STATEV\((.*)\)=(?:FLOAT|REAL|DBLE)\(([A-Z_]\w*)(?:\(.*\))?\)$", text)
+        if v["context"] == "real_expression" and m and read_slot.get(m.group(2)) == _norm(m.group(1)):
+            continue
+        remaining.append(v)
+    out["violations_after_amendment"] = remaining
+    out["static_amended"] = bool(all(base["integer_typed"].values()) and not remaining)
+    return out

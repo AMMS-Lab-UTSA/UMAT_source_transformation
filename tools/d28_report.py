@@ -92,6 +92,9 @@ for k in sorted(trunc_keys, key=lambda x: records[x]["source"]):
             "violations": [f'{v["unit"]}:{v["line"]} {v["context"]}' for v in st2.get("violations", [])],
             "dynamic_single_value": d2.get("single_integer_value_everywhere"),
             "value_seen": d2.get("replay_distinct_values"), "tangent_full": tv, "other_gates": gates}
+    am = d.rule_2_amended_static(text, rec["truncation"]["truncations"])
+    row2["static_amended"] = am["static_amended"]
+    row2["counts_amended"] = bool(am["static_amended"] and row2["dynamic_single_value"] and tv and gates)
     row2["counts_literal"] = bool(row2["static_literal"] and row2["dynamic_single_value"] and tv and gates)
     row2["counts_if_output_and_store_back_admitted"] = bool(
         row2["static_admitting_output"] and row2["dynamic_single_value"] and tv and gates)
@@ -106,10 +109,18 @@ for k in sorted(trunc_keys, key=lambda x: records[x]["source"]):
     r3.append(row3)
 report["rule_2"], report["rule_3"] = r2, r3
 j2 = [r["source"] for r in r2 if r["counts_literal"]]
-j2b = [r["source"] for r in r2 if r["counts_if_output_and_store_back_admitted"]]
+j2b = [r["source"] for r in r2 if r["counts_amended"]]
+# all 419 registry rows: which carry a truncation analysis, which are free form (not evaluated)
+reg_rows = list(csv.DictReader(open(d.REGISTRY)))
+with_trunc = {records[k]["source"] for k in records if "truncation" in records[k]}
+not_evaluated = [x["source_id"] for x in reg_rows
+                 if x["source_id"] in with_trunc and d.solver_form(d.CACHE / x["source_id"]) == "free"]
+report["rule_2_scope"] = {"registry_rows": len(reg_rows), "rows_with_a_truncation_analysis": len(with_trunc),
+                          "rows_without_one_not_applicable": len(reg_rows) - len(with_trunc),
+                          "free_form_rows_not_evaluated": not_evaluated,
+                          "fixed_form_only_note": "the static analysis reads fixed-form source; a free-form row with a truncation would be 'not evaluated'"}
 j3 = [r["source"] for r in r3 if r["counts"]]
-lines.append(f"Benign NINT read-back: {len(j2)} rows (rule as written; {len(j2b)} rows if the console WRITE and the "
-             f"first-call store of the integer back into STATEV are admitted: Vera to say)")
+lines.append(f"Benign NINT read-back: {len(j2)} rows under the rule as first written; {len(j2b)} under the amended rule")
 lines.append(f"Hand-DDSDDE-only truncations: {len(j3)} rows " + "; ".join(
     f'{r["source"].split("/")[-1]}: {r["ddsdde_changed_calls"]}/{r["calls"]} DDSDDE calls changed, '
     f'STRESS {"=" if r["stress_bitwise"] else "!="} STATEV {"=" if r["statev_bitwise"] else "!="} bitwise, '

@@ -246,6 +246,27 @@ def test_rule_2_an_implicit_real_name_is_not_an_integer():
     assert out["static_literal"] is False
 
 
+def test_rule_2_amended_admits_console_write_and_the_idempotent_store_but_the_first_variant_does_not():
+    src = BENIGN.replace("      RETURN", "      WRITE(6,*) NSLPTL\n      STATEV(NSTATV)=FLOAT(NSLPTL)\n      RETURN")
+    assert D.rule_2_static(src, TRUNC)["static_literal"] is False
+    assert D.rule_2_amended_static(src, TRUNC)["static_amended"] is True
+
+
+def test_rule_2_amended_canary_the_same_store_into_a_different_slot_flags():
+    src = BENIGN.replace("      RETURN", "      STATEV(NSTATV-1)=FLOAT(NSLPTL)\n      RETURN")
+    assert D.rule_2_amended_static(src, TRUNC)["static_amended"] is False
+
+
+def test_rule_2_amended_canary_nint_times_stress_still_flags():
+    src = BENIGN.replace("      RETURN", "      STRESS(1)=STRESS(1)*NSLPTL\n      RETURN")
+    assert D.rule_2_amended_static(src, TRUNC)["static_amended"] is False
+
+
+def test_rule_2_amended_a_non_nint_truncation_is_never_admitted():
+    other = [{"text": "I1BAR=REAL(BISO_OTI(1))", "target": "I1BAR", "line": 3}]
+    assert D.rule_2_amended_static(BENIGN, other)["static_amended"] is False
+
+
 # ---- rule 3 -------------------------------------------------------------------
 
 HAND = """      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,NTENS,NDI)
