@@ -865,6 +865,15 @@
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_unconfirmed_absence_keeps_a_source_in_the_population_and_mkl_is_a_library",
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_includes_are_matched_by_file_name_and_the_nearest_one_wins"
    ]
+  },
+  {
+   "commit": "a81e039",
+   "selected_by": "manual",
+   "bug": "A UMAT that dispatches to a routine defined elsewhere in its repository (zenodo umatAba.f) was recorded as a genuine UMAT with no stress update; the output search now follows repository routines handed STRESS or DDSDDE.",
+   "tests": [
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_routine_the_repository_defines_and_is_handed_stress_is_searched",
+    "tests/test_the_four_sources_that_disagreed_with_the_transformer.py::test_no_source_is_both_a_genuine_umat_here_and_anchorless_there"
+   ]
   }
  ],
  "excluded": [
