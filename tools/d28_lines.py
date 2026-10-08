@@ -56,7 +56,10 @@ R4_CANARY_PASS = 1e-17
 #: Rule 3 mutation factor.
 R3_MUTATION = 1.0 + 1e-3
 
-PASS24 = Path("/home/ammslab3/softwarex_work/corpus_run/pass24")
+#: Root of the campaign's working tree. Override with D28_WORK; the default is
+#: ~/softwarex_work, where the pass runs, the cache and the stores live.
+WORK = Path(os.environ.get("D28_WORK") or Path.home() / "softwarex_work")
+PASS24 = Path(os.environ.get("D28_PASS24") or WORK / "corpus_run" / "pass24")
 
 
 # ---------------------------------------------------------------------------
@@ -433,8 +436,8 @@ def rule_4_canaries(reference: Sequence[dict], other: Sequence[dict]) -> dict:
 # offline re-run of the D-4 tangent gate from stored artefacts
 # ---------------------------------------------------------------------------
 
-CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
-STORE = Path("/home/ammslab3/softwarex_work/transform_store")
+CACHE = Path(os.environ.get("D28_CACHE") or WORK / "discovery_cache")
+STORE = Path(os.environ.get("D28_STORE") or WORK / "transform_store")
 
 
 def _manifest_of(record: dict):
@@ -611,7 +614,7 @@ def rule_5_row(key: str, record: dict, scratch: Path, run: Path = PASS24) -> dic
 # RELABEL: published-text-compiles rule (D-28.4)
 # ---------------------------------------------------------------------------
 
-REGISTRY = Path("/home/ammslab3/softwarex_work/final-umat-b17/paper_results/corpus/corpus_registry.csv")
+REGISTRY = Path(os.environ.get("D28_REGISTRY") or WORK / "final-umat-b17" / "paper_results" / "corpus" / "corpus_registry.csv")
 
 
 def relabel_rule_text() -> str:
