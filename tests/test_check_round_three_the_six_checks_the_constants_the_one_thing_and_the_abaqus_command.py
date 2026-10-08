@@ -121,17 +121,16 @@ def _flags_of_all():
     return subprocess.run([sys.executable, str(REPO / "umat-oti"), "all", "--help"], capture_output=True, text=True, cwd="/").stdout
 
 
-def test_the_abaqus_command_is_built_from_flags_that_exist_and_names_the_users_files(tmp_path):
+def test_the_abaqus_command_is_the_verify_command_with_the_users_files(tmp_path):
     check._RUN.clear()
     check._RUN.update(source=tmp_path / "u.for", deck=tmp_path / "d" / "job.inp", out=tmp_path / "u_check")
     command = check.abaqus_command()
-    assert command == (f"umat-oti all {tmp_path / 'u.for'} --material-discovery-root {tmp_path / 'd'} "
-                       f"--out {tmp_path / 'u_check'}_abaqus --abaqus")
-    helped = _flags_of_all()
-    for flag in re.findall(r"--[a-z-]+", command):
+    assert command == f"umat-oti verify {tmp_path / 'u.for'} {tmp_path / 'd' / 'job.inp'}"
+    from umat_oti.app.verify_command import build_parser
+    helped = build_parser().format_help()
+    check._RUN["roots"] = [tmp_path / "lib"]
+    for flag in re.findall(r"--[a-z-]+", check.abaqus_command()):
         assert flag in helped, flag
-    check._RUN["material_config"] = tmp_path / "m.json"
-    assert f"--material-config {tmp_path / 'm.json'}" in check.abaqus_command()
 
 
 @pytest.mark.parametrize("final,says", [("amber", True), ("blue", False), ("red", False), ("green", False)])
@@ -142,7 +141,7 @@ def test_the_green_needs_abaqus_line_is_printed_only_after_an_amber_verdict_with
     out = capsys.readouterr().out
     assert ("To call this file verified, the six-check Abaqus comparison is needed" in out) is says
     if says:
-        assert "umat-oti all" in out and "--abaqus" in out
+        assert "umat-oti verify" in out
 
 
 def test_a_finite_strain_amber_next_step_is_the_command_not_a_rewrite_of_the_model():

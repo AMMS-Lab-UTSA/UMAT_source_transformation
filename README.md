@@ -49,6 +49,19 @@ What `check` does:
   in `<name>_check/results_table.txt` (and `.csv`); everything the run
   recorded is in `<name>_check/workflow_summary.json`.
 
+`check` does not run Abaqus, so it cannot call a file verified on its own. To get
+the full verdict (green only when the six checks held) run
+`umat-oti verify my_umat.for my_deck.inp`. It runs both versions of your
+file in Abaqus and gives the same six checks the corpus uses, in a scratch
+folder next to your UMAT (`--out FOLDER` to choose another; `--dependency-root`
+for helper files). It writes nothing to the shared store or the corpus. It
+needs Abaqus with an Intel Fortran compiler (the `abaqus` command must work),
+gfortran, this checkout, and a deck that carries the material constants after
+`*USER MATERIAL`; without one of these it stops with a card saying whose move
+it is and what to do. A run takes about two to three minutes for a small
+model. The "to call this file verified" sentence at the end of an amber
+`check` verdict gives this command with your file names filled in.
+
 The lower-level steps are still there: `umat-oti all my_umat.for --out DIR`
 (the pipeline `check` is built on) and `umat-oti jacobian`. When they refuse they
 now print the same plain card and keep the raw output in a file.

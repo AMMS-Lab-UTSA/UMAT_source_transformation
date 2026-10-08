@@ -214,6 +214,7 @@ _DOOR_HELP = """\
 umat-oti: derivatives of a UMAT with respect to its parameters, checked.
 
   umat-oti check UMAT.for [DECK.inp | FOLDER]   check one UMAT (start here)
+  umat-oti verify UMAT.for DECK.inp             the six checks in Abaqus, on your own files
   umat-oti doctor                               is this install the one you think it is?
   umat-oti --version                            which code is running, and where
 
@@ -223,6 +224,7 @@ The commands below are the lower-level steps `check` is built from.
 
 _ONE_LINE = {
     "check": "Check one UMAT: read its files, convert it, verify it and give the verdict (start here).",
+    "verify": "Run the six checks that make a file verified, in Abaqus, on your own UMAT and deck.",
     "doctor": "Say which umat-oti code is running and whether the command on your PATH is the same.",
 }
 
@@ -241,7 +243,7 @@ def _lower_level_help() -> str:
         except SystemExit:
             pass
     text = buffer.getvalue()
-    text = text.replace("{all,transform,config,jacobian}", "{check,doctor,all,transform,config,jacobian}")
+    text = text.replace("{all,transform,config,jacobian}", "{check,verify,doctor,all,transform,config,jacobian}")
     lines, added = [], False
     for line in text.splitlines():
         if line.startswith("    all ") and not added:
@@ -363,6 +365,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
     if args[:1] == ["doctor"]:
         return doctor(args[1:])
+    if args[:1] == ["verify"]:
+        from umat_oti.app.verify_command import main as verify_main
+
+        make_this_code_visible_to_children()
+        return verify_main(args[1:])
     if args[:1] == ["check"]:
         from umat_oti.app.check_command import main as check_main
 
