@@ -193,6 +193,17 @@ def _stage_the_gates_support(row: dict) -> str:
     return stage_supported_by_gates(row)
 
 
+def unmeasured_reason(rest_of_chain: str, measured: str = "") -> str:
+    """The reason text of an ``informativeness_not_established`` row.
+
+    The verification row's own reason is the state-regime text of the rest of the
+    chain ("4 of 4 chosen states ... every entry agrees"), which reads like a pass.
+    This state means one gate was never computed (null), so that is said first."""
+    return ("NOT A PASS: the mechanically_informative gate was never measured "
+            "(null)" + (f" -- {measured}" if measured else "")
+            + f". The rest of the verification: {rest_of_chain}")[:900]
+
+
 def translate_stage(stage: str, reason: str = "") -> Verdict:
     """The corpus verdict for a batch rung, or a refusal to guess at one."""
     name = str(stage or "")
@@ -1456,6 +1467,10 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                                   str(row.get("reason") or "")[:500])
         record.terminal_state, record.kind = verdict.state, verdict.kind
         record.reason = verdict.reason
+        if verdict.state == "informativeness_not_established":
+            record.reason = unmeasured_reason(
+                verdict.reason,
+                (row.get("mechanically_informative") or {}).get("reason") or "")
         record.transformed = True
         record.element_type = str(row.get("element_type") or "")
         record.ntens = row.get("ntens", record.ntens)
