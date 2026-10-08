@@ -390,6 +390,70 @@ def growth_state_slots(source_text: str) -> dict[int, str]:
     return dict(clock_reading(source_text).slots)
 
 
+def growth_target_slots(source_text: str,
+                        path: Optional[Path] = None) -> dict[int, str]:
+    """INSTRUMENT RULE (B20, written before it was run, applied to all growth rows).
+
+    Where the growth tensor is NOT kept in STATEV, read it where the author kept
+    what it is built from.
+
+    When a growth source computes its tensor from the clock as LOCAL variables
+    (``G11 = 1+(CarteG11St1-1)*(TIME(1)+DTIME)/TotalT``) and no STATEV slot is
+    clock-driven, the criterion "a clock-driven slot moved by 1%" has nothing to
+    read, and the gate was never measured (null) -- on SweetMelon, MorningGlory,
+    Trachea and CereusForbesiiSpiralis, whose STATEV(6..8) hold the position-only
+    end-state targets Lambda1..3 the tensor ramps towards. The rule: the target
+    slots are the STATEV(k) assigned from a local name (``STATEV(7)=Lambda2St1``)
+    on which a clock-driven quantity depends, through any chain of assignments.
+    Coordinates (assigned from COORDS) and the clock are not targets.
+
+    It applies only when :func:`clock_reading` found a clock-driven quantity and no
+    clock-driven slot, so every source that already has a slot is read exactly as
+    before. The same criterion (growth moved by at least GROWTH_MOVEMENT) is
+    then measured on the target times the fraction of the author's clock the
+    run covered; see :func:`growth_developed`.
+    """
+    from umat_oti.abaqus import constant_folding
+
+    reading = clock_reading(source_text, path=path)
+    if reading.slots or not reading.driven:
+        return {}
+    try:
+        units = constant_folding.routines(source_text, path=path)
+    except Exception:                                      # pragma: no cover
+        return {}
+    out: dict[int, str] = {}
+    for unit in units:
+        if unit.role != "material":
+            continue
+        table: dict[str, set] = {}
+        for line in statements(unit.text):
+            match = _ASSIGN.match(line)
+            if not match:
+                continue
+            key = "".join(match.group(1).split()).upper()
+            words = {w.upper() for w in re.findall(r"[A-Za-z_]\w*", match.group(2))}
+            table.setdefault(key, set()).update(words)
+        needed: set = set()
+        frontier = [name for name in reading.driven if name in table]
+        while frontier:
+            name = frontier.pop()
+            for word in table.get(name, ()):
+                if word not in needed and word in table:
+                    needed.add(word)
+                    frontier.append(word)
+        for line in statements(unit.text):
+            match = _ASSIGN.match(line)
+            if not match:
+                continue
+            slot = _STATEV_SLOT.match("".join(match.group(1).split()))
+            source = match.group(2).strip().upper()
+            if slot and re.fullmatch(r"[A-Z_]\w*", source) and source in needed \
+                    and source not in _CLOCK_ONLY:
+                out[int(slot.group(1))] = line.strip()[:110]
+    return out
+
+
 _STATEV_WRITE = re.compile(
     r"^\s*(?:\d+\s+)?STATEV\s*\(([^)]*)\)\s*=\s*(.+)$", re.IGNORECASE)
 _COMMON_BLOCK = re.compile(
@@ -1916,8 +1980,28 @@ def _results(records: Sequence[dict]) -> list[dict]:
             if record.get("kind") != "entry"]
 
 
+def _clock_reached(results: Sequence[dict]) -> float:
+    """Where the run's clock ended: the END of the last increment.
+
+    A record's ``time`` is TIME(1) at the START of its increment, so the last
+    record is one increment short of the end of a complete run. The increment is
+    taken from the last two records."""
+    times = []
+    for record in results:
+        try:
+            times.append(float(record.get("time") or 0.0))
+        except (TypeError, ValueError):
+            continue
+    if not times:
+        return 0.0
+    if len(times) >= 2 and times[-1] > times[-2]:
+        return times[-1] + (times[-1] - times[-2])
+    return times[-1]
+
+
 def growth_developed(records: Sequence[dict], slots: dict,
-                     total_time: float = 0.0) -> Finding:
+                     total_time: float = 0.0,
+                     targets: Optional[dict] = None) -> Finding:
     """Did the GROWTH TENSOR develop, or did some other state variable move?
 
     The slots are the ones the source itself computes from the clock, found by
@@ -1948,10 +2032,14 @@ def growth_developed(records: Sequence[dict], slots: dict,
     if not results:
         return Finding("growth developed", None,
                        "this run recorded no completed UMAT calls")
+    if not slots and targets:
+        return _growth_developed_from_targets(results, targets, total_time)
     if not slots:
         return Finding("growth developed", None,
+                       "the growth quantity of this source was never measured: "
                        "no state variable in this source is computed from the "
-                       "clock, so there is no growth quantity to watch")
+                       "clock and no state variable holds a target the clock "
+                       "ramps towards, so there is no growth quantity to watch")
     first = _values(results[0], "STATEV")
     last = _values(results[-1], "STATEV")
     if not first or not last:
@@ -1978,12 +2066,7 @@ def growth_developed(records: Sequence[dict], slots: dict,
         return Finding("growth developed", True,
                        f"the growth quantities this source computes from the "
                        f"clock developed: {detail}", best)
-    reached = 0.0
-    for record in results:
-        try:
-            reached = max(reached, float(record.get("time") or 0.0))
-        except (TypeError, ValueError):
-            continue
+    reached = _clock_reached(results)
     if total_time > 0.0 and reached >= 0.99 * total_time:
         how = (f". The run reached {reached:g} of the {total_time:g} this "
                f"source's own law is written against, so it is not a short "
@@ -2003,6 +2086,46 @@ def growth_developed(records: Sequence[dict], slots: dict,
         f"moved: {detail}. The largest, STATEV({best_slot}), changed "
         f"{best:.3%} of its starting value against the {GROWTH_MOVEMENT:.0%} "
         f"this family needs" + how, best)
+
+
+def _growth_developed_from_targets(results: Sequence[dict], targets: dict,
+                                   total_time: float) -> Finding:
+    """The criterion of :func:`growth_developed`, read on the end-state targets.
+
+    The author's tensor is ``1 + (target - 1) * (clock / TotalT)``, a ramp from
+    the identity; the target is held in STATEV and the clock fraction is the
+    part of the author's period the run covered. Growth that developed is
+    ``fraction * |target - 1|``, compared with the same GROWTH_MOVEMENT. The
+    assumption is the ramp from the identity, and the finding says so."""
+    last = _values(results[-1], "STATEV")
+    if not last:
+        return Finding("growth developed", None,
+                       "the probe recorded no state variables, so the growth "
+                       "targets cannot be read off this run")
+    if total_time <= 0.0:
+        return Finding("growth developed", None,
+                       "the period of the author's growth law is not known "
+                       "for this run, so the fraction of it covered is not either")
+    fraction = max(0.0, min(1.0, _clock_reached(results) / total_time))
+    reach = []
+    for slot in sorted(targets):
+        if slot - 1 < len(last):
+            reach.append((slot, fraction * abs(last[slot - 1] - 1.0)))
+    if not reach:
+        return Finding("growth developed", None,
+                       f"the probe recorded {len(last)} state variables and "
+                       f"the target slots {sorted(targets)} are not among them")
+    best_slot, best = max(reach, key=lambda pair: pair[1])
+    detail = ", ".join(f"STATEV({slot}) target x clock fraction {fraction:.0%} "
+                       f"= {value:.3%}" for slot, value in reach)
+    how = (f"the growth tensor of this source is a local variable, so it was "
+           f"read from the end-state targets it ramps towards from the "
+           f"identity: {detail}")
+    if best >= GROWTH_MOVEMENT:
+        return Finding("growth developed", True, how, best)
+    return Finding("growth developed", False,
+                   how + f". The largest, STATEV({best_slot}), is {best:.3%} "
+                   f"against the {GROWTH_MOVEMENT:.0%} this family needs", best)
 
 
 def stress_stays_on_the_material_scale(records: Sequence[dict],
@@ -2232,7 +2355,8 @@ def assess(family: Family, records: Sequence[dict],
         findings.append(growth_developed(
             records, growth_state_slots(source_text),
             total_time=sum(segment.period
-                           for segment in manifest.loading)))
+                           for segment in manifest.loading),
+            targets=growth_target_slots(source_text)))
         if any(segment.body_force for segment in manifest.loading):
             findings.append(deformed_under_the_load(records, manifest.props))
     elif family.name == "body force":
