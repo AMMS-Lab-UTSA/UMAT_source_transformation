@@ -931,6 +931,21 @@ def without_the_authors_program(text: str,
     return "".join(out), tuple(removed)
 
 
+_CPP_INCLUDE = re.compile(r"^(\s*#\s*include\s+)'([^'\n]+)'", re.MULTILINE)
+
+
+def requote_cpp_includes(text: str) -> tuple:
+    """``#include 'f'`` -> ``#include "f"`` for gfortran's preprocessor.
+
+    Returns ``(text, note)``; ``note`` is "" when nothing was changed.
+    """
+    found = _CPP_INCLUDE.findall(text)
+    if not found:
+        return text, ""
+    return (_CPP_INCLUDE.sub(lambda m: f'{m.group(1)}"{m.group(2)}"', text),
+            f"{len(found)} single-quoted #include name(s) double-quoted for gfortran's cpp")
+
+
 def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
                  name: str = "REPLAY", extra: Sequence[Path] = (),
                  flags: Sequence[str] = (), timeout: int = 900,
@@ -969,6 +984,12 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
         # computed -- an output statement with no IOSTAT= assigns nothing --
         # but "the same routine" is the claim this comparison rests on.
         text, silenced = silence_console_writes(text, form)
+        # B20 rule H3b: gfortran's preprocessor takes #include "f" or <f>, not
+        # the single-quoted form ifort's -fpp (the solver's) accepts. Only the
+        # quoting of the file name changes, and only when -cpp was asked for.
+        requoted = ""
+        if "-cpp" in flags:
+            text, requoted = requote_cpp_includes(text)
         without, removed = without_the_authors_program(text, form)
         if quad:
             from umat_oti.corpus_features.drivers import quadify
@@ -978,12 +999,13 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
             cleaned.append(replacement)
             removed_programs.extend(f"{unit.name}:PROGRAM {name}" for name in removed)
             continue
-        if not removed and not silenced:
+        if not removed and not silenced and not requoted:
             cleaned.append(unit)
             continue
         if not removed:
             without = text
-            removed = [f"{len(silenced)} console write(s)"]
+            removed = ([f"{len(silenced)} console write(s)"] if silenced else []) + (
+                [requoted] if requoted else [])
         # Indexed, because two helper files in one bundle can share a name
         # and the second would otherwise overwrite the first's cleaned copy.
         replacement = work_dir / f"noprogram_{index}_{unit.name}"
@@ -1029,6 +1051,13 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
         used = "stub: IMPLICIT REAL*16 (quad reference)"
     else:
         used = _install_header(work_dir)
+        # B20 rule H3: the other public headers a source includes
+        # (aba_ptk_enums.inc, PtkUtilitySubs.hdr, SMAAspUserSubroutines.hdr),
+        # in every casing, as the history builds already install them. An
+        # existing file is never overwritten, so an author's own include of
+        # the same name stays the author's.
+        from umat_oti.abaqus.single_call import install_headers
+        install_headers(work_dir)
     includes = [f"-I{work_dir}"]
 
     # Order is load-bearing, not cosmetic. A compiler processes these in the
