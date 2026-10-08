@@ -1816,6 +1816,42 @@
   "mock:tests/test_transform_ntens_follows_the_deck.py:test_a_deliberately_wrong_element_mapping_is_caught_by_the_guard:monkeypatch.setattr:c6c08d1b": {
    "verdict": "justified",
    "reason": "The planted error itself: maps CPE4 to the 6-component geometry in experiment.geometry_for so the transform NTENS comes out 6 while the planner's is 4; the real ntens_mismatch guard must then refuse. Only the element table is wrong; the guard under test is the real code."
+  },
+  "skip:tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "New test; the behavioural case skips only without gfortran, which it needs to build the transformed UMAT and the author's own routine and compare primal bits and the tangent with central differences. CI installs gfortran, so it runs there; the table, rename, clash and refusal tests in the same file need no compiler.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "skip:tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py:<module>:mark.skipif:8d891947#2": {
+   "verdict": "justified",
+   "reason": "New test; the behavioural case skips only without gfortran, which it needs to build the transformed UMAT and the author's own routine and compare primal bits and the tangent with central differences. CI installs gfortran, so it runs there; the table, rename, clash and refusal tests in the same file need no compiler.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "mock:tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py:test_the_checking_oracle_can_fail:monkeypatch.setattr:ba5f4530": {
+   "verdict": "justified",
+   "reason": "The planted error itself: swaps two entries of the position table in the module under test, then runs the real rewrite and asserts that an independently written Abaqus argument order (in the test) detects the wrong result. Only the table is wrong; the rewrite code is real."
+  },
+  "mock:tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py:test_a_wrong_position_table_makes_the_behavioural_gate_fail:monkeypatch.setattr:6d12f180": {
+   "verdict": "justified",
+   "reason": "The planted error itself: swaps STRAN and DSTRAN in the position table so the real transform and the real primal/tangent comparison against the author's routine must fail. Only the table is wrong; the transform and the gate are real."
+  },
+  "mock:tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py:test_a_wrong_position_table_makes_the_behavioural_gate_fail:monkeypatch.setattr:be8fcf27": {
+   "verdict": "justified",
+   "reason": "Routes the shared comparison harness's transform step through the corpus recipe (_build_contract, then run_transformation), which is where the position rewrite lives; the harness's own build, run and comparison against the author's routine are real. The harness's default step builds a different contract that never reaches the rewrite."
+  },
+  "mock:tests/test_a_umat_is_matched_to_abaqus_by_argument_position.py:test_the_renamed_umat_transforms_and_its_tangent_matches_the_authors:monkeypatch.setattr:cef0b4ef": {
+   "verdict": "justified",
+   "reason": "Same routing as above: the harness's transform step is replaced by the corpus recipe (_build_contract then run_transformation, both real) so the rename is exercised; the build, run, bitwise primal and finite-difference tangent comparison against the author's own routine are the real harness."
   }
  }
 }
