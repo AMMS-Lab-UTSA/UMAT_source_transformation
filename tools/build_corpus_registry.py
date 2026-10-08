@@ -414,6 +414,9 @@ class Record:
     #: (the terminal contract depends on it); this field tells them apart.
     tangent_verdict: str = ""
     missing_companions: str = ""
+    #: ``inferred_not_measured`` when a quantity behind the mechanically_informative
+    #: gate was inferred (growth read from state targets), never observed; "" otherwise.
+    informativeness_evidence: str = ""
     compile_defect: str = ""
     key: str = ""
     seconds: Optional[float] = None
@@ -1467,10 +1470,17 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                                   str(row.get("reason") or "")[:500])
         record.terminal_state, record.kind = verdict.state, verdict.kind
         record.reason = verdict.reason
+        record.informativeness_evidence = str(
+            (row.get("mechanically_informative") or {}).get("evidence_class") or "")
         if verdict.state == "informativeness_not_established":
             record.reason = unmeasured_reason(
                 verdict.reason,
                 (row.get("mechanically_informative") or {}).get("reason") or "")
+        if record.informativeness_evidence == "inferred_not_measured" \
+                and record.terminal_state == FULLY_VERIFIED:
+            raise ValueError(
+                f"{record.source_id}: a growth quantity inferred from state targets "
+                f"reached fully_verified; an inference is not a measurement")
         record.transformed = True
         record.element_type = str(row.get("element_type") or "")
         record.ntens = row.get("ntens", record.ntens)
@@ -2446,6 +2456,14 @@ def summarise(records: list) -> dict:
                                                             "duplicate"))
     return {
         "census": pass23_census(records),
+        "growth_inferred_from_state_targets": {
+            "rows": len([r for r in records
+                         if r.informativeness_evidence == "inferred_not_measured"]),
+            "sources": sorted(r.source_id for r in records
+                              if r.informativeness_evidence == "inferred_not_measured"),
+            "means": "mechanically_informative was never measured (null); growth was "
+                     "inferred from state targets, not measured. None of these rows is "
+                     "or can be fully_verified through that path."},
         "acquired": len(records),
         "genuine_umats": len(umats),
         "adequately_specified_genuine_umats": len(adequate),
@@ -3591,6 +3609,9 @@ def main(argv: Optional[list] = None) -> int:
     write_registry(records, payload, args.json_path, args.csv_path,
                    args.markdown)
 
+    inferred = (summary.get("growth_inferred_from_state_targets") or {})
+    print(f"  Growth inferred from state targets: {inferred.get('rows', 0)} rows "
+          f"(never measured; not verified)")
     census = summary.get("census") or {}
     if census:
         base, fresh = census["pass23_population"], census["new_not_yet_attempted"]
