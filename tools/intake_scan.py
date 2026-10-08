@@ -390,6 +390,20 @@ def substituted_text(deck_text: str) -> str:
     return "\n".join(_substituted(_BRACES.sub(r"<\1>", line), table) for line in lines)
 
 
+def _abaqus_on(rule: str) -> dict:
+    """What Abaqus/Standard 2021 itself does with a block that breaks ``rule`` (measured_results.txt of Ada's probe).
+
+    a ninth value on a data line: Abaqus accepts the block and ignores everything after the eighth (case N);
+    a blank line between data lines, or more data lines than CONSTANTS needs: Abaqus stops with an input
+    error (cases M and I, and A to C).
+    """
+    if rule.startswith("a data line of"):
+        return {"does": "accepts", "how": "reads only the first eight values of that line and ignores the rest"}
+    if rule.startswith("a blank line") or rule.startswith("more data lines"):
+        return {"does": "rejects", "how": "stops with an input error (invalid data)"}
+    return {"does": "unknown", "how": ""}
+
+
 def read_constants(deck_text: str, material_name: str, constants: int) -> dict:
     """The constants a deck WRITES, slot by slot, by the rules Abaqus applies.
 
@@ -769,6 +783,13 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
                  default=p["default"], whose=p["whose"]))
     agrees = None
     differ = None
+    refuses = None
+    if material is not None and getattr(material, "unreadable", ()):
+        # The pipeline's own reader will not use this block (it breaks a measured Abaqus card rule), so it
+        # gives no numbers and the two readers cannot be compared; the user is still told, in words, what
+        # the rule was and what Abaqus does with the block itself (Ada's measurements, props_card_probe).
+        refuses = {"rules": list(material.unreadable),
+                   "abaqus": [dict(rule=r, **_abaqus_on(r)) for r in material.unreadable]}
     if parsed is not None and pipeline_values is not None and not parsed["problems"]:
         written = [0.0 if v is None else v for v in parsed["slots"]]
         agrees = written == pipeline_values
@@ -871,7 +892,8 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
         "kinematics": "finite" if finite else "small strain",
         "props_values_found": values_ok,
         "props_values_agree_with_pipeline": agrees,
-        "props_values_differ": differ}
+        "props_values_differ": differ,
+        "props_values_pipeline_refuses": refuses}
 
     # ---- hand-over to the pipeline ----------------------------------------
     config, complete, missing = _material_config(

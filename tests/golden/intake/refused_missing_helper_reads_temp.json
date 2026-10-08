@@ -16,7 +16,8 @@
     "props_count": null,
     "props_values_agree_with_pipeline": null,
     "props_values_differ": null,
-    "props_values_found": false
+    "props_values_found": false,
+    "props_values_pipeline_refuses": null
   },
   "inputs": {
     "deck": "",
