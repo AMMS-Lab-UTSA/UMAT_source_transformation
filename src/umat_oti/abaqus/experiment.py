@@ -1251,6 +1251,17 @@ def plan(source: Path, repository: Path, name: str = "",
                                 if material.substituted and material.usable
                                 else "")),
         initial_state_from_user_subroutine=material.user_initial_state,
+        # B20 rule H4c: what the author's deck says the state and the stress
+        # start from, carried as written. Nothing is defaulted.
+        initial_stress_from_user_subroutine=material.user_initial_stress,
+        initial_statev=(tuple(material.initial_state_values)
+                        if (material.initial_state_values
+                            and not material.user_initial_state) else ()),
+        initial_statev_provenance=(
+            f"{Path(material.deck).name}: *INITIAL CONDITIONS, TYPE=SOLUTION "
+            f"lists {', '.join(f'{v:g}' for v in material.initial_state_values)}"
+            if (material.initial_state_values
+                and not material.user_initial_state) else ""),
         node_coordinates=nodes,
         node_provenance=node_provenance,
         plane_strain_directions=restraints.everywhere,
@@ -1265,6 +1276,7 @@ def plan(source: Path, repository: Path, name: str = "",
     if frame.known:
         base = replace(base, orientation_axes=frame.axes,
                        orientation_rotation=frame.rotation,
+                       orientation_system=frame.system,
                        orientation_provenance=(
                            f"{Path(material.deck).name}: {frame.provenance}"))
     family = classify(

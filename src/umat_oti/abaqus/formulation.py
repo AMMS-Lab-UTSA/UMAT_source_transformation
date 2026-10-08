@@ -1075,6 +1075,11 @@ class Orientation:
     axes: tuple[float, ...] = ()
     rotation: tuple[int, float] = (3, 0.0)
     provenance: str = ""
+    #: B20 rule H4d: the SYSTEM keyword the author wrote (RECTANGULAR,
+    #: CYLINDRICAL, SPHERICAL). Karakalas' ``system=CYLINDRICAL`` was emitted
+    #: as RECTANGULAR with the same six numbers, which Abaqus rejects ("points
+    #: A, B and the origin should not lie on a straight line").
+    system: str = "RECTANGULAR"
 
     @property
     def known(self) -> bool:
@@ -1107,6 +1112,7 @@ def read_orientation(deck_text: str, material: str = "") -> Orientation:
     different material.
     """
     frames: dict[str, tuple[list[float], tuple[int, float]]] = {}
+    systems: dict[str, str] = {}
     section_orientation = ""
     ply_angle: Optional[float] = None
     section_line = ""
@@ -1125,6 +1131,7 @@ def read_orientation(deck_text: str, material: str = "") -> Orientation:
             parameters = _parameters(found.group(2))
             if keyword == "ORIENTATION":
                 name = parameters.get("NAME", "").upper()
+                systems[name] = parameters.get("SYSTEM", "RECTANGULAR").upper()
                 pending = []
                 mode = "orientation"
                 continue
@@ -1176,7 +1183,10 @@ def read_orientation(deck_text: str, material: str = "") -> Orientation:
               f"axis {axis}")
     if ply_angle:
         detail += f"; the ply is turned a further {ply_angle:g} ({section_line})"
-    return Orientation(tuple(axes), (axis, total), detail)
+    system = systems.get(chosen, "RECTANGULAR") or "RECTANGULAR"
+    if system != "RECTANGULAR":
+        detail += f"; SYSTEM={system}"
+    return Orientation(tuple(axes), (axis, total), detail, system)
 
 
 #: ``*INITIAL CONDITIONS, TYPE=TEMPERATURE`` with a set name and a value.
