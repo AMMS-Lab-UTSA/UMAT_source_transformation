@@ -856,6 +856,15 @@
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_the_output_search_follows_quoted_includes_the_way_the_callee_rule_does",
     "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_a_name_the_upstream_tree_publishes_is_not_missing_because_the_cache_is_partial"
    ]
+  },
+  {
+   "commit": "fcde81f",
+   "selected_by": "manual",
+   "bug": "Names the cache lacked were counted missing without confirmation: a source whose only missing names are MKL (a library) or whose absence could not be checked (an svn snapshot) was external; a name now counts as unpublished only when its absence upstream is confirmed, and MKL is a library.",
+   "tests": [
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_unconfirmed_absence_keeps_a_source_in_the_population_and_mkl_is_a_library",
+    "tests/test_a_callee_is_external_only_when_its_repository_does_not_publish_it.py::test_includes_are_matched_by_file_name_and_the_nearest_one_wins"
+   ]
   }
  ],
  "excluded": [
