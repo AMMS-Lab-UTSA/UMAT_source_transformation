@@ -140,6 +140,8 @@ def _match_interface_by_position(src_path: Path) -> dict:
         return {"applied": False, "refused": outcome.refused}
     if not outcome.applied:
         return {}
+    from umat_oti.core.cache_guard import refuse_write_into_discovery_cache
+    refuse_write_into_discovery_cache(src_path)
     src_path.write_text(outcome.text, encoding="utf-8")
     return {"applied": True, "dummy_map": outcome.dummy_map, "clash_map": outcome.clash_map}
 

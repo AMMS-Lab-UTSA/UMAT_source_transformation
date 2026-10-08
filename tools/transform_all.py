@@ -53,6 +53,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "tools"))
 
+from umat_oti.core.cache_guard import refuse_write_into_discovery_cache  # noqa: E402
 from umat_oti.store import TransformStore  # noqa: E402
 from umat_oti.store.transform_store import file_digest  # noqa: E402
 
@@ -685,6 +686,7 @@ def stage_source_includes(source: Path, work: Path, *, _depth: int = 0) -> list[
         if not origin.is_file() or destination.exists():
             continue
         destination.parent.mkdir(parents=True, exist_ok=True)
+        refuse_write_into_discovery_cache(destination)
         shutil.copy2(origin, destination)
         staged.append(relative.as_posix())
         staged.extend(
@@ -767,6 +769,7 @@ def transform_one(item: WorkItem, work: Path) -> TransformResult:
         work.mkdir(parents=True, exist_ok=True)
         text = source.read_text(errors="replace")
         staged = work / source.name
+        refuse_write_into_discovery_cache(staged)
         staged.write_text(text, encoding="utf-8")
         stage_source_includes(source, work)
         _write_aba_param_stub(work)

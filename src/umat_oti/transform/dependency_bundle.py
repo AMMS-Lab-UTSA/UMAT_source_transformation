@@ -129,6 +129,8 @@ def bundle_sources(sources, out_dir: Path, *, roots=(), runtime_calls=(), librar
             lines[numbers[0]-1:numbers[-1]] = [rewritten]
         destination = out_dir / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
+        from umat_oti.core.cache_guard import refuse_write_into_discovery_cache
+        refuse_write_into_discovery_cache(destination)
         destination.write_text("\n".join(lines) + "\n", encoding="utf-8")
         records.append({"original": str(original), "bundled": relative.as_posix(),
                 "original_sha256": hashlib.sha256(original.read_bytes()).hexdigest(),
