@@ -1924,6 +1924,16 @@
   "mock:tests/test_verify_gives_a_file_outside_the_corpus_the_six_checks_in_a_scratch_folder.py:test_relative_paths_and_another_working_directory_are_resolved_before_anything_is_written:monkeypatch.setattr:f2988ad1": {
    "verdict": "justified",
    "reason": "The patched name is a machine fact or a slow step (the abaqus launcher lookup, the tool runner, the log of the converted file, the recorded result, the scanner); the code under test, verify_command.main and its path handling, stays real. Abaqus and the three tools are not run in an offline test, so the test only checks that relative paths are resolved into the scratch folder; the real-Abaqus runs of the command are separate."
+  },
+  "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_the_stub_verdict_is_withheld_the_moment_a_call_could_write_an_output:09ec4a77": {
+   "verdict": "justified",
+   "reason": "The floor 'at least 20 silent UMAT sources' only guarded against a vacuous test. The registry's output search now follows quoted includes and repository routines handed STRESS/DDSDDE (a81e039), which finds writes for 10 of the 24 silent sources; the figure is pinned exactly at 14, so a change in either direction is noticed, and the invariant that follows (every silent source makes a CALL or is withheld from the stub verdict) is unchanged.",
+   "evidence": [
+    {
+     "in": "tests/test_the_four_sources_that_disagreed_with_the_transformer.py",
+     "text": "assert len(silent) == 14, len(silent)"
+    }
+   ]
   }
  }
 }
