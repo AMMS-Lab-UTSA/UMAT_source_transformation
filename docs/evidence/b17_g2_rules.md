@@ -77,3 +77,32 @@ Rule:
 
 Canary: a source that reads an uninitialised variable after calling SPRIND is still
 flagged undefined_in_original (tests/test_abaqus_utility_stubs.py).
+
+## G2d. A poisoned build stopped by the author's own check is undefined_in_original (Vera, B17)
+
+Written 2026-10-07 BEFORE the rule was implemented or run. Ruling: a poisoned build that
+the author's own check stops (an author guard such as ISNAN trips on an uninitialised
+value) while the zero build completes is undefined_in_original; a poisoned build that
+stops for any other reason (IEEE trap, driver limit) establishes nothing.
+
+Rule, applied to every row that reaches D-12 and to every poison build of the primary
+and the secondary probe:
+1. The zero build replayed every call (it already must, or nothing is established).
+2. The poisoned build is "stopped by the author's own check" iff it ended with fewer
+   calls replayed than were requested AND its process exited normally (status >= 0:
+   a plain STOP, or XIT / STDB_ABQERR from the author's code) AND the status is not one
+   of the driver's own limits (4: SPRINC shape, 6: GETVRM, 7: SPRIND repeated value) AND
+   its output carries no runtime-trap text (forrtl, SIGFPE, "Program received signal",
+   "Fortran runtime error", "Segmentation", "Aborted"). gfortran's trailing
+   "Note: ... exceptions are signalling" is a note, not a trap.
+3. Then every output of the call that did not complete (STRESS, STATEV, DDSDDE) is
+   undefined_in_original: the author's check refused the increment on an uninitialised
+   value, so the solver's result there depends on the garbage. A signal, a trap, a
+   driver limit or any other stop establishes nothing, as before.
+4. Reported as a separate line beside the published figure: "106 of 242 as published;
+   the new rule changes k rows to undefined_in_original". Such rows lose the chance to
+   pass; none is freed.
+
+Canary: a planted author ISNAN guard on an uninitialised value is flagged; a planted
+IEEE trap (SIGFPE / forrtl text), a driver-limit status, a signal and a stop that
+completes every call are not (tests/test_poison_stop_classification.py).
