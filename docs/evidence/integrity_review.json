@@ -1934,6 +1934,16 @@
      "text": "assert len(silent) == 14, len(silent)"
     }
    ]
+  },
+  "broad_except:src/umat_oti/abaqus/experiment.py:growth_target_slots:except Exception:367aecec": {
+   "verdict": "justified",
+   "reason": "The same guard clock_reading and state_is_not_its_own already carry around constant_folding.routines: a source the folding cannot read yields no targets, and growth_developed then reports the growth quantity as never measured (null) -- the finding the gate had before this rule -- rather than a crash of the whole assessment.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/abaqus/experiment.py",
+     "text": "def growth_target_slots("
+    }
+   ]
   }
  }
 }
