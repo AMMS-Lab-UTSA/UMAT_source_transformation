@@ -1944,6 +1944,86 @@
      "text": "def growth_target_slots("
     }
    ]
+  },
+  "skip:tests/test_a_declaration_initialiser_is_carried_to_the_transform.py:<module>:mark.skipif:c9042235": {
+   "verdict": "justified",
+   "reason": "Real-source test; skips only when the discovery cache (a local acquisition of third-party repositories, never in CI) is absent. The synthetic tests of the same behaviour in the same file have no such condition and run in CI.",
+   "evidence": [
+    {
+     "in": "tests/test_a_declaration_initialiser_is_carried_to_the_transform.py",
+     "text": "@pytest.mark.skipif(not FGJD.is_file(), reason=\"needs the discovery cache\")"
+    }
+   ]
+  },
+  "skip:tests/test_a_state_array_with_a_shadow_is_loaded_and_stored.py:<module>:mark.skipif:f6da73f7": {
+   "verdict": "justified",
+   "reason": "Real-source test; skips only when the discovery cache is absent (never in CI). The state-shadow rule is exercised on the only source that showed the defect; the check that refuses a state shadow that is never loaded keeps its own existing tests.",
+   "evidence": [
+    {
+     "in": "tests/test_a_state_array_with_a_shadow_is_loaded_and_stored.py",
+     "text": "@pytest.mark.skipif(not SOURCE.is_file(), reason=\"needs the discovery cache\")"
+    }
+   ]
+  },
+  "skip:tests/test_an_old_tangent_write_before_the_extraction_is_not_a_surviving_write.py:<module>:mark.skipif:65162d0f": {
+   "verdict": "justified",
+   "reason": "Real-source test; skips only when the discovery cache (a local acquisition of third-party repositories, never in CI) is absent. The guard's unit-level behaviour for the exit statements is also exercised by the existing old-tangent tests.",
+   "evidence": [
+    {
+     "in": "tests/test_an_old_tangent_write_before_the_extraction_is_not_a_surviving_write.py",
+     "text": "needs_cache = pytest.mark.skipif(not CFIETEK.is_file(), reason=\"needs the discovery cache\")"
+    }
+   ]
+  },
+  "skip:tests/test_an_old_tangent_write_before_the_extraction_is_not_a_surviving_write.py:<module>:mark.skipif:c325ceed": {
+   "verdict": "justified",
+   "reason": "Real-source test of the second affected source; skips only when the discovery cache is absent (never in CI).",
+   "evidence": [
+    {
+     "in": "tests/test_an_old_tangent_write_before_the_extraction_is_not_a_surviving_write.py",
+     "text": "@pytest.mark.skipif(not MANDEL.is_file(), reason=\"needs the discovery cache\")"
+    }
+   ]
+  },
+  "skip:tests/test_oti_atan2_and_inverse_hyperbolics.py:<module>:mark.skipif:41d89ab2": {
+   "verdict": "justified",
+   "reason": "Real-source test of the crystal-plasticity UMATs; skips only when the discovery cache is absent (never in CI). The numerical tests of ATAN2 and the inverse hyperbolics in the same file need only gfortran and run in CI.",
+   "evidence": [
+    {
+     "in": "tests/test_oti_atan2_and_inverse_hyperbolics.py",
+     "text": "@pytest.mark.skipif(not (CP / \"umatCP.for\").is_file(), reason=\"needs the discovery cache\")"
+    }
+   ]
+  },
+  "skip:tests/test_oti_atan2_and_inverse_hyperbolics.py:build:call:skip:9b0c96cc": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there.",
+   "evidence": [
+    {
+     "in": "tests/test_oti_atan2_and_inverse_hyperbolics.py",
+     "text": "pytest.skip(\"gfortran required\")"
+    }
+   ]
+  },
+  "skip:tests/test_sum_with_dim_over_hypercomplex_arrays.py:output:call:skip:9fa909fa": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there.",
+   "evidence": [
+    {
+     "in": "tests/test_sum_with_dim_over_hypercomplex_arrays.py",
+     "text": "pytest.skip(\"gfortran required\")"
+    }
+   ]
+  },
+  "skip:tests/test_the_emitters_allocation_mirror_is_not_a_stress_expression.py:<module>:mark.skipif:f6da73f7": {
+   "verdict": "justified",
+   "reason": "Real-source test; skips only when the discovery cache is absent (never in CI). The unit tests of the stress-expression scan in the same file have no such condition and run in CI.",
+   "evidence": [
+    {
+     "in": "tests/test_the_emitters_allocation_mirror_is_not_a_stress_expression.py",
+     "text": "@pytest.mark.skipif(not SOURCE.is_file(), reason=\"needs the discovery cache\")"
+    }
+   ]
   }
  }
 }

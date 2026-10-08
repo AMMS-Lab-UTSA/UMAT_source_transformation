@@ -132,6 +132,8 @@ def transform_umat_to_oti_from_config(
     output_dir: Path,
     ntens: int,
 ) -> TransformResult:
+    global _AUTHOR_SHADOWS_MAX
+    _AUTHOR_SHADOWS_MAX = "MAX" in _locals_colliding_with_the_oti_modules(source_text)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     if ntens <= 0:
@@ -488,9 +490,16 @@ def transform_umat_to_oti_from_config(
     # has always emitted it; this one never did, so a source calling SIGN or
     # SQRT on a differentiated value compiled there and failed here.
     intrinsics_path = output_dir / "oti_intrinsics.f90"
+    searched = _without_comments(
+        transformed_source + "\n" + (lifted_helper_text or ""), parsed.form == "fixed")
     intrinsics_path.write_text(
-        _emit_intrinsic_extensions(module_result.module_name,
-                                   module_result.type_name),
+        _emit_intrinsic_extensions(
+            module_result.module_name, module_result.type_name,
+            sum_dim=bool(_SUM_WITH_DIM_RE.search(searched)),
+            atan2=_calls_on_oti_values("ATAN2", searched) and not complex_plan.active,
+            inverse_hyperbolic=tuple(
+                name for name in ("ASINH", "ACOSH", "ATANH")
+                if _calls_on_oti_values(name, searched))),
         encoding="utf-8")
     complex_used = complex_plan.active and complex_support.uses_complex_type(
         transformed_source, lifted_helper_text, type_name=module_result.type_name)
@@ -789,6 +798,9 @@ OTI_MODULE_GENERICS = frozenset({"MIN", "MAX", "SIGN", "NINT", "INT", "MATMUL"})
 #: two keep the refusal and the rest are renamed on import.
 GENERICS_THE_TRANSFORM_CALLS_ITSELF = frozenset({"MIN", "MAX"})
 
+#: Set per transform: the author declares a variable MAX, so no emitted line may call MAX.
+_AUTHOR_SHADOWS_MAX = False
+
 def _locals_colliding_with_the_oti_modules(source_text: str) -> list[str]:
     """Author-declared names that the OTI modules also export."""
     found: set[str] = set()
@@ -820,12 +832,16 @@ def _first_indexed_use(source_text: str, name: str) -> str:
 
 
 def _first_data_line(source_text: str, name: str) -> str:
-    """" (DATA at line N)" for the first DATA statement naming NAME, or ""."""
-    pattern = re.compile(rf"^\s*DATA\b.*(?<![A-Za-z0-9_]){re.escape(name)}\b",
-                         re.IGNORECASE)
+    """" (DATA at line N)" or " (initialised at line N)" for the first statement giving NAME a value."""
+    data = re.compile(rf"^\s*DATA\b.*(?<![A-Za-z0-9_]){re.escape(name)}\b", re.IGNORECASE)
+    declaration = re.compile(rf"::.*(?<![A-Za-z0-9_]){re.escape(name)}\b[^=,]*=(?!>)", re.IGNORECASE)
     for number, line in enumerate(source_text.splitlines(), start=1):
-        if line[:1] not in "Cc*!" and pattern.search(line):
+        if line[:1] in "Cc*!":
+            continue
+        if data.search(line):
             return f" (DATA at line {number})"
+        if declaration.search(line):
+            return f" (initialised at line {number})"
     return ""
 
 
@@ -882,6 +898,8 @@ def _readiness_blockers(
     for name in _locals_colliding_with_the_oti_modules(source_text):
         if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF:
             continue
+        if name == "MAX":
+            continue  # the emitted sqrt guard does not call MAX when the author owns the name
         blockers.append(
             f"{name} is declared as a variable here and is also a generic the "
             f"OTI support modules make public. The import is renamed for the "
@@ -1504,7 +1522,7 @@ def _local_newton_blockers(
 #: several corpus sources declare one, and a public generic of that name makes
 #: every one of them fail on its USE line with "The attributes of this name
 #: conflict with those made accessible by a USE statement".
-_INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "ATAN2", "SUM", "PRODUCT"})
+_INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "SUM", "PRODUCT"})
 
 #: Of those, the ones oti_intrinsics now declares for a single whole-array
 #: argument (SUM(array)). The paragraph above records why SUM was kept out;
@@ -1513,9 +1531,36 @@ _INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "ATAN2", "SUM", "PRODUCT"})
 #: ``_intrinsic_only_collisions``). SUM with DIM= or MASK= is still refused.
 _INTRINSICS_WITH_A_WHOLE_ARRAY_OTI_FORM = frozenset({"SUM"})
 
+def _without_comments(text: str, fixed: bool) -> str:
+    """``text`` with whole-line and trailing comments removed (a mention in prose is not a call)."""
+    kept = []
+    for line in text.split("\n"):
+        if fixed and line[:1] in ("C", "c", "*", "!"):
+            continue
+        stripped = line.lstrip()
+        if stripped.startswith("!"):
+            continue
+        kept.append(strip_inline_comment(line))
+    return "\n".join(kept)
+
+
+def _calls_on_oti_values(name: str, text: str) -> bool:
+    """Whether ``NAME(...)`` is called with a hypercomplex shadow among its first 300 characters.
+
+    oti_intrinsics gains the OTI form of ATAN2 and the inverse hyperbolics only
+    for a file that hands them a shadow, so a file that calls them on reals
+    keeps an unchanged support module.
+    """
+    return bool(re.search(rf"(?<![A-Za-z0-9_%]){name}\s*\([\s\S]{{0,300}}?_OTI\b", text, re.IGNORECASE))
+
+
+#: SUM(array, DIM=d): a linear reduction oti_intrinsics also declares (ranks
+#: 2..6), emitted only for a source that uses it. MASK= is still refused.
+_SUM_WITH_DIM_RE = re.compile(r"(?<![A-Za-z0-9_%])SUM\s*\(.*\bDIM\s*=", re.IGNORECASE)
+
 #: Generics only ``oti_intrinsics`` exports (the algebra module does not), so
 #: a collision with a source's own name is renamed on that USE line alone.
-OTI_INTRINSICS_ONLY_GENERICS = frozenset({"SUM", "NORM2", "TINY", "LOG10"})
+OTI_INTRINSICS_ONLY_GENERICS = frozenset({"SUM", "NORM2", "TINY", "LOG10", "ATAN2", "ASINH", "ACOSH", "ATANH"})
 
 
 def _unsupported_intrinsic_blockers(source_text: str, roles: dict[str, set[str]], stress_regions: list[dict[str, Any]]) -> list[str]:
@@ -1574,9 +1619,11 @@ def _intrinsic_argument_mentions(upper_line: str, intrinsic: str, promoted: set[
         open_paren = search_from + match.end() - 1
         close_paren = _matching_paren_index(upper_line, open_paren)
         argument = upper_line[open_paren + 1:close_paren] if close_paren > 0 else upper_line[open_paren + 1:]
-        if multi_argument_only and len(split_top_level(argument)) == 1:
-            search_from = open_paren + 1
-            continue
+        if multi_argument_only:
+            parts = split_top_level(argument)
+            if len(parts) == 1 or (len(parts) == 2 and re.match(r"\s*DIM\s*=", parts[1], re.IGNORECASE)):
+                search_from = open_paren + 1
+                continue
         if any(token in promoted for token in re.findall(r"[A-Za-z_]\w*", argument)):
             return True
         search_from = open_paren + 1
@@ -2949,7 +2996,7 @@ def _used_modules_not_defined_here(source_text: str) -> list[str]:
     """
     defined = {
         match.group(1).upper()
-        for match in re.finditer(r"^\s*MODULE\s+([A-Za-z_]\w*)\s*$", source_text,
+        for match in re.finditer(r"^\s*MODULE\s+([A-Za-z_]\w*)\s*(?:!.*)?$", source_text,
                                  flags=re.IGNORECASE | re.MULTILINE)
     }
     used: list[str] = []
@@ -3198,13 +3245,14 @@ def _data_initialised_shadow_blockers(
     if not initialised:
         return []
     return [
-        f"{name} takes its starting value from a DATA statement and is also "
-        "assigned, so it needs an OTI shadow, and nothing carries a DATA "
-        "value into a shadow. The shadow would start at zero instead of the "
-        "declared value. DATA initialisation of a promoted variable is not "
-        f"supported{_first_data_line(source_text, name)}. What to do: replace "
-        f"the DATA statement for {name} with an assignment at the top of the "
-        "executable part (or a PARAMETER if it is never reassigned)."
+        f"{name} takes its starting value from a DATA statement or a "
+        "declaration initialiser and is also assigned, so it needs an OTI "
+        "shadow, and nothing carries that value into a shadow. The shadow "
+        "would start at zero instead of the declared value. Initialisation of "
+        f"a promoted variable is not supported{_first_data_line(source_text, name)}. "
+        f"What to do: replace the initialiser of {name} with an assignment at "
+        "the top of the executable part (or a PARAMETER if it is never "
+        "reassigned)."
         for name in sorted((roles["seed"] | roles["promote"]) & initialised)
     ]
 
@@ -3547,6 +3595,12 @@ def _transform_source_text(
     )
     shadow_variables = sorted(shadow_variable_names)
     ddsdde_name = mappings.get("ddsdde", "DDSDDE")
+    # A state array that received a shadow (it is handed to a
+    # lifted helper beside promoted arguments) is copied in and written back like
+    # a promoted one; without this the shadow ran from zero and was never stored.
+    _sv = mappings.get("statev", "STATEV")
+    if _sv in shadow_variable_names and _sv not in roles["promote"]:
+        roles["promote"].add(_sv)
     # Which old-tangent lines the emitter will comment out, decided once so the
     # scratch analysis below and the loop that writes the file agree about it.
     disabled_old_region_lines = {
@@ -3661,7 +3715,7 @@ def _transform_source_text(
             output.append(_module_use_line(
                 form, module_name, oti_directions,
                 [name for name in _locals_colliding_with_the_oti_modules(source_text)
-                 if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF],
+                 if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF or (name == "MAX" and _AUTHOR_SHADOWS_MAX)],
                 shadowed_intrinsics=_intrinsic_only_collisions(
                     lines[selected_routine_span[0] - 1:selected_routine_span[1]])))
         if line_number + 1 == declaration_insert_before:
@@ -5524,6 +5578,10 @@ def _wrap_real_assignment_rhs(line: str) -> str:
     rhs = match.group(3).strip()
     if lhs_name.endswith("_OTI") or lhs_name in {"OTI_HX", "OTI_HY", "OTI_HTR"} or rhs.upper().startswith("REAL("):
         return line
+    # A logical or character constant is not a number: REAL(.TRUE.) is a compile error
+    # (the condition of "IF (...OTI...) FULL = .TRUE." made the line look differentiated).
+    if re.fullmatch(r"\.(?:TRUE|FALSE)\.(?:_\w+)?|'[^']*'|\"[^\"]*\"", rhs, flags=re.IGNORECASE):
+        return line
     # This function is handed ONE physical line, and a statement may run over
     # several. Where the right-hand side's parentheses do not balance, the
     # statement continues onto lines this call cannot see, and closing the
@@ -5580,6 +5638,20 @@ def _rewrite_lifted_helper_call(
         # sign of trouble is a derived type read as a real at run time.
         opener = re.match(r"^(\s*CALL\s+)([A-Z_][A-Z0-9_]*)(\s*\(.*)$",
                           line, flags=re.IGNORECASE)
+        if not opener:
+            # ... and a CALL whose name is followed by nothing but a comment
+            # (stripped before this function sees the line), with the
+            # argument list on the continuation line:
+            #
+            #       CALL STRESS_UPDATE  ! ITERATIVE STRESS UPDATE METHOD
+            #      1 (STAT_VAR,EQPLAS,STRESS,DDSDDE,ITER)
+            #
+            # The name is the whole of this physical line, so the opener
+            # above, which wants a "(", never matched and the OTI actuals on
+            # the next line went to the untransformed routine (theysy MML_U2:
+            # the first call returned a stress of 0.0 against 221.37).
+            opener = re.match(r"^(\s*CALL\s+)([A-Z_][A-Z0-9_]*)(\s*)$",
+                              line, flags=re.IGNORECASE)
         if not opener:
             return line
         callee = opener.group(2).upper()
@@ -5811,7 +5883,12 @@ def _normalize_safe_sqrt_intrinsics_in_oti_expression(line: str) -> str:
         if not _contains_oti_value_reference(argument):
             search_from = close_paren + 1
             continue
-        safe_argument = f"(((MAX(REAL({argument}), 1.0D-30)) - REAL({argument})) + ({argument}))"
+        if _AUTHOR_SHADOWS_MAX:
+            # max(x, c) = (x + c + |x - c|)/2, spelled without a call to MAX
+            safe_argument = (f"((0.5D0*(REAL({argument}) + 1.0D-30 + ABS(REAL({argument}) - 1.0D-30)) "
+                             f"- REAL({argument})) + ({argument}))")
+        else:
+            safe_argument = f"(((MAX(REAL({argument}), 1.0D-30)) - REAL({argument})) + ({argument}))"
         result = result[: open_paren + 1] + safe_argument + result[close_paren:]
         search_from = open_paren + 1 + len(safe_argument)
 
@@ -8044,9 +8121,12 @@ def oti_arguments_into_untransformed_calls(
     defined = _routines_carrying_the_oti_type(transformed_source, form)
     found: list[tuple[str, str]] = []
     seen: set[tuple[str, str]] = set()
-    for line in transformed_source.splitlines():
-        if _is_commented(line):
-            continue
+    # Statements, not physical lines: a CALL whose argument list continues on
+    # the next line (or whose name is followed by a comment and a continuation,
+    # theysy's MML_U2) carries its OTI actuals where a per-line reading never
+    # looked.
+    for logical in logical_lines_from_text(transformed_source, form):
+        line = logical.text
         match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)$",
                          line.replace("\t", " "), flags=re.IGNORECASE)
         if not match:
@@ -8431,6 +8511,63 @@ def value_actuals_left_real_in_lifted_helpers(
     return found
 
 
+_EXPLICIT_REAL_DECLARATION = re.compile(
+    r"^\s*(?:DOUBLE\s*PRECISION|REAL(?:\s*\*\s*\d+|\s*\([^)]*\))?)\s*(?:,[^:]*)?(?:::)?\s*(.+)$",
+    re.IGNORECASE)
+
+
+def real_variable_actuals_in_lifted_helpers(
+    lifted_helper_source: str, oti_helper_dummies: dict[str, list[str | None]],
+) -> list[tuple[str, str, str]]:
+    """A variable the calling helper declares REAL, handed to another helper's hypercomplex dummy.
+
+    :func:`value_actuals_left_real_in_lifted_helpers` examines literals only.
+    Inside the lifted helpers most names are hypercomplex through the IMPLICIT
+    statement the lifter writes, so the variables worth asking about are the
+    ones the helper declares REAL or DOUBLE PRECISION explicitly (luisez1988's
+    NorSand passes ``p, q, eta`` so declared to GETPANDQ_OTI, which writes
+    hypercomplex results into them). The implicit interface of an external
+    subprogram hides the mismatch from the compiler. Per calling routine; only
+    explicit REAL declarations count, so nothing typed by IMPLICIT is flagged.
+
+    Returns (callee, argument, dummy) triples, like the literal check.
+    """
+    dummies = {key.upper(): value for key, value in oti_helper_dummies.items()}
+    if not dummies:
+        return []
+    found: list[tuple[str, str, str]] = []
+    real_names: set[str] = set()
+    for line in logical_lines_from_text(lifted_helper_source, "free"):
+        text = line.text
+        if _UNIT_HEADER.match(text):
+            real_names = set()
+            continue
+        declaration = _EXPLICIT_REAL_DECLARATION.match(text)
+        if declaration and not re.match(r"^\s*REAL\s*\(\s*(?:KIND\s*=\s*)?[^)]*\)\s*FUNCTION", text, re.IGNORECASE):
+            for item in split_top_level(declaration.group(1)):
+                name = _helper_argument_base_name(item.split("=", 1)[0])
+                if name:
+                    real_names.add(name)
+            continue
+        match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)\)\s*$", text, re.IGNORECASE)
+        if not match:
+            continue
+        expected = dummies.get(match.group(1).upper()) or []
+        actuals = list(split_top_level(match.group(2)))
+        for position, dummy in enumerate(expected):
+            if dummy is None or position >= len(actuals):
+                continue
+            actual = actuals[position].strip()
+            if _DESIGNATOR_ACTUAL.match(actual) and _helper_argument_base_name(actual) in real_names:
+                found.append((match.group(1).upper(), actual, str(dummy).upper()))
+    return found
+
+
+_UNIT_HEADER = re.compile(
+    r"^\s*(?:(?:PURE|IMPURE|ELEMENTAL|RECURSIVE)\s+)*(?:SUBROUTINE|(?:[\w(), *]*\s)?FUNCTION)\s+[A-Za-z_]\w*",
+    re.IGNORECASE)
+
+
 #: A signed numeric literal, or arithmetic of nothing else.
 _REAL_OR_INTEGER_LITERAL_ONLY = re.compile(
     r"^[\s()+\-*/]*\d[\d.]*(?:[DEQdeq][+-]?\d+)?(?:_\w+)?"
@@ -8720,6 +8857,8 @@ def _semantic_checks(
         transformed_source, form, lifted_helper_source, type_name)
     reversed_leak += value_actuals_left_real_in_lifted_helpers(
         lifted_helper_source, oti_typed_dummies_of_lifted_helpers(lifted_helper_source))
+    reversed_leak += real_variable_actuals_in_lifted_helpers(
+        lifted_helper_source, oti_typed_dummies_of_lifted_helpers(lifted_helper_source))
     for callee, argument, dummy in reversed_leak[:6]:
         warnings.append(
             f"{argument} is passed to {callee}, whose dummy argument {dummy} "
@@ -8769,6 +8908,7 @@ def _semantic_checks(
             transformed_source,
             config,
             last_stress_update_line=last_stress_update_line,
+            extraction_line=ddsdde_output_line,
         ),
         # The companion question. The check above asks whether the old writes
         # to DDSDDE are gone; this one asks whether anything still reads the
@@ -9218,6 +9358,13 @@ def _stress_expression_lines(active_lines: list[tuple[int, str]], roles: dict[st
         if "TYPE(" in upper or "GETIM(" in upper or "REAL(" in upper:
             continue
         if "=" not in line and not re.match(r"^\s*CALL\b", line, flags=re.IGNORECASE):
+            continue
+        # ALLOCATE / DEALLOCATE of a shadow (the emitter's own mirror of the author's
+        # ALLOCATE) names a shadow and computes nothing: not a stress expression.
+        if re.match(r"^\s*(?:IF\s*\(\s*ALLOCATED\s*\([^)]*\)\s*\)\s*)?(?:DE)?ALLOCATE\s*\(", line, flags=re.IGNORECASE):
+            continue
+        # ... and the emitter's own zeroing loop over that mirror: DO OTI_HI = LBOUND(X_OTI,1), ...
+        if re.match(r"^\s*(?:\d+\s+)?DO\s+OTI_H[IJKL]\s*=", line, flags=re.IGNORECASE):
             continue
         if _is_dstran_initialization_line(line, dstran) or _is_dstran_seed_line(line, dstran):
             continue
@@ -9777,6 +9924,7 @@ def _old_ddsdde_assignments_disabled(
     config: dict[str, Any],
     *,
     last_stress_update_line: int = 0,
+    extraction_line: int = 0,
 ) -> bool:
     assignments = _dict(config.get("analysis")).get("assignments_to_ddsdde", []) if config else []
     regions = _regions_from_config(config) if config else {}
@@ -9791,15 +9939,33 @@ def _old_ddsdde_assignments_disabled(
     }
     if not expected_disabled:
         return True
-    active = [
-        (line_number, _canonical_fortran_text(line))
-        for line_number, line in _active_lines_with_numbers(transformed_source)
-    ]
+    # Only the selected routine's own statements; an assignment
+    # to a dummy that happens to be called DDSDDE in another routine of the file is
+    # that routine's variable.
+    raw_active = _active_lines_in_selected_subroutine(
+        _active_lines_with_numbers(transformed_source), _selected_umat(config))
+    active = [(line_number, _canonical_fortran_text(line)) for line_number, line in raw_active]
     if last_stress_update_line > 0:
+        window_start = last_stress_update_line
+        # An assignment that lies BEFORE the full-array DDSDDE extraction, on a stretch no
+        # statement can leave early, is overwritten by it: the guard is about a write that
+        # survives the extraction. It fails closed on every way out the routine has -- RETURN,
+        # any GO TO (plain, computed, assigned), ENTRY, an arithmetic IF, an alternate RETURN
+        # label, an ERR=/END=/EOR= branch -- and on STOP, which costs nothing to refuse.
+        if extraction_line > last_stress_update_line:
+            leaves = re.compile(
+                r"\b(?:RETURN|GO\s*TO|ENTRY|STOP)\b"
+                r"|^\s*(?:\d+\s+)?(?:ELSE\s*)?IF\s*\(.*\)\s*\d+\s*,\s*\d+\s*,\s*\d+\s*$"
+                r"|\b(?:ERR|END|EOR)\s*=\s*\d+"
+                r"|^\s*(?:\d+\s+)?CALL\b.*,\s*\*\s*\d+",
+                re.IGNORECASE)
+            if not any(leaves.search(line) for line_number, line in raw_active
+                       if last_stress_update_line <= line_number < extraction_line):
+                window_start = extraction_line
         active = [
             (line_number, text)
             for line_number, text in active
-            if line_number >= last_stress_update_line
+            if line_number >= window_start
         ]
     # No dominance escape hatch. An earlier version accepted a surviving
     # assignment when the OTI extraction appeared to dominate every RETURN,
@@ -9877,6 +10043,11 @@ def _statement_reads(statement: str, name: str) -> bool:
     text = _without_character_literals(
         _statement_without_inline_comment(statement)).strip()
     if not text or _NON_READING_STATEMENT.match(text):
+        return False
+    # PRINT only displays the array: a value that is printed is not used by the
+    # model. (WRITE is deliberately not included: its unit may be an internal
+    # file that the model reads back.)
+    if re.match(r"^(?:\d+\s+)?PRINT\b", text, flags=re.IGNORECASE):
         return False
     reference = re.compile(rf"(?<![%\w]){re.escape(name)}\b", re.IGNORECASE)
     inline_if = _split_inline_if_assignment(text)

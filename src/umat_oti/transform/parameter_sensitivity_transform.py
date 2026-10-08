@@ -752,7 +752,8 @@ def _required_utility_stubs(source_text: str) -> tuple[str, ...]:
 
 
 
-def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
+def _emit_intrinsic_extensions(module_name: str, type_name: str, *, sum_dim: bool = False, atan2: bool = False,
+                               inverse_hyperbolic: tuple[str, ...] = ()) -> str:
     """Mixed OTI/real forms of MIN, MAX, SIGN and MATMUL.
 
     The generated OTI module defines MIN and MAX only for two OTI operands, but
@@ -1224,7 +1225,158 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "END MODULE oti_intrinsics",
         "",
     ]
+    if sum_dim:
+        lines = _with_sum_dim(lines, type_name)
+    if atan2:
+        lines = _with_atan2(lines, type_name)
+    if inverse_hyperbolic:
+        lines = _with_inverse_hyperbolic(lines, type_name, inverse_hyperbolic)
     return "\n".join(lines)
+
+
+def _sum_dim_function(rank: int, type_name: str) -> list[str]:
+    """SUM(ARRAY, DIM) of a rank-``rank`` OTI array: a linear reduction, so exact."""
+    colons = ",".join([":"] * rank)
+    rcolons = ",".join([":"] * (rank - 1))
+    out = [
+        f"  FUNCTION oti_sum_d{rank}(ARRAY, DIM) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: ARRAY({colons})",
+        "    INTEGER, INTENT(IN) :: DIM",
+        f"    TYPE({type_name}), ALLOCATABLE :: RES({rcolons})",
+        "    INTEGER :: K, " + ", ".join(f"I{n}" for n in range(1, rank)),
+    ]
+    for d in range(1, rank + 1):
+        keep = [n for n in range(1, rank + 1) if n != d]
+        out.append(f"    {'IF' if d == 1 else 'ELSE IF'} (DIM == {d}) THEN")
+        out.append("      ALLOCATE (RES(" + ", ".join(f"SIZE(ARRAY, {n})" for n in keep) + "))")
+        out.append("      RES = 0.0D0")
+        for idx in range(len(keep), 0, -1):
+            out.append(f"      DO I{idx} = 1, SIZE(ARRAY, {keep[idx - 1]})")
+        out.append(f"      DO K = 1, SIZE(ARRAY, {d})")
+        sub, ri = [], 0
+        for n in range(1, rank + 1):
+            if n == d:
+                sub.append("K")
+            else:
+                ri += 1
+                sub.append(f"I{ri}")
+        res_sub = ", ".join(f"I{n}" for n in range(1, rank))
+        out.append(f"        RES({res_sub}) = RES({res_sub}) + ARRAY({', '.join(sub)})")
+        out.append("      END DO")
+        for _ in keep:
+            out.append("      END DO")
+    out.append("    ELSE")
+    out.append("      STOP 'SUM: DIM out of range'")
+    out.append("    END IF")
+    out.append(f"  END FUNCTION oti_sum_d{rank}")
+    return out
+
+
+def _with_sum_dim(lines: list[str], type_name: str) -> list[str]:
+    """Add the SUM(ARRAY, DIM) overloads (ranks 2..6) to the module text."""
+    names = ", ".join(f"oti_sum_d{r}" for r in range(2, 7))
+    result: list[str] = []
+    for line in lines:
+        if line == "    MODULE PROCEDURE oti_sum_r1, oti_sum_r2":
+            result.append(line)
+            result.append(f"    MODULE PROCEDURE {names}")
+            continue
+        if line == "END MODULE oti_intrinsics":
+            for r in range(2, 7):
+                result.extend(_sum_dim_function(r, type_name))
+        result.append(line)
+    return result
+
+
+def _with_atan2(lines: list[str], type_name: str) -> list[str]:
+    """ATAN2(Y, X) over the OTI type (three kind mixes), emitted only for a source that uses it.
+
+    Derivative (x dy - y dx)/(x^2 + y^2), taken through ATAN(Y/X) on the branch where
+    |x| >= |y| and through -ATAN(X/Y) otherwise, with the quadrant restored from the
+    real parts; at x = y = 0 the value is the intrinsic's and the derivative is zero.
+    """
+    body = [
+        "  ELEMENTAL FUNCTION oti_atan2_tt(Y, X) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: Y, X",
+        f"    TYPE({type_name}) :: RES",
+        "    REAL(DP) :: XV, YV",
+        "    REAL(DP), PARAMETER :: PI_ = 3.14159265358979323846264338327950288_DP",
+        "    XV = X%R",
+        "    YV = Y%R",
+        "    IF (XV == 0.0_DP .AND. YV == 0.0_DP) THEN",
+        "      RES = ATAN2(YV, XV)",
+        "    ELSE IF (ABS(XV) >= ABS(YV)) THEN",
+        "      RES = ATAN(Y / X)",
+        "      IF (XV < 0.0_DP) RES = RES + SIGN(PI_, YV)",
+        "    ELSE",
+        "      RES = SIGN(0.5_DP*PI_, YV) - ATAN(X / Y)",
+        "    END IF",
+        "  END FUNCTION oti_atan2_tt",
+        "  ELEMENTAL FUNCTION oti_atan2_tr(Y, X) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: Y",
+        "    REAL(DP), INTENT(IN) :: X",
+        f"    TYPE({type_name}) :: RES, XT",
+        "    XT = X",
+        "    RES = oti_atan2_tt(Y, XT)",
+        "  END FUNCTION oti_atan2_tr",
+        "  ELEMENTAL FUNCTION oti_atan2_rt(Y, X) RESULT(RES)",
+        "    REAL(DP), INTENT(IN) :: Y",
+        f"    TYPE({type_name}), INTENT(IN) :: X",
+        f"    TYPE({type_name}) :: RES, YT",
+        "    YT = Y",
+        "    RES = oti_atan2_tt(YT, X)",
+        "  END FUNCTION oti_atan2_rt",
+    ]
+    result: list[str] = []
+    for line in lines:
+        if line.startswith("  PUBLIC :: MIN, MAX, SIGN,"):
+            result.append(line)
+            result.append("  PUBLIC :: ATAN2")
+            result.append("  INTERFACE ATAN2")
+            result.append("    MODULE PROCEDURE oti_atan2_tt, oti_atan2_tr, oti_atan2_rt")
+            result.append("  END INTERFACE")
+            continue
+        if line == "END MODULE oti_intrinsics":
+            result.extend(body)
+        result.append(line)
+    return result
+
+
+_INVERSE_HYPERBOLIC_BODY = {
+    # asinh x = log(x + sqrt(x^2 + 1)); acosh x = log(x + sqrt(x^2 - 1)); atanh x = log((1+x)/(1-x))/2
+    "ASINH": "RES = LOG(X + SQRT(X*X + 1.0_DP))",
+    "ACOSH": "RES = LOG(X + SQRT(X*X - 1.0_DP))",
+    "ATANH": "RES = 0.5_DP*LOG((1.0_DP + X)/(1.0_DP - X))",
+}
+
+
+def _with_inverse_hyperbolic(lines: list[str], type_name: str, names: tuple[str, ...]) -> list[str]:
+    """ASINH / ACOSH / ATANH over the OTI type, emitted only for the ones a source uses."""
+    names = tuple(n for n in names if n in _INVERSE_HYPERBOLIC_BODY)
+    body: list[str] = []
+    for name in names:
+        low = name.lower()
+        body += [
+            f"  IMPURE ELEMENTAL FUNCTION oti_{low}(X) RESULT(RES)",
+            f"    TYPE({type_name}), INTENT(IN) :: X",
+            f"    TYPE({type_name}) :: RES",
+            f"    {_INVERSE_HYPERBOLIC_BODY[name]}",
+            f"  END FUNCTION oti_{low}",
+        ]
+    result: list[str] = []
+    for line in lines:
+        if line.startswith("  PUBLIC :: MIN, MAX, SIGN,"):
+            result.append(line)
+            for name in names:
+                result.append(f"  PUBLIC :: {name}")
+                result.append(f"  INTERFACE {name}")
+                result.append(f"    MODULE PROCEDURE oti_{name.lower()}")
+                result.append("  END INTERFACE")
+            continue
+        if line == "END MODULE oti_intrinsics":
+            result.extend(body)
+        result.append(line)
+    return result
 
 
 def _emit_makefile(module_name: str) -> str:
