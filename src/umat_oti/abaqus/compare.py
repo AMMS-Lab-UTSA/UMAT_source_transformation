@@ -368,7 +368,41 @@ ABSOLUTE_FLOOR_FRACTION = 1e-12
 SAME_TIME = 1e-9
 
 
-def align_by_time(left: Sequence[dict], right: Sequence[dict]
+def increment_size(record: dict) -> Optional[float]:
+    """The size of the increment a record was taken in, if it says (DTIME)."""
+    entry = record.get("entry") or {}
+    value = entry.get("DTIME", record.get("dtime"))
+    if isinstance(value, (list, tuple)):
+        value = value[0] if value else None
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return None
+    return value if math.isfinite(value) else None
+
+
+def record_key(record: dict, by_increment: bool = True) -> tuple:
+    """Where a record is: step, element, integration point, start time and --
+    B20 rule H5, ``by_increment`` -- the size of its increment.
+
+    A 5.0 increment and a 1.25 increment that start at the same time are two
+    different increments (Growth-CASE3: the control converged in 5.0 where the
+    transformed run took a 1.25 cutback), and comparing their records says
+    nothing about either build. A record that carries no DTIME is keyed as
+    before.
+    """
+    base = (int(record.get("step") or 0),
+            int(record.get("element") or 0),
+            int(record.get("point") or 0),
+            round(float(record.get("time") or 0.0) / SAME_TIME))
+    if not by_increment:
+        return base
+    size = increment_size(record)
+    return base + (None if size is None else float(f"{size:.9g}"),)
+
+
+def align_by_time(left: Sequence[dict], right: Sequence[dict], *,
+                  by_increment: bool = False
                   ) -> tuple[list[dict], list[dict], str]:
     """Pair two histories by WHERE they are, not by how many records each has.
 
@@ -388,16 +422,15 @@ def align_by_time(left: Sequence[dict], right: Sequence[dict]
     because its stiffness changes along the path and it needs the cutbacks.
 
     So the records are paired on the step, the integration point and the time
-    they were taken at. What comes back is what both builds actually reached,
+    they were taken at -- and, for the Jacobian-matched control
+    (``by_increment=True``, rule H5), on the size of the increment too.
+    What comes back is what both builds actually reached,
     and a sentence saying how much of each was used -- because a comparison
     resting on three of forty increments is a different claim from one
     resting on forty.
     """
     def key(record: dict) -> tuple:
-        return (int(record.get("step") or 0),
-                int(record.get("element") or 0),
-                int(record.get("point") or 0),
-                round(float(record.get("time") or 0.0) / SAME_TIME))
+        return record_key(record, by_increment)
 
     if len(left) == len(right) and all(
             key(a) == key(b) for a, b in zip(left, right)):
@@ -416,7 +449,8 @@ def align_by_time(left: Sequence[dict], right: Sequence[dict]
     note = (f"the two builds walked different increments, so the comparison "
             f"is over the {len(paired_left)} that the original's {len(left)} "
             f"and the converted build's {len(right)} records share by step, "
-            f"integration point and time")
+            f"integration point and time"
+            + (" and increment size" if by_increment else ""))
     return paired_left, paired_right, note
 
 
