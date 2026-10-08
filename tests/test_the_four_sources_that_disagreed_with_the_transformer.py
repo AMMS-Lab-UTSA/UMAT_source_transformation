@@ -198,7 +198,11 @@ def test_the_stub_verdict_is_withheld_the_moment_a_call_could_write_an_output():
     silent = [r for r in rows
               if r["entry_interface"] == "UMAT"
               and r["writes_stress"] is False and r["writes_ddsdde"] is False]
-    assert len(silent) >= 20, len(silent)
+    # 24 sources assigned neither output in their own text; the registry now also
+    # follows quoted includes and repository routines handed STRESS/DDSDDE
+    # (RULE_G3a amendment 4), which finds writes for 10 of them, so 14 stay silent.
+    # Pinned exactly so that a change in either direction is noticed.
+    assert len(silent) == 14, len(silent)
     templates = [r for r in silent if r["output_calls"] == 0]
     assert len(templates) == 3, [r["source_id"] for r in templates]
     for r in silent:

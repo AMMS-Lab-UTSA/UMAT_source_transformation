@@ -244,3 +244,25 @@ def test_unconfirmed_absence_keeps_a_source_in_the_population_and_mkl_is_a_libra
              "module MKL_RCI", "include mkl_lapack.f90"]
     assert reg.unpublished_by_the_rule("o__r/u.f", names, check) == ["call GONE", "module stdlib_kinds"]
     assert reg.unpublished_by_the_rule("o__r/never_checked.f", names, check) == []
+
+
+def test_a_routine_the_repository_defines_and_is_handed_stress_is_searched(tmp_path):
+    """RULE_G3a amendment 4: a dispatcher UMAT that CALLs a repository routine
+    with STRESS/DDSDDE is not a UMAT with no stress update (zenodo umatAba.f)."""
+    import build_corpus_registry as reg
+    from umat_oti.corpus.entry_routines import umat_outputs_written
+    main = HEAD + "      CALL KUSD(STRESS,DDSDDE)\n      CALL ELSEWHERE(STRESS)\n      CALL OTHER(TIME)\n      END\n"
+    repo(tmp_path, {"jobs/umat.f": main,
+                    "lib/k.f": "      SUBROUTINE KUSD(STRESS,DDSDDE)\n      STRESS(1)=1.D0\n      DDSDDE(1,1)=2.D0\n      END\n",
+                    "lib/o.f": "      SUBROUTINE OTHER(T)\n      STRESS(1)=9.D0\n      END\n"})
+    source = tmp_path / "owner__repo" / "jobs" / "umat.f"
+    found, followed = reg.outputs_following_includes(
+        source, main, umat_outputs_written(main, path=source), tmp_path)
+    assert found.writes_stress and found.writes_ddsdde
+    assert followed == ["owner__repo/lib/k.f"]   # OTHER gets no output argument; ELSEWHERE is undefined
+    # canary: the callee removed -> the dispatcher writes nothing
+    (tmp_path / "owner__repo/lib/k.f").unlink()
+    rl._INDEXES.clear()
+    found, followed = reg.outputs_following_includes(
+        source, main, umat_outputs_written(main, path=source), tmp_path)
+    assert not found.writes_stress and followed == []

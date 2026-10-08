@@ -1349,7 +1349,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             record.output_first_write = outputs.first_write
             record.output_first_write_line = outputs.first_write_line or None
             record.output_search = outputs.where_it_searched + (
-                f"; followed {len(followed)} quoted INCLUDE file(s) that "
+                f"; followed {len(followed)} quoted INCLUDE file(s) and callee file(s) that "
                 f"the repository publishes: {', '.join(followed)}" if followed else "")
             record.source_form = found.source_form
             record.entry_interface = found.entry_interface
@@ -3274,6 +3274,21 @@ def companion_files_text(order, cache) -> str:
     return "; ".join(str(Path(unit).relative_to(cache)) for unit in order)
 
 
+_OUTPUT_ARGUMENT = re.compile(r"\b(?:stress|ddsdde)\b", re.IGNORECASE)
+
+
+def _callees_given_the_outputs(text: str) -> list:
+    """CALL targets (upper case) whose argument list names STRESS or DDSDDE."""
+    from umat_oti.abaqus.repository_lookup import _CALL, _statements
+    from umat_oti.corpus import detect_source_form as detect_form_from_text
+    found = []
+    for code in _statements(text, detect_form_from_text(text)):
+        match = _CALL.search(code)
+        if match and match.group(2) != "%" and _OUTPUT_ARGUMENT.search(code[match.end():]):
+            found.append(match.group(1).upper())
+    return list(dict.fromkeys(found))
+
+
 def outputs_following_includes(source: Path, text: str, outputs, cache: Path,
                                depth: int = 6) -> tuple:
     """The output search of ``umat_outputs_written``, following quoted INCLUDEs.
@@ -3301,6 +3316,23 @@ def outputs_following_includes(source: Path, text: str, outputs, cache: Path,
         path, body, level = queue.pop(0)
         if level >= depth:
             continue
+        # RULE_G3a amendment 4: a routine defined in this repository that is
+        # handed STRESS or DDSDDE as a CALL argument is searched like the file.
+        for callee in _callees_given_the_outputs(body):
+            for found in index.by_declared.get(callee, ())[:1]:
+                if found.resolve() in seen:
+                    continue
+                seen.add(found.resolve())
+                call_text = index.texts.get(found) or found.read_text(errors="replace")
+                inc = umat_outputs_written(call_text, path=found)
+                followed.append(str(found.relative_to(cache)))
+                stress, ddsdde = stress or inc.writes_stress, ddsdde or inc.writes_ddsdde
+                calls += inc.calls
+                lines += inc.logical_lines
+                if not first and inc.first_write:
+                    first = f"[{found.name}] {inc.first_write}"[:200]
+                    first_line = 0
+                queue.append((found, call_text, level + 1))
         for include in needs(body).includes:
             base = Path(include).name.lower()
             if base in ABAQUS_INCLUDES:

@@ -1,7 +1,7 @@
 {
  "records": 419,
- "registry_generated": "2026-10-08T11:27:08+00:00",
- "registry_sha256": "744edcd7bc3fee2d8559b45e477a3077e1e4b0ee3b4ebe28a47bf481f76e02ca",
+ "registry_generated": "2026-10-08T12:05:39+00:00",
+ "registry_sha256": "7145b6a0448c076b98570bc75805cd508ce7e8d94dfdef54905dcbf9d0a4e3b0",
  "rows": [
   {
    "all_gates_true": false,
