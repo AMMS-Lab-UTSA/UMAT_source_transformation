@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "7dcf1c417bdb43c946bf6faa",
+  "registry_key": "fdac64e9436d47a3330c6e82",
   "source_id": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Disk.for",
   "repository": "Jeff97/General-shape-control-of-shell",
   "commit": "95cf95d2191c8b125fa96e898c2cf4d411fa0a7c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/General-shape-control-of-shell/blob/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto2D/From-2D-to-2D-Disk.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/General-shape-control-of-shell/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto2D/From-2D-to-2D-Disk.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
   },
   "sha256": "21b39e3da00888dbec150107e35a93d2324f36c224c7e19fe80dbd97e24424c1",
   "bytes": 10221,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-2d-disk--cdcd23b7  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "ec609ab41bb45a02",
-  "contract_transform_generation": "830e5ee95ce99cd2"
+  "transform_fingerprint": "50ae446f12de66d8",
+  "harness_fingerprint": "0b2c472c7085b594",
+  "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:7dcf1c417bdb43c946bf6faa",
+  "from": "transform_store:fdac64e9436d47a3330c6e82",
   "files": [
    {
     "path": "From-2D-to-2D-Disk_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=7dcf1c417bdb43c946bf6faa",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=fdac64e9436d47a3330c6e82",
    "material_provenance": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Disk.inp: From-2D-to-2D-Disk.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in From-2D-to-2D-Disk.inp attaches NeoHookean to C3D20H; the deck's name 'From-2D-to-2D-Disk.inp' contains the whole of the source's ste",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T135229",
-  "seconds": 15.4,
+  "run_id": "20261008T031642",
+  "seconds": 17.5,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "f39b16d4a926d5671bbab07f05395092fa4ec3bdee65bc4f10034fb2be9c16af",
+  "tree_sha256": "ecae86bab3d8d6cf583531d56a2459212df4355a7f8b92bfe2dd20290b722869",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1104012
+  "bytes": 1103867
  },
  "tiers": {
   "ci": false,
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-general-shape-control-of-shell--from-2d-to-2d-disk--cdcd23b7",
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-2d-disk--cdcd23b7",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 7dcf1c417bdb43c946bf6faa --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key fdac64e9436d47a3330c6e82 --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(9)"
@@ -720,12 +720,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(9)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T13:52:45",
+ "date": "2026-10-08T03:16:59",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.5,
+    "seconds": 5.8,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -802,7 +802,7 @@
     }
    },
    "replay": {
-    "seconds": 1.5,
+    "seconds": 2.0,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

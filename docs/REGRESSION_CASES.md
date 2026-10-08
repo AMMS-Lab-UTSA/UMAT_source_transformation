@@ -11,10 +11,11 @@ historical `umat/<id>/` directories are untouched (decision D-7). Design:
 
 `umat/cases/index.json` lists every case (118 at this commit: 4 curated CI
 cases, and 114 corpus cases in the offline tier -- one for every source in the
-routine-level D-8 count at pass23), all frozen at pass23: transform
-`830e5ee95ce99cd2`, harness `ec609ab41bb45a02`. The superseded pass18 to pass22
+routine-level D-8 count at pass24), all frozen at pass24: transform
+`50ae446f12de66d8`, harness `0b2c472c7085b594`. The superseded pass18 to pass23
 cases are kept in `$UMAT_CASE_ASSETS/history/`, not here. `make case-offline`
-checks all 118 in about 75 s with 12 jobs (measured 2026-10-06). One line per case:
+checks all 118 in about 75 s with 12 jobs (315 s with 3 jobs while other work
+ran, measured 2026-10-08). One line per case:
 
 ```bash
 python -c "import json; [print(c['case_id'], c['redistribution'], 'ci' if c['tiers']['ci'] else 'offline') for c in json.load(open('umat/cases/index.json'))['cases']]"
@@ -86,8 +87,8 @@ tier accepts only `permitted` cases; `freeze --tier ci` refuses the others.
 ## Freezing a case
 
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <registry/store key> --tier offline \
-        --verification-records $UMAT_OTI_WORKSPACE/corpus_run/pass23/results/store_verification.jsonl \
-        --registry $UMAT_OTI_WORKSPACE/corpus_campaign/pass23_registry/corpus_registry.json
+        --verification-records $UMAT_OTI_WORKSPACE/corpus_run/pass24/results/store_verification.jsonl \
+        --registry $UMAT_OTI_WORKSPACE/corpus_campaign/pass24_registry/corpus_registry.json
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --model parameter_sensitivity/models/m3_j2 \
         --family plasticity --activation 1.2e-3 --tier ci
 
@@ -104,10 +105,12 @@ current only at the fingerprints it records (D-6): after a transform or harness
 change, re-run `check`, and re-freeze only through a recorded decision.
 
 **Harness fingerprint.** The 118 cases at this commit record the fingerprints
-the pass23 run recorded: transform `830e5ee95ce99cd2`, harness
-`ec609ab41bb45a02`, the same values as the pass23 registry rows; every case was
-frozen again from pass23, and the pass22 cases are archived under
-`$UMAT_CASE_ASSETS/history/pass22_cases_830e5ee95ce99cd2/`. The case capture
+the pass24 run recorded: transform `50ae446f12de66d8`, harness
+`0b2c472c7085b594`, the same values as the pass24 registry rows; every case was
+frozen again from pass24 (only the provenance, fingerprints, dates and tree
+digests changed; the 114 sets of frozen inputs and references are byte
+identical to pass23), and the pass23 cases are archived under
+`$UMAT_CASE_ASSETS/history/pass23_cases_830e5ee95ce99cd2/`. The case capture
 records the verdict the harness used: `judge_binary32` judges a column three
 times (normal, wide with eps = EPS_SINGLE, double variant) and returns a
 fourth, per-entry verdict, and a case holds the returned verdict's codes

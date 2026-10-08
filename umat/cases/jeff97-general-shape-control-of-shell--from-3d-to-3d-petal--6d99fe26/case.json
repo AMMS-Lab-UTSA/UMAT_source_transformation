@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "abc567446443c8c067df618e",
+  "registry_key": "9e03e9e28ee9f92ef18b6846",
   "source_id": "Jeff97__General-shape-control-of-shell/Abaqus_Files/3Dto3D/From-3D-to-3D-Petal.for",
   "repository": "Jeff97/General-shape-control-of-shell",
   "commit": "95cf95d2191c8b125fa96e898c2cf4d411fa0a7c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/General-shape-control-of-shell/blob/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/3Dto3D/From-3D-to-3D-Petal.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/General-shape-control-of-shell/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/3Dto3D/From-3D-to-3D-Petal.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
   },
   "sha256": "9cb8eeedbfd842b51b554a0e117bc832cb6ab6a498139a70c6041f743965aab7",
   "bytes": 14644,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-3d-to-3d-petal--6d99fe26  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "ec609ab41bb45a02",
-  "contract_transform_generation": "830e5ee95ce99cd2"
+  "transform_fingerprint": "50ae446f12de66d8",
+  "harness_fingerprint": "0b2c472c7085b594",
+  "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:abc567446443c8c067df618e",
+  "from": "transform_store:9e03e9e28ee9f92ef18b6846",
   "files": [
    {
     "path": "From-3D-to-3D-Petal_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=abc567446443c8c067df618e",
+   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=9e03e9e28ee9f92ef18b6846",
    "material_provenance": "Jeff97__General-shape-control-of-shell/Abaqus_Files/3Dto3D/From-3D-to-3D-Petal.inp: From-3D-to-3D-Petal.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in From-3D-to-3D-Petal.inp attaches NeoHookean to C3D20H; the deck's name 'From-3D-to-3D-Petal.inp' contains the whole of the source's",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T135357",
-  "seconds": 18.7,
+  "run_id": "20261008T031800",
+  "seconds": 19.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "b56a4c0b7d0331d6581aab8d32a8b9e19726df09a70374095ff374f8ee0260f0",
+  "tree_sha256": "edbf6295e90646455fcf0dec91d39e575bc032dcb968d2d2fce0d285ba4e088a",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1216730
+  "bytes": 1216586
  },
  "tiers": {
   "ci": false,
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-general-shape-control-of-shell--from-3d-to-3d-petal--6d99fe26",
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-3d-to-3d-petal--6d99fe26",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key abc567446443c8c067df618e --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 9e03e9e28ee9f92ef18b6846 --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -717,12 +717,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T13:54:16",
+ "date": "2026-10-08T03:18:20",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.0,
+    "seconds": 6.5,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -799,7 +799,7 @@
     }
    },
    "replay": {
-    "seconds": 1.8,
+    "seconds": 2.2,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
