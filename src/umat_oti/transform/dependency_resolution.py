@@ -62,7 +62,12 @@ FORTRAN_SUFFIXES = (".for", ".f", ".f90", ".f77", ".FOR", ".F", ".F90")
 # ``MODEL`` in CriticalSoilModels) and put a routine nobody calls into the diagnostic.
 _CALL_RE = re.compile(r"(?:^|\W)CALL\s+([A-Za-z_]\w*)(?!\w)(?!\s*%)", re.IGNORECASE)
 _EXTERNAL_RE = re.compile(r"^\s*EXTERNAL\s+(.+)$", re.IGNORECASE)
-_INCLUDE_RE = re.compile(r"^\s*INCLUDE\s+['\"]([^'\"]+)['\"]", re.IGNORECASE)
+#: A Fortran INCLUDE, or the cpp ``#include "name"`` with a quoted name that
+#: Abaqus' preprocessed .for files use for the same job (a quoted name is
+#: looked up beside the including file, as INCLUDE is). ``#include <name>``
+#: is the preprocessor's search path and is not matched.
+_INCLUDE_RE = re.compile(
+    r"^\s*(?:INCLUDE\s+|#\s*include\s*)['\"]([^'\"]+)['\"]", re.IGNORECASE)
 _DEF_RE = re.compile(
     r"^\s*(?:\d+\s+)?(?:(?:RECURSIVE|PURE|ELEMENTAL|IMPURE)\s+)*"
     r"(?:(?P<kind>SUBROUTINE)\s+(?P<sname>[A-Za-z_]\w*)"
@@ -326,12 +331,24 @@ class SourceIndex:
         return self.definitions.get(name.upper(), [])
 
 
+def _is_fixed_form(path: Path, text: str) -> bool:
+    """Fixed form by the same evidence the parser uses, the suffix only as a tiebreak.
+
+    A free-form file called ``.for`` read as fixed form defines nothing: every
+    statement starts in column 1, so the whole file looks like a label field.
+    """
+    from umat_oti.fortran.normalize import detect_source_form
+    if path.suffix.lower() in {".for", ".f", ".f77"}:
+        return detect_source_form(path, text) == "fixed"
+    return False
+
+
 def _definitions_in(path: Path) -> list[RoutineDefinition]:
     try:
         text = path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return []
-    fixed = path.suffix.lower() in {".for", ".f", ".f77"}
+    fixed = _is_fixed_form(path, text)
     lines = text.splitlines()
     found: list[RoutineDefinition] = []
     open_definition: Optional[tuple[str, str, int]] = None
@@ -394,7 +411,7 @@ def _include_targets(path: Path) -> list[str]:
         text = path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return []
-    fixed = path.suffix.lower() in {".for", ".f", ".f77"}
+    fixed = _is_fixed_form(path, text)
     targets: list[str] = []
     for raw in text.splitlines():
         if fixed:
@@ -671,7 +688,8 @@ def combined_source(graph: DependencyGraph) -> str:
     appended = {definition.name for definition in graph.external_definitions}
     extras: list[RoutineDefinition] = []
     entry_lines = entry_text.rstrip("\n").splitlines()
-    comment = "C" if graph.entry_path.suffix.lower() in {".for", ".f", ".f77"} else "!"
+    entry_fixed = _is_fixed_form(graph.entry_path, entry_text)
+    comment = "C" if entry_fixed else "!"
     for index, line in enumerate(entry_lines):
         match = _INCLUDE_RE.match(line)
         if not match:
@@ -682,13 +700,14 @@ def combined_source(graph: DependencyGraph) -> str:
                 definitions = _definitions_in(included)
                 names = {definition.name for definition in definitions}
                 if names & appended:
-                    entry_lines[index] = f"{comment}     {line.strip()}  (appended below)"
+                    mark = "!" if line.lstrip().startswith("#") else comment
+                    entry_lines[index] = f"{mark}     {line.strip()}  (appended below)"
                     # Its other routines are not in the closure but are still
                     # part of the program the INCLUDE made; they follow too.
                     extras.extend(d for d in definitions if d.name not in appended)
                 break
     parts = ["\n".join(entry_lines)]
-    header = ("C" if graph.entry_path.suffix.lower() in {".for", ".f", ".f77"} else "!")
+    header = "C" if entry_fixed else "!"
     for definition in sorted(graph.external_definitions,
                              key=lambda d: (str(d.path), d.start_line)):
         parts.append(

@@ -235,6 +235,10 @@ PASS_THROUGH_CALLS = frozenset({
     "CPU_TIME", "DATE_AND_TIME", "SYSTEM_CLOCK", "RANDOM_SEED", "EXIT", "ABORT",
     "FLUSH", "GET_COMMAND_ARGUMENT", "GET_ENVIRONMENT_VARIABLE", "GETENV",
     "SYSTEM", "EXECUTE_COMMAND_LINE", "SLEEP",
+    # Vendor wall-clock and CPU-time library routines (Intel/Compaq DTIME,
+    # ETIME, SECOND, CLOCK, ITIME, IDATE, TIMER): they return elapsed time to
+    # the program, never a value that enters the constitutive response.
+    "DTIME", "ETIME", "SECOND", "CLOCK", "ITIME", "IDATE", "TIMER",
     # The solver's message routines, under the rule the selected routine
     # already follows (source_transform.ABAQUS_UTILITY_ROUTINES): what they
     # consume is printed, never returned, so an OTI value reaching REALV can
