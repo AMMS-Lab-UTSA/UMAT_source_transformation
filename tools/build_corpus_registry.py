@@ -37,6 +37,7 @@ import argparse
 import csv
 import hashlib
 import json
+from pathlib import PurePosixPath
 import os
 import re
 import shutil
@@ -1486,7 +1487,9 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         record.ntens = row.get("ntens", record.ntens)
         record.kinematics = str(row.get("kinematics") or record.kinematics)
         record.deck = str(row.get("deck") or "")
-        record.material_provenance = str(row.get("material_provenance") or "")
+        record.material_provenance = sibling_deck_provenance(
+            record.source_id, record.deck,
+            str(row.get("material_provenance") or ""))
         record.props_count = row.get("props_count")
         record.nstatv = row.get("nstatv")
         formulation = row.get("formulation") or {}
@@ -2670,37 +2673,114 @@ def refresh_retained(payload: dict) -> tuple:
 PASS23_POPULATION = REPO / "paper_results/corpus/pass23_population.json"
 
 
-def pass23_census(records, population_path: Optional[Path] = None) -> dict:
+_SINGLE_ELEMENT = re.compile(
+    r"\S+ declares exactly one element, so it is the author's own "
+    r"single-element test of this material")
+
+
+def deck_is_a_siblings(source_id: str, deck: str) -> str:
+    """The deck's folder when it belongs to a SIBLING example, else "".
+
+    Rule (written before it was run, applied to every row): the deck's directory
+    and the source's directory are in the same repository, neither is an ancestor
+    of the other, and their common ancestor is below the repository root -- two
+    separate example folders under one parent."""
+    if not source_id or not deck:
+        return ""
+    source_dir, deck_dir = PurePosixPath(source_id).parent, PurePosixPath(deck).parent
+    if source_dir.parts[:1] != deck_dir.parts[:1] or source_dir == deck_dir:
+        return ""
+    if deck_dir in source_dir.parents or source_dir in deck_dir.parents:
+        return ""
+    common = [a for a, b in zip(source_dir.parts, deck_dir.parts) if a == b]
+    if len(common) < 2:
+        return ""
+    return "/".join(deck_dir.parts[len(common):]) or deck_dir.name
+
+
+def sibling_deck_provenance(source_id: str, deck: str, provenance: str) -> str:
+    """The provenance sentence, corrected where the deck is a sibling example's.
+
+    "<deck> declares exactly one element, so it is the author's own single-element
+    test of this material" claims the deck is this source's own. For a sibling's
+    deck (neo_hookean_umat run on the _template example's job.inp; Worlthen
+    array_with_two_pixel_z on simplified_job.inp) it says instead that the run
+    was made with a sibling example's deck."""
+    folder = deck_is_a_siblings(source_id, deck)
+    if not folder or not _SINGLE_ELEMENT.search(provenance or ""):
+        return provenance
+    return _SINGLE_ELEMENT.sub(
+        f"verified with a sibling example's deck ({folder}), not this source's own", provenance)
+
+
+CENSUS_LINES = REPO / "paper_results/corpus/census_lines.json"
+
+
+def pass23_census(records, population_path: Optional[Path] = None,
+                  lines_path: Optional[Path] = None) -> dict:
     """The pass23 population and the new sources, as separate lines.
 
     The rebuilt registry holds more records than the 405 of pass23 (the 2026-10-06
-    host round added 14, not yet attempted). Nobody may read the size of the
-    rebuilt registry, or its count of eligible sources, as the denominator: the
-    denominator of the published figure is the pass23 population of 242, and the
-    revised line is that population after the callee rule, with the sources that
-    left and entered named.
+    host round added 14). Nobody may read the size of the rebuilt registry, or its
+    count of eligible sources, as the denominator: the denominator of the published
+    figure is the pass23 population of 242.
+
+    Wording (Vera, pass25): "x of 242 as published (pass23)"; "y of 242 under the
+    corrected pipeline (pass25), provisional until the rerun"; "+k on separate
+    lines"; the revised callee rule "of 252" with the freed sources that publish no
+    material KEPT IN; "247" on its own line with its rule, never "of 247" alone.
+    The rows on separate lines and the kept-in sources come from census_lines.json;
+    a row listed there is not counted in y. Counts are taken from the records.
     """
     path = Path(population_path or PASS23_POPULATION)
     if not path.is_file():
         return {}
     base = json.loads(path.read_text(encoding="utf-8"))
+    lines_file = Path(lines_path or CENSUS_LINES)
+    data = (json.loads(lines_file.read_text(encoding="utf-8"))
+            if lines_file.is_file() else {})
     published = set(base["eligible_source_ids"])
     in_base = set(base["source_ids"])
     by_id = {r.source_id: r for r in records}
     now = {r.source_id for r in records
            if r.source_id in in_base and r.adequately_specified}
-    left, entered = sorted(published - now), sorted(now - published)
-    verified = len([r for r in records
-                    if r.source_id in in_base and r.adequately_specified
-                    and r.terminal_state == FULLY_VERIFIED])
+    kept_in = {s for s in data.get("freed_but_no_material_kept_in", ())
+               if s in published and s in by_id}
+    left = sorted((published - now) - kept_in)
+    entered = sorted(now - published)
+    revised = len(published) - len(left) + len(entered)
+    verified_all = {r.source_id for r in records
+                    if r.source_id in published and r.terminal_state == FULLY_VERIFIED}
+    separate = [row for row in data.get("separate_line_rows", ())
+                if row["source_id"] in verified_all]
+    separate_ids = {row["source_id"] for row in separate}
+    y = len(verified_all - separate_ids)
+    labels = Counter(row["label"] for row in separate)
+    shorts = {}
+    for row in separate:
+        shorts.setdefault(row["label"], []).append(row.get("short") or row["source_id"])
+    separate_text = "; ".join(f"{label} {count}: {', '.join(shorts[label])}"
+                              for label, count in labels.items())
     new = sorted(r.source_id for r in records if r.source_id not in in_base)
     return {
         "pass23_population": {
             "acquired": len(in_base), "eligible_as_published": base["eligible"],
             "verified": base["verified"],
-            "line_as_published": f"{base['verified']} of {base['eligible']} (as published)",
-            "line_revised": (f"{verified} of {len(now)} = {base['eligible']} - "
-                             f"{len(left)} + {len(entered)}"),
+            "line_as_published": f"{base['verified']} of {base['eligible']} as published (pass23)",
+            "line_corrected": (f"{y} of {base['eligible']} under the corrected pipeline "
+                               f"(pass25), provisional until the rerun"),
+            "line_separate": (f"+{len(separate)} on separate lines ({separate_text})"
+                              if separate else "+0 on separate lines"),
+            "line_revised": (f"{y} of {revised} = {base['eligible']} - {len(left)} + "
+                             f"{len(entered)} (revised callee rule; {len(kept_in)} freed "
+                             f"sources that publish no material data kept in)"),
+            "line_247": (f"{revised - len(kept_in)} = {revised} minus the "
+                         f"{len(kept_in)} freed sources that publish no material data "
+                         f"(they are freed by the callee rule and have nothing to verify "
+                         f"on); quoted on its own line, never as 'of "
+                         f"{revised - len(kept_in)}' alone"),
+            "headline_verified": y, "separate_line_rows": sorted(separate_ids),
+            "kept_in": sorted(kept_in),
             "left_the_242": left, "entered": entered,
             "left_with_state": {s: by_id[s].terminal_state for s in left if s in by_id},
         },
@@ -2709,8 +2789,7 @@ def pass23_census(records, population_path: Optional[Path] = None) -> dict:
             "states": dict(Counter(by_id[s].terminal_state for s in new)),
             "sources": new,
             "means": "sources of the 2026-10-06 host round: in no pass23 batch, "
-                     "state not_attempted, outside both the 242 and its "
-                     "revised line",
+                     "outside the 242 and its revised line",
         },
     }
 
@@ -2721,13 +2800,13 @@ def _census_lines(census: dict) -> list:
     base, fresh = census["pass23_population"], census["new_not_yet_attempted"]
     return [
         "## Census: the pass23 population and the new sources, kept apart", "",
-        f"* pass23 population ({base['acquired']} sources): "
-        f"**{base['line_as_published']}**.",
-        f"* the same population with the callee rule applied: "
-        f"**{base['line_revised']}** (left: {len(base['left_the_242'])}, "
-        f"entered: {len(base['entered'])}).",
-        f"* new, not yet attempted: **{fresh['count']}** sources "
-        f"({fresh['states']}), outside both lines above. The size of this "
+        f"* **{base['line_as_published']}**.",
+        f"* **{base['line_corrected']}**.",
+        f"* {base['line_separate']}.",
+        f"* the revised callee rule: **{base['line_revised']}**.",
+        f"* {base['line_247']}.",
+        f"* new, not yet attempted or attempted apart: **{fresh['count']}** sources "
+        f"({fresh['states']}), outside every line above. The size of this "
         "registry and its count of eligible sources are not the denominator.",
         ""]
 
@@ -3615,9 +3694,11 @@ def main(argv: Optional[list] = None) -> int:
     census = summary.get("census") or {}
     if census:
         base, fresh = census["pass23_population"], census["new_not_yet_attempted"]
-        print(f"  pass23 population ({base['acquired']} sources): "
-              f"{base['line_as_published']}")
-        print(f"  pass23 population, callee rule applied: {base['line_revised']}")
+        print(f"  {base['line_as_published']}")
+        print(f"  {base['line_corrected']}")
+        print(f"  {base['line_separate']}")
+        print(f"  revised callee rule: {base['line_revised']}")
+        print(f"  247: {base['line_247']}")
         print(f"  new, not yet attempted ({fresh['count']} sources, "
               f"outside both lines above): {fresh['states']}")
     print(f"  {summary['acquired']} artefacts, {summary['genuine_umats']} UMATs, "
