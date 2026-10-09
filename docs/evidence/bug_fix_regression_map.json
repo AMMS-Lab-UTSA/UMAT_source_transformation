@@ -1004,6 +1004,23 @@
     "tests/test_the_discovery_cache_is_never_written.py::test_the_normal_transform_of_a_cached_source_never_writes_it",
     "tests/test_the_discovery_cache_is_never_written.py::test_a_path_inside_the_cache_is_refused_and_one_outside_is_not"
    ]
+  },
+  {
+   "commit": "dbc3000",
+   "selected_by": "manual",
+   "bug": "The percentage-without-denominator test failed on the quoted '25% search heuristic' of five growth rows' recorded reason (time_scale.py, fingerprint-covered, not changed); the test is now strict for every other percentage and xfail only for that quotation.",
+   "tests": [
+    "tests/test_the_two_denominators_stay_apart.py::test_no_percentage_appears_without_its_denominator"
+   ]
+  },
+  {
+   "commit": "3c225c4",
+   "selected_by": "manual",
+   "bug": "The registry said a sibling example's deck was the author's own single-element test of the material (neo_hookean_umat on the _template job.inp; Worlthen array_with_two_pixel_z on simplified_job.inp); it now says verified with a sibling example's deck, and the census follows Vera's wording with separate lines read from census_lines.json.",
+   "tests": [
+    "tests/test_b20_sibling_decks_and_the_census_wording.py::test_a_sibling_examples_deck_is_said_to_be_one_and_the_sentence_is_dropped",
+    "tests/test_b20_sibling_decks_and_the_census_wording.py::test_the_rule_changes_exactly_the_two_rows_it_was_written_for"
+   ]
   }
  ],
  "excluded": [
