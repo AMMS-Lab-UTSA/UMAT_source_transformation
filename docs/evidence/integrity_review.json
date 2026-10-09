@@ -2124,6 +2124,34 @@
      "text": "@pytest.mark.skipif(not PASS24.exists(), reason=\"pass25 evidence is machine-local\")"
     }
    ]
+  },
+  "skip:tests/test_the_two_denominators_stay_apart.py:test_no_percentage_appears_without_its_denominator:call:xfail:e511332c": {
+   "verdict": "justified",
+   "reason": "Vera's pass25 ruling: the recorded reason of five growth rows (SweetMelon, MorningGlory, Trachea, CereusForbesiiSpiralis, TendrilOfPumpkin) quotes time_scale.py's 'above the 25% search heuristic' without a denominator; that text is in fingerprint-covered code (ENOUGH_OF_THE_SCALE) and is not changed in this batch. The xfail fires only when every violation lies inside that quotation of exactly those rows (pinned by name and by the quoted sentence); any other percentage without a denominator still fails the test. Fix in the next batch.",
+   "evidence": [
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "QUOTED_HEURISTIC = \"above the 25% search heuristic\""
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert not violations, violations"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_two_denominators_stay_apart.py:test_no_percentage_appears_without_its_denominator:599a1243": {
+   "verdict": "justified",
+   "reason": "The direct assertion on the denominator tail moved into a loop that collects violations and asserts there are none; the only percentage set aside is the quoted heuristic of the five pinned growth rows, after which the test reports xfail. The check on every other percentage is the same.",
+   "evidence": [
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "if tail.startswith(\" of \"):"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert not violations, violations"
+    }
+   ]
   }
  }
 }
