@@ -294,7 +294,7 @@ def test_the_census_keeps_the_pass23_population_and_the_new_sources_apart(tmp_pa
         "eligible_source_ids": ids[:2]}), encoding="utf-8")
     census = pass23_census(records, population)
     base = census["pass23_population"]
-    assert base["line_as_published"] == "1 of 2 (as published)"
+    assert base["line_as_published"] == "1 of 2 as published (pass23)"
     assert base["acquired"] == 4
     assert census["new_not_yet_attempted"]["sources"] == ["owner__e/new.f"]
     assert census["new_not_yet_attempted"]["states"] == {"not_attempted": 1}

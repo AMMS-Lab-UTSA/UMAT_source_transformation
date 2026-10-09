@@ -1,0 +1,22 @@
+{
+ "_about": "Vera's pass25 census wording. separate_line_rows are verified rows reported on their own line and NOT counted in the headline y (move a row out of this list to count it in the headline, or in to take it out, after the rerun). freed_but_no_material_kept_in are sources the callee rule freed that publish no material data: they stay in the 252 and are left out of the 247, which is quoted on its own line only.",
+ "separate_line_rows": [
+  {
+   "source_id": "CAEAssistant-Group__UMAT-Abaqus-Tsai-Hill-Orthotropic-Composite-Subroutine/PLANESTRESS-ORTHOTROPIC.for",
+   "label": "oriented-frame instrument",
+   "short": "PLANESTRESS-ORTHOTROPIC"
+  },
+  {
+   "source_id": "tengzhang48__abaqus_ufl/examples/neo_hookean_umat/neo_hookean_umat.for",
+   "label": "sibling-deck provenance",
+   "short": "neo_hookean_umat"
+  }
+ ],
+ "freed_but_no_material_kept_in": [
+  "JuliaFEM__UMAT.jl/umat_models/gurson_porous_plasticity.f90",
+  "bennifuchs__TsaiWu-Fortran/abaqus-umat-interface.f90",
+  "j-machacek__numgeo-hardening-soil-bricks/src/hs-bricks-umat/umat.f90",
+  "mholla__growth/umats/umat_iso_Mandel_v2.f",
+  "prashanthgadwala__ferrite-fortran-integration_using_Julia/src/Material_Models/umat.f"
+ ]
+}
