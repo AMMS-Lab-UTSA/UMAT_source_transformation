@@ -2726,7 +2726,7 @@ def pass23_census(records, population_path: Optional[Path] = None,
     figure is the pass23 population of 242.
 
     Wording (Vera, pass25): "x of 242 as published (pass23)"; "y of 242 under the
-    corrected pipeline (pass25), provisional until the rerun"; "+k on separate
+    corrected pipeline (pass25), repeated once, identical"; "+k on separate
     lines"; the revised callee rule "of 252" with the freed sources that publish no
     material KEPT IN; "247" on its own line with its rule, never "of 247" alone.
     The rows on separate lines and the kept-in sources come from census_lines.json;
@@ -2768,7 +2768,8 @@ def pass23_census(records, population_path: Optional[Path] = None,
             "verified": base["verified"],
             "line_as_published": f"{base['verified']} of {base['eligible']} as published (pass23)",
             "line_corrected": (f"{y} of {base['eligible']} under the corrected pipeline "
-                               f"(pass25), provisional until the rerun"),
+                               f"(pass25), repeated once, identical; evidence "
+                               f"docs/evidence/pass25_repeat_nine.json"),
             "line_separate": (f"+{len(separate)} on separate lines ({separate_text})"
                               if separate else "+0 on separate lines"),
             "line_revised": (f"{y} of {revised} = {base['eligible']} - {len(left)} + "

@@ -47,9 +47,12 @@ def test_the_rule_changes_exactly_the_two_rows_it_was_written_for():
     path = REPO / "paper_results/corpus/corpus_registry.json"
     changed = []
     for record in json.loads(path.read_text(encoding="utf-8"))["records"]:
-        new = reg.sibling_deck_provenance(record["source_id"], record["deck"],
-                                          record["material_provenance"])
-        if new != record["material_provenance"] and "sibling example's deck" in new:
+        # the committed registry now carries the rule's output (pass25 regeneration):
+        # applying the rule again changes nothing, and exactly two rows say it
+        again = reg.sibling_deck_provenance(record["source_id"], record["deck"],
+                                            record["material_provenance"])
+        assert again == record["material_provenance"], record["source_id"]
+        if "sibling example's deck" in record["material_provenance"]:
             changed.append(record["source_id"].split("/")[-1])
     assert sorted(changed) == ["array_with_two_pixel_z.for", "neo_hookean_umat.for"]
 
@@ -84,7 +87,8 @@ def test_the_census_lines_follow_the_wording_and_separate_lines_leave_the_headli
     base = reg.pass23_census(records, population, lines)["pass23_population"]
     assert base["line_as_published"] == "2 of 6 as published (pass23)"
     assert base["line_corrected"] == ("1 of 6 under the corrected pipeline (pass25), "
-                                      "provisional until the rerun")
+                                      "repeated once, identical; evidence "
+                                      "docs/evidence/pass25_repeat_nine.json")
     assert base["line_separate"] == (
         "+2 on separate lines (oriented-frame instrument 1: U0; sibling-deck provenance 1: U1)")
     # the two freed sources without material stay IN the revised denominator

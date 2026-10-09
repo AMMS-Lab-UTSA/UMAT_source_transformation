@@ -1,0 +1,178 @@
+{
+ "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/Alex/749/Growth-Alex.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part2/ABAQUS_files/Growth-Bunny-Part2.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Model_car/ABAQUS_files/Growth-Model-car.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "CAEAssistant-Group__UMAT-Abaqus-Tsai-Hill-Orthotropic-Composite-Subroutine/PLANESTRESS-ORTHOTROPIC.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "Worlthen__20220314-abqus-simulation/abaqus/original/array_with_two_pixel_z.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "tengzhang48__abaqus_ufl/examples/_template/template_umat.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "tengzhang48__CoupFE/examples/neo_hookean_umat/neo_hookean_umat.for": {
+  "pass25": "needs_material_data",
+  "rep1": "needs_material_data",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": null,
+   "all_requested_outputs_present": null,
+   "complete_history_finite": null,
+   "derivatives_verified": null,
+   "primal_agreed": null,
+   "mechanically_informative": null
+  }
+ },
+ "tengzhang48__abaqus_ufl/examples/neo_hookean_umat/neo_hookean_umat.for": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ },
+ "keisuke58__Tmcmc202601/FEM/umat_biofilm_visco.f": {
+  "pass25": "needs_material_data",
+  "rep1": "needs_material_data",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": null,
+   "all_requested_outputs_present": null,
+   "complete_history_finite": null,
+   "derivatives_verified": null,
+   "primal_agreed": null,
+   "mechanically_informative": null
+  }
+ },
+ "keisuke58__pde-fem-biofilm/umat_biofilm_visco.f": {
+  "pass25": "verified",
+  "rep1": "verified",
+  "identical_stage": true,
+  "gates_identical": true,
+  "reason_identical": true,
+  "tangent_states_identical": true,
+  "gates": {
+   "abaqus_job_completed": true,
+   "all_requested_outputs_present": true,
+   "complete_history_finite": true,
+   "derivatives_verified": true,
+   "primal_agreed": true,
+   "mechanically_informative": true
+  }
+ }
+}
