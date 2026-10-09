@@ -59,7 +59,7 @@ R3_MUTATION = 1.0 + 1e-3
 #: Root of the campaign's working tree. Override with D28_WORK; the default is
 #: ~/softwarex_work, where the pass runs, the cache and the stores live.
 WORK = Path(os.environ.get("D28_WORK") or Path.home() / "softwarex_work")
-PASS24 = Path(os.environ.get("D28_PASS24") or WORK / "corpus_run" / "pass24")
+PASS24 = Path(os.environ.get("D28_PASS24") or WORK / "corpus_run" / "pass25")
 
 
 # ---------------------------------------------------------------------------

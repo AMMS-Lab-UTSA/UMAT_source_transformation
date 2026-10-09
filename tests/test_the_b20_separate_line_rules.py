@@ -377,14 +377,14 @@ def test_the_relabel_rule_text_is_carried_in_the_code():
     assert "never \"fine\"" in text
 
 
-# ---- A/B on the stored pass24 evidence ----------------------------------------
+# ---- A/B on the stored pass25 evidence ----------------------------------------
 
 PASS24 = D.PASS24 / "results" / "store_verification.jsonl"
 
 
-@pytest.mark.skipif(not PASS24.exists(), reason="pass24 evidence is machine-local")
+@pytest.mark.skipif(not PASS24.exists(), reason="pass25 evidence is machine-local")
 def test_ab_the_112_verified_rows_are_byte_identical_under_the_rule_1_code_path():
     records = D.load_records(PASS24)
     out = D.ab_identity_rule_1(records)
     assert out["different"] == []
-    assert out["verified_identical"] == out["verified_total"] == 112
+    assert out["verified_identical"] == out["verified_total"] == 121
