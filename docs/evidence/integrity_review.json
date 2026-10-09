@@ -1877,14 +1877,6 @@
    "verdict": "justified",
    "reason": "Offline stand-in for a machine fact (whether the abaqus command exists, a recorded result, the scanner) so the command's cards and its green-only-if-all-six-gates rule are tested without running Abaqus; the real-Abaqus runs are the three validation runs of this commit series."
   },
-  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:311e6e3a": {
-   "verdict": "justified",
-   "reason": "The routine-level 114 needs the pass24 harness cells (corpus_campaign/pass24_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as before, naming the pass24 cells."
-  },
-  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged:call:skip:cc0b52ea": {
-   "verdict": "justified",
-   "reason": "259 raw eligible (246 plus the 13 adequately specified new sources) and 106 are asserted from the committed registry before the skip; only the routine-level 114 needs the pass24 harness cells outside this tree, and that part runs wherever they exist."
-  },
   "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_every_record_names_where_the_file_came_from:a296a70d": {
    "verdict": "justified",
    "reason": "The acquisition-URL check was written for GitHub rows only. The 14 sources of the 2026-10-06 host round come from GitLab, SourceForge SVN and Zenodo, pinned by a commit, an SVN revision or a record md5, with the URL built from the acquisition's recorded template (cdacdd4). GitHub rows keep every original assertion (40-character commit inside the URL, reconstructed from the commit); the other hosts are asserted to start with one of the three known prefixes, to carry a non-empty pin and to say which template built the URL. Nothing is loosened for the rows it applied to.",
@@ -2096,6 +2088,42 @@
   "broad_except:tools/d28_compile_sweep2.py:main.one:except Exception:7276d843": {
    "verdict": "justified",
    "reason": "A sweep over 372 rows must record a row-level failure (a compiler or file error on one source) and carry on to the rest, otherwise one bad source hides the others; the exception text is stored in the row's own result, never swallowed. The script writes no verdict into any store."
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:1323412e": {
+   "verdict": "justified",
+   "reason": "The routine-level 118 needs the pass25 harness cells (corpus_campaign/pass25_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as before, naming the pass25 cells."
+  },
+  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged:call:skip:6549f920": {
+   "verdict": "justified",
+   "reason": "259 raw eligible (246 plus 13) and 115 are asserted from the committed registry before the skip; only the routine-level 118 needs the pass25 harness cells outside this tree, and that part runs wherever they exist."
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper:1741cbfc": {
+   "verdict": "justified",
+   "reason": "The sixth refused file of the mkhadijeh26 repository, ViscoelasticityCode3.f in ABAQUS_DSR_EXAMPLE, was the one survivor that stayed genuine_umat; at pass25 it transforms (B20 transformer fixes) and is no longer a refusal, so the repository has 5 refused files, all incomplete_or_corrupt_source, and no survivor. The test still asserts all five are filed as incomplete_or_corrupt_source, external and UMATs, and now asserts the survivor list is empty; nothing is loosened for the five files it protects.",
+   "evidence": [
+    {
+     "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
+     "text": "assert len(survivor) == 0, [r[\"source_id\"] for r in survivor]"
+    },
+    {
+     "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
+     "text": "assert len(damaged) == 5, len(damaged)"
+    }
+   ]
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper:2857a2dc": {
+   "verdict": "justified",
+   "reason": "The sixth refused file of the mkhadijeh26 repository, ViscoelasticityCode3.f in ABAQUS_DSR_EXAMPLE, was the one survivor that stayed genuine_umat; at pass25 it transforms (B20 transformer fixes) and is no longer a refusal, so the repository has 5 refused files, all incomplete_or_corrupt_source, and no survivor. The test still asserts all five are filed as incomplete_or_corrupt_source, external and UMATs, and now asserts the survivor list is empty; nothing is loosened for the five files it protects.",
+   "evidence": [
+    {
+     "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
+     "text": "assert len(survivor) == 0, [r[\"source_id\"] for r in survivor]"
+    },
+    {
+     "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
+     "text": "assert len(damaged) == 5, len(damaged)"
+    }
+   ]
   }
  }
 }

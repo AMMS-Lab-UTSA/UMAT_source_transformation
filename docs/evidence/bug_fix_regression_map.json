@@ -1190,6 +1190,10 @@
   {
    "commit": "3e09981",
    "reason": "Part of the new data-file redirect of rule H2 (written before it, in the same batch); 'fixed' in the message is 'fixed-form', the statement layout the wrapped literal has to fit, not a corrected behaviour of shipped code."
+  },
+  {
+   "commit": "d918996",
+   "reason": "Corpus freeze at pass25. 'refusals' names the registry's refusal classes whose pinned counts moved with the population; no defect is corrected."
   }
  ],
  "changelog_fixed": {
