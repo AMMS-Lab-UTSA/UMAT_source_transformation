@@ -383,7 +383,7 @@ PASS24 = D.PASS24 / "results" / "store_verification.jsonl"
 
 
 @pytest.mark.skipif(not PASS24.exists(), reason="pass25 evidence is machine-local")
-def test_ab_the_112_verified_rows_are_byte_identical_under_the_rule_1_code_path():
+def test_ab_every_verified_row_of_the_frozen_run_takes_the_same_code_path_with_and_without_rule_1():
     records = D.load_records(PASS24)
     out = D.ab_identity_rule_1(records)
     assert out["different"] == []

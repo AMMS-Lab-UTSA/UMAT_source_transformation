@@ -191,3 +191,18 @@ def test_the_unshaped_variable_and_the_value_in_a_declaration_refusals_name_the_
     assert kept.rule.startswith("rule:") and kept.whose_move == "the author of this UMAT"
     assert "TOL" in kept.sentence and "TOL = ..." in kept.next_action
     assert "SAVE" not in kept.sentence + kept.next_action
+
+
+def test_the_optional_arguments_and_two_formulations_refusals_name_whose_move_and_one_step():
+    optional = card_for("transform_refused", "HelperLiftingError: HSB has OPTIONAL dummy arguments and is called at "
+                        "line 112 with 2 of its 3 arguments.")
+    assert optional.rule.startswith("rule:") and optional.whose_move == "the author of this UMAT"
+    assert "HSB" in optional.sentence and "all of its arguments" in optional.next_action
+    two = card_for("unsupported_formulation", "the deck uses this material on 2 different formulations (rigid, "
+                   "three-dimensional continuum), so which tensor its UMAT is called with is not settled")
+    assert two.rule.startswith("rule:") and two.whose_move == "you" and "one kind of element" in two.next_action
+
+
+def test_a_plain_number_passed_to_an_argument_the_conversion_changed_gets_its_own_card():
+    card = card_for("transform_refused", "p is passed to GETPANDQ_OTI, whose dummy argument P the lifted body declares as the OTI type.")
+    assert card.rule.startswith("rule:") and card.whose_move == "this program" and "GETPANDQ_OTI" in card.sentence

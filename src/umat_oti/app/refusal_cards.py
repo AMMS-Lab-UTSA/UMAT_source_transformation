@@ -235,6 +235,35 @@ def _value_set_in_declaration(text, state):
         f"(`{name} = ...`) at the start of that sub-routine, then run again.")
 
 
+def _optional_arguments(text, state):
+    name = _names(text, r"(\w+) has OPTIONAL dummy arguments", "a sub-routine")
+    return (
+        f"The sub-routine {name} can be called with some of its arguments left out, and this program cannot "
+        "convert a call written that way.",
+        AUTHOR,
+        f"In a copy of the file, give every call of {name} all of its arguments (pass a dummy value for the ones "
+        "that were left out), then run again.")
+
+
+def _two_formulations(text, state):
+    return (
+        "The deck uses this material in two different kinds of element, so it is not clear which kind of "
+        "strain and stress the routine is called with.",
+        YOU,
+        "Give a copy of the deck in which the material is used by one kind of element only (delete or "
+        "re-assign the other element sets), then run again with that deck.")
+
+
+def _plain_value_to_promoted_argument(text, state):
+    callee = _names(text, r"is passed to (\w+), whose dummy argument", "a sub-routine")
+    return (
+        f"A plain number is handed to {callee}, which in the converted version expects a value that carries derivatives; "
+        "using it that way would give a stress computed from the wrong memory, so this program stops.",
+        PROGRAM,
+        "No action on your side is needed to decide this. Send the file to the maintainers; the program has to "
+        "convert that call before the file can be checked.")
+
+
 def _lu_eigen(text, state):
     return (
         "The routine solves a linear system or eigenvalue problem with an "
@@ -485,6 +514,9 @@ RULES: tuple = (
     ("scalar_stress", r"declared as a scalar in UMAT", _scalar_stress),
     ("unshaped_variable", r"has no confirmed shape", _unshaped_variable),
     ("value_in_declaration", r"gives \w+ a value in its declaration", _value_set_in_declaration),
+    ("optional_arguments", r"has OPTIONAL dummy arguments", _optional_arguments),
+    ("two_formulations", r"on \d+ different formulations", _two_formulations),
+    ("plain_value_to_promoted_argument", r"is passed to \w+, whose dummy argument", _plain_value_to_promoted_argument),
     ("lu_eigen", r"DGETRF|DSPEVD|HQR2|built-in (OTI )?(unblocked|Jacobi)|eigenvalue cluster", _lu_eigen),
     ("complex_step", r"complex-step derivative", _complex_step),
     ("construct", r"Unsupported intrinsic|deferred shape|EQUIVALENCE|DATA statement|applies ATAN2|generic the OTI support|dummy the lifted body keeps", _unsupported_construct),

@@ -983,7 +983,7 @@
     "tests/test_the_b20_separate_line_rules.py::test_rule_4_canaries_a_real_error_of_1e12_S_fails_and_1e17_S_passes",
     "tests/test_the_b20_separate_line_rules.py::test_rule_2_canary_a_nint_result_multiplied_into_stress_stays_flagged",
     "tests/test_the_b20_separate_line_rules.py::test_rule_3_canary_a_cast_on_a_quantity_that_reaches_stress_flags",
-    "tests/test_the_b20_separate_line_rules.py::test_ab_the_112_verified_rows_are_byte_identical_under_the_rule_1_code_path"
+    "tests/test_the_b20_separate_line_rules.py::test_ab_every_verified_row_of_the_frozen_run_takes_the_same_code_path_with_and_without_rule_1"
    ]
   },
   {
