@@ -1,7 +1,7 @@
 """``end function name`` ends a function; ``module name ! comment`` is a module header.
 
 Two reading errors in the closure resolver and the module scanners
-(Kernighan B19 findings 4 and 5). An ``END FUNCTION name`` line matched the
+(B19 diagnosis findings 4 and 5). An ``END FUNCTION name`` line matched the
 definition pattern (its prefix swallows END), so every free-form FUNCTION
 appeared twice, with different bodies, and the resolver reported them as
 ambiguous. And the module-header patterns ended at ``\\s*$``, so
