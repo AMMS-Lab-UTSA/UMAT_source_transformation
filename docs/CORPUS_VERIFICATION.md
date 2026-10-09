@@ -8,27 +8,29 @@ tools yourself.
 
 ## Current result
 
-The whole corpus of 419 acquired sources (the 405 of pass23 and 14 from the
-2026-10-06 host round) was re-transformed and re-verified in Abaqus 2021 on
-2026-10-07 and 2026-10-08 (pass24: commit 0324ca5, transform fingerprint
-`50ae446f12de66d8`, harness fingerprint `0b2c472c7085b594`, contract 5.0.0).
-pass24 is the single acceptance pass of the B17 engineering batch; no council
-experiment counts toward either figure below. Two lines are published and the
-new sources are reported apart; none of the three is pooled with another:
+The whole corpus of 419 acquired sources was re-transformed and re-verified in
+Abaqus 2021 on 2026-10-08 (pass25: commit a7b6b4b, transform fingerprint
+`c61511ea0ffe58e2`, harness fingerprint `cfd84cd2fe97e72b`, contract 5.0.0), at
+the tip of the B20 engineering batch. 311 sources transform (298 at pass24) and
+285 compile. The discovery cache was read-only for the tools and its SHA-256 over
+all 11,890 files is the same before and after the pass. No council experiment
+counts toward the figures below. The published line and the revised line are
+never pooled with each other or with the new sources:
 
-- **106 of 242 as published** (the pass23 population and the pass23 adequacy
-  test). Unchanged from pass23: the same 106 sources, none lost, none gained.
-- **106 of 252 with the revised callee rule** (242 - 0 + 10): a callee, module
-  or include counts as unpublished only if its absence from the repository at
-  the pinned commit is confirmed (the discovery cache is partial, so absence is
-  checked against the upstream tree: `paper_results/corpus/upstream_callee_check.json`).
-  Ten sources enter the eligible set and none left: Diffusion_3D,
-  GeneralFiniteStrain, the two bmmbUPF discs (Sub_MechDisc, Sub_TransDisc),
-  frodal HypoImp, the two mauroarcidiacono UMATs (their `core.for` includes are
-  in the upstream tree), ngrilli HCPnoTwin, xara peri/umat, and IoM
-  Phase_Trafos umat_main (its only missing names are MKL, a library ruled like
-  BLAS/LAPACK). All ten are `transform_refused`. The pass count did not change,
-  only the denominator.
+- **115 of 242 as published** (the pass23 population and the pass23 adequacy
+  test; 106 of 242 at pass24). The 106 sources of pass24 are all still verified:
+  none lost. Nine entered: PLANESTRESS-ORTHOTROPIC, the Bunny Part1 and Part2,
+  Alex 749 and Model_car growth sources, Worlthen array_with_two_pixel_z,
+  keisuke58 biofilm_visco and the two tengzhang48 sources.
+- **115 of 247 with the revised callee rule** (242 - 5 + 10). Ten sources enter
+  (a callee, module or include counts as unpublished only if its absence from
+  the repository at the pinned commit is confirmed, `upstream_callee_check.json`):
+  Diffusion_3D, GeneralFiniteStrain, the two bmmbUPF discs, frodal HypoImp, the
+  two mauroarcidiacono UMATs, ngrilli HCPnoTwin, xara peri/umat and IoM
+  Phase_Trafos umat_main. Five leave: gurson (JuliaFEM), bennifuchs TsaiWu,
+  numgeo hardening-soil bricks, mholla iso_Mandel_v2 and prashanthgadwala now
+  transform and are found to have no published material (`missing_material_data`,
+  not adequately specified).
 - **How "in the repository" is decided.** A module is found by its `MODULE`
   statement, a callee by its `SUBROUTINE`/`FUNCTION`/`ENTRY` (or generic
   `INTERFACE` name), an include by FILE NAME: `INCLUDE './x/body.f'` is matched
@@ -41,56 +43,60 @@ new sources are reported apart; none of the three is pooled with another:
   that is unconfirmed (an svn snapshot that cannot be fetched) keeps the source
   in the population. MKL names are a library, ruled like BLAS/LAPACK: neither
   resolved nor external.
-- **The 14 new sources** are attempted in pass24 and reported apart, never in
-  either line: 14 are adequately specified (12 `transform_refused`, 1
-  `primal_disagreed`, 1 `experiment_not_generated`), none is
-  `external_dependency_unavailable` (abumpack abcg1.f, an svn snapshot that
-  cannot be fetched, stays in because its absence is unconfirmed); none is verified.
+- **The 14 new sources** (2026-10-06 host round) are attempted and reported
+  apart, never in either line: 12 are adequately specified (8 `transform_refused`,
+  2 `original_job_failed`, 1 `primal_disagreed`, 1 `experiment_not_generated`),
+  2 are `missing_material_data`; none is verified.
+- **Growth inferred from state targets: 5 rows** (SweetMelon, MorningGlory,
+  Trachea, CereusForbesiiSpiralis, TendrilOfPumpkin): the growth tensor is a
+  local variable the harness cannot measure, the gate is null, and the rows are
+  `informativeness_not_established`; they can never be `fully_verified` through
+  this evidence and are not part of any count.
 
-The eligible denominator (D2) of the pass23 population is 242: adequately
-specified genuine UMATs with an author's deck. Two counts are reported:
+Two counts are reported over the eligible denominator:
 
 - **Abaqus, D-4 gate** (both builds run in Abaqus, primal gate by routine
   replay plus the Jacobian-matched control, DDSDDE judged entry by entry
   against a finite difference of the original with an FD-only plateau of at
   least 3 steps and a quad reference where double cannot resolve, mechanically
-  informative): **106 of 242** (106 of 242 at pass23, 105 at pass22, 102 of 245
-  at pass21; 67 of 238 at pass20 came from the legacy tangent gate, which D-4
-  supersedes, and is not comparable). A source whose Jacobian-matched control
-  decided nothing (`primal_control_not_decided`, 5 sources at pass24) can never
-  count as verified.
+  informative): **115 of 242** (106 of 242 at pass24 and pass23, 105 at pass22,
+  102 of 245 at pass21; 67 of 238 at pass20 came from the legacy tangent gate,
+  which D-4 supersedes, and is not comparable). A source whose
+  Jacobian-matched control decided nothing (`primal_control_not_decided`, 2
+  sources at pass25) can never count as verified. Across all 419 sources 121
+  are `fully_verified` (112 at pass24); six of them lie outside the 242.
 - **Routine level (decision D-8)**: Abaqus primal gate passed, the
   mechanically informative gate read true, and the routine-level harness
   verifies primal and DDSDDE against FD of the original (FD-only plateau of at
   least 3 steps, entrywise tolerance, quad-precision reference where double
   cannot resolve, binary32 stores judged under rule B32), with STRESS and
-  DDSDDE fully defined in the original: **114 of 242** (114 at pass23, 113 at
-  pass22, 112 of 245 at pass21, 109 of 238 at pass20). Of the 114, 105 are
-  `fully_verified` and 9 are not: 4 `tangent_not_verified`, all unresolved at the
-  chosen states and none with a measured disagreement; 5 `derivative_truncated`
-  (the three RitioL sources, ahartloper UVCmultiaxial and harshaa765 UMAT), whose
-  footnote stays: the converted source drops a derivative it then uses.
+  DDSDDE fully defined in the original: **118 of 242** (114 at pass24 and
+  pass23, 113 at pass22, 112 of 245 at pass21, 109 of 238 at pass20). Of the
+  118, 109 are `fully_verified` and 9 are not: 4 `tangent_not_verified`, all
+  unresolved at the chosen states and none with a measured disagreement; 5
+  `derivative_truncated` (the three RitioL sources, ahartloper UVCmultiaxial
+  and harshaa765 UMAT), whose footnote stays: the converted source drops a
+  derivative it then uses.
 
-Eight pass23 sources inside the 242 changed terminal state at pass24 without
-changing either count (for example MML_U3 became `undefined_in_original` under rule G2d, and
-NN_UMAT_Vahid and the two mholla orientation files now reach the Abaqus gate and
-are decided there); the per-source table is in
-`corpus_campaign/batches/B18/atlas/` (outside this repository).
+Several sources inside the 242 moved to a worse, uncounted state (for example
+Human-face to `original_job_failed`, Alex 20470 and Robot to `primal_disagreed`);
+no source of the 106 or the 112 did. The per-source table is in
+`corpus_campaign/batches/B21/atlas/tables.md` (outside this repository).
 
 Per material family (code-reviewed classification, decision D-11; "eligible" is the
 family's share of D2):
 
 | family | eligible | Abaqus D-4 gate | routine level |
 |---|---|---|---|
-| growth / morphoelastic | 134 | 97 | 100 |
+| growth / morphoelastic | 134 | 102 | 101 |
 | rate-independent plasticity | 21 | 1 | 2 |
 | damage / phase field | 13 | 0 | 0 |
 | crystal plasticity | 12 | 0 | 4 |
-| linear elastic | 9 | 3 | 3 |
+| linear elastic | 9 | 5 | 5 |
 | viscoelastic | 10 | 1 | 1 |
 | concrete / geomaterial | 13 | 0 | 0 |
-| other (incl. hyperelastic) | 30 | 4 | 4 |
-| **total** | **242** | **106** | **114** |
+| other (incl. hyperelastic) | 30 | 6 | 5 |
+| **total** | **242** | **115** | **118** |
 
 The growth figures include sources whose growth tensor is fixed to the identity
 (neo-Hookean response), and 105 of the growth sources come from one author

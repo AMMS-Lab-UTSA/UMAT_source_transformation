@@ -23,7 +23,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 WORKSPACE = REPO.parent
 REGISTRY = REPO / "paper_results/corpus/corpus_registry.json"
-PASS23_CELLS = WORKSPACE / "corpus_campaign/pass24_harness/run/manifest_cells.jsonl"  # the pass24 cells; the name keeps its pass23 wording so the audit record still finds the test
+PASS23_CELLS = WORKSPACE / "corpus_campaign/pass25_harness/run/manifest_cells.jsonl"  # the pass24 cells; the name keeps its pass23 wording so the audit record still finds the test
 
 sys.path.insert(0, str(REPO / "src"))
 _spec = importlib.util.spec_from_file_location(
@@ -75,13 +75,13 @@ def test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged():
     cells = (reg._read_rows(PASS23_CELLS) if PASS23_CELLS.is_file() else None)
     tiers = reg.tier_summary(records, cells)["tiers"]
     deck = tiers[reg.TIER_AUTHOR_DECK]
-    assert deck["eligible"] == 266
-    assert deck["verified_abaqus"] == 106
+    assert deck["eligible"] == 259
+    assert deck["verified_abaqus"] == 115
     if cells is None:
-        pytest.skip("pass24 harness cells not on this machine; 242/106 checked")
-    assert deck["verified_routine"] == 114
+        pytest.skip("pass25 harness cells not on this machine; 242/106 checked")
+    assert deck["verified_routine"] == 118
     # the deck-only D2 itself is untouched
-    assert sum(1 for r in records if r.adequately_specified) == 266
+    assert sum(1 for r in records if r.adequately_specified) == 259
     assert {r.adequacy_tier for r in records if r.adequately_specified} == {"author_deck"}
 
 

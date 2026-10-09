@@ -117,7 +117,7 @@ def test_a_refused_umat_that_builds_stays_this_project_s_problem():
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
     # 80 = 75 + the five sources whose "missing" modules and includes the upstream tree
     # turned out to publish (B18: frodal, mauro x2, ngrilli, xara)
-    assert len(ours) == 82, len(ours)  # + Phase_Trafos (MKL is a library) and abumpack (absence unconfirmed), B18
+    assert len(ours) == 69, len(ours)  # pass25: 13 fewer after the B20 transformer fixes (82 at the B18 tip); was: + Phase_Trafos (MKL is a library) and abumpack (absence unconfirmed), B18
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -156,7 +156,7 @@ def test_the_refusal_classes_partition_every_refusal():
             record["refusal_class"], 0) + 1
     assert sum(counts.values()) == len(rows), (counts, len(rows))
     assert counts == {
-        GENUINE_UMAT: 82,
+        GENUINE_UMAT: 69,
         MISSING_EXTERNAL_DEPENDENCY: 4,
         HELPER_OR_MODULE_ONLY: 14,
         INCOMPLETE_OR_CORRUPT: 13,
@@ -164,7 +164,7 @@ def test_the_refusal_classes_partition_every_refusal():
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 121
+    assert sum(counts.values()) == 108
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
@@ -245,7 +245,7 @@ def test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper():
     answers, and neither of them read off the refusal."""
     damaged = [r for r in refusals()
                if r["source_id"].startswith("mkhadijeh26__")]
-    assert len(damaged) == 6, len(damaged)
+    assert len(damaged) == 5, len(damaged)
     corrupt = [r for r in damaged
                if r["refusal_class"] == INCOMPLETE_OR_CORRUPT]
     assert len(corrupt) == 5, [r["source_id"] for r in damaged]
@@ -256,7 +256,9 @@ def test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper():
             "a UMAT that does not build is a UMAT that does not build, not a "
             "file that is not a UMAT")
     survivor = [r for r in damaged if r not in corrupt]
-    assert len(survivor) == 1 and survivor[0]["refusal_class"] == GENUINE_UMAT
+    # pass25: the sixth file (ViscoelasticityCode3.f) now transforms (B20) and
+    # is no longer a refusal, so no survivor is left to discriminate against.
+    assert len(survivor) == 0, [r["source_id"] for r in survivor]
 
     from umat_oti.corpus.entry_routines import Classification, NO_PROGRAM_UNIT
     unreadable = Classification(kind=NO_PROGRAM_UNIT)
@@ -281,7 +283,7 @@ def test_a_compile_that_settles_nothing_leaves_the_work_ours():
     settled nothing.)"""
     unsure = [r for r in refusals()
               if r["refusal_class_confident"] is False]
-    assert len(unsure) == 28, [r["source_id"] for r in unsure]
+    assert len(unsure) == 23, [r["source_id"] for r in unsure]
     for record in unsure:
         # One of the twelve is a second copy of another of them. A duplicate
         # keeps the underlying answer -- "as a file it is genuine_umat" is
