@@ -1211,6 +1211,10 @@
   {
    "commit": "d918996",
    "reason": "Corpus freeze at pass25. 'refusals' names the registry's refusal classes whose pinned counts moved with the population; no defect is corrected."
+  },
+  {
+   "commit": "b85295c",
+   "reason": "Regeneration of the pass25 registry with the council plans the runs used. 'stale' names the wrong input folder of the registry build command, which is not code in this repository; no defect in the repository is corrected."
   }
  ],
  "changelog_fixed": {
