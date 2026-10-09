@@ -45,8 +45,6 @@ def test_canary_a_decks_that_is_the_sources_own_keeps_its_sentence(source, deck)
 
 def test_the_rule_changes_exactly_the_two_rows_it_was_written_for():
     path = REPO / "paper_results/corpus/corpus_registry.json"
-    if not path.is_file():
-        pytest.skip("no registry")
     changed = []
     for record in json.loads(path.read_text(encoding="utf-8"))["records"]:
         new = reg.sibling_deck_provenance(record["source_id"], record["deck"],
