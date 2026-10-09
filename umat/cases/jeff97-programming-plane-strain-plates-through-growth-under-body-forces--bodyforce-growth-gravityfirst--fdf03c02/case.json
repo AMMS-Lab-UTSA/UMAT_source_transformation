@@ -33,7 +33,7 @@
  "fingerprints": {
   "transform_fingerprint": "c61511ea0ffe58e2",
   "harness_fingerprint": "cfd84cd2fe97e72b",
-  "contract_transform_generation": "50ae446f12de66d8"
+  "contract_transform_generation": "c61511ea0ffe58e2"
  },
  "transform": {
   "settings": {
@@ -543,8 +543,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261008T213449",
-  "seconds": 16.7,
+  "run_id": "20261009T025233",
+  "seconds": 17.0,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -556,7 +556,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "c44203179fe3817f3080c3e7fe615e9090a2c85c5ce137534e68a4c3732d7c22",
+  "tree_sha256": "d3929f4b51500c33bac2026f32551eb49c65a52ed30c5074a606fd21f7ef4196",
   "location": "corpus_assets",
   "files": 34,
   "bytes": 936155
@@ -579,12 +579,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(8)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-08T21:35:06",
+ "date": "2026-10-09T02:52:51",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 6.0,
+    "seconds": 5.6,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {

@@ -33,7 +33,7 @@
  "fingerprints": {
   "transform_fingerprint": "c61511ea0ffe58e2",
   "harness_fingerprint": "cfd84cd2fe97e72b",
-  "contract_transform_generation": "50ae446f12de66d8"
+  "contract_transform_generation": "c61511ea0ffe58e2"
  },
  "transform": {
   "settings": {
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261008T213732",
-  "seconds": 18.4,
+  "run_id": "20261009T025519",
+  "seconds": 18.3,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,7 +697,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "f56c50e49ec528a6091093feac2f0d02e53a422bae5dd8a2e56c2bdbda79f245",
+  "tree_sha256": "64865b8a6ec15dc08862caef63dfc6e8a36316d9d8b77958c4b492d1f6920762",
   "location": "corpus_assets",
   "files": 37,
   "bytes": 997908
@@ -717,12 +717,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-08T21:37:51",
+ "date": "2026-10-09T02:55:37",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.1,
+    "seconds": 5.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
