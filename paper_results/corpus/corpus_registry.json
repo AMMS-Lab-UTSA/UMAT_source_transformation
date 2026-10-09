@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-registry/1",
- "generated": "2026-10-09T02:02:35+00:00",
+ "generated": "2026-10-09T07:00:02+00:00",
  "what_counts_as_verified": "only fully_verified, and it is reached by a source that transformed, compiled, ran in Abaqus as the original, ran as the converted build on the same deck, agreed with itself over the whole stress and state history, and whose OTI tangent agreed with a finite difference of the original at several smooth states",
  "terminal_states": {
   "verified": [
@@ -41,15 +41,24 @@
     "acquired": 405,
     "eligible_as_published": 242,
     "verified": 106,
-    "line_as_published": "106 of 242 (as published)",
-    "line_revised": "115 of 247 = 242 - 5 + 10",
-    "left_the_242": [
+    "line_as_published": "106 of 242 as published (pass23)",
+    "line_corrected": "113 of 242 under the corrected pipeline (pass25), repeated once, identical; evidence docs/evidence/pass25_repeat_nine.json",
+    "line_separate": "+2 on separate lines (oriented-frame instrument 1: PLANESTRESS-ORTHOTROPIC; sibling-deck provenance 1: neo_hookean_umat)",
+    "line_revised": "113 of 252 = 242 - 0 + 10 (revised callee rule; 5 freed sources that publish no material data kept in)",
+    "line_247": "247 = 252 minus the 5 freed sources that publish no material data (they are freed by the callee rule and have nothing to verify on); quoted on its own line, never as 'of 247' alone",
+    "headline_verified": 113,
+    "separate_line_rows": [
+     "CAEAssistant-Group__UMAT-Abaqus-Tsai-Hill-Orthotropic-Composite-Subroutine/PLANESTRESS-ORTHOTROPIC.for",
+     "tengzhang48__abaqus_ufl/examples/neo_hookean_umat/neo_hookean_umat.for"
+    ],
+    "kept_in": [
      "JuliaFEM__UMAT.jl/umat_models/gurson_porous_plasticity.f90",
      "bennifuchs__TsaiWu-Fortran/abaqus-umat-interface.f90",
      "j-machacek__numgeo-hardening-soil-bricks/src/hs-bricks-umat/umat.f90",
      "mholla__growth/umats/umat_iso_Mandel_v2.f",
      "prashanthgadwala__ferrite-fortran-integration_using_Julia/src/Material_Models/umat.f"
     ],
+    "left_the_242": [],
     "entered": [
      "BBahtiri__ABAQUS-Multiphysics-Diffusion-UEL/Diffusion_3D.for",
      "InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f",
@@ -62,13 +71,7 @@
      "ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for",
      "peer-open-source__xara/SRC/domain/peri/umat.for"
     ],
-    "left_with_state": {
-     "JuliaFEM__UMAT.jl/umat_models/gurson_porous_plasticity.f90": "missing_material_data",
-     "bennifuchs__TsaiWu-Fortran/abaqus-umat-interface.f90": "missing_material_data",
-     "j-machacek__numgeo-hardening-soil-bricks/src/hs-bricks-umat/umat.f90": "missing_material_data",
-     "mholla__growth/umats/umat_iso_Mandel_v2.f": "missing_material_data",
-     "prashanthgadwala__ferrite-fortran-integration_using_Julia/src/Material_Models/umat.f": "missing_material_data"
-    }
+    "left_with_state": {}
    },
    "new_not_yet_attempted": {
     "count": 14,
@@ -95,7 +98,7 @@
      "zenodo.org__13354078/multisurface-plasticity-master-2D/src/umat.f90",
      "zenodo.org__13980989/src/labtools/EXAMPLES/SDCHABOX_2D/jobs/umatAba.f"
     ],
-    "means": "sources of the 2026-10-06 host round: in no pass23 batch, state not_attempted, outside both the 242 and its revised line"
+    "means": "sources of the 2026-10-06 host round: in no pass23 batch, outside the 242 and its revised line"
    }
   },
   "growth_inferred_from_state_targets": {
@@ -21272,7 +21275,7 @@
    "formulation": "three-dimensional continuum",
    "kinematics": "small strain",
    "deck": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp",
-   "material_provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- simplified_job.inp declares exactly one element, so it is the author's own single-element test of this material",
+   "material_provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- verified with a sibling example's deck (simplified), not this source's own",
    "props_count": 8,
    "nstatv": 4,
    "activated": true,
@@ -41306,7 +41309,7 @@
    "formulation": "three-dimensional continuum",
    "kinematics": "finite",
    "deck": "tengzhang48__abaqus_ufl/examples/_template/abaqus/job.inp",
-   "material_provenance": "tengzhang48__abaqus_ufl/examples/_template/abaqus/job.inp: job.inp *MATERIAL TEMPLATE: 2 constants, *DEPVAR 0 -- job.inp declares exactly one element, so it is the author's own single-element test of this material; a section in job.inp attaches TEMPLATE to C3D8R",
+   "material_provenance": "tengzhang48__abaqus_ufl/examples/_template/abaqus/job.inp: job.inp *MATERIAL TEMPLATE: 2 constants, *DEPVAR 0 -- verified with a sibling example's deck (_template/abaqus), not this source's own; a section in job.inp attaches TEMPLATE to C3D8R",
    "props_count": 2,
    "nstatv": 1,
    "activated": true,
