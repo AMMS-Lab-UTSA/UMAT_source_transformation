@@ -17,20 +17,28 @@ all 11,890 files is the same before and after the pass. No council experiment
 counts toward the figures below. The published line and the revised line are
 never pooled with each other or with the new sources:
 
-- **115 of 242 as published** (the pass23 population and the pass23 adequacy
-  test; 106 of 242 at pass24). The 106 sources of pass24 are all still verified:
-  none lost. Nine entered: PLANESTRESS-ORTHOTROPIC, the Bunny Part1 and Part2,
-  Alex 749 and Model_car growth sources, Worlthen array_with_two_pixel_z,
-  keisuke58 biofilm_visco and the two tengzhang48 sources.
-- **115 of 247 with the revised callee rule** (242 - 5 + 10). Ten sources enter
+- **106 of 242 as published (pass23).** The pass23 population and the pass23
+  adequacy test; unchanged at pass24.
+- **113 of 242 under the corrected pipeline (pass25), repeated once, identical**
+  (evidence: `docs/evidence/pass25_repeat_nine.json`). The 106 of pass24 are all
+  still verified; nine entered and each was rerun at the pass25 fingerprints in
+  fresh scratch with identical stage, gates and tangent states. Seven count in
+  the headline: Bunny Part1 and Part2, Alex 749, Model_car, Worlthen
+  array_with_two_pixel_z, keisuke58 biofilm_visco and tengzhang48 template_umat.
+- **+2 on separate lines**, verified but not counted in the 113: PLANESTRESS-ORTHOTROPIC
+  (oriented-frame instrument) and neo_hookean_umat (sibling-deck provenance: its
+  deck is a sibling example's, not its own). 115 of 242 if both were counted.
+- **Revised callee rule, 113 of 252** (242 - 0 + 10), with the five freed
+  sources that publish no material (gurson, bennifuchs TsaiWu, numgeo
+  hs-bricks, mholla iso_Mandel_v2, prashanthgadwala) kept in. Ten sources enter
   (a callee, module or include counts as unpublished only if its absence from
   the repository at the pinned commit is confirmed, `upstream_callee_check.json`):
   Diffusion_3D, GeneralFiniteStrain, the two bmmbUPF discs, frodal HypoImp, the
   two mauroarcidiacono UMATs, ngrilli HCPnoTwin, xara peri/umat and IoM
-  Phase_Trafos umat_main. Five leave: gurson (JuliaFEM), bennifuchs TsaiWu,
-  numgeo hardening-soil bricks, mholla iso_Mandel_v2 and prashanthgadwala now
-  transform and are found to have no published material (`missing_material_data`,
-  not adequately specified).
+  Phase_Trafos umat_main; none verifies.
+- **247, on its own line**: 252 minus the five freed sources that publish no
+  material; never quoted as "of 247" alone. How 246, 251, 252 and 247 differ,
+  source by source: `docs/evidence/pass25_denominators.txt`.
 - **How "in the repository" is decided.** A module is found by its `MODULE`
   statement, a callee by its `SUBROUTINE`/`FUNCTION`/`ENTRY` (or generic
   `INTERFACE` name), an include by FILE NAME: `INCLUDE './x/body.f'` is matched
@@ -59,7 +67,7 @@ Two counts are reported over the eligible denominator:
   replay plus the Jacobian-matched control, DDSDDE judged entry by entry
   against a finite difference of the original with an FD-only plateau of at
   least 3 steps and a quad reference where double cannot resolve, mechanically
-  informative): **115 of 242** (106 of 242 at pass24 and pass23, 105 at pass22,
+  informative): **113 of 242** (115 with the two separate lines; 106 of 242 at pass24 and pass23, 105 at pass22,
   102 of 245 at pass21; 67 of 238 at pass20 came from the legacy tangent gate,
   which D-4 supersedes, and is not comparable). A source whose
   Jacobian-matched control decided nothing (`primal_control_not_decided`, 2
@@ -70,7 +78,7 @@ Two counts are reported over the eligible denominator:
   verifies primal and DDSDDE against FD of the original (FD-only plateau of at
   least 3 steps, entrywise tolerance, quad-precision reference where double
   cannot resolve, binary32 stores judged under rule B32), with STRESS and
-  DDSDDE fully defined in the original: **118 of 242** (114 at pass24 and
+  DDSDDE fully defined in the original: **116 of 242** (118 with the two separate lines; 114 at pass24 and
   pass23, 113 at pass22, 112 of 245 at pass21, 109 of 238 at pass20). Of the
   118, 109 are `fully_verified` and 9 are not: 4 `tangent_not_verified`, all
   unresolved at the chosen states and none with a measured disagreement; 5
@@ -92,11 +100,11 @@ family's share of D2):
 | rate-independent plasticity | 21 | 1 | 2 |
 | damage / phase field | 13 | 0 | 0 |
 | crystal plasticity | 12 | 0 | 4 |
-| linear elastic | 9 | 5 | 5 |
+| linear elastic | 9 | 4 | 4 |
 | viscoelastic | 10 | 1 | 1 |
 | concrete / geomaterial | 13 | 0 | 0 |
-| other (incl. hyperelastic) | 30 | 6 | 5 |
-| **total** | **242** | **115** | **118** |
+| other (incl. hyperelastic) | 30 | 5 | 4 |
+| **total** | **242** | **113** | **116** |
 
 The growth figures include sources whose growth tensor is fixed to the identity
 (neo-Hookean response), and 105 of the growth sources come from one author

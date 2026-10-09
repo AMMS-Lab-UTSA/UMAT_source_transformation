@@ -4,9 +4,12 @@ Every acquired source has a record here, and each one is named by its path insid
 
 ## Census: the pass23 population and the new sources, kept apart
 
-* pass23 population (405 sources): **106 of 242 (as published)**.
-* the same population with the callee rule applied: **115 of 247 = 242 - 5 + 10** (left: 5, entered: 10).
-* new, not yet attempted: **14** sources ({'missing_material_data': 2, 'transform_refused': 8, 'primal_disagreed': 1, 'original_job_failed': 2, 'experiment_not_generated': 1}), outside both lines above. The size of this registry and its count of eligible sources are not the denominator.
+* **106 of 242 as published (pass23)**.
+* **113 of 242 under the corrected pipeline (pass25), repeated once, identical; evidence docs/evidence/pass25_repeat_nine.json**.
+* +2 on separate lines (oriented-frame instrument 1: PLANESTRESS-ORTHOTROPIC; sibling-deck provenance 1: neo_hookean_umat).
+* the revised callee rule: **113 of 252 = 242 - 0 + 10 (revised callee rule; 5 freed sources that publish no material data kept in)**.
+* 247 = 252 minus the 5 freed sources that publish no material data (they are freed by the callee rule and have nothing to verify on); quoted on its own line, never as 'of 247' alone.
+* new, not yet attempted or attempted apart: **14** sources ({'missing_material_data': 2, 'transform_refused': 8, 'primal_disagreed': 1, 'original_job_failed': 2, 'experiment_not_generated': 1}), outside every line above. The size of this registry and its count of eligible sources are not the denominator.
 
 ## Where every number below comes from
 

@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-manifest/1",
- "generated": "2026-10-09T03:15:55+00:00",
+ "generated": "2026-10-09T07:00:23+00:00",
  "what_this_is": "one row per acquired corpus source plus one per discovered-but-not-acquired candidate; every pipeline stage and feature cell carries a status, a reason and an evidence locator. Skipped never counts as verified.",
  "roots": {
   "campaign": "$UMAT_OTI_WORKSPACE/corpus_campaign",
@@ -15,7 +15,7 @@
  "inputs": {
   "registry": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b20/paper_results/corpus/corpus_registry.json",
-   "sha256": "152d3a63eea3d2d8c57ec8b29d3ca5e710b6534ff50c4232f5224dc4430c49f6"
+   "sha256": "03fc8ab6be9d5e45a1da3b46a0c875260ca23c4b2289c3c3d4cabc068b481654"
   },
   "triage": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat-b20/paper_results/discovery/discovery_triage.json",
@@ -176350,12 +176350,12 @@
     },
     "props": {
      "count": 8,
-     "provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- simplified_job.inp declares exactly one element, so it is the author's own single-element test of this material",
+     "provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- verified with a sibling example's deck (simplified), not this source's own",
      "max_literal_index_in_source": 8
     },
     "nstatv": {
      "count": 4,
-     "provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- simplified_job.inp declares exactly one element, so it is the author's own single-element test of this material",
+     "provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- verified with a sibling example's deck (simplified), not this source's own",
      "max_literal_index_in_source": 4,
      "triage_hint": 7
     },
@@ -276425,12 +276425,12 @@
     },
     "props": {
      "count": 2,
-     "provenance": "tengzhang48__abaqus_ufl/examples/_template/abaqus/job.inp: job.inp *MATERIAL TEMPLATE: 2 constants, *DEPVAR 0 -- job.inp declares exactly one element, so it is the author's own single-element test of this material; a section in job.inp attaches TEMPLATE to C3D8R",
+     "provenance": "tengzhang48__abaqus_ufl/examples/_template/abaqus/job.inp: job.inp *MATERIAL TEMPLATE: 2 constants, *DEPVAR 0 -- verified with a sibling example's deck (_template/abaqus), not this source's own; a section in job.inp attaches TEMPLATE to C3D8R",
      "max_literal_index_in_source": 2
     },
     "nstatv": {
      "count": 1,
-     "provenance": "tengzhang48__abaqus_ufl/examples/_template/abaqus/job.inp: job.inp *MATERIAL TEMPLATE: 2 constants, *DEPVAR 0 -- job.inp declares exactly one element, so it is the author's own single-element test of this material; a section in job.inp attaches TEMPLATE to C3D8R",
+     "provenance": "tengzhang48__abaqus_ufl/examples/_template/abaqus/job.inp: job.inp *MATERIAL TEMPLATE: 2 constants, *DEPVAR 0 -- verified with a sibling example's deck (_template/abaqus), not this source's own; a section in job.inp attaches TEMPLATE to C3D8R",
      "max_literal_index_in_source": null,
      "triage_hint": 73
     },
