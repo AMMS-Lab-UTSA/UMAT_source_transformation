@@ -2117,11 +2117,11 @@
   },
   "skip:tests/test_the_b20_separate_line_rules.py:<module>:mark.skipif:feb6e0ac": {
    "verdict": "justified",
-   "reason": "The one skipif guards the A/B test that reads the machine-local pass25 evidence (corpus_run/pass25/results/store_verification.jsonl, 298 records, which is not in the repository). Every other test in the module is self-contained and runs unconditionally; on the machine that produced the evidence the skip does not fire (the A/B ran: 112 of 112 verified rows byte-identical).",
+   "reason": "The one skipif guards the A/B test that reads the machine-local pass25 evidence (corpus_run/pass25/results/store_verification.jsonl, 311 records, which is not in the repository). Every other test in the module is self-contained and runs unconditionally; on the machine that produced the evidence the skip does not fire (the A/B ran: 121 of 121 verified rows byte-identical).",
    "evidence": [
     {
      "in": "tests/test_the_b20_separate_line_rules.py",
-     "text": "@pytest.mark.skipif(not PASS24.exists(), reason=\"pass24 evidence is machine-local\")"
+     "text": "@pytest.mark.skipif(not PASS24.exists(), reason=\"pass25 evidence is machine-local\")"
     }
    ]
   }
