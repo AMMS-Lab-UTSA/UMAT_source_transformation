@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "6068e518277553839aead8f1",
+  "registry_key": "fb76f1244decbd328291ced7",
   "source_id": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Scallop.for",
   "repository": "Jeff97/General-shape-control-of-shell",
   "commit": "95cf95d2191c8b125fa96e898c2cf4d411fa0a7c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/General-shape-control-of-shell/blob/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto2D/From-2D-to-2D-Scallop.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/General-shape-control-of-shell/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto2D/From-2D-to-2D-Scallop.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass25/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass25_registry/corpus_registry.json"
   },
   "sha256": "52ae0b5f7a057fed224b64ef0eb4739147b606332ea49432d3ed4577e7d1e7ab",
   "bytes": 10302,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-2d-scallop--4bcdb9ec  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "50ae446f12de66d8",
-  "harness_fingerprint": "0b2c472c7085b594",
+  "transform_fingerprint": "c61511ea0ffe58e2",
+  "harness_fingerprint": "cfd84cd2fe97e72b",
   "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:6068e518277553839aead8f1",
+  "from": "transform_store:fb76f1244decbd328291ced7",
   "files": [
    {
     "path": "From-2D-to-2D-Scallop_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=6068e518277553839aead8f1",
+   "registry": "<workspace>/corpus_campaign/pass25_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass25/results/store_verification.jsonl key=fb76f1244decbd328291ced7",
    "material_provenance": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Scallop.inp: From-2D-to-2D-Scallop.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in From-2D-to-2D-Scallop.inp attaches NeoHookean to C3D20H; the deck's name 'From-2D-to-2D-Scallop.inp' contains the whole of the ",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261008T031659",
-  "seconds": 18.7,
+  "run_id": "20261008T211956",
+  "seconds": 18.9,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "8d7aefabde77feb7a8d7c8da0a2c7c8fcff1149c5d6defd2d1ce726cd11730ad",
+  "tree_sha256": "d36c754e176726083c3a9401f272578d619a91d6f7428d6e1f8ba911f54bfc9e",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1104369
+  "bytes": 1104368
  },
  "tiers": {
   "ci": false,
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-general-shape-control-of-shell--from-2d-to-2d-scallop--4bcdb9ec",
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-2d-scallop--4bcdb9ec",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 6068e518277553839aead8f1 --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key fb76f1244decbd328291ced7 --verification-records <workspace>/corpus_run/pass25/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass25_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(9)"
@@ -720,12 +720,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(9)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-08T03:17:18",
+ "date": "2026-10-08T21:20:15",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.5,
+    "seconds": 5.3,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -802,7 +802,7 @@
     }
    },
    "replay": {
-    "seconds": 2.0,
+    "seconds": 1.9,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
