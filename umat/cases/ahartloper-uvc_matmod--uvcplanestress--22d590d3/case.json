@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "4524861175470cf1ee7b09b1",
+  "registry_key": "36ca248c8e3c7c412a820dd4",
   "source_id": "ahartloper__UVC_MatMod/Abaqus/UVCplanestress.for",
   "repository": "ahartloper/UVC_MatMod",
   "commit": "a4b8f6e27d0c9c4699332d75f68c562ee64932ae",
@@ -14,8 +14,8 @@
   "url": "https://github.com/ahartloper/UVC_MatMod/blob/a4b8f6e27d0c9c4699332d75f68c562ee64932ae/Abaqus/UVCplanestress.for",
   "raw_url": "https://raw.githubusercontent.com/ahartloper/UVC_MatMod/a4b8f6e27d0c9c4699332d75f68c562ee64932ae/Abaqus/UVCplanestress.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass25/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass25_registry/corpus_registry.json"
   },
   "sha256": "d25ee404fed5493ea479a3a38c8b0b59a25526dd5703fff9a6d0c99bf447b46e",
   "bytes": 14070,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch ahartloper-uvc_matmod--uvcplanestress--22d590d3  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "50ae446f12de66d8",
-  "harness_fingerprint": "0b2c472c7085b594",
+  "transform_fingerprint": "c61511ea0ffe58e2",
+  "harness_fingerprint": "cfd84cd2fe97e72b",
   "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 3,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:4524861175470cf1ee7b09b1",
+  "from": "transform_store:36ca248c8e3c7c412a820dd4",
   "files": [
    {
     "path": "UVCplanestress_oti.for",
@@ -108,8 +108,8 @@
   "family": "plasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=4524861175470cf1ee7b09b1",
+   "registry": "<workspace>/corpus_campaign/pass25_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass25/results/store_verification.jsonl key=36ca248c8e3c7c412a820dd4",
    "material_provenance": "ahartloper__UVC_MatMod/Abaqus/testing/Shell-Biaxial-UMAT.inp: Shell-Biaxial-UMAT.inp *MATERIAL umat: 11 constants, *DEPVAR 10 -- ahartloper__UVC_MatMod's README states that Shell-Biaxial-UMAT.inp runs with UVCplanestress.for; Shell-Biaxial-UMAT.inp declares exactly one element, so it is the author's",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -1109,7 +1109,7 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261008T035027",
+  "run_id": "20261008T215324",
   "seconds": 20.6,
   "features": [
    "primal_stress_state",
@@ -1122,7 +1122,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "d6286bbc8f54433af93d61e4576e430216f14495bec476790d1d18142cdcfe02",
+  "tree_sha256": "8ac409476674b93484469f95b58d382fa2e67f0a7bfa0e0173089fbc3f9dbe13",
   "location": "corpus_assets",
   "files": 52,
   "bytes": 1221827
@@ -1134,7 +1134,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only ahartloper-uvc_matmod--uvcplanestress--22d590d3",
   "fetch": "python tools/corpus_cases.py fetch ahartloper-uvc_matmod--uvcplanestress--22d590d3",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 4524861175470cf1ee7b09b1 --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 36ca248c8e3c7c412a820dd4 --verification-records <workspace>/corpus_run/pass25/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass25_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -1142,12 +1142,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-08T03:50:47",
+ "date": "2026-10-08T21:53:45",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.7,
+    "seconds": 5.3,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -1273,7 +1273,7 @@
     }
    },
    "replay": {
-    "seconds": 2.1,
+    "seconds": 1.9,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

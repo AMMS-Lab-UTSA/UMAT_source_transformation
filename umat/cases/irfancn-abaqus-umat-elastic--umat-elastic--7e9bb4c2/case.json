@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "450386db3c081a9df6795c0a",
+  "registry_key": "07b94a95a399347188a5b73e",
   "source_id": "irfancn__Abaqus-UMAT-elastic/umat_elastic.for",
   "repository": "irfancn/Abaqus-UMAT-elastic",
   "commit": "d69aaf474e62f8fbc3391bc6b388af3890708396",
@@ -14,8 +14,8 @@
   "url": "https://github.com/irfancn/Abaqus-UMAT-elastic/blob/d69aaf474e62f8fbc3391bc6b388af3890708396/umat_elastic.for",
   "raw_url": "https://raw.githubusercontent.com/irfancn/Abaqus-UMAT-elastic/d69aaf474e62f8fbc3391bc6b388af3890708396/umat_elastic.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass24/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass25/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass25_registry/corpus_registry.json"
   },
   "sha256": "5e500764da04aaabba279113de51697b41641f62f5912ba5e44144e4fff31572",
   "bytes": 1673,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "50ae446f12de66d8",
-  "harness_fingerprint": "0b2c472c7085b594",
+  "transform_fingerprint": "c61511ea0ffe58e2",
+  "harness_fingerprint": "cfd84cd2fe97e72b",
   "contract_transform_generation": "50ae446f12de66d8"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:450386db3c081a9df6795c0a",
+  "from": "transform_store:07b94a95a399347188a5b73e",
   "files": [
    {
     "path": "compile_order.txt",
@@ -94,8 +94,8 @@
   "family": "elasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass24_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass24/results/store_verification.jsonl key=450386db3c081a9df6795c0a",
+   "registry": "<workspace>/corpus_campaign/pass25_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass25/results/store_verification.jsonl key=07b94a95a399347188a5b73e",
    "material_provenance": "irfancn__Abaqus-UMAT-elastic/elastic_input.inp: elastic_input.inp *MATERIAL user_mat: 2 constants, *DEPVAR 0 -- a section in elastic_input.inp attaches user_mat to C3D8; the two names share elastic; the deck sits in the source's own directory",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -795,8 +795,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261008T035521",
-  "seconds": 10.6,
+  "run_id": "20261008T215819",
+  "seconds": 10.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -808,7 +808,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "d59e22321b5b29d1f51a454af0df6ea644b51225f6ddebc027c5e422159c21ef",
+  "tree_sha256": "7aae7458e7c681744460963b55261cee500888581fd0276344c36e4b3eba860d",
   "location": "corpus_assets",
   "files": 43,
   "bytes": 872127
@@ -820,7 +820,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2",
   "fetch": "python tools/corpus_cases.py fetch irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 450386db3c081a9df6795c0a --verification-records <workspace>/corpus_run/pass24/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass24_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 07b94a95a399347188a5b73e --verification-records <workspace>/corpus_run/pass25/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass25_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -828,12 +828,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-08T03:55:32",
+ "date": "2026-10-08T21:58:29",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.8,
+    "seconds": 4.7,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -931,7 +931,7 @@
     }
    },
    "replay": {
-    "seconds": 1.7,
+    "seconds": 1.6,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
