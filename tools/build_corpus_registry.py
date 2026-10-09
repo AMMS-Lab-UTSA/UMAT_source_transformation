@@ -2812,6 +2812,21 @@ def _census_lines(census: dict) -> list:
         ""]
 
 
+def _d1_d2_headline_note(census: dict) -> list:
+    """The sentence that keeps the D1/D2 table from being quoted as a headline.
+
+    Its counts include the sources on separate lines and every verified source of the
+    registry, also those outside the 242; the census line is the headline."""
+    base = (census or {}).get("pass23_population") or {}
+    if not base:
+        return []
+    return [
+        "These counts include the separate-line sources and every verified source of "
+        "the registry, also those outside the 242; the census figure is the headline. "
+        f"The figure to quote is **{base['line_corrected']}** "
+        f"({base['line_separate']}).", ""]
+
+
 def markdown(records: list, summary: dict) -> str:
     inputs = summary.get("inputs") or {}
     denominators = summary.get("denominators") or {}
@@ -2938,8 +2953,9 @@ def markdown(records: list, summary: dict) -> str:
         f"| D2 adequately specified genuine UMATs | {verified_adequate} | "
         f"{gated_adequate} | {adequate} |",
         "",
-        "**Verified on every gate is the stricter number and it is the one to "
-        "quote.** The two columns differ by the "
+        "**Verified on every gate is the stricter of the two columns; it is not "
+        "the figure to quote** (see the census headline above). The "
+        "two columns differ by the "
         f"{verified - gated} entr{'y' if verified - gated == 1 else 'ies'} "
         "that reached the batch's `verified` rung with one of the six "
         "evidence gates not reading true; they are named below.",
@@ -2947,6 +2963,7 @@ def markdown(records: list, summary: dict) -> str:
         f"* {_pct(gated, acquired, 'acquired sources (D1)')}",
         f"* {_pct(gated_adequate, adequate, 'adequately specified genuine UMATs (D2)')}",
         "",
+        *_d1_d2_headline_note(summary.get("census") or {}),
         "Against the looser rung instead:",
         "",
         f"* {_pct(verified, acquired, 'acquired sources (D1)')}",

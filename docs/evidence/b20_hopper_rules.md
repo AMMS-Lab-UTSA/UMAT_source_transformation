@@ -8,7 +8,7 @@ with the 112 fully_verified required to keep their status.
 
 ## H1. A wedge-meshed model is run on the author's wedge element
 
-Observation (Bell D1, Ritchie D2): decks meshed with C3D6/C3D6H/C3D15 were run on a unit hexahedron:
+Observation (Bell D1, B19 diagnosis D2): decks meshed with C3D6/C3D6H/C3D15 were run on a unit hexahedron:
 Alex (P1, 20470, 749), Car, Robot, Human-face, Bunny P1/P2, Model_car. The wedge has 2 (C3D6) or 9 (C3D15)
 integration points, not 8, so a routine that assigns a thickness coordinate only for NPT 1,2 reads garbage at
 NPT 3..8, and the author's mesh nodes are discarded because a wedge has 6 corners and a hexahedron 8, so the
@@ -93,7 +93,7 @@ A/B: pairing and generated decks of every source before/after: only sources with
 
 ## H5. The Jacobian-matched control is paired with the transformed run by the same increment
 
-Observation (Ritchie G9): `align_by_time` keys on (step, element, point, start time); Growth-CASE3 pairs a 5.0
+Observation (B19 diagnosis G9): `align_by_time` keys on (step, element, point, start time); Growth-CASE3 pairs a 5.0
 increment of the control with a 1.25 increment of the transformed run that starts at the same time.
 Rule: in the comparison of the Jacobian-matched control with the transformed run (`jacobian_matched_verdict` and the
 first-parting-time helper) records are paired only if their increment sizes (DTIME, relative 1e-9) also agree;

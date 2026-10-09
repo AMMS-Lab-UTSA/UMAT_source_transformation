@@ -51,10 +51,12 @@ There are two populations in this report and they are never pooled. Every rate b
 | D1 acquired sources | 121 | 121 | 419 |
 | D2 adequately specified genuine UMATs | 115 | 115 | 259 |
 
-**Verified on every gate is the stricter number and it is the one to quote.** The two columns differ by the 0 entries that reached the batch's `verified` rung with one of the six evidence gates not reading true; they are named below.
+**Verified on every gate is the stricter of the two columns; it is not the figure to quote** (see the census headline above). The two columns differ by the 0 entries that reached the batch's `verified` rung with one of the six evidence gates not reading true; they are named below.
 
 * 121 of 419 acquired sources (D1) -- 28.9% of acquired sources (D1)
 * 115 of 259 adequately specified genuine UMATs (D2) -- 44.4% of adequately specified genuine UMATs (D2)
+
+These counts include the separate-line sources and every verified source of the registry, also those outside the 242; the census figure is the headline. The figure to quote is **113 of 242 under the corrected pipeline (pass25), repeated once, identical; evidence docs/evidence/pass25_repeat_nine.json** (+2 on separate lines (oriented-frame instrument 1: PLANESTRESS-ORTHOTROPIC; sibling-deck provenance 1: neo_hookean_umat)).
 
 Against the looser rung instead:
 
