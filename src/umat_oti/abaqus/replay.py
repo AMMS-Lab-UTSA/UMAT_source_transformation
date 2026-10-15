@@ -322,16 +322,16 @@ def library_link(compiler: str = "gfortran", *, quad: bool = False, source_text:
     chain calls private names only.
     """
     from umat_oti.core.host_lapack import host_lapack
-    from umat_oti.core.lapack_names import standard_names_defined_in
+    from umat_oti.core.lapack_names import needs_mkl_or_twins
 
     chosen = host_lapack(compiler)
-    own = standard_names_defined_in(source_text) if source_text else ()
+    own = needs_mkl_or_twins(source_text) if source_text else ()
     if quad or not chosen.is_library or (own and chosen.kind != "mkl"):
         if quad and chosen.is_library:
             reason = "REAL(16) build: the twins, promoted with the source"
         elif chosen.is_library:
-            reason = (f"the source defines {', '.join(own)} itself; {chosen.description} would call "
-                      f"it from inside its own routines, which Abaqus's MKL does not: the twins")
+            reason = (f"{'; '.join(own)}; {chosen.description} would not compute what Abaqus's MKL "
+                      f"computes: the twins")
         else:
             reason = chosen.description
         return [], True, {"kind": "twins", "description": reason}

@@ -302,6 +302,30 @@ def _ladder_arrays(evaluate, base: float, steps: tuple, *, admissible) -> tuple[
     return kept, differences, responses
 
 
+#: Relative tolerance of the primal comparison (provider vs the original's
+#: reference build), per entry and, scaled by the run's largest magnitude, as
+#: the absolute floor (:func:`primal_atol`).
+PRIMAL_RTOL = 1e-12
+
+
+def primal_atol(expected, floor: float) -> float:
+    """The absolute tolerance of the primal comparison for one array over the run:
+    ``PRIMAL_RTOL`` times its largest magnitude, never less than ``floor`` (the
+    fixed value used before).
+
+    A fixed absolute tolerance does not scale with the stress: a component that
+    cancels to about zero (a deviatoric term of an otherwise large stress)
+    carries the rounding of the large terms it was computed from, ~1e-15 of the
+    largest stress, which for stresses of 1e5 is far above 1e-10. Measured on
+    the run's own magnitude, as the gate measures stress agreement against the
+    stiffness, such a component is judged by the precision it could have.
+    """
+    values = np.asarray(expected, dtype=np.float64)
+    finite = values[np.isfinite(values)]
+    scale = float(np.max(np.abs(finite))) if finite.size else 0.0
+    return max(floor, PRIMAL_RTOL * scale)
+
+
 def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branches=True) -> dict:
     contract_path, output_dir = Path(contract_path).resolve(), Path(output_dir).resolve()
     raw = json.loads(contract_path.read_text())
@@ -356,9 +380,10 @@ def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branche
     for array in (stress, state, tangent, dsigma, dstate, march_stress, march_dsigma, march_tangent):
         if not np.all(np.isfinite(array)):
             raise AssertionError("provider returned nonfinite values on the check path")
-    np.testing.assert_allclose(stress, expected_stress, rtol=1e-12, atol=1e-10)
-    np.testing.assert_allclose(state, expected_state, rtol=1e-12, atol=1e-14)
-    np.testing.assert_allclose(march_stress, expected_stress[-1], rtol=1e-12, atol=1e-10)
+    stress_atol, state_atol = primal_atol(expected_stress, 1e-10), primal_atol(expected_state, 1e-14)
+    np.testing.assert_allclose(stress, expected_stress, rtol=PRIMAL_RTOL, atol=stress_atol)
+    np.testing.assert_allclose(state, expected_state, rtol=PRIMAL_RTOL, atol=state_atol)
+    np.testing.assert_allclose(march_stress, expected_stress[-1], rtol=PRIMAL_RTOL, atol=stress_atol)
 
     def branches(states):
         return np.diff(np.r_[0.0, states[:, 0]]) > 1.0e-10
@@ -517,6 +542,9 @@ def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branche
                             if require_j2_branches else "no branch rule"),
         },
         "primal_stress_max_abs": float(np.max(np.abs(stress - expected_stress))),
+        "primal_tolerance": {"rtol": PRIMAL_RTOL, "stress_atol": stress_atol, "state_atol": state_atol,
+                             "rule": "atol = rtol x the largest magnitude of the array over the run, "
+                                     "at least 1e-10 (stress) / 1e-14 (state)"},
         "primal_state_max_abs": float(np.max(np.abs(state - expected_state))) if nstatev else 0.0,
         "carry_reset_stress_derivative_difference": carry_difference,
         "state_growth": float(np.max(np.abs(expected_state[-1]))) if nstatev else 0.0,

@@ -50,3 +50,24 @@ def standard_names_defined_in(text: str) -> tuple:
         if match and match.group(1).upper() in STANDARD_LAPACK_BLAS:
             found.add(match.group(1).upper())
     return tuple(sorted(found))
+
+
+#: Routines whose results in MKL (the library Abaqus links) and in reference
+#: BLAS differ for some arguments, not only in rounding: DNRM2 and DSCAL with
+#: INCX <= 0 (reference BLAS returns zero / does nothing, MKL computes).
+MKL_SEMANTICS = frozenset({"DNRM2", "DSCAL"})
+
+
+def needs_mkl_or_twins(text: str) -> tuple:
+    """Why a stand-alone build of ``text`` must link MKL or the twins rather than
+    another LAPACK/BLAS: the standard names it defines itself (another library's
+    routines would call them), and the routines it references whose semantics
+    differ between MKL and reference BLAS. Empty when any library will do."""
+    import re
+
+    reasons = [f"the source defines {name} itself" for name in standard_names_defined_in(text)]
+    for name in sorted(MKL_SEMANTICS):
+        if re.search(rf"(?im)^[^cC*!\n][^!\n]*(?<![A-Za-z0-9_]){name}\s*\(", text):
+            reasons.append(f"the source calls {name}, whose result for INCX <= 0 differs between "
+                           f"MKL and reference BLAS")
+    return tuple(reasons)

@@ -260,6 +260,82 @@ FUNCTIONS_UMAT = HEADER + """      DOUBLE PRECISION DDOT, DNRM2, T(6)
       END
 """
 
+#: DNRM2 and DSCAL with negative and zero increments, where reference BLAS
+#: 3.9.0 returns zero / does nothing and Abaqus's MKL computes.
+INCREMENT_UMAT = HEADER + """      DOUBLE PRECISION DNRM2, T(6)
+      DO I = 1, NTENS
+        T(I) = PROPS(1)*DSTRAN(I) + 0.1D0*I*DSTRAN(MOD(I,6)+1)
+      END DO
+      XN = DNRM2(NTENS, T, -1) + 2.0D0*DNRM2(3, T, 0)
+      CALL DSCAL(3, 0.5D0, T, -2)
+      CALL DSCAL(2, 1.5D0, T(2), 0)
+      DO I = 1, NTENS
+        STRESS(I) = STRESS(I) + T(I)*(1.0D0 + 1.0D1*XN)
+      END DO
+      DO I = 1, NTENS
+        DO J = 1, NTENS
+          DDSDDE(I,J) = 0.0D0
+        END DO
+        DDSDDE(I,I) = PROPS(1)
+      END DO
+      RETURN
+      END
+"""
+
+#: A REAL function of the author's whose name begins with I-N (MYNRM2),
+#: declared DOUBLE PRECISION, on the stress path of a large stress whose shear
+#: components cancel to about zero.
+MYNRM2_UMAT = HEADER + """      DIMENSION S(6,6), B(6), EPS(6)
+      INTEGER IPIV(6), INFO
+      DOUBLE PRECISION MYNRM2, XN
+      E = PROPS(1)
+      XNU = 0.3D0
+      DO I = 1, NTENS
+        EPS(I) = STRAN(I) + DSTRAN(I)
+      END DO
+      FACTOR = 1.0D0
+      DO I = 1, NTENS
+        FACTOR = FACTOR + 50.0D0*EPS(I)*EPS(I)
+      END DO
+      DO I = 1, 6
+        DO J = 1, 6
+          S(I,J) = 0.0D0
+        END DO
+      END DO
+      DO I = 1, 3
+        DO J = 1, 3
+          S(I,J) = -XNU/E*FACTOR
+        END DO
+        S(I,I) = FACTOR/E
+        S(I+3,I+3) = 2.0D0*(1.0D0+XNU)/E*FACTOR
+      END DO
+      DO I = 1, NTENS
+        B(I) = EPS(I)
+      END DO
+      CALL DGESV(NTENS, 1, S, 6, IPIV, B, 6, INFO)
+      XN = MYNRM2(NTENS, B, 1)
+      DO I = 1, NTENS
+        STRESS(I) = B(I)*(1.0D0+1.0D-3*XN)
+      END DO
+      DO I = 1, NTENS
+        DO J = 1, NTENS
+          DDSDDE(I,J) = 0.0D0
+        END DO
+        DDSDDE(I,I) = E
+      END DO
+      RETURN
+      END
+      DOUBLE PRECISION FUNCTION MYNRM2(N,X,INCX)
+      INTEGER N,INCX,I
+      DOUBLE PRECISION X(*)
+      MYNRM2=0.0D0
+      DO I=1,N
+        MYNRM2=MYNRM2+3.0D0*X(I)*X(I)
+      END DO
+      RETURN
+      END
+"""
+
 ABA_PARAM = "      IMPLICIT REAL*8 (A-H,O-Z)\n      PARAMETER (NPRECD=2)\n"
 
 
@@ -737,6 +813,9 @@ def test_stand_alone_builds_of_a_source_defining_a_standard_name_keep_the_librar
             assert library_link("gfortran", source_text=LU_UMAT)[1] is False
             flags, twins, record = library_link("gfortran", source_text=AUTHOR_UMAT)
             assert twins and flags == [] and "DGETRF" in record["description"]
+            # DNRM2 and DSCAL differ between MKL and reference BLAS for INCX <= 0
+            flags, twins, record = library_link("gfortran", source_text=INCREMENT_UMAT)
+            assert twins and "DNRM2" in record["description"] and "DSCAL" in record["description"]
         monkeypatch.setenv("UMAT_OTI_LAPACK", "auto")
         host_lapack.cache_clear()
         if host_lapack("gfortran").kind == "mkl":
@@ -818,6 +897,163 @@ def test_the_provider_verifier_names_the_missing_state_for_the_j2_branch_check(t
     assert record["passed"] is False and "--elastic" in record["error"]
     passed = verifier.verify_provider(model / "contract.json", tmp_path / "elastic", require_j2_branches=False)
     assert passed["passed"] is True
+
+
+#: Calls with increments 1, 2, -1, -2 and 0, N <= 0, and invalid leading
+#: dimensions or option letters, printed so two builds can be compared.
+_ARGUMENT_PROBE = """      PROGRAM P
+      DOUBLE PRECISION X(6), Y(6), Z(6), DNRM2, DDOT, A(3,3), B(3,3), C(3,3)
+      DOUBLE PRECISION S(3,3), W(3)
+      INTEGER I, J, K, INC(5), IPIV(3), INFO
+      DATA X /0.7D0,-1.3D0,0.2D0,2.1D0,-0.4D0,0.9D0/
+      DATA Y /1.1D0,0.3D0,-0.8D0,0.5D0,1.7D0,-0.6D0/
+      DATA INC /1,2,-1,-2,0/
+      DO K = 1, 9
+        A(MOD(K-1,3)+1,(K-1)/3+1) = 0.1D0*K - 0.35D0
+        B(MOD(K-1,3)+1,(K-1)/3+1) = 0.2D0*K + 0.15D0
+      END DO
+      DO I = 1, 5
+        DO K = -1, 6
+          WRITE(*,*) 'NRM2', K, INC(I), DNRM2(K,X,INC(I))
+        END DO
+        Z = X
+        CALL DSCAL(3, 0.7D0, Z, INC(I))
+        WRITE(*,*) 'SCAL', INC(I), Z
+        DO J = 1, 5
+          WRITE(*,*) 'DOT', INC(I), INC(J), DDOT(3,X,INC(I),Y,INC(J))
+          Z = Y
+          CALL DAXPY(3, 0.7D0, X, INC(I), Z, INC(J))
+          WRITE(*,*) 'AXPY', INC(I), INC(J), Z
+          Z = Y
+          CALL DCOPY(3, X, INC(I), Z, INC(J))
+          WRITE(*,*) 'COPY', INC(I), INC(J), Z
+          Z = Y
+          CALL DGEMV('N', 3, 3, 0.9D0, A, 3, X, INC(I), 0.4D0, Z,
+     &               INC(J))
+          WRITE(*,*) 'GEMVN', INC(I), INC(J), Z
+          Z = Y
+          CALL DGEMV('T', 3, 3, 0.9D0, A, 3, X, INC(I), 0.4D0, Z,
+     &               INC(J))
+          WRITE(*,*) 'GEMVT', INC(I), INC(J), Z
+        END DO
+      END DO
+      Z = Y
+      CALL DGEMV('N', 3, 3, 0.9D0, A, 2, X, 1, 0.4D0, Z, 1)
+      WRITE(*,*) 'GEMV LDA', Z
+      Z = Y
+      CALL DGEMV('X', 3, 3, 0.9D0, A, 3, X, 1, 0.4D0, Z, 1)
+      WRITE(*,*) 'GEMV TRANS', Z
+      C = B
+      CALL DGEMM('N','N',3,3,3,1.0D0,A,2,B,3,0.0D0,C,3)
+      WRITE(*,*) 'GEMM LDA', C
+      C = B
+      CALL DGEMM('N','N',3,3,3,1.0D0,A,3,B,3,0.0D0,C,2)
+      WRITE(*,*) 'GEMM LDC', C
+      C = B
+      CALL DGEMM('X','N',3,3,3,1.0D0,A,3,B,3,0.0D0,C,3)
+      WRITE(*,*) 'GEMM TRANS', C
+      C = B
+      CALL DGEMM('N','N',3,3,-1,1.0D0,A,3,B,3,0.5D0,C,3)
+      WRITE(*,*) 'GEMM K', C
+      S = A
+      W = X(1:3)
+      CALL DGESV(3, 1, S, 2, IPIV, W, 3, INFO)
+      WRITE(*,*) 'GESV LDA', INFO, W
+      S = A
+      CALL DGETRF(3, 3, S, 2, IPIV, INFO)
+      WRITE(*,*) 'GETRF LDA', INFO
+      END
+      SUBROUTINE XERBLA(SRNAME, INFO)
+      CHARACTER*(*) SRNAME
+      INTEGER INFO
+      END
+"""
+
+
+def _probe_output(work: Path, flags, sources=()) -> list:
+    work.mkdir()
+    (work / "probe.f").write_text(_ARGUMENT_PROBE)
+    subprocess.run(["gfortran", "-ffixed-line-length-none", "probe.f", *map(str, sources), *flags, "-o", "probe"],
+                   cwd=work, check=True)
+    lines = subprocess.run(["./probe"], cwd=work, capture_output=True, text=True, check=True).stdout
+    return [line.split() for line in lines.splitlines()]
+
+
+def test_the_twins_follow_mkl_for_every_increment_and_invalid_argument(tmp_path):
+    """The library Abaqus links a UMAT against is MKL: where it and reference BLAS
+    disagree (DNRM2 and DSCAL for INCX <= 0), the twins follow MKL; for invalid
+    leading dimensions and options every routine leaves its output alone. MKL's
+    arithmetic differs from reference BLAS's in the last bits even for unit
+    increments, so values are compared to a few ulps, labels and counts exactly."""
+    from umat_oti.core.host_lapack import host_lapack
+
+    host = host_lapack("gfortran")
+    if host.kind != "mkl":
+        pytest.skip("needs MKL")
+    twins = tmp_path / "twins.f90"
+    twins.write_text("".join(library_twin_sources().values()))
+    mkl = _probe_output(tmp_path / "mkl", host.flags)
+    ours = _probe_output(tmp_path / "twins", [], [twins])
+    assert len(mkl) == len(ours) and len(mkl) > 150
+    for left, right in zip(mkl, ours):
+        assert len(left) == len(right), (left, right)
+        for a, b in zip(left, right):
+            try:
+                x, y = float(a), float(b)
+            except ValueError:
+                assert a == b
+                continue
+            assert x == y or abs(x - y) <= 4 * np.finfo(float).eps * max(abs(x), abs(y)), (left, right)
+
+
+def test_negative_and_zero_increments_are_differentiated_as_mkl_computes_them(tmp_path):
+    from umat_oti.core.host_lapack import host_lapack
+
+    out = _transformed(tmp_path, INCREMENT_UMAT, "increments")
+    report = json.loads((out / "transform_report.json").read_text())
+    assert report["success"] is True
+    transformed = C.CDLL(str(_transformed_library(out)))
+    props, dstran = [2.5], np.array([1e-3, -2e-3, 1.5e-3, 3e-3, -1e-3, 2e-3])
+    s_oti, tangent = call_umat(transformed, props, dstran)
+    assert abs(s_oti).max() > 0
+    if host_lapack("gfortran").kind == "mkl":
+        original = C.CDLL(str(_hosted_original(tmp_path, INCREMENT_UMAT, "increments")))
+        np.testing.assert_allclose(s_oti, call_umat(original, props, dstran)[0], rtol=1e-14, atol=0)
+    reference = C.CDLL(str(_original_library(tmp_path, INCREMENT_UMAT, "increments")))
+    np.testing.assert_allclose(s_oti, call_umat(reference, props, dstran)[0], rtol=1e-15, atol=0)
+    fd = _fd_tangent(reference, props, dstran)
+    np.testing.assert_allclose(tangent, fd, rtol=1e-6, atol=1e-6 * abs(fd).max())
+
+
+def test_the_primal_tolerance_scales_with_the_run_and_a_function_result_keeps_its_derivative(tmp_path):
+    """A stress component that cancels to about zero carries the rounding of the
+    large terms it came from; the verifier's absolute tolerance is relative to
+    the run's largest stress (never tighter than before). MYNRM2, a DOUBLE
+    PRECISION function whose name begins with I-N, is lifted with an OTI result
+    (its stores were wrapped in REAL(), dropping the derivative)."""
+    from umat_oti.validation.parameter_sensitivity_provider import primal_atol, verify_provider
+
+    assert primal_atol(np.zeros((3, 6)), 1e-10) == 1e-10
+    assert primal_atol(np.array([[2.0e5, -1.0, 0.0]]), 1e-10) == pytest.approx(2.0e-7)
+    assert primal_atol(np.array([[np.nan, 3.0]]), 1e-14) == pytest.approx(3.0e-12)
+    model = tmp_path / "model"
+    model.mkdir()
+    (model / "umat.f").write_text(MYNRM2_UMAT)
+    (model / "contract.json").write_text(json.dumps({
+        "schema": "resasm_umat_transform_v2", "source": {"main_file": "umat.f"},
+        "kinematics": "small_strain", "dimensions": {"ntens": 6, "nprops": 1, "nstatev": 0},
+        "parameters": [{"name": "E", "props_index": 1}],
+        "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
+        "history": {"path_dependent": False},
+        "validation": {"props_values": [200000.0],
+                       "check_path": {"dstran_per_increment": [0.003, -0.0009, -0.0009, 0.002, 0.0, 0.001],
+                                      "n_increments": 6}},
+        "output": {"object": "m.obj", "contract": "m.json"}}))
+    report = verify_provider(model / "contract.json", tmp_path / "out", require_j2_branches=False)
+    assert report["passed"] is True
+    assert report["primal_tolerance"]["stress_atol"] > 1e-10
+    lifted = next((tmp_path / "out").glob("build-*/umat_oti_lifted.f90")).read_text().upper()
+    assert "REAL(MYNRM2" not in lifted
 
 
 # --------------------------------------------------------------------------- the provider

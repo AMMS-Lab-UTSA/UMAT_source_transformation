@@ -239,16 +239,17 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
     # the transform's real twins only where there is none.
     from umat_oti.core.host_lapack import host_lapack
 
-    from umat_oti.core.lapack_names import standard_names_defined_in
+    from umat_oti.core.lapack_names import needs_mkl_or_twins
 
     host = host_lapack(compiler)
-    # A source defining a standard name itself (its own DGETRF) links MKL or
-    # the twins: see umat_oti.abaqus.replay.library_link.
-    own = standard_names_defined_in(source.read_text(encoding="utf-8", errors="replace"))
+    # A source defining a standard name itself (its own DGETRF), or calling a
+    # routine whose semantics differ between MKL and reference BLAS, links MKL
+    # or the twins: see umat_oti.abaqus.replay.library_link.
+    own = needs_mkl_or_twins(source.read_text(encoding="utf-8", errors="replace"))
     record = host.as_dict()
     if host.is_library and own and host.kind != "mkl":
-        record = {"kind": "twins", "description": f"the source defines {', '.join(own)} itself; "
-                  f"{host.description} would call it from inside its own routines: the twins"}
+        record = {"kind": "twins", "description": f"{'; '.join(own)}; {host.description} would not "
+                  f"compute what Abaqus's MKL computes: the twins"}
     twins = ((list(host.flags) if record["kind"] != "twins" else _library_twin_archive(out_dir, compiler))
              if library_twins else [])
     (out_dir / "lapack.json").write_text(__import__("json").dumps(

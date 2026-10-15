@@ -148,6 +148,20 @@ LAPACK to rounding (eigenvectors up to sign). The OTI copies' real parts agree
 with the real twins to a few ulps; their derivatives agree with central
 differences and the complex step.
 
+*Where MKL and reference BLAS disagree, the twins follow MKL*, the library the
+original runs with inside Abaqus. Measured with MKL 2023.2 against reference
+BLAS 3.9.0 over increments 1, 2, -1, -2 and 0, N <= 0, and invalid leading
+dimensions and options: DNRM2 computes the norm for INCX < 0 (as LAPACK 3.10 and
+later do) and for INCX = 0 (N copies of X(1)), where reference BLAS returns
+zero; DSCAL scales X(1), X(1+|INCX|), ... for INCX < 0 and X(1) N times for
+INCX = 0, where reference BLAS does nothing; DGEMV and DGEMM leave their output
+alone for an invalid argument, as both do. DDOT, DAXPY, DCOPY and the rest agree
+for every increment. A UMAT taking the norm with INCX = -1 transformed silently
+to a stress that differed from the original's inside Abaqus. MKL's arithmetic
+differs from reference BLAS's in the last bits even for unit increments (fused
+multiply-adds, reordered sums), so the twins agree with MKL to a few ulps, not
+bit for bit (`test_the_twins_follow_mkl_for_every_increment_and_invalid_argument`).
+
 *Stand-alone builds link a real LAPACK.* The verifier's reference, the
 six-check gate's offline replays and the routine-level harness link the host's
 library (`umat_oti.core.host_lapack`: oneAPI MKL, else OpenBLAS, else the
@@ -157,8 +171,9 @@ reference LAPACK, found through `ldconfig` -- on PATH, or in /sbin or
 `mkl_version.h`, the library files the link resolves to, and the LAPACK
 version the library reports through ILAVER): `reference_lapack` in
 `verification.json`, `lapack` in each build record. The twins are compiled in
-only where no library links, in every REAL(16) build, and where the source
-defines a standard name itself and the host library is not MKL. Abaqus's own
+only where no library links, in every REAL(16) build, and, when the host
+library is not MKL, where the source defines a standard name itself or calls
+DNRM2 or DSCAL (whose results for INCX <= 0 differ from MKL's). Abaqus's own
 bundled MKL is not used outside Abaqus.
 
 *Literals and expressions.* A literal or an expression handed to a library
@@ -200,6 +215,16 @@ the existing reference driver. It writes `verification.json` and
 object digest, the exact properties and path, comparison counts, step sizes and
 measured errors. On failure the command exits non-zero and writes
 `passed=false` with the diagnostic; a failure is never turned into a warning.
+
+**Primal tolerance.** The provider's stress and state are compared with the
+original's reference build entry by entry with rtol = 1e-12 and an absolute
+tolerance of 1e-12 times the largest magnitude of that array over the run,
+never less than 1e-10 (stress) or 1e-14 (state), the fixed values used before
+(`primal_tolerance` in `verification.json`). A fixed absolute tolerance does
+not scale with the stress: a component that cancels to about zero carries the
+rounding of the large terms it was computed from, about 1e-15 of the largest
+stress, which for stresses of order 1e5 is above 1e-10, and valid providers
+were rejected for it.
 
 **Check path.** The path comes from the contract's `validation.check_path`,
 in one of two forms:
