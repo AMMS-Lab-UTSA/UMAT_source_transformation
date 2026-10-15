@@ -310,6 +310,13 @@ def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branche
     completed = json.loads(Path(built["contract"]).read_text())
     dimensions = completed["dimensions"]
     ntens, nstatev, nprops = (dimensions[key] for key in ("ntens", "nstatev", "nprops"))
+    if require_j2_branches and nstatev < 1:
+        # The branch sequence is read off STATEV(1), the J2 models' equivalent
+        # plastic strain. With no state variable there is nothing to read it
+        # from; indexing the empty state array raised IndexError.
+        raise ValueError("the J2 branch check (elastic, plastic and unloading increments) reads "
+                         "STATEV(1), and this UMAT has no state variables (dimensions.nstatev = 0); "
+                         "verify it with --elastic (require_j2_branches=False)")
     if props.shape != (nprops,) or not np.all(np.isfinite(props)):
         raise ValueError("validation.props_values must contain one finite value per PROPS slot")
     path, path_source = check_path(raw, ntens)

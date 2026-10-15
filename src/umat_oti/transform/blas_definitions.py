@@ -13,8 +13,17 @@ ascending order and, for JOBZ='V', orthonormal eigenvectors, which are copied
 back into A. Eigenvalues agree with LAPACK's to rounding; eigenvectors agree up
 to sign (and, inside a repeated cluster, up to a rotation within the cluster).
 
-Licence: DCOPY, DSCAL, DAXPY, DGEMV and DGEMM are derived from Reference BLAS
-(dcopy.f, dscal.f, daxpy.f, dgemv.f, dgemm.f) and DSYEV's interface and argument
+DDOT and DNRM2 are functions. DDOT sums in index order, which is the order of
+reference BLAS's unrolled loop. DNRM2 is the scaled sum of squares of
+reference BLAS 3.9.0 (a running scale and a sum of squares of ratios, so no
+square overflows or underflows); in the OTI copy a zero vector, and a single
+zero entry, give a zero norm with zero derivative parts (the norm has no
+derivative there, and zero is the derivative of the norm along every path that
+stays at the origin), and an entry whose real part is zero contributes no
+derivative, which is the exact derivative x_i/|x| = 0 of the norm.
+
+Licence: DCOPY, DSCAL, DAXPY, DGEMV, DGEMM, DDOT and DNRM2 are derived from
+Reference BLAS (dcopy.f, dscal.f, daxpy.f, dgemv.f, dgemm.f, ddot.f, dnrm2.f) and DSYEV's interface and argument
 checks from Reference LAPACK's dsyev.f (https://github.com/Reference-LAPACK/lapack),
 BSD-3-Clause, Copyright (c) 1992-2023 The University of Tennessee and The
 University of Tennessee Research Foundation, (c) 2000-2023 The University of
@@ -268,5 +277,59 @@ DSYEV_DEFINITION = """
           A(ROW,COL) = Z(ROW,COL)
         END DO
       END DO
+      END
+"""
+
+DDOT_DEFINITION = """
+      DOUBLE PRECISION FUNCTION DDOT(N,DX,INCX,DY,INCY)
+      IMPLICIT NONE
+      INTEGER N,INCX,INCY,I,IX,IY
+      DOUBLE PRECISION DX(*),DY(*),DTEMP
+      DTEMP = 0.0D0
+      DDOT = 0.0D0
+      IF (N.LE.0) RETURN
+      IX = 1
+      IY = 1
+      IF (INCX.LT.0) IX = (-N+1)*INCX+1
+      IF (INCY.LT.0) IY = (-N+1)*INCY+1
+      DO I = 1,N
+        DTEMP = DTEMP+DX(IX)*DY(IY)
+        IX = IX+INCX
+        IY = IY+INCY
+      END DO
+      DDOT = DTEMP
+      END
+"""
+
+DNRM2_DEFINITION = """
+      DOUBLE PRECISION FUNCTION DNRM2(N,X,INCX)
+      IMPLICIT NONE
+      INTEGER N,INCX,IX
+      DOUBLE PRECISION X(*),ABSXI,NORM,SCALE,SSQ
+      IF (N.LT.1 .OR. INCX.LT.1) THEN
+        NORM = 0.0D0
+      ELSE IF (N.EQ.1) THEN
+        IF (X(1).EQ.0.0D0) THEN
+          NORM = 0.0D0
+        ELSE
+          NORM = ABS(X(1))
+        END IF
+      ELSE
+        SCALE = 0.0D0
+        SSQ = 1.0D0
+        DO IX = 1,1+(N-1)*INCX,INCX
+          IF (X(IX).NE.0.0D0) THEN
+            ABSXI = ABS(X(IX))
+            IF (SCALE.LT.ABSXI) THEN
+              SSQ = 1.0D0+SSQ*(SCALE/ABSXI)**2
+              SCALE = ABSXI
+            ELSE
+              SSQ = SSQ+(ABSXI/SCALE)**2
+            END IF
+          END IF
+        END DO
+        NORM = SCALE*SQRT(SSQ)
+      END IF
+      DNRM2 = NORM
       END
 """

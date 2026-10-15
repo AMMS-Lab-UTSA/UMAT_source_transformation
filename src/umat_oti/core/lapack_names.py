@@ -27,6 +27,11 @@ DLACPY DLASET DLANGE DLANSY DLAMCH DLAPY2 DLASWP DLASCL DTRTRI DTRTRS DTRCON
 
 STANDARD_LAPACK_BLAS = BLAS | LAPACK
 
+#: The ones that are FUNCTIONS, referenced in expressions rather than CALLed.
+LAPACK_BLAS_FUNCTIONS = frozenset("""
+DDOT DSDOT DNRM2 DASUM IDAMAX DLAMCH DLAPY2 DLANGE DLANSY
+""".split())
+
 
 def standard_names_defined_in(text: str) -> tuple:
     """The standard LAPACK/BLAS names ``text`` defines as a SUBROUTINE or FUNCTION

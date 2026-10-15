@@ -28,7 +28,8 @@ from umat_oti.fortran.regions import (
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
 from umat_oti.transform import complex_support
 from umat_oti.transform.abaqus_utility_definitions import (
-    library_licence_comment, privatise_author_library_definitions, privatise_oti_copies,
+    author_library_definitions, library_licence_comment, privatise_oti_copies,
+    rename_author_library_definitions, with_supplied_library_functions,
     strip_supplied_solver_bodies, supply_reachable_definitions)
 from umat_oti.transform.control_blocks import block_spans, depth_at, enclosing_blocks, hoisted_insertion_line
 from umat_oti.transform.helper_lifting import PASS_THROUGH_CALLS, HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
@@ -135,6 +136,11 @@ def transform_umat_to_oti_from_config(
     ntens: int,
 ) -> TransformResult:
     global _AUTHOR_SHADOWS_MAX
+    # The supplied library functions the source references (DDOT, DNRM2) are
+    # read as functions it defines (appended; idempotent), and treated as
+    # supplied in what is written: see with_supplied_library_functions.
+    source_text, library_functions = with_supplied_library_functions(
+        source_text, detect_source_form(Path(_source_file(config) or "uploaded_umat.f"), source_text))
     _AUTHOR_SHADOWS_MAX = "MAX" in _locals_colliding_with_the_oti_modules(source_text)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -279,21 +285,12 @@ def transform_umat_to_oti_from_config(
     supplied = ()
     author_library_record = None
     # The author's own definitions of standard LAPACK/BLAS names (a DGETRF of
-    # their own) get private names in everything generated, with every
-    # reference to them; see privatise_author_library_definitions.
-    parsed, author_library_renames = privatise_author_library_definitions(parsed)
+    # their own) are transformed exactly like any helper of the author's, under
+    # their own names, and get private names in what is written, after the
+    # checks (rename_author_library_definitions below).
+    author_library_renames = {name: private for name, private in author_library_definitions(parsed).items()
+                              if name not in library_functions}
     if author_library_renames:
-        source_text = parsed.text
-        helper_roots = tuple(author_library_renames.get(name.upper(), name) for name in helper_roots)
-        narrow_roots = tuple(author_library_renames.get(name.upper(), name) for name in narrow_roots)
-        for role_names in roles.values():
-            for old_name, new_name in author_library_renames.items():
-                if old_name in role_names:
-                    role_names.discard(old_name)
-                    role_names.add(new_name)
-        if config.get("_otis_lifted_function_roots"):
-            config = {**config, "_otis_lifted_function_roots": sorted(
-                author_library_renames.get(name, name) for name in config["_otis_lifted_function_roots"])}
         author_library_record = {
             "renamed": dict(author_library_renames),
             "rule": "a standard LAPACK/BLAS name the source defines itself is renamed, with every "
@@ -303,6 +300,7 @@ def transform_umat_to_oti_from_config(
     if helper_roots:
         parsed, supplied = supply_reachable_definitions(parsed, helper_roots)
         source_text = parsed.text
+    supplied = tuple(supplied) + tuple(library_functions)
     if helper_roots:
         try:
             helper_lift_names = helper_lift_closure(parsed, helper_roots, selected_umat=selected_umat)
@@ -621,12 +619,18 @@ def transform_umat_to_oti_from_config(
     # written (UMATOTI_DGESV_OTI), so the emitted objects define no name another
     # library could also define; renamed after the checks, which read the
     # lifter's own names.
-    if supplied:
-        transformed_source = privatise_oti_copies(transformed_source, supplied)
+    if supplied or author_library_renames:
+        transformed_source = rename_author_library_definitions(
+            privatise_oti_copies(transformed_source, supplied), author_library_renames, parsed.form)
+        if parsed.form == "fixed" and author_library_renames:
+            transformed_source = _wrap_fixed_form_source(transformed_source)
         transformed_path.write_text(transformed_source, encoding="utf-8")
         if helper_source_path is not None:
-            lifted_helper_text = (library_licence_comment(supplied)
-                                  + privatise_oti_copies(lifted_helper_text, supplied))
+            renamed_helpers = rename_author_library_definitions(
+                privatise_oti_copies(lifted_helper_text, supplied), author_library_renames, "free")
+            if author_library_renames:
+                renamed_helpers = wrap_free_form(renamed_helpers)
+            lifted_helper_text = library_licence_comment(supplied) + renamed_helpers
             helper_source_path.write_text(lifted_helper_text, encoding="utf-8")
     generated_files = [
         module_result.master_parameters_path,
@@ -3143,6 +3147,8 @@ def _shape_blockers(
                   - _subscripted_assignment_names(source_text))
     used_modules = _used_modules_not_defined_here(source_text)
     declared = _declared_names(parsed)
+    from umat_oti.transform.abaqus_utility_definitions import library_function_references
+    library_functions_referenced = set(library_function_references(source_text))
     for name in sorted(roles["seed"] | roles["promote"]):
         if name in mapped_arrays or name.upper() in not_arrays:
             continue
@@ -3213,6 +3219,17 @@ def _shape_blockers(
                 f"transformer cannot read that module, so it cannot tell "
                 f"whether {name} is an array to promote or a call into it."
             )
+            continue
+        if name.upper() in library_functions_referenced:
+            # A LAPACK/BLAS FUNCTION the source references and nothing supplies
+            # (DASUM, DLAMCH): refused by name, as a CALLed routine is, not
+            # reported as an array with no shape.
+            from umat_oti.transform.helper_lifting import _what_an_undefined_routine_is
+            blockers.append(
+                f"Helper lifting requires source definitions for ['{name.upper()}'], a function "
+                f"referenced on the stress path"
+                f"{_first_indexed_use(source_text, name).replace('first indexed', 'first referenced')}. "
+                + _what_an_undefined_routine_is([name]))
             continue
         blockers.append(
             f"Promoted variable {name} is indexed in a stress region but has no "

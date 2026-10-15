@@ -355,6 +355,9 @@ def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str |
             f"Could not resolve: {source.get('file', '')}"
         )
     source_text = source_path.read_text(encoding="utf-8", errors="replace")
+    from umat_oti.fortran.normalize import detect_source_form
+    from umat_oti.transform.abaqus_utility_definitions import with_supplied_library_functions
+    source_text, _ = with_supplied_library_functions(source_text, detect_source_form(source_path, source_text))
     analysis = analyze_fortran_source(source_path)
     selected_umat = _compact_selected_umat(source, analysis)
     aliases = _dict_or_empty(normalized.get("transformation_settings")).get("gradient_aliases")
