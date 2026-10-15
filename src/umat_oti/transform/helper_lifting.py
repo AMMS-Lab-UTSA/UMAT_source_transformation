@@ -251,7 +251,8 @@ def _what_an_undefined_routine_is(names) -> str:
     """One sentence saying what kind of routine is missing and what to do."""
     names = [str(n).upper() for n in names]
     utilities = [n for n in names if n in _ABAQUS_UTILITIES]
-    lapack = [n for n in names if _LAPACK_NAME.match(n)]
+    from umat_oti.core.lapack_names import STANDARD_LAPACK_BLAS
+    lapack = [n for n in names if _LAPACK_NAME.match(n) or n in STANDARD_LAPACK_BLAS]
     if utilities:
         return (f"{', '.join(utilities)} is an Abaqus utility routine, supplied "
                 f"by the solver as object code, so there is no body to lift "
@@ -260,8 +261,10 @@ def _what_an_undefined_routine_is(names) -> str:
                 f"routine the transform can lift), or keep the call off the "
                 f"differentiated path.")
     if lapack:
-        return (f"{', '.join(lapack)} is a LAPACK routine, linked as a "
-                f"library, so there is no body to lift. What to do: put a "
+        from umat_oti.transform.abaqus_utility_definitions import LIBRARY_ROUTINES
+        return (f"{', '.join(lapack)} is a LAPACK/BLAS routine, linked as a "
+                f"library, and umat-oti has no differentiable version of it "
+                f"(it supplies {', '.join(LIBRARY_ROUTINES)}). What to do: put a "
                 f"Fortran source of it (reference LAPACK) beside the UMAT or "
                 f"in dependency_roots, or replace it with an explicit small "
                 f"solve the transform can lift.")

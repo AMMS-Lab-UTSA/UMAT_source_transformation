@@ -15,6 +15,17 @@ import pytest
 
 pytestmark = pytest.mark.skipif(shutil.which("gfortran") is None, reason="needs gfortran")
 
+
+@pytest.fixture
+def twins_only(monkeypatch):
+    """No LAPACK library on this machine: the stub block carries the twins."""
+    from umat_oti.core.host_lapack import host_lapack
+
+    monkeypatch.setenv("UMAT_OTI_LAPACK", "twins")
+    host_lapack.cache_clear()
+    yield
+    host_lapack.cache_clear()
+
 SOLVE = """
 PROGRAM t
   IMPLICIT NONE
@@ -60,7 +71,7 @@ UMAT_CALLING_DGESV = """      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
 """
 
 
-def test_the_stub_block_solves_a_system_the_way_lapack_does(tmp_path):
+def test_the_stub_block_solves_a_system_the_way_lapack_does(tmp_path, twins_only):
     from umat_oti.abaqus.replay import library_twin_block, utility_stub_block
 
     assert "SUBROUTINE DGESV(" in library_twin_block()
@@ -77,7 +88,7 @@ def test_the_stub_block_solves_a_system_the_way_lapack_does(tmp_path):
                                rtol=1e-14)
 
 
-def test_a_source_that_defines_a_routine_keeps_its_own(tmp_path):
+def test_a_source_that_defines_a_routine_keeps_its_own(tmp_path, twins_only):
     from umat_oti.abaqus.replay import utility_stub_block
     from umat_oti.abaqus.single_call import drop_stubs_defined_by
 
@@ -119,7 +130,7 @@ def test_the_provider_reference_links_the_twins_and_only_what_is_missing(tmp_pat
     assert np.asarray(result.statev)[0][0] == -1.0
 
 
-def test_the_replay_driver_links_beside_a_umat_that_brings_its_own_dgesv(tmp_path):
+def test_the_replay_driver_links_beside_a_umat_that_brings_its_own_dgesv(tmp_path, twins_only):
     """build_replay (the finite-difference reference) linked the twins beside a
     source defining DGESV itself: ``multiple definition of dgesv_``."""
     from umat_oti.abaqus.replay import build_replay, driver_source
@@ -165,6 +176,6 @@ def test_the_provider_twins_are_the_supplied_bodies_and_never_an_authors_helper(
         "output": {"object": "toy.obj", "contract": "toy.json"}}))
     built = build_provider(model / "contract.json", tmp_path / "out")
     twins = (Path(built["build_dir"]) / "real_library_twins.f90").read_text()
-    bodies = library_twin_sources()
+    bodies = library_twin_sources("UMATOTI_{name}_R")
     assert twins.split("\n\n", 1)[1] == "\n".join(bodies[n] for n in ("DGESV", "DGETRF", "DGETRS"))
-    assert "MYSCALE" not in twins.upper()
+    assert "MYSCALE" not in twins.upper() and "SUBROUTINE DGESV(" not in twins.upper()

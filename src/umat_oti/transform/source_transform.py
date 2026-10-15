@@ -27,7 +27,8 @@ from umat_oti.fortran.regions import (
     INTRINSIC_TOKEN_NAMES, _is_executable_line, _routine_effect_table)
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
 from umat_oti.transform import complex_support
-from umat_oti.transform.abaqus_utility_definitions import strip_supplied_solver_bodies, supply_reachable_definitions
+from umat_oti.transform.abaqus_utility_definitions import (
+    privatise_oti_copies, strip_supplied_solver_bodies, supply_reachable_definitions)
 from umat_oti.transform.control_blocks import block_spans, depth_at, enclosing_blocks, hoisted_insertion_line
 from umat_oti.transform.helper_lifting import PASS_THROUGH_CALLS, HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
 # The intrinsic extension module is generated in one place and used by
@@ -427,7 +428,7 @@ def transform_umat_to_oti_from_config(
         )
     finally:
         BINARY32_CONTEXT.reset(_binary32_token)
-    transformed_source = strip_supplied_solver_bodies(rewrite.source, supplied)
+    transformed_source = strip_supplied_solver_bodies(rewrite.source, supplied, parsed.form)
     transformed_source = _binary32_stores_rounded(
         transformed_source, parsed.form, selected_umat, roles, source_text, source_file)
     transformed_source = complex_support.retype_umat_complex_shadows(
@@ -590,6 +591,16 @@ def transform_umat_to_oti_from_config(
         config=config,
     )
     warnings.extend(sanity_warnings)
+    # The OTI copies of supplied library routines get private names in what is
+    # written (UMATOTI_DGESV_OTI), so the emitted objects define no name another
+    # library could also define; renamed after the checks, which read the
+    # lifter's own names.
+    if supplied:
+        transformed_source = privatise_oti_copies(transformed_source, supplied)
+        transformed_path.write_text(transformed_source, encoding="utf-8")
+        if helper_source_path is not None:
+            lifted_helper_text = privatise_oti_copies(lifted_helper_text, supplied)
+            helper_source_path.write_text(lifted_helper_text, encoding="utf-8")
     generated_files = [
         module_result.master_parameters_path,
         module_result.real_utils_path,

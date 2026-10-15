@@ -389,7 +389,9 @@ def test_transitive_dspevd_is_supplied_to_jacobian_pipeline(tmp_path, form):
     source.write_text(text, encoding="ascii")
     result = run_jacobian_transform(source, tmp_path / "out", ntens=6, compile_generated=True)
     assert result.succeeded, result.report
-    assert any("subroutine dspevd_oti" in path.read_text().lower() for path in (tmp_path / "out").glob("*.f90"))
+    # the OTI copy of a LAPACK routine has a private name in the emitted files
+    assert any("subroutine umatoti_dspevd_oti" in path.read_text().lower()
+               for path in (tmp_path / "out").glob("*.f90"))
     output = tmp_path / "out"
     driver = output / "verify_tangent.f90"
     driver.write_text("""program verify_tangent
@@ -407,8 +409,12 @@ end program verify_tangent
 """, encoding="ascii")
     executable = output / "verify_tangent"
     files = (output / "compile_order.txt").read_text().splitlines()
+    # The emitted file defines no real DSPEVD (inside Abaqus the solver's MKL
+    # serves the real call in eigen_update); a stand-alone link supplies the host's.
+    from test_lu_oti import _host_lapack_link
     built = subprocess.run(["gfortran", "-ffree-line-length-none", "-ffixed-line-length-none",
-                            *files, driver.name, "-o", str(executable)], cwd=output, text=True, capture_output=True)
+                            *files, driver.name, *_host_lapack_link(output), "-o", str(executable)],
+                           cwd=output, text=True, capture_output=True)
     assert built.returncode == 0, built.stdout + built.stderr
     strain = np.array([.1, -.2, .05, .13, -.07, .18])
     run = subprocess.run([str(executable)], input=" ".join(map(str, strain))+"\n", text=True, capture_output=True)

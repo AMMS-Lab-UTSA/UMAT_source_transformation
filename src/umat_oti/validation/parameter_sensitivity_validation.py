@@ -190,11 +190,11 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
                           library_twins: bool = True) -> Path:
     """Compile the untransformed source into a replayable reference executable.
 
-    ``library_twins`` links the real bodies of the LAPACK routines the
-    transform supplies (DGESV, DGETRF, DGETRS, DGETRI, DSPEVD), one archive
-    member each and after everything else, so the linker takes only those the
-    source calls and does not define: Abaqus supplies them to a UMAT, a
-    stand-alone reference build has no LAPACK of its own.
+    ``library_twins`` links a LAPACK for the routines the source calls and does
+    not define (Abaqus supplies them to a UMAT): the host's library
+    (:func:`umat_oti.core.host_lapack.host_lapack`, recorded in
+    ``out_dir/lapack.json``) or, where there is none, the transform's real
+    twins, one archive member each, after everything else.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     for name in ("aba_param.inc", "ABA_PARAM.INC", "ABA_PARAM.inc", "aba_param.INC"):
@@ -235,7 +235,15 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
                 f"{built.stderr[:2000]}")
         extra_objects.append(str(extra_object))
 
-    twins = _library_twin_archive(out_dir, compiler) if library_twins else []
+    # The host's LAPACK where there is one (as Abaqus gives the UMAT its MKL);
+    # the transform's real twins only where there is none.
+    from umat_oti.core.host_lapack import host_lapack
+
+    host = host_lapack(compiler)
+    twins = ((list(host.flags) if host.is_library else _library_twin_archive(out_dir, compiler))
+             if library_twins else [])
+    (out_dir / "lapack.json").write_text(__import__("json").dumps(
+        host.as_dict() if library_twins else {"kind": "none"}, indent=2) + "\n", encoding="utf-8")
     executable = out_dir / "original_reference_driver"
     link = subprocess.run(
         [compiler, "-O1", "-std=legacy", "-ffree-line-length-none",

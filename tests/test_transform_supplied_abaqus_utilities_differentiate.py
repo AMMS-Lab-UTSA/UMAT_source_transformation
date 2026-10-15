@@ -334,5 +334,8 @@ def test_the_emitted_file_keeps_calling_the_solvers_own_routine():
             + definition_text(["SPRINC"]))
     stripped = strip_supplied_solver_bodies(text, ["SPRINC", "SPRIND", "DSPEVD"])
     assert "SUBROUTINE SPRINC(" not in stripped and "SUBROUTINE SPRIND(" not in stripped
-    assert "SUBROUTINE DSPEVD(" in stripped        # a library routine, not the solver's
+    # A LAPACK routine is stripped as well: inside Abaqus the user library comes
+    # before MKL in the symbol scope, so a real DSPEVD defined there would serve
+    # every caller in the solver.
+    assert "SUBROUTINE DSPEVD(" not in stripped
     assert "CALL SPRINC_OTI" in stripped

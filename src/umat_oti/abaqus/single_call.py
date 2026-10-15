@@ -128,11 +128,12 @@ class CallBuild:
     ok: bool = False
     reason: str = ""
     log: str = ""
+    lapack: dict = field(default_factory=dict)
 
     def as_dict(self) -> dict:
         return {"program": str(self.program) if self.program else None,
                 "compiler": self.compiler, "ok": self.ok,
-                "reason": self.reason, "log": self.log[-2000:]}
+                "reason": self.reason, "log": self.log[-2000:], "lapack": self.lapack}
 
 
 @dataclass
@@ -214,7 +215,7 @@ def drop_stubs_defined_by(stubs: str, source_text: str) -> tuple:
     return "".join(kept), dropped
 
 
-def driver_source(name: str = "REPLAY", source_text: str = "") -> str:
+def driver_source(name: str = "REPLAY", source_text: str = "", compiler: str = "gfortran") -> str:
     """The single-call program, for a source linked beside it.
 
     ``source_text`` is the UMAT being replayed. Any Abaqus utility it defines
@@ -222,7 +223,7 @@ def driver_source(name: str = "REPLAY", source_text: str = "") -> str:
     """
     from umat_oti.abaqus.replay import utility_stub_block
 
-    stubs = utility_stub_block()
+    stubs = utility_stub_block(compiler)
     if source_text:
         stubs, _ = drop_stubs_defined_by(stubs, source_text)
     return _DRIVER % {"state": STATE_FILE, "out": RESULT_FILE,
@@ -295,13 +296,15 @@ def build_call(source: Path, work_dir: Path, *, compiler: str = "ifort",
         unit = prepared
 
     driver = work_dir / "otis_single_call.f90"
-    driver.write_text(driver_source(name, text), encoding="utf-8")
+    driver.write_text(driver_source(name, text, compiler), encoding="utf-8")
+    from umat_oti.abaqus.replay import library_link
+    lapack_flags, _, lapack_record = library_link(compiler)
     program = work_dir / "otis_single_call"
     install_headers(work_dir, include)
     includes = [f"-I{work_dir}"] + [f"-I{Path(d)}" for d in module_dirs]
     command = [compiler, *flags, *includes, str(unit),
                *[str(Path(o)) for o in objects], str(driver),
-               "-o", str(program)]
+               *lapack_flags, "-o", str(program)]
     try:
         done = subprocess.run(command, cwd=str(work_dir), capture_output=True,
                               text=True, timeout=timeout)
@@ -314,7 +317,7 @@ def build_call(source: Path, work_dir: Path, *, compiler: str = "ifort",
                                 f"{Path(source).name} (exit {done.returncode})",
                          log=(done.stdout + done.stderr)[-6000:])
     return CallBuild(program=program, compiler=compiler, ok=True,
-                     log=(done.stdout + done.stderr)[-2000:])
+                     log=(done.stdout + done.stderr)[-2000:], lapack=lapack_record)
 
 
 def parse_result(path: Path) -> CallResult:

@@ -58,6 +58,9 @@ from __future__ import annotations
 
 from umat_oti.transform.spectral_definitions import DSPEVD_DEFINITION
 from umat_oti.transform.lu_definitions import DGETRF_DEFINITION, DGETRS_DEFINITION
+from umat_oti.transform.blas_definitions import (
+    DAXPY_DEFINITION, DCOPY_DEFINITION, DGEMM_DEFINITION, DGEMV_DEFINITION, DSCAL_DEFINITION,
+    DSYEV_DEFINITION)
 
 #: ``CALL ROTSIG(S, R, OUTPUT, LSTR, NDI, NSHR)``
 #:
@@ -293,6 +296,12 @@ UTILITY_DEFINITIONS: dict[str, str] = {
     "SPRIND": SPRIND_DEFINITION,
     "SPRINC": SPRINC_DEFINITION,
     "SINV": SINV_DEFINITION,
+    "DSYEV": DSYEV_DEFINITION,
+    "DGEMM": DGEMM_DEFINITION,
+    "DGEMV": DGEMV_DEFINITION,
+    "DCOPY": DCOPY_DEFINITION,
+    "DSCAL": DSCAL_DEFINITION,
+    "DAXPY": DAXPY_DEFINITION,
 }
 
 #: What a supplied body itself calls, so supplying it supplies these too.
@@ -301,6 +310,7 @@ UTILITY_DEPENDENCIES: dict[str, tuple[str, ...]] = {
     "SPRIND": ("DSPEVD",),
     "DGESV": ("DGETRF", "DGETRS"),
     "DGETRI": ("DGETRS",),
+    "DSYEV": ("DSPEVD",),
 }
 
 #: Supplied bodies of routines the SOLVER links in. The transform uses their
@@ -337,7 +347,40 @@ def definition_text(names) -> str:
 LIBRARY_ROUTINES = tuple(sorted(set(UTILITY_DEFINITIONS) - SOLVER_UTILITIES))
 
 
-def library_twin_sources() -> dict[str, str]:
+#: The private name of a library routine's real twin wherever one is compiled
+#: into an object that also holds an author's code: never a standard LAPACK or
+#: BLAS name, which would replace the host library's routine for every caller
+#: in the process (see docs/PROVIDER.md, "Library routines").
+PRIVATE_REAL_FORMAT = "UMATOTI_{name}_R"
+#: The private name of the OTI copy the transform calls.
+PRIVATE_OTI_FORMAT = "UMATOTI_{name}_OTI"
+
+
+def renamed_library_calls(text: str, names, name_format: str) -> str:
+    """``text`` with every SUBROUTINE definition of and CALL to the routines in
+    ``names`` renamed by ``name_format`` (e.g. DGESV -> UMATOTI_DGESV_R)."""
+    import re
+
+    for name in names:
+        new = name_format.format(name=name)
+        text = re.sub(rf"(?i)\b(SUBROUTINE|CALL|EXTERNAL)(\s+){name}\b(?=\s*(\(|$|,))",
+                      lambda m: m.group(1) + m.group(2) + new, text)
+        text = re.sub(rf"(?i)(\bEND\s+SUBROUTINE\s+){name}\b", lambda m: m.group(1) + new, text)
+    return text
+
+
+def privatise_oti_copies(text: str, supplied) -> str:
+    """``text`` with the OTI copies of supplied LAPACK/BLAS routines (``DGESV_OTI``)
+    renamed to their private names (``UMATOTI_DGESV_OTI``), definitions and calls
+    alike. The Abaqus utilities keep ``ROTSIG_OTI`` and the like."""
+    import re
+
+    for name in sorted(set(str(n).upper() for n in supplied) & set(LIBRARY_ROUTINES)):
+        text = re.sub(rf"(?i)(?<![A-Za-z0-9_]){name}_OTI\b", PRIVATE_OTI_FORMAT.format(name=name), text)
+    return text
+
+
+def library_twin_sources(name_format: str = "{name}") -> dict[str, str]:
     """``{NAME: free-form Fortran}``: the real bodies of :data:`LIBRARY_ROUTINES`.
 
     A stand-alone build of an ORIGINAL that calls DGESV has no LAPACK to link,
@@ -349,9 +392,13 @@ def library_twin_sources() -> dict[str, str]:
     """
     from umat_oti.fortran.parser import logical_lines_from_text
 
-    return {name: _without_dble("\n".join(line.text for line in
-                                          logical_lines_from_text(UTILITY_DEFINITIONS[name], "fixed")) + "\n")
-            for name in LIBRARY_ROUTINES}
+    bodies = {name: _without_dble("\n".join(line.text for line in
+                                            logical_lines_from_text(UTILITY_DEFINITIONS[name], "fixed")) + "\n")
+              for name in LIBRARY_ROUTINES}
+    if name_format != "{name}":
+        bodies = {name: renamed_library_calls(text, LIBRARY_ROUTINES, name_format)
+                  for name, text in bodies.items()}
+    return bodies
 
 
 def _without_dble(text: str) -> str:
@@ -413,8 +460,16 @@ def supply_reachable_definitions(parsed, roots):
     return ParsedFortranSource(parsed.path, parsed.form, text, lines, parse_subroutines(lines)), tuple(sorted(supplied))
 
 
-def strip_supplied_solver_bodies(text: str, supplied) -> str:
-    """``text`` without the REAL bodies of supplied solver utilities.
+def strip_supplied_solver_bodies(text: str, supplied, form: str = "free") -> str:
+    """``text`` without the REAL bodies of the supplied routines: solver
+    utilities and LAPACK/BLAS routines alike.
+
+    Measured on Abaqus 2021: the user-subroutine library (libstandardU.so) is a
+    DT_NEEDED of libABQSMAStaCore.so and sits at position 31 of the solver's
+    global symbol scope, MKL (libmkl_rt.so) at 66; the solver's own
+    libABQSMABlaModule.so imports dgesv_, dgetrf_, dgetrs_, dgemm_, dgemv_,
+    dsyev_ and dpotrf_. A dgesv_ defined in the user library would therefore
+    be the one every caller in the process gets.
 
     The supplied body is appended to the source so the lifter can make its
     OTI copy (``SPRINC_OTI``). Left in the emitted file it would also define
@@ -428,7 +483,7 @@ def strip_supplied_solver_bodies(text: str, supplied) -> str:
     """
     import re
 
-    names = sorted(set(str(n).upper() for n in supplied) & SOLVER_UTILITIES)
+    names = sorted(set(str(n).upper() for n in supplied) & set(UTILITY_DEFINITIONS))
     if not names:
         return text
     lines = text.splitlines(keepends=True)
@@ -444,8 +499,12 @@ def strip_supplied_solver_bodies(text: str, supplied) -> str:
             end += 1
         if end >= len(lines):
             continue
-        # "!" in column 1 is a comment in both source forms.
-        note = (f"! {name}: supplied body removed from the emitted file; the solver "
-                f"provides the real routine and the transform calls {name}_OTI.\n")
+        # A fixed-form file needs its comment marker in column 1 AND nothing in
+        # column 6 that a fixed-to-free conversion could take for a continuation.
+        marker = "C     " if form == "fixed" else "! "
+        copy = PRIVATE_OTI_FORMAT.format(name=name) if name in LIBRARY_ROUTINES else f"{name}_OTI"
+        note = (f"{marker}{name}: supplied body removed from the emitted file; the host (Abaqus, "
+                f"its MKL for LAPACK/BLAS) provides the real routine, and the transform calls "
+                f"its OTI copy {copy}.\n")
         lines[start:end + 1] = [note]
     return "".join(lines)
