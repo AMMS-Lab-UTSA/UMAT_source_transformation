@@ -1,4 +1,4 @@
-"""Every case of the review's B1 merge probe (batches/B1/vera/g_merge_probe.py), and
+"""Every case of the review's B1 merge probe (batches/B1, review folder, g_merge_probe.py), and
 the rest of her review section G/E, as tests of the manifest merge contract.
 
 Pure Python on a two-row synthetic manifest whose evidence root is a temporary
