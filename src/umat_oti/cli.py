@@ -80,6 +80,9 @@ def build_parser() -> argparse.ArgumentParser:
     jacobian.add_argument("--abaqus-allow-semantic-failures", action="store_true",
                           help="Allow an unverified Abaqus trial despite failed semantic checks; requires an Abaqus trial request.")
     jacobian.add_argument("--abaqus-command", default="abaqus")
+    jacobian.add_argument("--abaqus-job", metavar="NAME",
+                          help="Job name of the Abaqus trial (default: a unique oti_trial_* name); its files, "
+                               "NAME.odb included, are written into --out.")
     jacobian.add_argument("--abaqus-modules", default=DEFAULT_ABAQUS_MODULES)
     jacobian.add_argument("--abaqus-run-prefix", default=DEFAULT_ABAQUS_RUN_PREFIX,
                           help="Scheduler command prefix; use an empty string when already on a compute node.")
@@ -138,6 +141,8 @@ def main(argv: list[str] | None = None) -> int:
         abaqus_requested = args.abaqus or args.abaqus_smoke or args.abaqus_input is not None or args.abaqus_experiment is not None
         if args.abaqus_smoke and (args.abaqus or args.abaqus_input is not None or args.abaqus_experiment is not None):
             parser.error("--abaqus-smoke cannot be combined with an Abaqus analysis trial request")
+        if args.abaqus_job is not None and (not abaqus_requested or args.abaqus_smoke):
+            parser.error("--abaqus-job names an Abaqus analysis trial; it needs --abaqus or --abaqus-input")
         if args.abaqus_allow_semantic_failures and not abaqus_requested:
             parser.error("--abaqus-allow-semantic-failures requires --abaqus, --abaqus-smoke or --abaqus-input")
         if args.abaqus_input is not None and not args.abaqus_input.is_file():
@@ -177,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
                 smoke=args.abaqus_smoke,
                 allow_semantic_failures=args.abaqus_allow_semantic_failures,
                 abaqus_command=args.abaqus_command, abaqus_modules=args.abaqus_modules,
-                run_prefix=args.abaqus_run_prefix)
+                run_prefix=args.abaqus_run_prefix, job_name=args.abaqus_job)
             run.summary["abaqus_trial"] = trial
             if trial["status"] != ("built" if args.abaqus_smoke else "completed"):
                 exit_code = exit_code or 1

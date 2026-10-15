@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import re
 import shlex
 import shutil
 import subprocess
 from uuid import uuid4
 
 from umat_oti.services.transformation import _write_combined_source
-from umat_oti.validation.abaqus_runner import analysis_completed
+from umat_oti.validation.abaqus_runner import analysis_completed, completed_despite_teardown_abort
 from umat_oti.validation.job_builder import DEFAULT_ABAQUS_MODULES, DEFAULT_ABAQUS_RUN_PREFIX
 
 
@@ -18,7 +20,8 @@ def run_abaqus_trial(run, input_deck: Path | None = None, *, allow_semantic_fail
                      smoke: bool = False,
                      abaqus_command: str = "abaqus",
                      abaqus_modules: str = DEFAULT_ABAQUS_MODULES,
-                     run_prefix: str = DEFAULT_ABAQUS_RUN_PREFIX) -> dict:
+                     run_prefix: str = DEFAULT_ABAQUS_RUN_PREFIX,
+                     job_name: str | None = None) -> dict:
     output = run.contract_path.parent.resolve()
     failed = sorted(name for name, passed in run.summary.get("semantic_checks", {}).items()
                     if passed is False)
@@ -48,7 +51,9 @@ def run_abaqus_trial(run, input_deck: Path | None = None, *, allow_semantic_fail
         combined = _write_combined_source(output, transformed)
         if combined is None:
             raise ValueError("Could not assemble the Abaqus user source.")
-        job = "oti_trial_" + uuid4().hex[:12]
+        if job_name is not None and not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,79}", job_name):
+            raise ValueError(f"Abaqus job name {job_name!r}: letters, digits, '_', '.' and '-' only")
+        job = job_name or "oti_trial_" + uuid4().hex[:12]
         invocation = shlex.split(abaqus_command)
         if not invocation:
             raise ValueError("Abaqus command must not be empty.")
@@ -64,7 +69,7 @@ def run_abaqus_trial(run, input_deck: Path | None = None, *, allow_semantic_fail
             invocation += ["make", f"library={combined.name}", "directory=."]
         else:
             invocation += [f"job={job}", f"input={input_deck.resolve()}",
-                           f"user={combined.resolve()}", "interactive"]
+                           f"user={combined.resolve()}", "ask_delete=OFF", "interactive"]
         inner = "set -e; "
         if abaqus_modules.strip():
             inner += "module load " + shlex.join(shlex.split(abaqus_modules)) + "; "
@@ -72,12 +77,24 @@ def run_abaqus_trial(run, input_deck: Path | None = None, *, allow_semantic_fail
         command = shlex.split(run_prefix) + ["bash", "-lc", inner]
         stdout_path = output / f"{job}_stdout.log"
         stderr_path = output / f"{job}_stderr.log"
+        # A UMAT that writes to the console (WRITE(*,*), PRINT) aborts an
+        # "interactive" job: the solver's unit 6 is then a pipe, and the Intel
+        # Fortran runtime fails while naming it (fname_from_piped_fd, signal 6
+        # in the element loop). FOR_PRINT sends that output to a file instead;
+        # nothing the routine computes changes. A FOR_PRINT already set is kept.
+        environment = dict(os.environ)
+        console = environment.get("FOR_PRINT") or str(working_directory / f"{job}_console.txt")
+        environment["FOR_PRINT"] = console
         report.update(job=job, command=command, user_source=str(combined),
                       stdout=str(stdout_path), stderr=str(stderr_path), status="running",
-                      working_directory=str(working_directory))
+                      working_directory=str(working_directory), console_output=console)
+        # A named job may find the files of an earlier run of the same name in
+        # --out. Only what this run wrote counts: an evidence file (.dat,
+        # .exception) counts when it is new or changed since the run started.
+        before = _evidence_stamps(working_directory, job)
         with stdout_path.open("w") as stdout, stderr_path.open("w") as stderr:
             process = subprocess.run(command, cwd=working_directory, stdout=stdout, stderr=stderr,
-                                     check=False, timeout=3600)
+                                     check=False, timeout=3600, env=environment)
         if smoke:
             libraries = sorted(str(path) for path in working_directory.iterdir()
                                if path.suffix.lower() in {".so", ".dll", ".dylib"}
@@ -86,9 +103,18 @@ def run_abaqus_trial(run, input_deck: Path | None = None, *, allow_semantic_fail
                           libraries=libraries,
                           status="built" if process.returncode == 0 and libraries else "failed")
         else:
-            completed = analysis_completed(output, job)
+            completed = (_written_by_this_run(output / f"{job}.dat", before)
+                         and analysis_completed(output, job))
+            # Abaqus 2021's runtime can abort in its own clean-up after the
+            # solve, after the results are written and the ODB is closed; a
+            # non-zero exit with that evidence is not a failed analysis.
+            teardown = (_fresh_teardown_abort(output, job, before)
+                        if process.returncode != 0 and completed else "")
             report.update(returncode=process.returncode, analysis_completed=completed,
-                          status="completed" if process.returncode == 0 and completed else "failed")
+                          status="completed" if completed and (process.returncode == 0 or teardown)
+                          else "failed")
+            if teardown:
+                report["teardown_abort"] = teardown
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         report.update(status="failed" if report["status"] == "running" else "blocked",
                       error=str(error))
@@ -96,3 +122,39 @@ def run_abaqus_trial(run, input_deck: Path | None = None, *, allow_semantic_fail
     report["report"] = str(report_path)
     report_path.write_text(json.dumps(report, indent=2) + "\n")
     return report
+
+def _evidence_stamps(directory: Path, job: str) -> dict:
+    """``{name: (mtime_ns, size)}`` of the job's .dat and .exception files now."""
+    stamps = {}
+    for path in [Path(directory) / f"{job}.dat", *Path(directory).glob(f"{job}.*.exception")]:
+        try:
+            info = path.stat()
+        except OSError:
+            continue
+        stamps[path.name] = (info.st_mtime_ns, info.st_size)
+    return stamps
+
+
+def _written_by_this_run(path: Path, before: dict) -> bool:
+    """Whether ``path`` exists and is new or changed since ``before`` was taken."""
+    try:
+        info = path.stat()
+    except OSError:
+        return False
+    return before.get(path.name) != (info.st_mtime_ns, info.st_size)
+
+
+def _fresh_teardown_abort(output: Path, job: str, before: dict) -> str:
+    """:func:`completed_despite_teardown_abort`, from exception files this run wrote."""
+    from umat_oti.validation.abaqus_runner import _TEARDOWN_FRAMES
+
+    if not completed_despite_teardown_abort(output, job):
+        return ""
+    for candidate in sorted(Path(output).glob(f"{job}.*.exception")):
+        if not _written_by_this_run(candidate, before):
+            continue
+        text = candidate.read_text(errors="replace")
+        for frame in _TEARDOWN_FRAMES:
+            if frame in text:
+                return f"{candidate.name}: aborted inside {frame}"
+    return ""
