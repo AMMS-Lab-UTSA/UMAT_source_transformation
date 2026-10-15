@@ -86,16 +86,50 @@ regular object's `role` says so and `compiled_source_sha256_full` is the digest
 of what was compiled). The source file is not changed. The analysis is a data flow over the UMAT routine only; a bare CALL argument counts as assigned and an array is reported only when no element can have been set, so the equivalence with `-init=zero` holds for the reported locals, not for every read. `--zero-init-locals`
 (every local zero in every build, by compiler flags) is still accepted.
 
-**Library routines.** A UMAT may call LAPACK routines Abaqus supplies (DGESV,
-DGETRF, DGETRS, DGETRI, DSPEVD). The lift calls the OTI copies the transform
-supplies; the original is linked against the real copies of the same
-algorithm, so both builds pivot and round alike. These copies are not LAPACK or MKL:
-DGETRF is an unblocked LU with partial pivoting, DGESV/DGETRS/DGETRI are built on
-it, and DSPEVD is a cyclic Jacobi method. The stand-alone original can therefore
-differ in the last bits from the same original running under Abaqus, which links
-MKL (measured on one plasticity UMAT with a Newton loop: the six-check gate's offline replay of the
-original reproduced the Abaqus record to 9e-16). Only these supplied routines get a
-real twin; an author's own helper is never defined twice.
+**Library routines (LAPACK and BLAS).** A UMAT may call routines Abaqus links
+in from its MKL. umat-oti supplies bodies, and so OTI copies, for DGESV,
+DGETRF, DGETRS, DGETRI, DSYEV, DSPEVD, DGEMM, DGEMV, DCOPY, DSCAL and DAXPY;
+a call to any other LAPACK/BLAS routine on the derivative path is refused at
+transform time with the routine's name, and a provider whose original calls
+one is not built (it could not link on its own).
+
+*No standard name is ever defined by a generated object.* Measured on Abaqus
+2021: the user-subroutine library is loaded as a dependency of the solver's own
+libraries and sits before MKL in the process's global symbol scope (position 31
+against 66), and the solver's libABQSMABlaModule.so imports dgesv_, dgetrf_,
+dgetrs_, dgemm_, dgemv_, dsyev_ and dpotrf_. A dgesv_ defined in the user
+library would be the one every caller in the solver gets. So:
+
+- the transformed UMAT (`<name>_oti.f`, `<name>_oti_combined.f90`) keeps its
+  real calls (`CALL DGESV`) for the host library -- MKL inside Abaqus, exactly
+  what the original calls there -- and calls private OTI copies
+  (`UMATOTI_DGESV_OTI`, ...) for the differentiated ones; the supplied real
+  bodies are removed from the emitted file;
+- inside the provider object the bundled original's calls are renamed to
+  private real twins (`UMATOTI_DGESV_R`, ...; `objcopy --redefine-sym`); the
+  mapping records them under `build.library_routines`. The regular object keeps
+  the original's own calls for the host's library.
+
+*The twins follow reference LAPACK.* DGETRF/DGETRS/DGESV give the same bits as
+the reference LAPACK on random, ill-conditioned, singular and pivoting cases
+(`tests/test_library_routines.py`): the first largest pivot, INFO = the first
+exactly-zero pivot with the factorization completed, the reciprocal scaling of
+DGETRF2, DTRSM's loop orders, and no INFO from DGETRS for a zero diagonal. Each
+division is first brought into [2^-166, 2^166] by powers of two, which is exact
+in real arithmetic and keeps the OTI copy's derivative parts finite (the OTI
+algebra divides as x*y^-1). The BLAS bodies give reference BLAS's bits; DGETRI
+inverts by solves and DSYEV uses the cyclic Jacobi DSPEVD, so those agree with
+LAPACK to rounding (eigenvectors up to sign). The OTI copies' real parts agree
+with the real twins to a few ulps; their derivatives agree with central
+differences and the complex step.
+
+*Stand-alone builds link a real LAPACK.* The verifier's reference, the
+six-check gate's offline replays and the routine-level harness link the host's
+library (`umat_oti.core.host_lapack`: oneAPI MKL, else OpenBLAS, else the
+reference LAPACK; `UMAT_OTI_LAPACK` overrides) and record which
+(`reference_lapack` in `verification.json`, `lapack` in each build record). The
+twins are compiled in only where no library links, and in every REAL(16)
+build. Abaqus's own bundled MKL is not used outside Abaqus.
 
 **Hashes and status.** `object.sha256` holds the legacy 16-character SHA-256
 prefix; `object.sha256_full` holds the full digest. The build runs a

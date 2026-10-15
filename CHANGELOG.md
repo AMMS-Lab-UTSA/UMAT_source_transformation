@@ -7,13 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### A UMAT that reads a local before setting it, calls LAPACK and writes to the console
+### LAPACK/BLAS routines, reads before assignment, the Abaqus trial
 - **Transform generation not re-frozen.** These changes move the transform
   fingerprint from `c61511ea0ffe58e2` (the value recorded in
   `src/umat_oti/contract/schemas/transform_generation.json` and in Residual
-  Assembler's copy) through `3f12754672151349` to `a57f1534146fcdd3`, and the
-  harness fingerprint from `cfd84cd2fe97e72b` through `43d9a6de2e929b02` to
-  `2da74ab4f74c09b2`. The generation file is deliberately left at
+  Assembler's copy) to `@@TRANSFORM@@`, and the harness fingerprint from
+  `cfd84cd2fe97e72b` to `@@HARNESS@@`. The generation file is deliberately left at
   `c61511ea0ffe58e2`: its own procedure (`how_to_update`) requires everything
   frozen at the old value -- the pass25 corpus evidence, the 122 frozen
   regression cases and the two Residual Assembler fixtures -- to be re-frozen
@@ -21,6 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_contract_fixtures.py::test_the_recorded_generation_is_this_worktrees_actual_transform`
   fails on a fresh clone, by design, and all frozen evidence is evidence
   about `c61511ea0ffe58e2`, not about this code.
+- **LAPACK/BLAS routines.** No generated object defines a standard LAPACK/BLAS
+  name any more: inside Abaqus the user library precedes MKL in the solver's
+  symbol scope, so the real DGESV/DGETRF/DGETRS the emitted file used to carry
+  served every caller in the solver. The transformed UMAT now keeps its real
+  calls for the host library (MKL inside Abaqus) and calls private OTI copies
+  (`UMATOTI_<NAME>_OTI`); the provider's copy of the original calls private
+  real twins (`UMATOTI_<NAME>_R`), recorded in `build.library_routines`. The
+  twins follow reference LAPACK/BLAS (same bits for DGETRF/DGETRS/DGESV and the
+  BLAS bodies; INFO and pivoting as reference LAPACK; exact power-of-two
+  rescaling instead of the 1e50 factors). New supplied routines: DSYEV, DGEMM,
+  DGEMV, DCOPY, DSCAL, DAXPY; any other LAPACK/BLAS routine on the derivative
+  path is refused by name. Stand-alone builds of an original (verifier
+  reference, six-check gate replays, routine-level harness) link the host's
+  LAPACK (`umat_oti.core.host_lapack`: MKL, OpenBLAS or reference LAPACK;
+  `UMAT_OTI_LAPACK` overrides) and record which; the twins are only the
+  fallback. Two of the six checks were undecided for a UMAT calling DGESV
+  because the stand-alone original did not link.
 - **Reads before assignment are found, reported and defined.** A forward data
   flow over the selected routine (`umat_oti.fortran.read_before_set`) names
   every local that some path can read before any statement assigns it (an
@@ -35,12 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   completed contract; the source on disk is never changed); the provider
   verifier's reference uses the same statements. `--zero-init-locals` still
   works and is no longer needed for this.
-- **Stand-alone builds of an original that calls LAPACK link.** Abaqus supplies
-  DGESV, DGETRF, DGETRS, DGETRI and DSPEVD to a user subroutine; the offline
-  replays of the six-check gate (init probe, routine-level primal, the
-  finite-difference reference) and the provider verifier's reference now link
-  the transform's real bodies of them (a source that defines one keeps its own).
-  Two of the six checks were undecided for this alone.
 - **`umat-oti verify`** prints a paragraph when the original reads a value it
   never set: the variable and line from the transform report, and the outputs
   the init probe found undefined (left out of the stress comparison).
