@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### A UMAT that reads a local before setting it, calls LAPACK and writes to the console
+- **Transform generation not re-frozen.** These changes move the transform
+  fingerprint from `c61511ea0ffe58e2` (the value recorded in
+  `src/umat_oti/contract/schemas/transform_generation.json` and in Residual
+  Assembler's copy) through `3f12754672151349` to `a57f1534146fcdd3`, and the
+  harness fingerprint from `cfd84cd2fe97e72b` through `43d9a6de2e929b02` to
+  `2da74ab4f74c09b2`. The generation file is deliberately left at
+  `c61511ea0ffe58e2`: its own procedure (`how_to_update`) requires everything
+  frozen at the old value -- the pass25 corpus evidence, the 122 frozen
+  regression cases and the two Residual Assembler fixtures -- to be re-frozen
+  or retired together with it, which needs a corpus pass. Until then
+  `tests/test_contract_fixtures.py::test_the_recorded_generation_is_this_worktrees_actual_transform`
+  fails on a fresh clone, by design, and all frozen evidence is evidence
+  about `c61511ea0ffe58e2`, not about this code.
+- **Reads before assignment are found, reported and defined.** A forward data
+  flow over the selected routine (`umat_oti.fortran.read_before_set`) names
+  every local that some path can read before any statement assigns it (an
+  array only when no path assigns any element). Each one is a warning in
+  `transform_report.json` / `.txt` with the variable and the line, and the
+  report's `reads_before_assignment` block lists them. The generated code
+  starts each at zero on entry, explicitly (`X = 0.0D0`, and `X_OTI = 0.0D0`
+  for its shadow), so a transformed UMAT compiled with Abaqus's default flags
+  computes what the original computes with `-init=zero`. The provider build
+  does the same in the lifted routine and in its build of the original
+  (`build.reads_before_assignment`, `build.original_entry_statements` in the
+  completed contract; the source on disk is never changed); the provider
+  verifier's reference uses the same statements. `--zero-init-locals` still
+  works and is no longer needed for this.
+- **Stand-alone builds of an original that calls LAPACK link.** Abaqus supplies
+  DGESV, DGETRF, DGETRS, DGETRI and DSPEVD to a user subroutine; the offline
+  replays of the six-check gate (init probe, routine-level primal, the
+  finite-difference reference) and the provider verifier's reference now link
+  the transform's real bodies of them (a source that defines one keeps its own).
+  Two of the six checks were undecided for this alone.
+- **`umat-oti verify`** prints a paragraph when the original reads a value it
+  never set: the variable and line from the transform report, and the outputs
+  the init probe found undefined (left out of the stress comparison).
+- **`umat-oti jacobian --abaqus-input`**: console output of the UMAT goes to a
+  file (`FOR_PRINT`, default `<job>_console.txt`), which stops the Intel runtime
+  abort on WRITE(*,*) in an interactive job; an abort inside Abaqus's own
+  clean-up after a completed analysis is recorded (`teardown_abort`) and not
+  counted as a failure; `--abaqus-job NAME` names the job (its ODB is
+  `<out>/NAME.odb`); a failed trial after a successful conversion no longer
+  prints the card of a refused conversion.
+
 ### Connected workflow (2026-09-18)
 - **Compiled OTI material provider** (`umat-oti-provider build`): the ORIGINAL
   UMAT and its OTI lift in one relocatable object with a completed contract

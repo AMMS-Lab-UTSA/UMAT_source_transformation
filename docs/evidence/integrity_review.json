@@ -1239,11 +1239,11 @@
   },
   "removed_check:tests/test_a_transition_is_not_a_pass.py:test_the_resolution_ladder_respects_the_ceiling:341e71e2": {
    "verdict": "justified",
-   "reason": "The two replaced asserts pinned the tool's ladder line 'wanted = min(amplitude * factor, CEILING)' and min(0.005*400, CEILING). G4 (02a3b08) routes the same clamp through amplitude_search.capped(amplitude, ceiling), which is min(amplitude, ceiling, CEILING); the test now asserts the new line and capped(0.005*400) == CEILING and capped(2.0, 5.0) == CEILING, so the bound it guards is unchanged and a council ceiling above CEILING is still clamped."
+   "reason": "The two replaced asserts pinned the tool's ladder line 'wanted = min(amplitude * factor, CEILING)' and min(0.005*400, CEILING). G4 (02a3b08) routes the same clamp through amplitude_search.capped(amplitude, ceiling), which is min(amplitude, ceiling, CEILING); the test now asserts the new line and capped(0.005*400) == CEILING and capped(2.0, 5.0) == CEILING, so the bound it guards is unchanged and a reviewer ceiling above CEILING is still clamped."
   },
   "removed_check:tests/test_a_transition_is_not_a_pass.py:test_the_resolution_ladder_respects_the_ceiling:f53423c1": {
    "verdict": "justified",
-   "reason": "The two replaced asserts pinned the tool's ladder line 'wanted = min(amplitude * factor, CEILING)' and min(0.005*400, CEILING). G4 (02a3b08) routes the same clamp through amplitude_search.capped(amplitude, ceiling), which is min(amplitude, ceiling, CEILING); the test now asserts the new line and capped(0.005*400) == CEILING and capped(2.0, 5.0) == CEILING, so the bound it guards is unchanged and a council ceiling above CEILING is still clamped."
+   "reason": "The two replaced asserts pinned the tool's ladder line 'wanted = min(amplitude * factor, CEILING)' and min(0.005*400, CEILING). G4 (02a3b08) routes the same clamp through amplitude_search.capped(amplitude, ceiling), which is min(amplitude, ceiling, CEILING); the test now asserts the new line and capped(0.005*400) == CEILING and capped(2.0, 5.0) == CEILING, so the bound it guards is unchanged and a reviewer ceiling above CEILING is still clamped."
   },
   "skip:tests/test_a_zero_initial_state_is_proven_harmless_or_refused.py:<module>:mark.skipif:0a70e71a": {
    "verdict": "justified",
@@ -1263,7 +1263,7 @@
   },
   "mock:tests/test_every_council_cell_carries_both_origins.py:workspace:monkeypatch.setattr:eeb6e20d": {
    "verdict": "justified",
-   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir, council plans) at a temporary fixture tree so resolve_entry reads a council plan and an author-deck record; the real resolve_entry, _record and cells.fold run and nothing numerical is replaced."
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir, reviewer plans) at a temporary fixture tree so resolve_entry reads a reviewer plan and an author-deck record; the real resolve_entry, _record and cells.fold run and nothing numerical is replaced."
   },
   "skip:tests/test_a_quad_replay_resolves_what_double_quantises.py:<module>:mark.skipif:0a70e71a": {
    "verdict": "justified",
@@ -1271,11 +1271,11 @@
   },
   "removed_check:tests/test_a_transition_is_not_a_pass.py:test_a_path_dependent_material_needs_an_unloading_state:4095dd7c": {
    "verdict": "justified",
-   "reason": "The assert on coverage with an unloading state was rewritten, not removed: Vera B7 A7 counts a smooth unloading state as activated only if the material had activated by then, so the test now passes activated=True for the state that completes coverage and adds the opposite assert (an unloading state before any activation does not complete it)."
+   "reason": "The assert on coverage with an unloading state was rewritten, not removed: review B7 A7 counts a smooth unloading state as activated only if the material had activated by then, so the test now passes activated=True for the state that completes coverage and adds the opposite assert (an unloading state before any activation does not complete it)."
   },
   "skip:tests/test_a_council_experiment_reads_only_the_source_and_the_row.py:test_no_real_council_plan_cites_an_authors_deck:call:skip:a29654a2": {
    "verdict": "justified",
-   "reason": "Needs the generated council plans beside the checkout (corpus_campaign/council_plans, written by tools/make_council_deck.py); the test runs wherever they exist."
+   "reason": "Needs the generated reviewer plans beside the checkout (corpus_campaign/council_plans, written by tools/make_council_deck.py); the test runs wherever they exist."
   },
   "skip:tests/test_corpus_manifest_count_target.py:<module>:call:skip:e09a5718": {
    "verdict": "justified",
@@ -1299,7 +1299,7 @@
   },
   "broad_except:tools/verify_store_in_abaqus.py:verify_tangent:except Exception:32fa29db": {
    "verdict": "justified",
-   "reason": "Reading the seed map of a transformed source (seeded_kinematics) can fail on any malformed text; the failure is recorded in direction_check.error and the row is left UNRESOLVED (Vera G10 review A8: a map that cannot be read cannot show a wrong direction), never verified and never silently passed. Tested by tests/test_the_gate_on_a_replayed_toy.py."
+   "reason": "Reading the seed map of a transformed source (seeded_kinematics) can fail on any malformed text; the failure is recorded in direction_check.error and the row is left UNRESOLVED (review G10 review A8: a map that cannot be read cannot show a wrong direction), never verified and never silently passed. Tested by tests/test_the_gate_on_a_replayed_toy.py."
   },
   "mock:tests/test_the_gate_on_a_replayed_toy.py:test_a_direction_mismatch_fails_and_an_unreadable_seed_map_is_unresolved:monkeypatch.setattr:07db5835": {
    "verdict": "justified",
@@ -1549,7 +1549,7 @@
   },
   "mock:tests/test_corpus_cases_holdout.py:env:monkeypatch.setattr:b19953be": {
    "verdict": "justified",
-   "reason": "The fixture empties the runner's REVIEWED_SCANS so the workspace's harvest and council-constant files cannot leak into the toy sources; the reviewed-scan tests pass their own file explicitly."
+   "reason": "The fixture empties the runner's REVIEWED_SCANS so the workspace's harvest and reviewer-constant files cannot leak into the toy sources; the reviewed-scan tests pass their own file explicitly."
   },
   "mock:tests/test_corpus_cases_holdout.py:test_the_author_side_is_the_current_pass_not_pass16:monkeypatch.setattr:86a38ab8": {
    "verdict": "justified",
@@ -1635,15 +1635,15 @@
   },
   "mock:tests/test_run_corpus_features_council_plans.py:test_the_flag_sets_the_plans_folder_the_council_key_is_resolved_from:monkeypatch.setattr:8dc36cca": {
    "verdict": "justified",
-   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which council plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
+   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which reviewer plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
   },
   "mock:tests/test_run_corpus_features_council_plans.py:test_the_flag_sets_the_plans_folder_the_council_key_is_resolved_from:monkeypatch.setattr:a9aa9512": {
    "verdict": "justified",
-   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which council plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
+   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which reviewer plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
   },
   "mock:tests/test_run_corpus_features_council_plans.py:test_without_the_flag_the_harness_default_is_kept:monkeypatch.setattr:6a83019d": {
    "verdict": "justified",
-   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which council plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
+   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which reviewer plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
   },
   "mock:tests/test_the_front_door_names_the_code_that_runs.py:test_doctor_says_so_when_no_command_is_installed:monkeypatch.setattr:4580c99e": {
    "verdict": "justified",
@@ -2127,7 +2127,7 @@
   },
   "skip:tests/test_the_two_denominators_stay_apart.py:test_no_percentage_appears_without_its_denominator:call:xfail:e511332c": {
    "verdict": "justified",
-   "reason": "Vera's pass25 ruling: the recorded reason of five growth rows (SweetMelon, MorningGlory, Trachea, CereusForbesiiSpiralis, TendrilOfPumpkin) quotes time_scale.py's 'above the 25% search heuristic' without a denominator; that text is in fingerprint-covered code (ENOUGH_OF_THE_SCALE) and is not changed in this batch. The xfail fires only when every violation lies inside that quotation of exactly those rows (pinned by name and by the quoted sentence); any other percentage without a denominator still fails the test. Fix in the next batch.",
+   "reason": "The review's pass25 ruling: the recorded reason of five growth rows (SweetMelon, MorningGlory, Trachea, CereusForbesiiSpiralis, TendrilOfPumpkin) quotes time_scale.py's 'above the 25% search heuristic' without a denominator; that text is in fingerprint-covered code (ENOUGH_OF_THE_SCALE) and is not changed in this batch. The xfail fires only when every violation lies inside that quotation of exactly those rows (pinned by name and by the quoted sentence); any other percentage without a denominator still fails the test. Fix in the next batch.",
    "evidence": [
     {
      "in": "tests/test_the_two_denominators_stay_apart.py",
@@ -2152,6 +2152,26 @@
      "text": "assert not violations, violations"
     }
    ]
+  },
+  "skip:tests/test_read_before_set.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_read_before_set.py:<module>:mark.skipif:6824f295#2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_stand_alone_builds_link_the_library_twins.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_read_before_set.py:<module>:mark.skipif:6824f295#3": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "mock:tests/test_abaqus_trial_console_and_teardown.py:test_the_front_door_names_a_failed_trial_only:monkeypatch.setattr:64a369c0": {
+   "verdict": "justified",
+   "reason": "Replaces umat_oti.cli.main by a function that prints a fixed jacobian summary, so the front door's choice of message can be tested without a transform or Abaqus; no numerical function is replaced."
   }
  }
 }

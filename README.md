@@ -63,7 +63,12 @@ model. Verified means the generated derivatives match finite differences of
 your routine's own stress response, in Abaqus, on the checks listed; it does
 not check your hand-written tangent (DDSDDE) or that the constitutive law is
 physically right. The "to call this file verified" sentence at the end of an amber
-`check` verdict gives this command with your file names filled in.
+`check` verdict gives this command with your file names filled in. When your
+routine can read a variable before it sets it, the verdict is followed by a
+paragraph naming the variable and line and the outputs this makes undefined;
+those outputs are left out of the stress comparison, and the converted file
+starts the variable at zero. A routine that calls LAPACK (DGESV and the like,
+which Abaqus supplies) is replayed against the transform's own real copies.
 
 The lower-level steps are still there: `umat-oti all my_umat.for --out DIR`
 (the pipeline `check` is built on) and `umat-oti jacobian`. When they refuse they

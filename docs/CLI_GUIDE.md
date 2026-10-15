@@ -327,6 +327,31 @@ after a timeout before retrying.
 This is an **unverified execution trial**, not an original-versus-transformed
 comparison or proof of tangent correctness. `verified` is always false.
 
+`--abaqus-job NAME` names the job (default: a unique `oti_trial_*` name), so its
+results are `OUT/NAME.odb`, `OUT/NAME.sta` and so on. Whatever the routine
+writes to the console (`WRITE(*,*)`, `PRINT`) goes to `OUT/NAME_console.txt`
+(the `FOR_PRINT` file of the Intel Fortran runtime; a `FOR_PRINT` you set is
+kept): in an `interactive` job the solver's console is a pipe, and the runtime
+aborts on the first such write. Abaqus 2021 can still abort inside its own
+clean-up after the analysis completed and the ODB was closed; the trial then
+records `teardown_abort` with the frame that shows it and reports `completed`.
+
+**Running the transformed UMAT yourself.** `OUT/<name>_oti_combined.f90` is one
+self-contained Abaqus user-subroutine file (the OTI modules and the transformed
+routine); it needs no other object and no extra compiler flag:
+
+```bash
+umat-oti jacobian my_umat.f --ntens 6 --out tangent
+FOR_PRINT=$PWD/bar_console.txt abaqus job=bar input=bar.inp user=tangent/my_umat_oti_combined.f90
+```
+
+`FOR_PRINT` matters only for a routine that writes to the console: with the
+Intel runtime Abaqus 2021 ships, such a write aborts the job in background and
+interactive mode alike unless that output goes to a file. Its DDSDDE is the consistent tangent, which is in general unsymmetric: give the
+material `*User Material, ..., unsymm`. Locals the original reads before it sets
+them start at zero in this file (see the transform report's
+`reads_before_assignment`), so its results do not depend on `-init=zero`.
+
 **Purpose.** Transform a UMAT so that `DDSDDE` is computed by OTI arithmetic,
 from four fields: the source, NTENS, and what to differentiate. The
 transformer finds the lines that assign the tangent by itself. This is the
@@ -354,6 +379,8 @@ usage: umat-oti jacobian [-h] --ntens NTENS [--seed SEED]
 | `--compile` | also compile every generated file with gfortran |
 | `--discover-dependencies` | recursively search beneath the source directory for helper definitions |
 | `--dependency-root PATH` | search an additional source directory or file; repeatable; relative to the current working directory |
+| `--abaqus-input DECK.inp` | run the generated UMAT in Abaqus on this deck (an unverified trial; see above) |
+| `--abaqus-job NAME` | name of that Abaqus job; its files are written into `--out` |
 
 **Automatic helper discovery.** No hand-written contract is needed:
 
@@ -452,7 +479,9 @@ routine alone), the OTI modules (`master_parameters.f90`, `real_utils.f90`,
 `otim6n1.f90`, `oti_intrinsics.f90`), `compile_order.txt`, `compile_hint.sh`,
 `jacobian_contract.json` (the four fields as a contract),
 `derivative_manifest.json`, `transform_report.txt` and `.json` (21 structural
-checks). With `--compile`, also the `.o` and `.mod` files. See
+checks, and `reads_before_assignment`: every local the routine can read before
+it assigns it, by name and line, each also a warning and each started at zero
+on entry in the generated routine). With `--compile`, also the `.o` and `.mod` files. See
 [Example 1](../examples/01_elastic_tangent/README.md) and
 [Example 2](../examples/02_j2_plasticity_tangent/README.md).
 
@@ -840,6 +869,26 @@ signatures, layouts, SHA-256 of both objects); `REAL_UMAT.obj`; and
 `build-<random>/` with the generated sources. The build does **not** verify:
 the mapping says `"validation": {"status": "not_run", "passed": false}`. Use
 the collaborator package or the verifier below.
+
+**Locals read before they are assigned.** When the UMAT can read a local before
+any statement sets it (undefined behaviour: the value is whatever the stack
+held), the build names it on standard error and in the mapping
+(`build.reads_before_assignment`: name, line, type), starts it at zero on entry
+to the lifted routine, and compiles the original with the same statement at
+its entry (`build.original_entry_statements`; `regular_object.role` and
+`compiled_source_sha256_full` say so). The source on disk is not changed. Both
+builds then compute what the original computes with its locals started at zero,
+with no compiler flag; `--zero-init-locals` (all locals zero in every build)
+still exists. The verifier below builds its reference the same way and says so
+in `verification.json` (`reference_entry_statements`).
+
+**Library routines Abaqus supplies.** A UMAT that calls LAPACK (DGESV, DGETRF,
+DGETRS, DGETRI, DSPEVD) links against Abaqus's copy in a job. The provider and
+the verifier's reference link the transform's own real bodies of those routines
+instead, one archive member each, so only what the source leaves undefined is
+taken. They are not LAPACK or MKL (DGETRF is an unblocked LU with partial pivoting,
+DSPEVD a cyclic Jacobi method), so a stand-alone build of the original can differ
+in the last bits from the same original running under Abaqus.
 
 **When it refuses.** Measured:
 
