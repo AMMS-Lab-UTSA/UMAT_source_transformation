@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `UMAT_OTI_LAPACK` overrides) and record which; the twins are only the
   fallback. Two of the six checks were undecided for a UMAT calling DGESV
   because the stand-alone original did not link.
+- **A value that reaches the stress only through a library call is on the
+  stress path.** The dependency scan had no edge through a routine the file
+  does not define, so in ``CALL DGESV(N, 1, S, 6, IPIV, B, 6, INFO)`` nothing
+  tied S to B: a scalar built from the strain that scaled S was left REAL
+  (``FACTOR = REAL(...)``), the stress was right and every derivative through
+  it was lost. The scan now reads the bodies of the supplied library routines
+  for their effect, as it does an author's helpers
+  (`tests/test_values_feeding_a_library_call_are_promoted.py`).
 - **Reads before assignment are found, reported and defined.** A forward data
   flow over the selected routine (`umat_oti.fortran.read_before_set`) names
   every local that some path can read before any statement assigns it (an
