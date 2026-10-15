@@ -213,7 +213,7 @@ frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
 against the new code. The script and its output are in
 `corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
 
-**Harness `cfd84cd2fe97e72b` -> `@@HARNESS@@` (2026-10-15, not re-run).** The
+**Harness `cfd84cd2fe97e72b` -> `0034d7873e401b46` (2026-10-15, not re-run).** The
 offline replays of an original (the D-12 init probe, the routine-level primal,
 the finite-difference reference, the routine-level harness) now link the host's
 LAPACK (`umat_oti.core.host_lapack`: MKL, OpenBLAS or reference LAPACK, recorded
@@ -225,7 +225,7 @@ built". Such a replay can differ from the solver's record in the last bits (a
 different MKL, or reference LAPACK; measured on one plasticity UMAT with a
 Newton loop: 9e-16, inside `REPLAY_REPRODUCES`). Comments and docstrings were
 also reworded (neutral wording for review attributions). The transform
-fingerprint moved with these changes (`c61511ea0ffe58e2` -> `@@TRANSFORM@@`; see
+fingerprint moved with these changes (`c61511ea0ffe58e2` -> `3c6081c518bae6cc`; see
 CHANGELOG): no pass was run at the new fingerprints, so every pass25 row and
 every regression case remains evidence at `cfd84cd2fe97e72b` /
 `c61511ea0ffe58e2`.

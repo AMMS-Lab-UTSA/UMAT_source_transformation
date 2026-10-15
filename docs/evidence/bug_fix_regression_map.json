@@ -1021,6 +1021,51 @@
     "tests/test_b20_sibling_decks_and_the_census_wording.py::test_a_sibling_examples_deck_is_said_to_be_one_and_the_sentence_is_dropped",
     "tests/test_b20_sibling_decks_and_the_census_wording.py::test_the_rule_changes_exactly_the_two_rows_it_was_written_for"
    ]
+  },
+  {
+   "commit": "770ddbb",
+   "bug": "A local read before assignment made the original's result depend on build flags and the provider's derivatives read undefined memory; a leading logical IF was taken for a statement function; the provider wrappers passed a scalar KSTEP to a UMAT declaring JSTEP(4); a logical assigned from a comparison of a differentiated value was wrapped in REAL(); the provider's real library twins were regex rewrites of every lifted routine, so an author's helper got a second definition.",
+   "tests": [
+    "tests/test_read_before_set.py::test_the_newton_loop_shape_is_found_at_the_read_and_nothing_else_is",
+    "tests/test_read_before_set.py::test_a_logical_if_is_not_a_statement_function_and_the_zero_goes_before_it",
+    "tests/test_read_before_set.py::test_the_provider_starts_the_finding_at_zero_in_both_builds",
+    "tests/test_logical_assignment_and_jstep_array.py::test_the_wrappers_pass_a_four_array_when_asked",
+    "tests/test_logical_assignment_and_jstep_array.py::test_the_logical_assignment_is_not_wrapped_and_a_real_one_still_is",
+    "tests/test_stand_alone_builds_link_the_library_twins.py::test_the_provider_twins_are_the_supplied_bodies_and_never_an_authors_helper"
+   ],
+   "selected_by": "message_pattern"
+  },
+  {
+   "commit": "7239088",
+   "selected_by": "manual",
+   "bug": "A stand-alone build of an original that calls LAPACK did not link (dgesv_ undefined), so two of the six checks went undecided and the provider verifier could not build its reference; the replay driver linked stubs twice beside a source that defines its own DGESV.",
+   "tests": [
+    "tests/test_stand_alone_builds_link_the_library_twins.py::test_the_history_driver_builds_against_an_original_that_calls_dgesv",
+    "tests/test_stand_alone_builds_link_the_library_twins.py::test_the_provider_reference_links_the_twins_and_only_what_is_missing",
+    "tests/test_stand_alone_builds_link_the_library_twins.py::test_the_replay_driver_links_beside_a_umat_that_brings_its_own_dgesv"
+   ]
+  },
+  {
+   "commit": "c83c74d",
+   "bug": "The Abaqus trial aborted for a UMAT that writes to the console, counted an abort in Abaqus's own clean-up after a completed analysis as a failure, read an earlier run's files as the evidence of a named job, and printed the card of a refused conversion for a failed trial.",
+   "tests": [
+    "tests/test_abaqus_trial_console_and_teardown.py::test_console_output_goes_to_a_file_named_after_the_job",
+    "tests/test_abaqus_trial_console_and_teardown.py::test_a_teardown_abort_after_a_completed_analysis_is_not_a_failure",
+    "tests/test_abaqus_trial_console_and_teardown.py::test_files_of_an_earlier_run_of_the_same_job_are_not_evidence",
+    "tests/test_abaqus_trial_console_and_teardown.py::test_the_front_door_names_a_failed_trial_only"
+   ],
+   "selected_by": "message_pattern"
+  },
+  {
+   "commit": "2b1d397",
+   "bug": "The transformed UMAT defined real DGESV/DGETRF/DGETRS under the standard names, which inside Abaqus precede MKL in the solver's symbol scope; DGETRF/DGETRS rescaled by inexact 1e50 factors and DGETRS reported INFO for a zero diagonal, unlike reference LAPACK; stand-alone references linked the twins instead of a real LAPACK.",
+   "tests": [
+    "tests/test_library_routines.py::test_lu_twins_give_the_reference_lapack_bits_and_info",
+    "tests/test_library_routines.py::test_no_generated_object_defines_a_standard_lapack_or_blas_name",
+    "tests/test_library_routines.py::test_the_provider_defines_no_standard_name_and_its_regular_object_keeps_the_hosts",
+    "tests/test_library_routines.py::test_the_host_lapack_is_recorded_and_the_twins_are_only_a_fallback"
+   ],
+   "selected_by": "message_pattern"
   }
  ],
  "excluded": [

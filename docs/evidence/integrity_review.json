@@ -2172,6 +2172,18 @@
   "mock:tests/test_abaqus_trial_console_and_teardown.py:test_the_front_door_names_a_failed_trial_only:monkeypatch.setattr:64a369c0": {
    "verdict": "justified",
    "reason": "Replaces umat_oti.cli.main by a function that prints a fixed jacobian summary, so the front door's choice of message can be tested without a transform or Abaqus; no numerical function is replaced."
+  },
+  "skip:tests/test_library_routines.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_library_routines.py:<module>:mark.skipif:66eac379": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the comparison is against the system reference LAPACK and BLAS (liblapack.so.3, libblas.so.3); without them there is no reference to compare the twins with."
+  },
+  "skip:tests/test_library_routines.py:<module>:mark.skipif:f69b5b3b": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the build the Abaqus way needs the abaqus command (abaqus make); the test is also marked abaqus."
   }
  }
 }

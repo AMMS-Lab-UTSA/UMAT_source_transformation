@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Transform generation not re-frozen.** These changes move the transform
   fingerprint from `c61511ea0ffe58e2` (the value recorded in
   `src/umat_oti/contract/schemas/transform_generation.json` and in Residual
-  Assembler's copy) to `@@TRANSFORM@@`, and the harness fingerprint from
-  `cfd84cd2fe97e72b` to `@@HARNESS@@`. The generation file is deliberately left at
+  Assembler's copy) to `3c6081c518bae6cc`, and the harness fingerprint from
+  `cfd84cd2fe97e72b` to `0034d7873e401b46`. The generation file is deliberately left at
   `c61511ea0ffe58e2`: its own procedure (`how_to_update`) requires everything
   frozen at the old value -- the pass25 corpus evidence, the 122 frozen
   regression cases and the two Residual Assembler fixtures -- to be re-frozen
