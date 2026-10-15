@@ -3,7 +3,7 @@
 pass19 (three RitioL crystal-plasticity sources): the base path completes,
 but a +h perturbation makes the routine STOP. The driver runs every
 perturbation in one process, so every record after that call is absent; the
-harness raised KeyError at several sites. Rule (Gauss, 2026-10-02): a column
+harness raised KeyError at several sites. Rule (review 2026-10-02): a column
 whose perturbed run (any build) did not write the records it needs is not
 judged, with the reason "original terminated under perturbation (STOP/XIT) at
 increment k"; the states it leaves unjudged go through the coverage rule;

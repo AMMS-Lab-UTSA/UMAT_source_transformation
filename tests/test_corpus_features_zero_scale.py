@@ -1,8 +1,8 @@
-"""Structural-zero window, value-under-test term, Euler term (Vera B2/C).
+"""Structural-zero window, value-under-test term, Euler term (review B2/C).
 
 Synthetic FD ladders as in corpus_campaign/batches/B2/vera/c_atol_inject.py
 (truncation c h^2 + round-off at the reference's eps), judged by
-fd.judge_column; and Vera's PROPS(3)=0 injection inside the real harness
+fd.judge_column; and the review's PROPS(3)=0 injection inside the real harness
 (c_orig toy: STRESS(1) += PROPS(3)*STATEV(2), PROPS(3)=0; dropping the
 derivative w.r.t. PROPS(3) passed as a "structural zero", local and total).
 """
@@ -30,7 +30,7 @@ def _judge(oti, D, x_scale, F, *, eps=fd.EPS_QUAD, vmag=None, euler=True, seed=0
 @pytest.mark.parametrize("oti, expect", [([500.0], "verified"), ([0.0], "failed"),
                                          ([-500.0], "failed")])
 def test_total_value_term_cannot_open_a_window_beyond_the_derivative_scale(oti, expect):
-    # Vera case 5: n=50, history max 1e10, p=0 -> uncapped value term 888 > D=500
+    # the review case 5: n=50, history max 1e10, p=0 -> uncapped value term 888 > D=500
     v = _judge(oti, [500.0], 1e-6, [1e3], vmag=np.array([50 * 1e10]))
     assert v.status == expect, (v.codes, v.atol)
     assert v.atol[0] <= fd.RESOLUTION * 500.0 * (1 + 1e-9)
@@ -41,7 +41,7 @@ def test_total_value_term_cannot_open_a_window_beyond_the_derivative_scale(oti, 
 @pytest.mark.parametrize("vmag", [None, 50])
 @pytest.mark.parametrize("slot2", [0.0, 1.5e-4, -1e-5])
 def test_mixed_unit_statev_block_never_passes_a_wrong_slot(eps, vmag, slot2):
-    # Vera cases 1/6: energy-like slot 1e9 (D 1e7), plastic-strain slot 1e-3 (D 1e-5), p=100
+    # the review cases 1/6: energy-like slot 1e9 (D 1e7), plastic-strain slot 1e-3 (D 1e-5), p=100
     D, F = [1e7, 1e-5], [1e9, 1e-3]
     v = _judge([1e7, slot2], D, 100.0, F, eps=eps, euler="bracket",
                vmag=None if vmag is None else vmag * np.asarray(F))
@@ -58,7 +58,7 @@ def test_a_cancelled_statev_slot_is_unresolved_not_failed():
     # measured (Lemaitre SDV6, fv44 B2c first run): quad reference ~1e-34, OTI
     # round-off 2.8e-17 from the large terms the slot is the difference of;
     # on its own magnitude it "failed", on the Euler term it passed ->
-    # unresolved. Since Vera's pass21 A3 floor a double value counts as nonzero
+    # unresolved. Since the review's pass21 A3 floor a double value counts as nonzero
     # only above NOISE eps max(S, |block|) = 1.8e-16 here, so 2.8e-17 is a
     # zero on both judgements, and one 100x above it fails on both: the
     # Euler window of this toy was exactly that floor.
@@ -95,7 +95,7 @@ def test_structural_zero_still_passes_when_resolved_against_the_column():
 
 def test_an_exactly_zero_column_passes_as_structural_zero():
     """...against the QUAD reference; in double a bitwise-zero ladder with no
-    derivative scale is unresolved (Vera B7 A1: it can be quantisation)."""
+    derivative scale is unresolved (review B7 A1: it can be quantisation)."""
     est = [np.zeros(2) for _ in L]
     v = fd.judge_column(np.zeros(2), est, list(range(len(L))), L, steps=list(L),
                         magnitude=np.array([1.0, 1.0]), eps=fd.EPS_QUAD)

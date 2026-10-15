@@ -1,5 +1,5 @@
 """``umat-oti check`` ends with the one-page verdict and the headline numbers,
-and leaves the derivatives in a table with named columns (Nico, B11: the answer
+and leaves the derivatives in a table with named columns (review B11: the answer
 was a 50 KB JSON on the screen and a CSV whose first value column is ``oti``).
 """
 import csv

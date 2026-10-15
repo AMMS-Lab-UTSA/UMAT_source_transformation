@@ -3,7 +3,7 @@
 ``4/DTHREE`` with DTHREE an INTEGER PARAMETER is 1 in the source. The lifter
 promotes bare integer literals next to an operator (an OTI operand has no
 operator taking a default INTEGER in otim6n1), and wrote ``4.0D0/DTHREE`` =
-1.333: primal 1.6e-2, DDSDDE 3 % off the author's routine (Vera B5 toy a5x).
+1.333: primal 1.6e-2, DDSDDE 3 % off the author's routine (review B5 toy a5x).
 A division both of whose operands are integer keeps its literals as written;
 oti_intrinsics supplies the OTI-with-INTEGER operators the result then meets.
 

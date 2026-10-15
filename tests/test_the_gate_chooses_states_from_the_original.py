@@ -1,4 +1,4 @@
-"""State choice of the Abaqus D-4 tangent gate (G10; Vera A5, Curie item 5).
+"""State choice of the Abaqus D-4 tangent gate (G10; review A5, review item 5).
 
 States are chosen from the ORIGINAL history, on one integration point's own
 records (activation found there, not on the flattened list of every point),
@@ -74,7 +74,7 @@ def test_a_chosen_state_without_a_replay_counts_against_the_row(tool):
 
 
 def test_states_pair_on_step_as_well_as_increment(tool):
-    """Vera G10 review B1: Abaqus restarts the increment count each step."""
+    """review G10 review B1: Abaqus restarts the increment count each step."""
     def two_steps(transformed=False):
         out = []
         for step in (1, 2):

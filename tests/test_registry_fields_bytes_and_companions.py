@@ -1,4 +1,4 @@
-"""Registry fields that were silently wrong (Scout, B1 data-quality 2 and 3).
+"""Registry fields that were silently wrong (review B1 data-quality 2 and 3).
 
 * ``bytes`` was ``len(text.encode())`` of the text decoded with
   ``errors="replace"`` and universal newlines -- not the file size for 115

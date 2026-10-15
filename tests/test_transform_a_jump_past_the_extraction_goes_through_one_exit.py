@@ -2,7 +2,7 @@
 
 The extractions are hoisted to the end of the outermost block enclosing their
 insertion point. ``IF (..) GOTO 200`` inside that block, to a label after it,
-skipped the hoisted copy-out and DDSDDE altogether (Vera, B2 review item 2,
+skipped the hoisted copy-out and DDSDDE altogether (review B2 review item 2,
 toy t2d: primal relative error 1.0, DDSDDE 0 against FD ~100). Any jump --
 unconditional, computed GO TO, arithmetic IF -- from at or before the
 insertion point to a label after it now gives the routine one exit

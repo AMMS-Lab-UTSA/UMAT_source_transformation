@@ -15,7 +15,7 @@ transform and of the harness that produced the evidence. See
     PYTHONHASHSEED=0 python tools/corpus_cases.py check --tier offline --replay --only <id>
     python tools/corpus_cases.py fetch <id>          # source of a non-redistributable case
     python tools/corpus_cases.py verify-assets       # re-hash every CAS object a case lists
-    PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <key>#<set>   # a council set (A-1)
+    PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <key>#<set>   # a reviewer set (A-1)
     PYTHONHASHSEED=0 python tools/corpus_cases.py holdout --template T --selection VERA.json
 
 Checks (numbers only; generated Fortran is never text-diffed):
@@ -75,7 +75,7 @@ SCHEMA = "umat-oti/regression-case/1"
 FEATURES = ("primal_stress_state", "ddsdde")
 
 # ---------------------------------------------------------------------------
-# the one global rule (Vera B1 amendment 2: tolerances are never per case)
+# the one global rule (review B1 amendment 2: tolerances are never per case)
 # ---------------------------------------------------------------------------
 
 RULE = {
@@ -784,8 +784,8 @@ def consistency_failures(case_dir: Path, case: dict, ref: dict, row,
     """Cross-checks that do not trust any single file: the reference against
     case.json's experiment (paths, judged-state counts and increments), and
     both against the index row (digests, path and judged-state totals). A
-    council case is also checked against its registry row and its frozen
-    council plan (origins, refs, fingerprint: :func:`council_consistency_failures`)."""
+    reviewer case is also checked against its registry row and its frozen
+    reviewer plan (origins, refs, fingerprint: :func:`council_consistency_failures`)."""
     out = []
     if case.get("council"):
         key = case["council"].get("registry_key")
@@ -834,7 +834,7 @@ def consistency_failures(case_dir: Path, case: dict, ref: dict, row,
 
 
 def index_council(case: dict) -> Optional[dict]:
-    """The council identity a council case's index row repeats (None otherwise)."""
+    """The reviewer identity a reviewer case's index row repeats (None otherwise)."""
     block = case.get("council")
     if not block:
         return None
@@ -845,7 +845,7 @@ def index_council(case: dict) -> Optional[dict]:
 
 def index_rows() -> list:
     """The rows of index.json. An author-deck case's row is exactly what it was
-    before council cases existed; a council case's row adds ``council``."""
+    before reviewer cases existed; a reviewer case's row adds ``reviewer``."""
     rows = []
     for case_json in case_jsons():
         try:                      # a parallel freeze may be rewriting a case right now
@@ -912,20 +912,20 @@ def preserved_units(case_dir: Path, case: dict, work: Path) -> tuple:
 
 
 # ---------------------------------------------------------------------------
-# council cases (D-19a rev 2 A-1): a council-designed experiment, frozen
+# reviewer cases (D-19a rev 2 A-1): a reviewer-designed experiment, frozen
 # ---------------------------------------------------------------------------
 #
-# A council source (no usable author deck, D-19/D-21) is frozen ONE CASE PER
+# A reviewer source (no usable author deck, D-19/D-21) is frozen ONE CASE PER
 # PARAMETER SET, ``--key <registry key>#<set>``. Each set is its own
 # experiment (D-21.3; harness.resolve_entry and cells.fold keep sets apart):
 # its PROPS, driver configs, ORIGINAL history and FD reference differ, so one
 # case per set keeps every frozen reference attributable to one manifest and a
 # failure attributable to one set. What ties the sets together is the SOURCE
-# verdict (:func:`council_source_verdicts`): a council source passes only when
+# verdict (:func:`council_source_verdicts`): a reviewer source passes only when
 # the case of every set its plan lists (``council_sets``) is present and
 # passes; a missing set is a failure, never a skip.
 #
-# Every council case stores in the CAS (corpus_assets): council_plan.json, every
+# Every reviewer case stores in the CAS (corpus_assets): council_plan.json, every
 # council_<set>.inp of the plan, the rows files the plan was written from, the
 # row(s) of this key read from them (harvest and/or D-21) and the
 # re-derivation output (rederive_harvest.py) of the harvest row(s). The check
@@ -938,7 +938,7 @@ REDERIVE = "corpus_campaign/material_data/rederive_harvest.py"
 #: D-1: the abuganza tree carries no licence file -- not_permitted, whatever a
 #: manifest says. No case of it goes into a pushed tree.
 NOT_PERMITTED_REPOSITORIES = ("abuganza__",)
-#: the fields a council case must agree on with its registry row (S2 Record)
+#: the fields a reviewer case must agree on with its registry row (S2 Record)
 COUNCIL_REGISTRY_FIELDS = ("material_data_origin", "experiment_origin", "material_data_ref",
                            "council_deck_ref", "council_fingerprint", "council_sets")
 
@@ -977,7 +977,7 @@ def _ref_tail(field: str, ref) -> Optional[tuple]:
 
 
 def experiment_origin_of(value) -> str:
-    """``author`` or ``council``, as the registry writes it (S2), from what a
+    """``author`` or ``reviewer``, as the registry writes it (S2), from what a
     plan or a row wrote (a plan says ``council_deck``)."""
     text = str(value or "")
     if text in ("council", "council_deck"):
@@ -988,7 +988,7 @@ def experiment_origin_of(value) -> str:
 
 
 def council_restriction(licence: dict, source_id: str, rows: list) -> str:
-    """Why no case of this council source may exist in the (pushed) case tree, or ''."""
+    """Why no case of this reviewer source may exist in the (pushed) case tree, or ''."""
     if licence.get("redistribution") == "not_permitted":
         return f"D-2: the source is not_permitted ({licence.get('redistribution_basis', '')[:160]})"
     if str(source_id).startswith(NOT_PERMITTED_REPOSITORIES):
@@ -1027,7 +1027,7 @@ def run_make_council_deck(argv: list) -> tuple:
 
 def rederive_rows(rows: list, rederive: Path) -> dict:
     """The re-derivation output (S1, rederive_harvest.check_row) of each row.
-    A D-21 council row has no raw+rule to re-derive: it is frozen by sha
+    A D-21 reviewer row has no raw+rule to re-derive: it is frozen by sha
     (D-21c) and recorded as such."""
     module = _load_by_path("rederive_harvest_case", rederive)
     try:
@@ -1052,9 +1052,9 @@ def rederive_rows(rows: list, rederive: Path) -> dict:
 
 def council_freeze_block(key: str, set_id: str, plans_dir: Path, rows_files: list,
                          workspace: Path, cache: Path) -> tuple:
-    """``(council block for case.json, [(published path, local file, role)],
+    """``(reviewer block for case.json, [(published path, local file, role)],
     problems)``. Problems make the freeze stop: the plan must regenerate byte for
-    byte from exactly these rows files, the plan must be a found council plan,
+    byte from exactly these rows files, the plan must be a found reviewer plan,
     and a harvest row the plan used must re-derive."""
     problems = []
     folder = Path(plans_dir) / key
@@ -1178,9 +1178,9 @@ def _registry_agrees(field: str, registry_value, case_value) -> bool:
 
 def council_consistency_failures(case: dict, registry: Optional[dict],
                                  plan: Optional[dict]) -> list:
-    """Origins, refs and fingerprint of a council case against its registry
+    """Origins, refs and fingerprint of a reviewer case against its registry
     row and against the frozen council_plan.json. Any mismatch -- or a missing
-    registry row or field -- fails: a council case counts on nothing unchecked."""
+    registry row or field -- fails: a reviewer case counts on nothing unchecked."""
     block = case.get("council") or {}
     out = []
     key, set_id = block.get("registry_key"), block.get("council_set")
@@ -1220,7 +1220,7 @@ def council_consistency_failures(case: dict, registry: Optional[dict],
 
 def _council_file(case_dir: Path, case: dict, path: str, cas_root: Path = None,
                   workspace: Path = None) -> Optional[Path]:
-    """A frozen council file, verified by sha256: the case's copy when the case
+    """A frozen reviewer file, verified by sha256: the case's copy when the case
     holds one (a changed copy is never replaced by an intact one from elsewhere),
     else the CAS, else (rows files only) the live workspace file when its bytes
     still match."""
@@ -1246,9 +1246,9 @@ def frozen_council_plan(case_dir: Path, case: dict, cas_root: Path = None) -> Op
 
 def check_council(case_dir: Path, case: dict, work: Path, *, cas_root: Path = None,
                   workspace: Path = None, plans_dir: Path = None) -> list:
-    """The council part of a case check:
+    """The reviewer part of a case check:
 
-    * every frozen council file is present and intact (case, CAS);
+    * every frozen reviewer file is present and intact (case, CAS);
     * ``make_council_deck --check`` regenerates the frozen plan and every deck
       byte for byte from the frozen rows files (a changed generator, harness,
       row or deck fails: R6.1);
@@ -1349,7 +1349,7 @@ def check_council(case_dir: Path, case: dict, work: Path, *, cas_root: Path = No
 
 
 def council_source_verdicts(results: list, cases: list, complete_selection: bool = True) -> dict:
-    """Per council SOURCE: verified only when the case of every set its plan
+    """Per reviewer SOURCE: verified only when the case of every set its plan
     lists is checked and passes. ``cases``: [(case_dir, case)] that were checked."""
     by_id = {r["case_id"]: r for r in results}
     groups: dict = {}
@@ -1869,7 +1869,7 @@ def _freeze(args) -> int:
     cas_files.append({"path": "harness/builds.json", "sha256": cas_put(harness_dir / "builds.json"),
                       "bytes": (harness_dir / "builds.json").stat().st_size, "role": "harness builds"})
     if council is not None:
-        # the council experiment (A-1): CAS always; in the case only when the
+        # the reviewer experiment (A-1): CAS always; in the case only when the
         # source is redistributable, and the rows files (every row of the
         # campaign) never
         block, council_files = council

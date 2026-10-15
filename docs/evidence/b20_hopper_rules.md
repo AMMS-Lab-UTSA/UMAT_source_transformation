@@ -1,4 +1,4 @@
-# B20 package Hopper (harness): rules written BEFORE they were implemented or run (D-28)
+# B20 package (harness): rules written BEFORE they were implemented or run (D-28)
 
 Written 2026-10-08. Every rule applies to ALL sources; each changes how a measurement is taken or what
 is staged/paired/placed, not what a counted gate means. Results are reported as separate lines beside
@@ -79,7 +79,7 @@ cubeUH.inp DEPVAR 11). Applies to every source with such a declaration.
 subroutine and is never a UMAT's constants; the default and TYPE=MECHANICAL blocks are the UMAT's.
 (c) Initial conditions. `*INITIAL CONDITIONS, TYPE=SOLUTION` values the author's deck lists for the material's
 element set are carried into the generated deck and the manifest's initial state, in the Plan route as already in
-the council route; `TYPE=STRESS, USER` is carried as `*INITIAL CONDITIONS, TYPE=STRESS, USER` exactly as
+the reviewer route; `TYPE=STRESS, USER` is carried as `*INITIAL CONDITIONS, TYPE=STRESS, USER` exactly as
 `TYPE=SOLUTION, USER` is. Nothing is defaulted: an absent card stays absent.
 (d) `*ORIENTATION` keeps the author's SYSTEM keyword (RECTANGULAR, CYLINDRICAL, SPHERICAL) with the author's data
 lines; the generator no longer hard-codes RECTANGULAR.

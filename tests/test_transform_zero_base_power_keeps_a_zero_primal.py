@@ -1,6 +1,6 @@
 """``x**m`` at ``x = 0`` has real part ``0**m`` in every OTI operand combination.
 
-Curing (Worlthen, Curie-G B2 cluster E): ``(cure/max_cure)**m`` is evaluated at
+Curing (Worlthen, review B2 cluster E): ``(cure/max_cure)**m`` is evaluated at
 cure = 0 on the first increment. In real arithmetic ``0.0**0.4`` is 0. If any
 partial of the OTI power is non-finite (``m*0**(m-1)`` is Inf for m < 1,
 ``0**m*LOG(0)`` is -Inf*0), the evaluator multiplies it by a zero perturbation

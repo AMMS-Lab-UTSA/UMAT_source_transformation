@@ -1,8 +1,8 @@
 """Origins on records and cells (G8, D-19a rev 2; D-21 tiers).
 
-A council entry is resolved from its council plan (one set per entry,
+A reviewer entry is resolved from its reviewer plan (one set per entry,
 ``<key>#<set>``), carries material_data_origin and experiment_origin into
-every record and cell, and its driver point says it is the council plan's.
+every record and cell, and its driver point says it is the reviewer plan's.
 An author-deck entry carries neither, so its records read as before.
 """
 import json
@@ -67,7 +67,7 @@ def test_each_council_set_is_its_own_entry_with_both_origins(workspace):
         assert entry.provenance["experiment_origin"] == "council_deck"
         assert entry.driver_point["provenance"].startswith("council plan")
         assert entry.path_hints["documented_domain"]["strain_max"]["value"] == 0.004
-    # a bare key is refused for a multi-set plan (Vera G review C6)
+    # a bare key is refused for a multi-set plan (review G C6)
     with pytest.raises(LookupError, match="name one"):
         H.resolve_entry("c1")
 

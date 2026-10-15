@@ -1,4 +1,4 @@
-"""Every case of Vera's B1 merge probe (batches/B1/vera/g_merge_probe.py), and
+"""Every case of the review's B1 merge probe (batches/B1/vera/g_merge_probe.py), and
 the rest of her review section G/E, as tests of the manifest merge contract.
 
 Pure Python on a two-row synthetic manifest whose evidence root is a temporary
@@ -100,7 +100,7 @@ def _merge(m, recs):
 # ---- the probe cases, one test each ---------------------------------------
 
 PROBES = {
-    # Vera: 'nonexistent evidence, tol=1e300, held_fixed="-"' merged=1 in B1
+    # the review: 'nonexistent evidence, tol=1e300, held_fixed="-"' merged=1 in B1
     "nonexistent evidence, tol=1e300, held_fixed='-'": dict(
         evidence="nowhere:does/not/exist.json", tolerance=1e300, held_fixed="-"),
     "no evidence": dict(evidence=""),
@@ -298,7 +298,7 @@ def test_rebuilding_unchanged_inputs_rewrites_identical_bytes(tmp_path, roots):
     assert b"2030-01-01" in (out / "corpus_manifest.json").read_bytes()
 
 
-# ---- Residual Assembler records (Noether) ----------------------------------------------
+# ---- Residual Assembler records (review) ----------------------------------------------
 
 def _ra(problem, status, feature="residual_sens", **over):
     rec = {"schema": "ra-corpus-residual/1", "source_id": SID, "feature": feature,

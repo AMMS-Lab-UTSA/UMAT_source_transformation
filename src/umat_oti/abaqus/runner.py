@@ -142,7 +142,7 @@ def run_job(
                 (work_dir / f"{job}_includes.json").write_text(
                     json.dumps(staged, indent=1), encoding="utf-8")
         command.append(f"user={bundle.name}")
-        # Vera B10: per build, whether the object compiled WITHOUT -assume
+        # review B10: per build, whether the object compiled WITHOUT -assume
         # norealloc_lhs references for_realloc_lhs, i.e. whether the flag
         # changed this build's code (abaqus.realloc_probe)
         if shim is not None:

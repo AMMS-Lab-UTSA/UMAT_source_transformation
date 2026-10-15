@@ -1,6 +1,6 @@
-"""Entrywise, resolution-aware tolerance (B2) against Vera's B1 injection cases.
+"""Entrywise, resolution-aware tolerance (B2) against the review's B1 injection cases.
 
-Vera (corpus_campaign/batches/B1/vera/b_c_inject.py) injected known errors
+The review (corpus_campaign/batches/B1/vera/b_c_inject.py) injected known errors
 into an exact tangent of a synthetic stiffness-like map with a wide spread of
 entry sizes; the B1 column-norm rule passed a -100% error on an entry at 6e-7
 of its column, +0.5% at 1.5e-4 and x10 at 9e-8. Under the B2 rule every
@@ -123,7 +123,7 @@ def test_every_injected_error_beyond_tolerance_is_caught(name):
 
 
 def test_an_error_at_exactly_rtol_is_inside_the_stated_tolerance():
-    # Vera's "column 1 scaled by 1+1e-6" is an error of exactly rtol: by
+    # the review's "column 1 scaled by 1+1e-6" is an error of exactly rtol: by
     # definition inside tau = atol + rtol |D| + 2u. It is caught as soon as
     # rtol is tightened below it -- the rule is not what hides it.
     X = jac(EPS0)
@@ -140,7 +140,7 @@ def test_an_error_at_exactly_rtol_is_inside_the_stated_tolerance():
 @pytest.mark.parametrize("ratio", [1e-3, 1e-5, 1e-7, 1e-9])
 @pytest.mark.parametrize("error", [1e-4, 1e-2, 1.0])
 def test_a_small_column_is_judged_on_its_own_scale_not_a_path_floor(ratio, error):
-    # Vera c_floor.py: a state whose whole column is `ratio` of the path
+    # the review c_floor.py: a state whose whole column is `ratio` of the path
     # maximum (softened / unloaded). B1 passed 100% errors at 1e-9.
     ladder = fd.DEFAULT_LADDER
     x0, scale = 1e-3, 1e-3

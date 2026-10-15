@@ -1,21 +1,21 @@
-"""Council cases (D-19a rev 2, package A-1): freeze and check a council-designed experiment.
+"""Reviewer cases (D-19a rev 2, package A-1): freeze and check a reviewer-designed experiment.
 
-A council source has no usable author deck; the experiment is the council's
+A reviewer source has no usable author deck; the experiment is the reviewer's
 (tools/make_council_deck.py). One case is frozen per parameter set
 (``--key <key>#<set>``) and stores, besides what every case stores,
 council_plan.json, every council_<set>.inp, the rows files and the row of the
 key read from them, and the re-derivation output of the harvest row. Pinned here:
 
-* (gfortran) a council fixture -- a toy source, its harvest row, its plan,
+* (gfortran) a reviewer fixture -- a toy source, its harvest row, its plan,
   a registry row carrying the S2 fields -- freezes, and the frozen case passes
   its check, R and P, with ``make_council_deck --check`` over the frozen rows;
 * a harvest row edited after the freeze (in the live rows, or in the frozen
   rows with every digest refreshed) fails the check;
-* a council .inp edited in the case fails it, also with its digest refreshed;
+* a reviewer .inp edited in the case fails it, also with its digest refreshed;
 * an origin, ref or fingerprint that differs from the registry row fails it;
 * a licence-restricted source (D-2 not_permitted, D-1 abuganza, a D-21a
   licence hold) gets no case at all;
-* the council SOURCE verdict needs every set: a failed or missing set fails it;
+* the reviewer SOURCE verdict needs every set: a failed or missing set fails it;
 * the index anchors (digests) of the committed author-deck cases are unchanged.
 """
 from __future__ import annotations
@@ -101,7 +101,7 @@ def build_workspace(root: Path, mp: pytest.MonkeyPatch) -> dict:
     plan = json.loads((plans / KEY / "council_plan.json").read_text())
     assert not plan["refusal"], plan["refusal"]
     set_id = plan["sets"][0]["set_id"]
-    # as build_corpus_registry (S2) writes them: experiment_origin author|council,
+    # as build_corpus_registry (S2) writes them: experiment_origin author|reviewer,
     # refs named from the registry's repository, sets ;-joined
     refs = {"material_data_ref": f"../corpus_campaign/material_data/{rows.name}#key={KEY}",
             "council_deck_ref": f"../corpus_campaign/council_plans/{KEY}/council_plan.json"}
@@ -178,7 +178,7 @@ def test_the_source_verdict_needs_every_set():
 def test_the_committed_author_deck_cases_keep_their_index_anchors():
     """Council support changes no committed case: every index row (digests of
     case.json and of the reference) is re-derived exactly as committed, and no
-    committed case carries a council block."""
+    committed case carries a reviewer block."""
     index = json.loads((cc.CASES / "index.json").read_text())
     assert len(index["cases"]) >= 113
     assert cc.index_rows() == index["cases"]

@@ -3,7 +3,7 @@
 One UMAT exercises the B2 lifter/transform fixes together, each a defect seen
 in the corpus:
 
-* ``DATA FIRST /.TRUE./`` + ``SAVE`` (Vera B1 toy a1): the lifted body put
+* ``DATA FIRST /.TRUE./`` + ``SAVE`` (review B1 toy a1): the lifted body put
   SAVE after an executable line (compile error) and re-ran the DATA
   assignment on every call (a first-call switch reset each time). Here a
   SAVEd call counter must count 1, 2, 3 across three increments.

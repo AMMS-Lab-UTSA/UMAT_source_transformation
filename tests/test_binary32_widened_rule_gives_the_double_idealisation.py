@@ -6,7 +6,7 @@ determinant's derivative depends on G11' = -G22'. Under B-W (rule 'author')
 MMOD's real part is rounded and its derivative is not, which breaks that
 identity at the 1e-7 level. Where the derivative is itself a cancellation of
 that size, OTI then equals neither the author's function nor the double
-idealisation: there it gave 9.05 against 0.435 (Vera pre22 addendum, B32-3).
+idealisation: there it gave 9.05 against 0.435 (the review pre22 addendum, B32-3).
 
 Rule 'widened' rounds none of those variables. The lifted build is then the OTI
 form of precision.widen()'s control, and its derivative must equal a central

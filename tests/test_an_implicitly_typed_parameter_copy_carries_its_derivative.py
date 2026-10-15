@@ -17,7 +17,7 @@ stress/state derivatives are carried between increments, DSTRAN is held fixed.
 The finite-difference reference is the AUTHOR's routine, compiled on its own
 from the text written below with the entry renamed UMATORIG -- not the
 ``umat`` the transform output links, which would make the reference depend on
-the very build under test (Vera, B1 review Q7).
+the very build under test (review B1 review Q7).
 """
 import json
 import shutil

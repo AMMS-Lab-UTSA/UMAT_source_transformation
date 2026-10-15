@@ -1,4 +1,4 @@
-"""The tangent gate as one word: verified, failed or unresolved (Vera's final review, pass21).
+"""The tangent gate as one word: verified, failed or unresolved (the review's final review, pass21).
 
 * (a) Registry and manifest carry ``tangent_verdict``, derived from the D-4
   gate's ``tangent.verified`` / ``tangent.failed``; the stage keeps its name
@@ -8,7 +8,7 @@
   D-4 rule text, not the legacy plateau rule.
 * (c) "could not pin the tangent down" is never shown for a row with
   ``tangent.failed``, in the corpus page or in plain language.
-* (d) A council row whose council_sets is empty is never counted.
+* (d) A reviewer row whose council_sets is empty is never counted.
 """
 
 from __future__ import annotations

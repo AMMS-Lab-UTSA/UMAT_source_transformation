@@ -67,7 +67,7 @@ def capped(amplitude: float, ceiling: float = CEILING) -> float:
     """``amplitude`` held at or below ``ceiling``, and never above
     :data:`CEILING`.
 
-    The ceiling of a council-designed experiment (D-19a rev 2, R3) is the
+    The ceiling of a reviewer-designed experiment (D-19a rev 2, R3) is the
     documented strain or stretch domain, or a default (0.02 small strain, 0.2
     finite); it lives here, in the fingerprinted package, so that changing it
     moves the harness fingerprint. With ``ceiling = CEILING`` -- every author
@@ -171,7 +171,7 @@ class SearchResult:
     bracket: tuple[float, float] = (0.0, 0.0)
     attempts: list[Attempt] = field(default_factory=list)
     reason: str = ""
-    #: the ceiling this search ran under (CEILING unless a council experiment
+    #: the ceiling this search ran under (CEILING unless a reviewer-designed experiment
     #: set a lower one); not serialised, so author rows read as before
     ceiling: float = CEILING
 

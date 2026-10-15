@@ -3,7 +3,7 @@
 ``REAL C; PARAMETER (C=1.D0/3.D0)`` is 1/3 rounded to binary32 in the source.
 The lifter emitted ``real(8), parameter :: C = 1.D0/3.D0`` -- the double value
 -- and the primal moved by 4.3e-9 (7.1e-10 for ``C=0.1D0``), also when the
-constant was carried into an internal procedure (Vera B5 T3 v_*). Now the
+constant was carried into an internal procedure (review B5 T3 v_*). Now the
 constant holds the binary32 value exactly (an OTI operator takes REAL(8), so
 it stays real(8)), and an operation between two binary32 operands is rounded
 as the source's is.

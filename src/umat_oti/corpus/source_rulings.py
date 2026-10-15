@@ -1,7 +1,7 @@
 """What a source's own text says about whether it can be run, as rules.
 
 Two readings of a published file that decide its corpus verdict before any
-run does, both ruled by Vera (B10 pre-pass22, rulings b and c):
+run does, both ruled by the review (B10 pre-pass22, rulings b and c):
 
 ``unpublished_absolute_inputs``
     The routine OPENs a file by the AUTHOR's absolute path -- ``/work/...``,

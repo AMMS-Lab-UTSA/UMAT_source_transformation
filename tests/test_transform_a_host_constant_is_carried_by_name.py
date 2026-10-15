@@ -5,7 +5,7 @@ by host association. They used to be carried per source STATEMENT: a DOTPROD6
 that declared a local THREE dropped the whole of the host's
 ``PARAMETER(TOL=..., ONE=..., TWO=..., THREE=..., ...)``, TWO with it, and the
 lifted copy multiplied by an uninitialised local TWO (UVCmultiaxial with
-``REAL(8) :: THREE`` added; Vera B5: stress 4-6 %, DDSDDE 43 % off). They are
+``REAL(8) :: THREE`` added; review B5: stress 4-6 %, DDSDDE 43 % off). They are
 carried per NAME now: only the hidden name is left out, and a carried value
 defined through a hidden name is refused.
 

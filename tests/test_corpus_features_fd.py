@@ -82,7 +82,7 @@ def test_branch_consistent_small_steps_still_give_a_smooth_reference():
 
 
 def test_identically_zero_column_is_resolved():
-    """Resolved by the QUAD reference only (Vera B7 A1): in double a bitwise
+    """Resolved by the QUAD reference only (review B7 A1): in double a bitwise
     zero ladder can be quantisation, so with no derivative scale to put atol
     under 1e-3 of, it is unresolved there."""
     f = lambda x: np.array([0.0, 5.0])   # noqa: E731
@@ -141,7 +141,7 @@ def _rec(path, status, states, judged, **kw):
 
 
 def test_fold_needs_two_verified_paths_and_half_the_states():
-    # Vera B1/D: one verified path plus not_attempted others was folded verified.
+    # review B1/D: one verified path plus not_attempted others was folded verified.
     cells = fold([_rec("a", "verified", 10, 10), _rec("b", "not_attempted", 10, 1)], evidence="e")
     assert cells[0]["status"] == "not_attempted"
     assert cells[0]["reason"].startswith("insufficient coverage: 11/20")

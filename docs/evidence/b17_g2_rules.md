@@ -1,4 +1,4 @@
-# B17 package G2 (Hopper): rules written BEFORE they were run (D-28)
+# B17 package G2 (review): rules written BEFORE they were run (D-28)
 
 Written 2026-10-07, before any all-row re-run of D-12 with the new probe and before
 the NTENS change was applied to a store. Nothing in this file changes what a counted
@@ -78,7 +78,7 @@ Rule:
 Canary: a source that reads an uninitialised variable after calling SPRIND is still
 flagged undefined_in_original (tests/test_abaqus_utility_stubs.py).
 
-## G2d. A poisoned build stopped by the author's own check is undefined_in_original (Vera, B17)
+## G2d. A poisoned build stopped by the author's own check is undefined_in_original (review B17)
 
 Written 2026-10-07 BEFORE the rule was implemented or run. Ruling: a poisoned build that
 the author's own check stops (an author guard such as ISNAN trips on an uninitialised

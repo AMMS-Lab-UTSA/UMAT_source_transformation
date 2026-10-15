@@ -1,4 +1,4 @@
-"""B20 separate-line rules (Vera, D-28, written 2026-10-08 BEFORE any run).
+"""B20 separate-line rules (review D-28, written 2026-10-08 BEFORE any run).
 
 Every rule here produces an ADDITIONAL, labelled verdict that sits NEXT TO the
 published verdict of a row and never replaces it. Nothing in this module
@@ -41,7 +41,7 @@ from umat_oti.abaqus.replay import (HistoryBuild, parse_history_output,   # noqa
 EPS32 = 2.0 ** -23
 EPS64 = _compare.EPS
 
-#: Rule 1 constants, fixed by Vera: bound = clip(4*U, 2, 64) ulpK.
+#: Rule 1 constants, fixed by the review: bound = clip(4*U, 2, 64) ulpK.
 R1_FACTOR = 4.0
 R1_MIN_ULPS = 2.0
 R1_CAP_ULPS = 64.0
@@ -119,7 +119,7 @@ def rule_1_float32_native_primal_unit(reference_calls: Sequence[dict],
                                       stiffness: float, tolerance: float = 1e-10,
                                       excluded: Optional[dict] = None,
                                       eps: float = EPS32) -> dict:
-    """RULE (1) FLOAT32-NATIVE PRIMAL BOUND (Vera, verbatim):
+    """RULE (1) FLOAT32-NATIVE PRIMAL BOUND (review verbatim):
 
     LEGITIMATE, separate line. For a row whose original declares single-precision
     REAL on the stress path (declaration scan + the original's own build), the
@@ -143,7 +143,7 @@ def rule_1_float32_native_primal_unit(reference_calls: Sequence[dict],
     with epsilon(eps):
         floor = _compare.measured_noise_ulps(reference_calls, noise_draws, excluded=excluded)
         # measured_noise_ulps applies the published constants (4, 2, 64): the
-        # same numbers Vera fixed; recomputed explicitly so the record shows them
+        # same numbers the review fixed; recomputed explicitly so the record shows them
         measured = floor.get("measured")
         ulps = _clip(measured) if measured is not None else R1_CAP_ULPS
         comparison = _compare.compare_calls(reference_calls, transformed_calls,
@@ -357,7 +357,7 @@ def ab_identity_rule_1(records: dict, run: Path = PASS24) -> dict:
 def state_slot_floor_compare(reference: Sequence[dict], other: Sequence[dict], *,
                              tolerance: float = 1e-10,
                              excluded: Optional[Iterable[int]] = None) -> dict:
-    """RULE (4) ABSOLUTE FLOOR ON STATE SLOTS (Vera, verbatim):
+    """RULE (4) ABSOLUTE FLOOR ON STATE SLOTS (review verbatim):
 
     (Lemaitre, NTNU): LEGITIMATE, separate line. A state slot is compared with
     max(1e-10 x own scale, F), F = 8*eps64*S, S = largest |STATEV| over all
@@ -501,7 +501,7 @@ def nearest_ordinals(positions: Sequence[int], activation_ordinal: int) -> list:
 
 def revised_gate_states(original_history: Sequence[dict],
                         transformed_history: Sequence[dict]) -> tuple[list, dict]:
-    """RULE (5) (Vera, verbatim):
+    """RULE (5) (review verbatim):
 
     Th005 PRE-ACTIVATION STATES: NOT LEGITIMATE as "3 of 4 judged is enough".
     LEGITIMATE only as a deterministic selection rule applied to all 242,
@@ -619,7 +619,7 @@ REGISTRY = Path(os.environ.get("D28_REGISTRY") or WORK / "final-umat-b17" / "pap
 
 def relabel_rule_text() -> str:
     """RELABEL of the three non-compiling sources (umat_elastic_official,
-    umat_mises_official, nsundar) as incomplete_or_corrupt_source (Vera, verbatim):
+    umat_mises_official, nsundar) as incomplete_or_corrupt_source (review verbatim):
 
     possible as a denominator change under D-28.4. Rule: an original_job_failed
     row whose build log shows an error located in the file itself (not a missing
@@ -914,7 +914,7 @@ def _occurrence_contexts(expr: str, name: str, unit: dict, functions: set) -> li
 
 def classify_uses(unit: dict, name: str, functions: set, units_by_name: dict) -> list:
     """Every reference to ``name`` in a program unit, with its context and
-    whether Vera's static condition allows it. Contexts allowed: dimension,
+    whether the review's static condition allows it. Contexts allowed: dimension,
     do_limit, subscript, integer_comparison, definition-by-integer-expression,
     integer arithmetic into another INTEGER (closure), actual argument to an
     INTEGER dummy of a unit defined in the file (checked in that unit).
@@ -1047,7 +1047,7 @@ def classify_uses(unit: dict, name: str, functions: set, units_by_name: dict) ->
 
 def static_integer_use(units: Sequence[dict], unit_name: str, name: str, *, depth: int = 4,
                        _seen: Optional[set] = None) -> dict:
-    """Vera's static condition for one target ``name`` in ``unit_name``: every
+    """The review's static condition for one target ``name`` in ``unit_name``: every
     reference in the unit and, recursively, in every unit it is passed to, with
     the integer-derived variables it is assigned to followed as well.
     Returns the list of uses and the ones that are not allowed."""
@@ -1099,7 +1099,7 @@ def nint_pattern_targets(truncations: Sequence[dict]) -> dict:
 
 
 def rule_2_static(original_text: str, truncations: Sequence[dict], entry_unit: str = "UMAT") -> dict:
-    """RULE (2) BENIGN NINT READ-BACK (Vera, verbatim):
+    """RULE (2) BENIGN NINT READ-BACK (review verbatim):
 
     (RitioL x3, harshaa765 UMATFile): LEGITIMATE (D-28.3), separate line.
     Static (all): target exactly v = REAL(NINT(REAL(STATEV_OTI(k)))); v INTEGER
@@ -1115,10 +1115,10 @@ def rule_2_static(original_text: str, truncations: Sequence[dict], entry_unit: s
 
     Two static verdicts are returned. ``static_literal`` is the rule as
     written: every violation counts. ``static_admitting_output`` additionally
-    admits two references that are not in Vera's list but cannot carry a value
+    admits two references that are not in the review's list but cannot carry a value
     into any computed quantity: a console WRITE of v, and the store of the same
     integer back into STATEV (`STATEV(..)=FLOAT(v)`, the first-call initial
-    state). Which of the two is the rule is Vera's to say; the line uses the
+    state). Which of the two is the rule is the review's to say; the line uses the
     literal one.
     """
     pat = nint_pattern_targets(truncations)
@@ -1272,7 +1272,7 @@ def _ids(text: str) -> set:
 
 def rule_3_static(original_text: str, targets: Iterable[str], sinks: Iterable[str],
                   entry_unit: str = "UMAT") -> dict:
-    """RULE (3) TRUNCATION REACHING ONLY THE HAND-CODED DDSDDE (Vera, verbatim):
+    """RULE (3) TRUNCATION REACHING ONLY THE HAND-CODED DDSDDE (review verbatim):
 
     (UVC, Tissue x3, NN_UMAT_Vahid): LEGITIMATE only as a separate line, with
     proof of no influence; a different rule from (2) (does not contradict
@@ -1672,7 +1672,7 @@ def rule_4_jm_row(key: str, record: dict, scratch: Path, run: Path = PASS24) -> 
 
 
 # ---------------------------------------------------------------------------
-# RULE 2, AMENDED VARIANT (Vera, written 2026-10-08 AFTER the first run)
+# RULE 2, AMENDED VARIANT (review written 2026-10-08 AFTER the first run)
 # ---------------------------------------------------------------------------
 
 def _norm(text: str) -> str:
@@ -1680,7 +1680,7 @@ def _norm(text: str) -> str:
 
 
 def rule_2_amended_static(original_text: str, truncations: Sequence[dict], entry_unit: str = "UMAT") -> dict:
-    """RULE (2) NINT, AMENDED (Vera, verbatim, written 2026-10-08 after the first run):
+    """RULE (2) NINT, AMENDED (review verbatim, written 2026-10-08 after the first run):
 
     a REAL-expression use of v is admitted only as (a) a console WRITE or PRINT,
     or (b) the idempotent store `STATEV(j) = FLOAT(v)`, `REAL(v)` or `DBLE(v)`

@@ -23,7 +23,7 @@ Definitions (see ``corpus_campaign/batches/B1/gauss/DESIGN.md``):
 * total  d(.)_n/dp along the prescribed-strain history: STRAN/DSTRAN/DFGRD
   held at their prescribed values, STRESS/STATEV propagated.
 
-B2 changes (Vera's B1 review): entrywise resolution-aware tolerance
+B2 changes (the review's B1 review): entrywise resolution-aware tolerance
 (:func:`fd.judge_column`); a hidden-state gate that makes the whole SOURCE
 ``not_attempted`` (:func:`hidden_state_pregate`, :func:`hidden_state_gate`);
 branch signatures restricted to the STATEV slots that can affect the judged
@@ -57,7 +57,7 @@ from umat_oti.corpus_features import drivers as dv
 from umat_oti.corpus_features import fd
 from umat_oti.corpus_features.paths import kinematics_for, paths_for
 
-#: Curie's label for a path that leaves the author's documented domain (D-12.1).
+#: the review's label for a path that leaves the author's documented domain (D-12.1).
 OUTSIDE_MODEL_DOMAIN = "outside_model_domain"
 
 #: The directory the checkout sits in (beside discovery_cache/, transform_store/,
@@ -67,7 +67,7 @@ WORKSPACE = Path(os.environ.get("UMAT_OTI_WORKSPACE")
 REGISTRY = Path(__file__).resolve().parents[3] / "paper_results/corpus/corpus_registry.json"
 FAMILIES = WORKSPACE / "corpus_run/material_families_checked_E.json"
 PASS16 = WORKSPACE / "corpus_run/pass16/results/store_verification.jsonl"
-#: Council plans (D-19a rev 2 G8/G9): ``<dir>/<registry key>/council_plan.json``
+#: Reviewer plans (D-19a rev 2 G8/G9): ``<dir>/<registry key>/council_plan.json``
 #: (``experiment.CouncilPlan.as_dict``). Read when the verification record of
 #: a key carries no manifest.
 COUNCIL_PLANS = WORKSPACE / "corpus_campaign/council_plans"
@@ -324,7 +324,7 @@ def _pass16_record(key: str) -> Optional[dict]:
 
 
 def _council_manifest(key: str, set_id: str) -> tuple[dict, dict]:
-    """``(manifest dict, council plan dict)`` of one set of a council plan."""
+    """``(manifest dict, reviewer plan dict)`` of one set of a reviewer plan."""
     path = Path(COUNCIL_PLANS) / key / "council_plan.json"
     if not path.is_file():
         return {}, {}
@@ -386,9 +386,9 @@ def static_scan_override_check(entry: "CorpusEntry", build, work: Path, incremen
 def resolve_entry(key: str) -> CorpusEntry:
     """A registry key -> everything the harness needs, with provenance.
 
-    ``key`` may carry a council parameter set, ``<registry key>#<set id>``
+    ``key`` may carry a reviewer parameter set, ``<registry key>#<set id>``
     (D-21: each set is its own experiment). Without an Abaqus manifest for
-    the key, the council plan (:data:`COUNCIL_PLANS`) supplies it, and the
+    the key, the reviewer plan (:data:`COUNCIL_PLANS`) supplies it, and the
     entry carries both origins (material data, experiment)."""
     key, _hash, set_id = str(key).partition("#")
     registry = json.loads(REGISTRY.read_text())
@@ -607,7 +607,7 @@ def build_all(entry: CorpusEntry, work: Path, *, want_store: bool = True,
         builds.lifted, builds.lifted_ndir, builds.lifted_reason = _build_lifted(
             entry, work / "lifted", builds, supply_utilities=supply_utilities)
     if any((sc or {}).get("lists_stores") for sc in builds.binary32.values()):
-        # the static half of the per-entry scope (Vera's B32 ruling)
+        # the static half of the per-entry scope (the review's B32 ruling)
         for sc in builds.binary32.values():
             if sc and sc.get("lists_stores"):
                 sc["static"] = binary32_scope.static_paths(Path(prepared), sc["stores"])
@@ -822,7 +822,7 @@ def _increments(entry: CorpusEntry, path) -> list:
 
 
 # ---------------------------------------------------------------------------
-# hidden-state gate (Vera B1/A)
+# hidden-state gate (review B1/A)
 # ---------------------------------------------------------------------------
 
 _FIELDS = ("stress", "statev", "ddsdde", "sse", "spd", "scd", "pnewdt")
@@ -1080,7 +1080,7 @@ def is_derivative_feature(feature: str) -> bool:
 
 
 def apply_gate_notes(records: list) -> list:
-    """Explicit rule (Vera B5 r2, item G): a hidden-state gate check that was
+    """Explicit rule (review B5 r2, item G): a hidden-state gate check that was
     NOT APPLIED on a path (``gates.hidden_state_gate_notes``, e.g. an isolation
     probe whose in-process record the original never wrote) leaves that path
     without the evidence that restored-state FD is a valid reference. Its
@@ -1116,7 +1116,7 @@ def hidden_state_gate(entry: CorpusEntry, builds: Builds, path, work: Path, pris
        reproduces the in-process perturbed call (PROPS: whole history vs the
        in-process total run; DSTRAN: increment m vs the in-process local call;
        incoming STATEV at increment 1 vs the in-process local call). This is
-       what catches SAVEd data initialised from PROPS on the first call (Vera's
+       what catches SAVEd data initialised from PROPS on the first call (the review's
        toy a1), which leaves every in-process base call unchanged.
     """
     nt = entry.ntens
@@ -1762,7 +1762,7 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
             perts.append(dv.Perturbation(mode, kind, idx, h, direction))
             index[(mode, kind, idx if key_idx is None else key_idx, k)] = len(perts)
 
-    # Step scale of an input whose value is 0 (Vera B2/C): the 1e-6 floor
+    # Step scale of an input whose value is 0 (review B2/C): the 1e-6 floor
     # put the plateau's 3rd step at 1e-10 and the round-off atol at
     # 8 eps F / 1e-10 = 1.8e-5 F, so a true derivative below that passed as a
     # "structural zero". A zero-valued PROPS (and a STATEV slot that is 0 over
@@ -2136,7 +2136,7 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                 "FD reference"), common))
         else:
           #: per (increment, column): which entries the DOUBLE ladder found
-          #: exactly zero at every usable step (Vera B7 A3, read by the quad pass)
+          #: exactly zero at every usable step (review B7 A3, read by the quad pass)
           double_zero_of: dict = {}
 
           def ddsdde_payload():
@@ -2166,7 +2166,7 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                           column.forward = [e + shift for e in column.forward]
                           column.backward = [e + shift for e in column.backward]
                       columns[j] = column
-                  # Round-off model (Vera B7 A1): the largest derivative term
+                  # Round-off model (review B7 A1): the largest derivative term
                   # across the BLOCK at this state times the TOTAL kinematic
                   # input, not the increment.
                   block_derivative = _block_derivative(
@@ -2647,7 +2647,7 @@ def run_entry(entry: CorpusEntry, work_root: Path, *, paths=None,
                                            check_build_flags=" ".join(FINIT_SNAN) + " | "
                                            + " ".join(FINIT_HUGE))
 
-    # D-12.1 (Curie's loading_paths): a path whose clock leaves the author's
+    # D-12.1 (the review's loading_paths): a path whose clock leaves the author's
     # documented domain gives no verdict and is not run through the gate --
     # undefined behaviour outside the model's domain is not a source defect.
     outside = [p for p in paths if getattr(p, "purpose", "") == OUTSIDE_MODEL_DOMAIN]
@@ -2708,7 +2708,7 @@ def run_entry(entry: CorpusEntry, work_root: Path, *, paths=None,
                                                      "statev0": history["initial_statev"]})
             records.extend(recs)
     if source_trips:
-        # A trip anywhere makes the whole SOURCE not_attempted (Vera B1/A):
+        # A trip anywhere makes the whole SOURCE not_attempted (review B1/A):
         # restored-state FD of a routine with hidden state is not a reference.
         reason = "hidden state: " + " | ".join(source_trips[:4])
         if len(source_trips) > 4:
@@ -2737,7 +2737,7 @@ def run_entry(entry: CorpusEntry, work_root: Path, *, paths=None,
         record["undefined_outputs_detail"] = details[:60]
         record["undefined_variables_flagged"] = builds.uninitialised_hints if names else []
         record["stress_and_ddsdde_fully_defined"] = fully_defined
-    # Curie's admissibility checks on the ORIGINAL routine's histories.
+    # the review's admissibility checks on the ORIGINAL routine's histories.
     try:
         from umat_oti.corpus_features import mechanics_checks
         checks = mechanics_checks.run_all(entry.as_mapping(), runs_for_checks)

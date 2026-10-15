@@ -2,7 +2,7 @@
 
 ``umat-oti all`` asks for the material data first and the routine second, so a
 UMAT that calls a helper nobody supplied failed with "no deck with a *USER
-MATERIAL block" -- true, and not the reason it could not be checked (Nico, B11:
+MATERIAL block" -- true, and not the reason it could not be checked (review B11:
 ``jacojvr umat_iso.f``, ``mrkearden UMAT.F90``). ``check`` runs the transformer's
 own dependency discovery and anchor location (the first, fast half of the
 ``jacobian`` step; no compile) before it reads or asks for a single constant, so

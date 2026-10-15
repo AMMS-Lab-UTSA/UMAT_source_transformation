@@ -1,6 +1,6 @@
-"""Ceilings of a council-designed experiment (G4, D-19a rev 2 R3).
+"""Ceilings of a reviewer-designed experiment (G4, D-19a rev 2 R3).
 
-The amplitude search and the extension ladder take the council ceiling --
+The amplitude search and the extension ladder take the reviewer ceiling --
 the documented strain/stretch domain, or 0.02 small strain / 0.2 finite --
 through ``amplitude_search.capped``, which never exceeds CEILING; with
 ceiling = CEILING (every author deck) they behave exactly as before. A

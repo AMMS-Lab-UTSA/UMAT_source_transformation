@@ -1,4 +1,4 @@
-"""Verdicts a source's own text decides, and Vera's B10 rulings (Scout, B10).
+"""Verdicts a source's own text decides, and the review's B10 rulings (review B10).
 
 * ruling (b), vishalsubbiah: a routine that READs a file named by the
   author's ABSOLUTE path, which the repository does not publish, is

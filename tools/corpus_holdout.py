@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Blind hold-out of a council experiment template (D-19a rev 2 R6.3; package A-2).
+"""Blind hold-out of a reviewer-designed experiment template (D-19a rev 2 R6.3; package A-2).
 
-Tier ``holdout``. For one template (an experiment family of R3), Vera picks
+Tier ``holdout``. For one template (an experiment family of R3), the review picks
 blind at least five sources that are VERIFIED with their author's deck. This
 runner never picks them: it takes her list. For each source it
 
@@ -11,18 +11,18 @@ runner never picks them: it takes her list. For each source it
    (an origin the harvest schema does not admit, so a hold-out row can never be
    merged into the harvest or counted);
 2. lays out a DECKLESS copy of the source's repository (its Fortran files
-   only), so the pairing finds no author deck and the source takes the council
+   only), so the pairing finds no author deck and the source takes the reviewer
    route (``no_deck_in_repository``), and runs ``plan_council`` through
    ``tools/make_council_deck.py`` into a hold-out folder -- never into
    corpus_campaign/council_plans;
-3. runs the SAME gates on the council experiment (every set) and on the
+3. runs the SAME gates on the reviewer experiment (every set) and on the
    author-deck experiment, and compares the verdicts.
 
 Every verdict must equal the author-deck verdict. ONE disagreement (a refused
-council plan included) withdraws the template. Agreement on every source only
-holds the template for Vera's review; acceptance is hers (R6.5). A template
+reviewer plan included) withdraws the template. Agreement on every source only
+holds the template for the independent review; acceptance is hers (R6.5). A template
 with only 1-4 verified author-deck sources gets a FALSIFICATION-ONLY report
-(Vera's ruling): a disagreement still withdraws it, and agreement accepts
+(the review's ruling): a disagreement still withdraws it, and agreement accepts
 nothing -- the report says "not withdrawn", never "held for review".
 
 The author side is read from the CURRENT pass (``CURRENT_RECORDS``, pass21;
@@ -30,11 +30,11 @@ The author side is read from the CURRENT pass (``CURRENT_RECORDS``, pass21;
 registry does not carry (store keys move with the transform fingerprint) is
 followed to its current key through the source the selection names.
 
-TEMP and COORDS/NOEL/NPT reads are set to the REVIEWED value, as a council
+TEMP and COORDS/NOEL/NPT reads are set to the REVIEWED value, as a reviewer
 row's are (D-21a (e), accepted overrides included): from a reviewed static
 scan (``REVIEWED_SCANS``, ``--reviewed-scan``) where one names the source --
 matched by ``registry_key`` (the current pass's key), ``key`` (the selection's)
-or ``source_id`` -- and ONLY if Vera accepted that row (``vera_accepted: true``)
+or ``source_id`` -- and ONLY if the review accepted that row (``vera_accepted: true``)
 and its ``source_sha256``, where given, is the cached file's. A matching row
 that is not accepted, or names other bytes, stops the run as incomplete
 (exit 2) naming the row.
@@ -45,8 +45,8 @@ selection file is never edited):
 * R-H1: a pick whose source is not fully_verified at the pass the hold-out
   runs on. A replacement is due only when fewer than 5 picks remain AND the
   family's pool was stratified (``n_available`` > 5); the runner never picks
-  it -- it reports the run incomplete until Vera's seeded order supplies one.
-* R-H2: a pick whose council plan needs an input no template rule decides, or
+  it -- it reports the run incomplete until the review's seeded order supplies one.
+* R-H2: a pick whose reviewer plan needs an input no template rule decides, or
   one the template refuses (plan refusals ``R_H2_REFUSALS``) -- "not a
   template test", never a disagreement. A COORDS/NOEL-reading pick with no
   reviewed placement is placed by G12 in the author's documented geometry:
@@ -56,9 +56,9 @@ Without one, a flag is false only where a name scan finds no executable use
 (a read must name the argument, so the scan cannot miss one); a name-scan hit
 with no review leaves the hold-out incomplete (exit 2), never a refused plan. Q4: the gates
 are independent of the inputs' origin, the inputs are not independent of the
-council's choices -- only the hold-out and review validate those choices.
+reviewer's choices -- only the hold-out and review validate those choices.
 
-Selection file (written by Vera; JSON)::
+Selection file (written by the review; JSON)::
 
     {"template": "<template>", "selected_by": "vera", "blind": true,
      "date": "YYYY-MM-DD", "keys": ["<registry key>", ...],
@@ -73,9 +73,9 @@ Run::
 
 ``--gates routine`` (default): the routine-level harness
 (umat_oti.corpus_features: primal_stress_state and ddsdde cells), the gates a
-council row runs through today (G8). ``--gates FILE``: verdicts produced by
+reviewer row runs through today (G8). ``--gates FILE``: verdicts produced by
 another gate run (e.g. Abaqus), JSON lines ``{"key", "side": "author" |
-"council", "set_id", "verdict"}``. Exit 0: held for review; 1: withdrawn;
+"reviewer", "set_id", "verdict"}``. Exit 0: held for review; 1: withdrawn;
 2: the selection or the run is incomplete or invalid; 3: falsification-only
 report with no disagreement (not withdrawn, nothing accepted).
 """
@@ -105,15 +105,15 @@ _WORKSPACE = Path(__import__("os").environ.get("UMAT_OTI_WORKSPACE")
 CURRENT_RECORDS = _WORKSPACE / "corpus_run/pass21/results/store_verification.jsonl"
 #: reviewed static scans (reads_temp / reads_coords_or_noel, notes, accepted
 #: overrides), first match by key or source_id wins: the hold-out's own review
-#: file, then the reviewed rows of the harvest and the council constants
+#: file, then the reviewed rows of the harvest and the reviewer constants
 REVIEWED_SCANS = (_WORKSPACE / "corpus_campaign/holdout/reviewed_scan.jsonl",
                   _WORKSPACE / "corpus_campaign/material_data/d19_harvest.jsonl",
                   _WORKSPACE / "corpus_campaign/material_data/d21_council_constants.jsonl")
 REVIEWED_FIELDS = ("reads_temp", "reads_coords_or_noel", "reads_temp_note", "coords_note",
                    "static_scan_overrides", "placement", "undefined_outputs")
-#: council-plan refusals that mean the template refuses an input (D-22 R-H2)
+#: reviewer-plan refusals that mean the template refuses an input (D-22 R-H2)
 R_H2_REFUSALS = ("needs_documented_temperature", "needs_documented_geometry", "body_force",
-                 # Vera, D-22: a growth source whose clock needs a total time no
+                 # the review, D-22: a growth source whose clock needs a total time no
                  # template rule decides (mholla umat_iso_morph)
                  "growth_needs_total_time")
 #: ReadDetF(3000, 27) in the Jeff97 growth sources (D-22 condition)
@@ -138,10 +138,10 @@ class NotVerifiedHere(SelectionError):
 # ---------------------------------------------------------------------------
 
 def load_selection(path: Path, template: str) -> dict:
-    """Vera's blind selection, checked: her name, blind, this template, distinct keys.
+    """The review's blind selection, checked: her name, blind, this template, distinct keys.
 
     ``mode`` is ``holdout`` with >= MIN_SOURCES keys and ``falsification_only``
-    with 1..MIN_SOURCES-1 (Vera's ruling for small templates); none is refused."""
+    with 1..MIN_SOURCES-1 (the review's ruling for small templates); none is refused."""
     selection = json.loads(Path(path).read_text(encoding="utf-8"))
     problems = []
     if selection.get("template") != template:
@@ -297,9 +297,9 @@ def load_reviewed(paths=None) -> dict:
 
 def reviewed_reads(record: dict, body: str, reviewed: Optional[dict],
                    source_sha256: Optional[str] = None) -> dict:
-    """The TEMP and COORDS/NOEL flags to the reviewed standard of a council row.
+    """The TEMP and COORDS/NOEL flags to the reviewed standard of a reviewer row.
 
-    Only a Vera-accepted row is used; a matching row that is not accepted, or
+    Only a the review-accepted row is used; a matching row that is not accepted, or
     that reviewed other bytes, leaves both flags None and says which row."""
     from umat_oti.abaqus import experiment as X
     entry = (reviewed or {}).get(record.get("key")) or (reviewed or {}).get(record["source_id"])
@@ -343,7 +343,7 @@ def holdout_row(record: dict, manifest: dict, source_text: str, family: str = ""
     """The author deck's constants as a harvest-format row (origin holdout_from_author_deck).
 
     ``reads_temp`` / ``reads_coords_or_noel`` follow the reviewed standard of a
-    council row (``reviewed_reads``); ``None`` where a name-scan hit has no review."""
+    reviewer row (``reviewed_reads``); ``None`` where a name-scan hit has no review."""
     from umat_oti.abaqus import experiment as X
     body = X._strip_header(X._executable(source_text))
     reads = reviewed_reads(record, body, reviewed, source_sha256)
@@ -405,7 +405,7 @@ def author_mesh_placement(deck_text: str, deck_name: str) -> Optional[dict]:
 
 
 def r_h2_leaves(plan: dict) -> str:
-    """Why a council plan makes its pick "not a template test" (D-22 R-H2), or ''."""
+    """Why a reviewer plan makes its pick "not a template test" (D-22 R-H2), or ''."""
     code = plan.get("refusal_code")
     if code in R_H2_REFUSALS:
         return (f"not a template test: the council plan is refused {code} "
@@ -446,7 +446,7 @@ def deckless_copy(source_id: str, cache: Path, into: Path) -> Path:
 
 def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
             reviewed_scans=None) -> dict:
-    """Rows, deckless cache and council plans for the selected (current) keys."""
+    """Rows, deckless cache and reviewer plans for the selected (current) keys."""
     import corpus_cases as cc
     from umat_oti.corpus_features import harness as H
     out = Path(out)
@@ -524,7 +524,7 @@ def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
 
 def routine_gate(work: Path) -> Callable:
     """The routine-level harness, run the same way on both sides. ``gate(key,
-    plans)``: ``plans`` None = the author-deck experiment; else the council
+    plans)``: ``plans`` None = the author-deck experiment; else the reviewer
     experiment of ``key#set`` from that plans folder."""
     import corpus_cases as cc
     from umat_oti.corpus_features import harness as H
@@ -578,7 +578,7 @@ def verdicts_gate(path: Path) -> Callable:
 
 def judge(template: str, keys: list, plans: Path, gate: Callable,
           mode: str = HOLDOUT) -> dict:
-    """Compare council and author-deck verdicts on every selected source.
+    """Compare reviewer and author-deck verdicts on every selected source.
 
     ``mode`` ``falsification_only`` (1-4 sources): a disagreement withdraws the
     template, agreement only reports it not withdrawn -- it accepts nothing."""

@@ -55,7 +55,7 @@ NONSMOOTH_GAP = 1e-3
 MIN_PLATEAU = 3
 
 #: An entry whose FD uncertainty ``u_e`` exceeds this fraction of ``|D_e|`` is
-#: UNRESOLVED -- never verified, never failed (Vera B1/B).
+#: UNRESOLVED -- never verified, never failed (review B1/B).
 RESOLUTION = 1e-3
 
 #: Round-off bound of a central difference: ``NOISE_FACTOR * eps * F / h``
@@ -69,7 +69,7 @@ EPS = float(np.finfo(float).eps)
 EPS_QUAD = 2.0 ** -112
 #: Machine epsilon of IEEE binary32, on the same convention as EPS: the
 #: reference noise of a source whose derivative path stores binary32 values
-#: (Vera B10, B32-1).
+#: (review B10, B32-1).
 EPS_SINGLE = float(np.finfo(np.float32).eps)
 
 
@@ -253,7 +253,7 @@ PASS, ZERO_PASS, FAIL, UNRESOLVED_PLATEAU, UNRESOLVED_SPREAD, UNRESOLVED_ZERO, O
 UNRESOLVED_ROUNDOFF = "unresolved_roundoff"
 #: the reference sits below atol, but atol is not < RESOLUTION x the column's
 #: derivative scale and the FD differences are not exactly zero: "structural
-#: zero" cannot be told from "true derivative under the noise" (Vera B2/C)
+#: zero" cannot be told from "true derivative under the noise" (review B2/C)
 UNRESOLVED_ZERO_SCALE = "unresolved_zero_scale"
 
 
@@ -272,7 +272,7 @@ class ColumnVerdict:
     max_ratio: float = 0.0    # |oti - D| / tau over resolved entries
     max_rel_tolerance: float = 0.0   # tau / |D| over resolved nonzero entries
     #: the entry with the largest err/t over BOTH branches (zero and nonzero
-    #: reference; Vera B10: it was taken over the nonzero branch only, so a
+    #: reference; review B10: it was taken over the nonzero branch only, so a
     #: column failing on a zero entry reported a passing worst entry)
     worst_entry: int = -1
     tolerance_at_worst: float = 0.0
@@ -293,7 +293,7 @@ class ColumnVerdict:
     #: test term): the double noise envelope of the B32 scope test
     atol_ref: Optional[np.ndarray] = None
     #: judge_binary32 only: per entry {static_path, max_fd_diff, envelope,
-    #: in_scope} (Vera's B32 scope ruling), and the entries whose scope could
+    #: in_scope} (the review's B32 scope ruling), and the entries whose scope could
     #: not be decided because the double variant is unavailable
     b32_scope: list = field(default_factory=list)
 
@@ -379,7 +379,7 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
                  n_increments: int = 1) -> ColumnVerdict:
     """Compare one column of derivatives against the FD ladder, entry by entry.
 
-    The rule (B2; Vera B1/B, C):
+    The rule (B2; review B1/B, C):
 
     * reference ``D_e`` and uncertainty ``u_e`` from the entry's own FD-only
       plateau of >= MIN_PLATEAU consecutive steps (:func:`entry_plateau`);
@@ -404,7 +404,7 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
 
     The value-under-test round-off term (``value_magnitude``, n x max|o| for
     a total derivative) is capped at ``RESOLUTION * S``: it can never open a
-    window larger than 1e-3 of the column's derivative scale (Vera B2/C: with
+    window larger than 1e-3 of the column's derivative scale (review B2/C: with
     D=500 and the uncapped term 888, a dropped derivative passed as zero).
     ``euler`` (default True) widens each output's round-off magnitude with
     the column-max Euler term ``max_e' |D_e'| |x|``; it is meant for a block
@@ -417,7 +417,7 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
     on the Euler one) is UNRESOLVED (``unresolved_euler_window``) -- never
     passed, never failed on a round-off model the two disagree about. ``eps`` is the unit round-off of the arithmetic the reference was
     evaluated in (EPS, or EPS_QUAD for the quad-precision reference build);
-    ``kinematic_input`` / ``block_derivative`` (Vera B7 A1): the Euler term is
+    ``kinematic_input`` / ``block_derivative`` (review B7 A1): the Euler term is
     ``max(column_max, block_derivative) * max(|x|, kinematic_input)`` -- the
     largest derivative term across the BLOCK times the TOTAL kinematic input
     (``|STRAN + DSTRAN|`` or ``|DFGRD1|``), not the increment: a stress built
@@ -428,7 +428,7 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
     exact-zero exemption applies to the QUAD reference only (in double a
     zero can be quantisation). ``double_zero`` (quad pass, per entry: the
     double ladder was exactly zero too): a zero in both precisions against a
-    nonzero value under test FAILS (Vera B7 A3);
+    nonzero value under test FAILS (review B7 A3);
     ``value_eps`` that of the value under test (double: EPS).
     ``steps`` are the absolute steps (default: the relative ladder) and
     ``magnitude`` the output magnitude at the state per entry (default: the
@@ -483,7 +483,7 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
     atol_ref = roundoff_atol(mag, steps, floor=atol_floor, eps=eps)
     # the value under test's own round-off: its terms are ~F/|x| with x the
     # same kinematic scale the Euler term uses (A1), not the increment alone
-    # (Vera G10 review B2: with |F| in vmag and the increment here the
+    # (review G10 review B2: with |F| in vmag and the increment here the
     # allowance was |F|/|dx| too large, and a 1e-4 defect passed under quad)
     value_term = NOISE_FACTOR * value_eps * vmag / max(input_scale, abs(float(kinematic_input)),
                                                        1e-300)
@@ -530,13 +530,13 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
             t = atol[e] + 2.0 * u
             # The value under test is computed in DOUBLE, so it is "nonzero"
             # only above floor_v = NOISE eps max(S, |block|) (x n for a total
-            # derivative), capped at RESOLUTION S (Vera pass21 review: Flat/
+            # derivative), capped at RESOLUTION S (review pass21 review: Flat/
             # Th01 BodyForce (1,5), OTI 1.9e-27 against a zero in both
             # precisions, failed A3 with no floor).
             floor_v = min(NOISE_FACTOR * EPS * max(scale, abs(float(block_derivative)))
                           * max(int(n_increments), 1), RESOLUTION * scale)
             # the threshold the decision actually used is the one reported
-            # (Vera B10: a FAIL never shows a ratio < 1)
+            # (review B10: a FAIL never shows a ratio < 1)
             t = floor_v if both_zero else max(t, floor_v)
             ok = abs(oti[e]) <= t
             # reported: where quad resolves a small nonzero D (u <= 1e-3 |D|),
@@ -591,7 +591,7 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
 UNRESOLVED_EULER = "unresolved_euler_window"
 _OK = (PASS, ZERO_PASS)
 
-#: Binary32 judging (Vera B10, B32-1..3 with the per-entry scope ruling): an
+#: Binary32 judging (review B10, B32-1..3 with the per-entry scope ruling): an
 #: entry that passes under the binary32 reference noise, and an entry B32-3
 #: leaves unresolved.
 PASS_B32, ZERO_PASS_B32 = "pass_b32", "zero_pass_b32"

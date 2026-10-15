@@ -5,7 +5,7 @@ regions._inferred_edges_for_call took the first identifier of each actual
 ``CALL SCALE(Q*G/PROPS(1), ...)`` it is Q, so G's edge to the callee's output
 was lost: G's own assignment from DSTRAN was left REAL ahead of the seed
 block, G_OTI was filled with no derivative, and the transform returned a
-bitwise-correct stress beside a wrong tangent (Vera, B8 review R2: 1000
+bitwise-correct stress beside a wrong tangent (review B8 review R2: 1000
 against FD 1040.8 and 1020.4). Every identifier is read now, in the inferred
 edges and in the hand-checked helper table alike.
 

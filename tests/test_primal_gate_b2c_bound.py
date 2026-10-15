@@ -1,4 +1,4 @@
-"""B2c primal-gate bound (Vera B2 item 4).
+"""B2c primal-gate bound (review B2 item 4).
 
 * the stiffness of the bound comes from the ORIGINAL / the smaller build per
   call: inflating the transformed DDSDDE x1e6 at one call (MinSur1) no longer
@@ -53,7 +53,7 @@ def test_minsur1_inflated_tangent_at_one_call_cannot_widen_its_own_bound():
     i = max(range(len(orig)), key=lambda k: max(abs(v) for v in orig[k]["STRESS"]))
     bad = _scaled(trans, 1 + 1e-6, call=i, ddsdde=1e6)
     # the old rule (one global stiffness from the build under test) let it
-    # through (Vera B2 item 4). Per call the smaller build's tangent is used,
+    # through (review B2 item 4). Per call the smaller build's tangent is used,
     # so even passing the inflated history's own maximum cannot widen it:
     for stiffness in (stiffness_scale(bad), stiffness_scale(orig)):
         new = compare_calls(orig, bad, stiffness=stiffness, tolerance=1e-10)

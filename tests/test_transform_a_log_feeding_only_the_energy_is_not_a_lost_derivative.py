@@ -1,6 +1,6 @@
 """GOH_Example.f's ``lnJe = REAL(LOG(DETFE_OTI))``: truncated where nothing differentiates it.
 
-Curie-G (B2 cluster E) listed the truncation as a derivative loss. In the source
+The review (B2 cluster E) listed the truncation as a derivative loss. In the source
 ``lnJe`` reaches only SSE, the specific strain energy, which the transform returns
 REAL and differentiates nowhere: STRESS, DDSDDE and STATEV do not read it. The
 truncation is therefore exact for every output the transform claims. Where the

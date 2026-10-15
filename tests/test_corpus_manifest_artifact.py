@@ -248,7 +248,7 @@ def test_family_figures_come_from_the_reviewed_classification(manifest):
     assert fc["fallback_file"].endswith("material_families_checked_E.json")
     assert manifest["summary"]["families"]["classification"] == FAMILY_CLASSIFICATION
     # A source a later discovery round added (tools/ingest_discovery_round.py)
-    # has no reviewed family until Scout reviews it: its review reads
+    # has no reviewed family until review reviews it: its review reads
     # "missing" and its family is empty -- never a provisional label passed
     # off as reviewed. Only those sources may be missing.
     triage = json.loads((REPO / "paper_results/discovery/discovery_triage.json")

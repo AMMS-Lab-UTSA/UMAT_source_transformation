@@ -2,7 +2,7 @@
 
 * The deck-only column is the D-8 figure: 242 eligible, 106 Abaqus (D-4
   gate, G10), 114 routine level on the pass23 registry and harness cells,
-  whether or not a council row is added beside them (242 / 105 / 113 at
+  whether or not a reviewer row is added beside them (242 / 105 / 113 at
   pass22; 245 / 102 / 112 at pass21; 238 / 67 / 109 at pass20, before the
   D-4 Abaqus gate).
 * The Fisher exact test is two-sided, matches reference values, and runs only
@@ -68,7 +68,7 @@ def test_the_deck_only_column_is_the_d8_figure():
     denom, abaqus, routine = ct.deck_counts(records, fam, CELLS)
     assert (sum(denom.values()), sum(abaqus.values()), sum(routine.values())) == (259, 115, 118)
     # the same figure from a registry that carries the tier columns, with a
-    # council row added beside it: the deck column does not move
+    # reviewer row added beside it: the deck column does not move
     tiered = [r.as_dict() for r in reg.apply_origins(
         [reg.Record(**r) for r in records], reg.origin_inputs())]
     council_before = sum(c["eligible"] for c in
@@ -103,7 +103,7 @@ def test_fisher_runs_only_when_both_arms_have_five_attempted():
     ("true", True), ("null", False), ("absent", False), ("false", False),
     ("no_evidence_block", False), (None, False)])
 def test_routine_ok_requires_the_informative_gate_explicitly(gate, counted):
-    """Vera B10 pass21: pass20 counted 3 shell-growth sources whose
+    """review B10 pass21: pass20 counted 3 shell-growth sources whose
     mechanically_informative gate was null at routine level; a later
     terminal stage (tangent_not_verified) must not hide the gate."""
     row = {"source_id": "x__y/u.f", "terminal_state": "tangent_not_verified"}

@@ -1,7 +1,7 @@
 """Which builds the binary32 judging rule applies to, and the double variant
-of the original it needs (Vera B10, B32-0 and B32-3; :data:`fd.B32_RULE`).
+of the original it needs (review B10, B32-0 and B32-3; :data:`fd.B32_RULE`).
 
-Scope is decided per derivative entry (fd.B32_RULE; Vera's ruling replacing
+Scope is decided per derivative entry (fd.B32_RULE; the review's ruling replacing
 B32-0). Its static half needs the transform's binary32 map: the stores of
 OTI-carrying values the generated code rounds. The map is the transform's own record
 (``umat_oti.transform.binary32.binary32_store_report``, field
@@ -42,7 +42,7 @@ def _report(generated_texts: Iterable[str], original_text: str) -> Optional[dict
 
 def scope(binary32_map: Optional[dict], origin: str) -> dict:
     """The binary32 map of one build: whether it lists a store (the
-    precondition of the per-entry scope test, Vera's B32 ruling)."""
+    precondition of the per-entry scope test, the review's B32 ruling)."""
     if not isinstance(binary32_map, dict) or "stores" not in binary32_map:
         return {"lists_stores": None, "origin": origin,
                 "reason": "no binary32 map for this build: the B32 rule is not applied"}
@@ -112,7 +112,7 @@ OUTPUT_NAMES = {"stress": ("STRESS",), "statev": ("STATEV",)}
 
 
 def static_paths(source: Path, stores: Iterable[str]) -> dict:
-    """Vera's static scope condition, per (output, input) kind: does the
+    """The review's static scope condition, per (output, input) kind: does the
     output depend on a binary32 store of the map that itself depends on the
     input? Read off the ORIGINAL's assignment and CALL-effect edges
     (umat_oti.fortran.regions), flow-insensitive and at whole-variable

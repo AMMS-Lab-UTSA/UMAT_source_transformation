@@ -1,4 +1,4 @@
-"""Council evidence locators without ``#`` in the path (Scout, Vera D-27).
+"""Council evidence locators without ``#`` in the path (review the review D-27).
 
 ``#`` separates a locator's path from its selector, so a set folder named
 ``<key>#A`` can never be named by a locator. ``tools/council_locators.py``

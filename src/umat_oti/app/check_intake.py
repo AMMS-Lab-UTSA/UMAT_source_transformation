@@ -7,7 +7,7 @@ never defaulted: a value that is not in a deck, typed with ``--props`` or in a
 material file is *missing*, and ``check`` says so.
 
 This is the user-facing reader for ``check``. The corpus-wide scanner that
-Ada maintains (``tools/intake_scan.py``) reads registry-scale evidence; this
+the review maintains (``tools/intake_scan.py``) reads registry-scale evidence; this
 reads one UMAT and one deck for one person.
 """
 from __future__ import annotations

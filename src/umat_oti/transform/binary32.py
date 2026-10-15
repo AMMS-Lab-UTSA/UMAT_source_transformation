@@ -2,8 +2,8 @@
 
 The OTI type is built over double precision, and its operators take REAL(8)
 operands only. Two things the source computes in single precision therefore
-change when a statement is rewritten over it (Curie-G, B2 growth diagnosis,
-clusters B-L and B-W; Gauss B1 F3):
+change when a statement is rewritten over it (review B2 growth diagnosis,
+clusters B-L and B-W; review B1 F3):
 
 **Literal-only subexpressions (B-L).** ``X**(-5.0/3.0)``: the compiler folds
 ``-5.0/3.0`` in binary32 (-1.66666662693...), then converts. Writing each

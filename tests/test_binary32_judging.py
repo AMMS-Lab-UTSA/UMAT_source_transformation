@@ -1,4 +1,4 @@
-"""Binary32 judging, Vera B10 B32-0..3 (fd.B32_RULE).
+"""Binary32 judging, review B10 B32-0..3 (fd.B32_RULE).
 
 Wrinkle (Jeff97 l1-is-1--l2-is-12) stores G11..G22 in REAL; for STATEV_n(3)
 the OTI value (8.18) agreed with neither the original's FD (-2.083) nor the

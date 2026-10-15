@@ -1,4 +1,4 @@
-"""Initial-state proof for a council experiment (G6, D-19a rev 2 R5).
+"""Initial-state proof for a reviewer-designed experiment (G6, D-19a rev 2 R5).
 
 The ORIGINAL is driven twice, with the zero-started STATEV slots at 0 and at
 a sentinel. Bit-identical STRESS, DDSDDE and written STATEV prove that

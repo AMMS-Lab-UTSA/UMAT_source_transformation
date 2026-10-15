@@ -109,7 +109,7 @@ EPS = 2.220446049250313e-16
 #: exceeds what the arithmetic can distinguish.
 STIFFNESS_ULPS = 64.0
 
-#: B2c (Vera B2 item 4): the 64 above is now a CAP, not the bound. Each row
+#: B2c (review B2 item 4): the 64 above is now a CAP, not the bound. Each row
 #: gets its own floor, MEASURED on the ORIGINAL: the original replayed on its
 #: recorded calls with every real input (STRESS0, STATEV0, STRAN, DSTRAN,
 #: DFGRD0, DFGRD1) moved by NOISE_INPUT_ULPS ulps (random sign, fixed seeds,
@@ -205,7 +205,7 @@ class RoutineComparison:
     STRESS at call i is held to ``tolerance * max|STRESS| + ulps * eps * K_i``
     with ``K_i`` = the SMALLER of the two builds' max|DDSDDE| at that call
     (and of ``stiffness`` when given): the build under test cannot widen its
-    own bound by inflating its tangent (Vera B2 item 4: DDSDDE x 1e6 at one
+    own bound by inflating its tangent (review B2 item 4: DDSDDE x 1e6 at one
     call let a 1e-6 stress error pass);
     each STATEV slot to ``tolerance * max|slot|`` (its own scale over the
     history, so a slot holding coordinates is not judged against one holding

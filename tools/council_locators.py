@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Make the council evidence locators resolvable: set folders without ``#``.
+"""Make the reviewer evidence locators resolvable: set folders without ``#``.
 
 A locator is ``<root>:<path>[#selector]`` and ``#`` is the fragment separator
 (``umat_oti.corpus_features.manifest.resolve_locator`` cuts the path at the
-first ``#``). The council harness runs name each set's folder ``<key>#A`` /
-``<key>#B``, so every council evidence locator named a path that does not
+first ``#``). The reviewer harness runs name each set's folder ``<key>#A`` /
+``<key>#B``, so every reviewer evidence locator named a path that does not
 exist: the merge validator reported "does not resolve to a file" for all of
-them (Vera D-27, open condition).
+them (the review D-27, open condition).
 
 This is a POST-PROCESSING step, so no fingerprint-covered code changes:
 

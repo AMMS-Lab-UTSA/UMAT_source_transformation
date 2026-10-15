@@ -1,4 +1,4 @@
-"""``umat-oti --version`` and ``umat-oti doctor`` (Nico, B11: the ``umat-oti`` on
+"""``umat-oti --version`` and ``umat-oti doctor`` (review B11: the ``umat-oti`` on
 PATH was an old install that said ``invalid choice: 'all'`` and nothing about
 being old; the working route needed an undocumented PYTHONPATH).
 """

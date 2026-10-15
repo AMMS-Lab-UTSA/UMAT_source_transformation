@@ -252,7 +252,7 @@ def complex_step_idioms(source_text: str, form: str) -> list[dict[str, Any]]:
                                         "statement": text.strip(), "step": step})
         # The perturbation alone identifies the idiom. The extraction may be
         # written in a form not matched above -- AIMAG(F)*HINV with HINV =
-        # 1/h (Vera's t5d) -- and requiring it switched the imaginary-part
+        # 1/h (the review's t5d) -- and requiring it switched the imaginary-part
         # guard off for exactly such a source.
         values = {step: parameters.get(step, step) for step in sorted(steps)}
         consumers: list[dict[str, Any]] = []
@@ -863,7 +863,7 @@ def _reads_an_imaginary_part(rhs: str, complex_here: set[str], tainted: set[str]
 
     AIMAG and a tainted name do. So does any complex name or complex
     constructor that is not simply taken apart by DBLE/REAL/ABS of the bare
-    name: ``DBLE(DCMPLX(0,-1)*Z)`` is Im(Z) written without AIMAG (Vera's
+    name: ``DBLE(DCMPLX(0,-1)*Z)`` is Im(Z) written without AIMAG (the review's
     t5b). When it cannot be told, it is counted as one.
     """
     if _IMAG_RE.search(rhs) or tainted & _names_in(rhs):
@@ -893,7 +893,7 @@ def imaginary_part_branches(transformed_source: str, form: str,
     expression not reduced to its real part or modulus, or returned through
     a CALL argument by a callee whose matching dummy is so tainted -- or by
     any callee that cannot be read, when the CALL passes a complex value
-    (Vera's t5c: ``CALL IMPART(Z, XIM)``).
+    (the review's t5c: ``CALL IMPART(Z, XIM)``).
     """
     scopes: list[tuple[str, list[str]]] = []
     for routine in split_routines(lifted_text or "", "free"):

@@ -1,4 +1,4 @@
-"""Tampering with a frozen case makes ``check`` FAIL (Vera, B5 review item 1).
+"""Tampering with a frozen case makes ``check`` FAIL (review B5 review item 1).
 
 Each test copies one CI case into a scratch ``cases/`` directory together with
 its committed index row, injects one defect, and asserts the check names it:

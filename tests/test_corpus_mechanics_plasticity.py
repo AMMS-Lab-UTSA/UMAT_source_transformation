@@ -153,7 +153,7 @@ def test_back_stress_sign_is_not_applicable_without_identified_slots():
 
 
 # ---------------------------------------------------------------------------
-# elastic-only checks gated on demonstrated elastic increments (Vera F)
+# elastic-only checks gated on demonstrated elastic increments (the review F)
 # ---------------------------------------------------------------------------
 def test_pd_check_is_not_applicable_when_increment_one_moved_the_state():
     path = _path("elastic_uniaxial")

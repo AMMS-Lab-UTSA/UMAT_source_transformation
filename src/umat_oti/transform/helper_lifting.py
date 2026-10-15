@@ -1025,7 +1025,7 @@ def _lift_helper_routine(
         entry = re.match(r"^\s*ENTRY\s+([A-Z_]\w*)", _statement_text(line, form), re.IGNORECASE)
         if entry:
             # The lifted copy carried the ENTRY statement through and the
-            # alternate entry point came out defined twice (link error; Vera
+            # alternate entry point came out defined twice (link error; the review
             # B5 T3 c_entry_plain).
             raise HelperLiftingError(
                 f"{routine.name} has an ENTRY statement ({entry.group(1).upper()}). "
@@ -1040,7 +1040,7 @@ def _lift_helper_routine(
         stitched_lines = stitched_lines[:1] + carried + stitched_lines[1:]
     lifted_function_names = set(lifted_function_names or ())
     # Binary32 variables keep a binary32 primal: every store to one rounds
-    # the real part of its OTI value (Curie-G B-W, Gauss F3). The routine's
+    # the real part of its OTI value (the review B-W, review F3). The routine's
     # own declarations and IMPLICIT rules decide which names those are; a
     # name only a module could type is left alone.
     from umat_oti.transform.routine_typing import routine_typing
@@ -1051,7 +1051,7 @@ def _lift_helper_routine(
     # An internal procedure has its host's IMPLICIT rules (ABA_PARAM.INC's
     # IMPLICIT REAL*8 included) unless it states its own, so it is typed
     # inside its host's text; read on its own, every implicitly typed name
-    # was default REAL and its stores were rounded to binary32 (Vera B5 a3).
+    # was default REAL and its stores were rounded to binary32 (review B5 a3).
     typing_text = _routine_source_lines(source_lines, typing_host or routine)
     routine_types = routine_typing("\n".join(typing_text),
                                    routine.name, form=form,
@@ -1131,7 +1131,7 @@ def _lift_helper_routine(
     # rate law -- carry no derivative, and typing them OTI turned
     # ``(cure/max_cure)**m`` into an OTI-to-OTI power that goes through
     # LOG(0) at cure = 0 and returns a non-finite value where the source
-    # returns 0 (Worlthen curing, Curie-G cluster E). Kept REAL(8), the power
+    # returns 0 (Worlthen curing, the review cluster E). Kept REAL(8), the power
     # is OTI**REAL, whose zero base is handled. See _literal_constant_locals
     # for what keeps a name out (arguments, arrays, shared storage, actual
     # arguments of any call).
@@ -1337,7 +1337,7 @@ def _lift_helper_routine(
         if save_match:
             # SAVE is a specification statement. Falling through to the body
             # put it after the first executable line ("Unexpected attribute
-            # declaration statement", Vera's B1 toy a1).
+            # declaration statement", the review's B1 toy a1).
             listed = [entry.strip() for entry in split_top_level(save_match.group(1)) if entry.strip()]
             if listed:
                 saved_names.update(entry.strip("/ ").upper() for entry in listed)
@@ -1560,7 +1560,7 @@ def _lift_helper_routine(
     # A literal-constant local the source declares binary32 is declared
     # real(8) here (an OTI operator takes REAL(8) operands only). Its value is
     # still the binary32 one, but every operation on it is now formed in
-    # double -- ``9.0/40.0*PI`` with PI REAL (Curie-G B-L). Listed with the
+    # double -- ``9.0/40.0*PI`` with PI REAL (the review B-L). Listed with the
     # OTI shadows, its operations are rounded back to binary32 like theirs,
     # and every store to it is rounded too.
     widened_binary32 = frozenset(name for name in constant_real_names
@@ -2112,7 +2112,7 @@ def _rewrite_parameter_line(payload: str,
             elif kind == "single":
                 # Declared REAL / REAL(4) / REAL*4 (or so typed implicitly): the
                 # source's constant is the value rounded to binary32 -- REAL C;
-                # PARAMETER (C=1.D0/3.D0) is 0.3333333432674408, not 1/3 (Vera
+                # PARAMETER (C=1.D0/3.D0) is 0.3333333432674408, not 1/3 (the review
                 # B5 T3: primal 4.3e-9). An OTI operator takes REAL(8), so the
                 # constant stays real(8) and holds that binary32 value exactly.
                 lines.append(f"    real(8), parameter :: {name} = "
@@ -2617,7 +2617,7 @@ def _normalize_numeric_literals(line: str, oti_names: set[str],
     if _FORMAT_STATEMENT_RE.match(line):
         return line
     # Literal-only subexpressions are folded in binary32 first, the way the
-    # source's compiler folds them (Curie-G B-L); lifted statements are whole
+    # source's compiler folds them (the review B-L); lifted statements are whole
     # statements, so nothing continues past the end of the text.
     from umat_oti.transform.binary32 import (
         fold_binary32_constants, round_binary32_operations_in_context)
@@ -2636,7 +2636,7 @@ def _normalize_numeric_literals(line: str, oti_names: set[str],
     # program uses that value: ENU=0.4999 under IMPLICIT REAL*8 stores
     # 0.49990001320838928, not 0.4999. Appending D0 changed the number, and
     # the lifted build's primal drifted from the original's by 3e-8 to 8e-2
-    # on 32 corpus sources (Gauss, B1 F3). The literal is rewritten as the
+    # on 32 corpus sources (review B1 F3). The literal is rewritten as the
     # double it actually denotes -- the single-rounded value, written exactly
     # -- which is what the store transform already does.
     normalized = re.sub(
@@ -2673,7 +2673,7 @@ def _integer_division_literals(line: str, integer_name: Callable[[str], bool]) -
     """Positions of the bare integer literals that are operands of an INTEGER division.
 
     ``4/DTHREE`` with DTHREE an INTEGER PARAMETER is 1 in the source; promoted
-    to ``4.0D0/DTHREE`` it was 1.333 (Vera B5 a5x: primal 1.6e-2, DDSDDE 3 %).
+    to ``4.0D0/DTHREE`` it was 1.333 (review B5 a5x: primal 1.6e-2, DDSDDE 3 %).
     Promotion exists because an OTI operand has no operator for an INTEGER
     one, but oti_intrinsics defines OTI-with-INTEGER operators and assignment,
     so an integer quotient is left exactly as the source wrote it. Only a
@@ -2852,7 +2852,7 @@ def _initialised_reals_as_named_constants(stitched_lines, form: str, routine_nam
             written.add(target.group(1).upper())
         # A name handed to a function reference can be written through it
         # (``X = BUMP(TEN)`` with BUMP assigning its argument): as a PARAMETER
-        # that write crashes under gfortran and may vanish under ifort (Vera,
+        # that write crashes under gfortran and may vanish under ifort (review
         # B8 re-review C1). Every identifier inside the argument list of a
         # reference that is neither an intrinsic nor one of this routine's
         # arrays counts as written, as in _literal_constant_locals.
@@ -3295,7 +3295,7 @@ def _without_internal_procedures(raw_lines: list[str], form: str, routine: Parse
             if function and function.group(1).upper() not in arrays | host_arrays:
                 # Lifted, it was written as an assignment to an undeclared
                 # array and did not compile, while the transform reported
-                # success (Vera B5 T3 i_sf_dummy, i_sf_name).
+                # success (review B5 T3 i_sf_dummy, i_sf_name).
                 raise HelperLiftingError(
                     f"The internal procedure {name} of {routine.name} defines the "
                     f"statement function {function.group(1).upper()}. A statement "
@@ -3360,7 +3360,7 @@ def _carried_host_constants(host_constants: Sequence[str], stitched_lines: list[
     one: dropping the whole host statement because one of its names was
     hidden left ``TWO`` of ``PARAMETER(..., TWO=2.0D0, THREE=3.0D0, ...)``
     undeclared in a DOTPROD6 that declared a local THREE, an uninitialised
-    local in the lifted copy (UVCmultiaxial; Vera B5: stress 4-6 %, DDSDDE
+    local in the lifted copy (UVCmultiaxial; review B5: stress 4-6 %, DDSDDE
     43 % off). A carried value that refers to a hidden name would be
     evaluated against the procedure's own entity, not the host's constant:
     refused.
@@ -3718,7 +3718,7 @@ def _joined_fixed_continuation(left: str, right: str) -> str:
     continue ``1+G13*G21*G32...``, and the name is ``G31``. Joined with a
     blank, the lifted (free-form) helper read ``G3 1+...``, and the Petal and
     SeaShell provider builds failed on "G3 1.0D0" once the literal pass had
-    rewritten the 1 (Noether's B8 RA run). The emitter's own join
+    rewritten the 1 (the review's B8 RA run). The emitter's own join
     (source_transform._join_continuations) already omits the blank.
 
     So: inside an open character literal the line is padded to column 72

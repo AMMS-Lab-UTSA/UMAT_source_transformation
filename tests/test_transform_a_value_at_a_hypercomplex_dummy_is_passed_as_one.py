@@ -113,7 +113,7 @@ def test_a_literal_from_one_lifted_helper_to_another_is_passed_as_a_hypercomplex
 
 @pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran required")
 def test_a_negative_zero_value_actual_keeps_its_sign(tmp_path):
-    """``(-0.0d0) + 0.0D0*E1`` has real part +0.0; the emitted wrap must keep -0.0 (Vera, B8 R1).
+    """``(-0.0d0) + 0.0D0*E1`` has real part +0.0; the emitted wrap must keep -0.0 (review B8 R1).
 
     Checked on the emitted wrap itself, compiled against the generated OTI
     module, because the sign of a zero is what changes and no arithmetic
@@ -127,7 +127,7 @@ def test_a_negative_zero_value_actual_keeps_its_sign(tmp_path):
     out = tmp_path / "out"
     emitted = next(out.glob("*_oti.f90")).read_text()
     # The first actual of the emitted call, exactly as the emitter wrote it
-    # (Vera, B8 re-review: a hard-coded copy would test the test).
+    # (review B8 re-review: a hard-coded copy would test the test).
     import re
 
     from umat_oti.fortran.parser import split_top_level

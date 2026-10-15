@@ -4,7 +4,7 @@
 kind parameters -- and its UMAT says ``use NumKind``. The lifted build wrote
 the UMAT and its helper closure into ``umat_oti_lifted.f90`` and nothing else,
 so ``use NumKind`` named a module that did not exist there and the lifted
-build did not compile (Gauss, B1 F4).
+build did not compile (review B1 F4).
 
 A module the source defines is part of the source. :func:`modules_used_by`
 finds the ones a set of lifted routines USE (transitively), and

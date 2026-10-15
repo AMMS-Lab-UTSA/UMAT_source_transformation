@@ -3,10 +3,10 @@
 * The deck-only figures on the committed pass23 registry do not move: 242
   eligible, 106 Abaqus verified under the D-4 gate (G10), 114 routine level
   (D-8). (242 / 105 / 113 at pass22; 245 / 102 / 112 at pass21.)
-* A council row counts only under R6: both Vera acceptances, no pairing
+* A reviewer row counts only under R6: both review acceptances, no pairing
   change, every parameter set verified (cells.combine_council_sets), no
   unenforced domain, no licence hold, a D-2 decision recorded, and the
-  author-deck re-run at the council harness.
+  author-deck re-run at the reviewer harness.
 * An eligible harvest row cannot pull a source whose author block was
   rejected into a tier (czmHealing, D-19a R0).
 """

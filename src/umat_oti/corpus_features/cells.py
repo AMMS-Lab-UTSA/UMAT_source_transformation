@@ -63,7 +63,7 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
     for record in records:
         if record.get("feature") in MANIFEST_FEATURES:
             # a D-21 parameter set is its own experiment: never merged with
-            # another set's records (Vera G review C6)
+            # another set's records (review G C6)
             groups.setdefault((record["source_id"], record.get("council_set") or "",
                                record["feature"]), []).append(record)
     cells = []
@@ -201,7 +201,7 @@ def combine_council_sets(cells: Iterable[Mapping]) -> list:
 
     verified iff every planned set (``council_sets``) has a verified cell;
     failed if any set failed; otherwise not_attempted, naming the sets that
-    are missing or not verified. Cells without a council set pass through.
+    are missing or not verified. Cells without a reviewer set pass through.
     """
     by: "OrderedDict[tuple, list]" = OrderedDict()
     passthrough = []

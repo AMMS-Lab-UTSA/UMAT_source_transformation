@@ -7,7 +7,7 @@ G_OTI was filled from G with no derivative, and the tangent lost dG/dDSTRAN
 beside a bitwise-correct stress. The classifier now reads every identifier
 (tests/test_transform_a_call_reads_every_identifier_of_its_actuals.py); this
 semantic check, ``no_seed_read_into_a_real_copy_of_a_shadowed_name``, stays as
-the backstop on the emitted text, and since Vera's B8 review (R2) it follows
+the backstop on the emitted text, and since the review's B8 review (R2) it follows
 the seed transitively through REAL statements and CALLs.
 
 Checked on emitted text written out here, because the transform no longer
@@ -45,7 +45,7 @@ def test_one_hop_is_refused():
 
 
 def test_two_hops_are_refused():
-    """Vera's toy: T = DSTRAN(2); G = PROPS(1)*(1+T). Was 1000 against FD 1040.8."""
+    """The review's toy: T = DSTRAN(2); G = PROPS(1)*(1+T). Was 1000 against FD 1040.8."""
     found = _check("  t = dstran(2)\n  g = props(1)*(1.0d0 + t)\n")
     assert any("G = PROPS(1)" in text.upper() or "G_OTI = G" in text.upper() for _, text in found)
 

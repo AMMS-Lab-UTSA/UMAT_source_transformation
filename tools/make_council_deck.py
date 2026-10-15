@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Write, or check, the council-designed experiments of D-19a rev 2 (G9).
+"""Write, or check, the reviewer-designed experiments of D-19a rev 2 (G9).
 
-For every row of a harvest file or a D-21 council-constants file (JSON
+For every row of a harvest file or a D-21 reviewer-constants file (JSON
 lines), :func:`umat_oti.abaqus.experiment.plan_council` designs the
 experiment; this writes ``<out>/<key>/council_plan.json`` and one
 ``council_<set>.inp`` per parameter set (``abaqus.deck.generate_deck``).
-council.inp is an OUTPUT only: nothing reads it back.
+reviewer.inp is an OUTPUT only: nothing reads it back.
 
 ``--check`` regenerates everything in memory and compares it byte for byte
 with what is on disk (R6.1): any difference -- a changed row, a changed
@@ -61,8 +61,8 @@ def _portable(text: str, cache: Path) -> str:
 
 
 def _rank(row: dict) -> int:
-    """Precedence of rows for one key (Vera G review C7): an eligible
-    harvest row (the author's published constants), then a D-21 council
+    """Precedence of rows for one key (review G C7): an eligible
+    harvest row (the author's published constants), then a D-21 reviewer
     row, then an ineligible harvest row -- whatever order the files came in."""
     if row.get("sets") is not None:
         return 1

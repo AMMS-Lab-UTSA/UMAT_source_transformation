@@ -313,7 +313,7 @@ def _inferred_edges_for_call(
     # identifier of ``2.0D0*G`` is none and of ``Q*G/PROPS(1)`` is Q, so G's
     # edge to the callee's output was lost, G's own assignment was left REAL
     # outside the stress regions, and the tangent lost dG/dDSTRAN with a
-    # bitwise-correct stress (Vera, B8 review R2: 1000 against FD 1040.8 and
+    # bitwise-correct stress (review B8 review R2: 1000 against FD 1040.8 and
     # 1020.4). The written actual is still the designated variable itself.
     reads = [_tokens(argument) for argument in arguments]
     edges: list[tuple[str, set[str]]] = []
