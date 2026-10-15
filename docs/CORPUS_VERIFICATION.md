@@ -213,7 +213,7 @@ frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
 against the new code. The script and its output are in
 `corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
 
-**Harness `cfd84cd2fe97e72b` -> `5edddeb37b3f3bef` (2026-10-15, not re-run).** The
+**Harness `cfd84cd2fe97e72b` -> `842e5c680eb59c86` (2026-10-15, not re-run).** The
 offline replays of an original (the D-12 init probe, the routine-level primal,
 the finite-difference reference, the routine-level harness) now link the host's
 LAPACK (`umat_oti.core.host_lapack`: MKL, OpenBLAS or reference LAPACK, recorded

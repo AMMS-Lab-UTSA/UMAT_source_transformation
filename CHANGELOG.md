@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fingerprint from `c61511ea0ffe58e2` (the value recorded in
   `src/umat_oti/contract/schemas/transform_generation.json` and in Residual
   Assembler's copy) to `b5cfc67d97a57dd8`, and the harness fingerprint from
-  `cfd84cd2fe97e72b` to `5edddeb37b3f3bef`. The generation file is deliberately left at
+  `cfd84cd2fe97e72b` to `842e5c680eb59c86`. The generation file is deliberately left at
   `c61511ea0ffe58e2`: its own procedure (`how_to_update`) requires everything
   frozen at the old value -- the pass25 corpus evidence, the 122 frozen
   regression cases and the two Residual Assembler fixtures -- to be re-frozen
@@ -101,6 +101,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   derivative.** Its result was declared OTI but stores to it were read as
   stores to an integer and wrapped in REAL() (MYNRM2 = REAL(...)), so the
   derivative through it was lost.
+- **Verification records with NumPy values are written.** A record carrying a
+  NumPy int64 stopped a six-check run after both Abaqus jobs ("Object of type
+  int64 is not JSON serializable") and the entry's record was lost; the
+  writers now write NumPy values as plain values. Predates this branch.
 - **Provider verifier primal tolerance.** The absolute tolerance is now 1e-12
   of the array's largest magnitude over the run (never tighter than the fixed
   1e-10 / 1e-14 before); a stress component cancelling to about zero in a large
