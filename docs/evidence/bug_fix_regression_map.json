@@ -1116,6 +1116,16 @@
     "tests/test_library_routines.py::test_stand_alone_builds_of_a_source_defining_a_standard_name_keep_the_library_chain"
    ],
    "selected_by": "message_pattern"
+  },
+  {
+   "commit": "c1ddcac",
+   "bug": "When the informativeness gate failed on its scale rule (the material acted but its stress grew far beyond the problem's scales), the verdict asked \"did the test make the material act?\" and advised a stronger loading.",
+   "tests": [
+    "tests/test_the_informativeness_verdict_names_the_rule_that_failed.py::test_a_material_that_acted_beyond_the_problem_scale_is_told_so",
+    "tests/test_the_informativeness_verdict_names_the_rule_that_failed.py::test_an_older_record_without_the_rules_is_read_from_its_reason",
+    "tests/test_the_informativeness_verdict_names_the_rule_that_failed.py::test_a_material_that_did_nothing_keeps_its_card"
+   ],
+   "selected_by": "message_pattern"
   }
  ],
  "excluded": [
