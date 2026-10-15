@@ -3969,10 +3969,19 @@ def _is_informative(record: dict, manifest: VerificationManifest,
     findings = _measured_instead_of_declared(findings, record)
     record["coverage"] = [finding.as_dict() for finding in findings]
     failed = [finding for finding in findings if finding.met is False]
+    # Which of the sub-rules failed, so that the verdict can name it: a run in
+    # which the material did act but the stress grew far beyond the problem's
+    # own scales is not "a test that did not make the material act".
+    beyond = [finding for finding in failed if "not accounted for by the scales" in finding.reason]
+    record["informative_failed_rules"] = (
+        ([] if activation.activated else ["no_activation"])
+        + ([] if plausible.plausible and not beyond else ["response_beyond_scale"])
+        + [f"coverage:{finding.name}" for finding in failed if finding not in beyond])
     if failed:
-        return False, "; ".join(
-            said + [f.reason for f in failed])
+        return False, "; ".join(dict.fromkeys(
+            said + [f.reason for f in failed]))
     said.extend(f.reason for f in findings)
+    said = list(dict.fromkeys(said))
 
     if not plausible.checks:
         # Nothing supplied a scale to check against. That is not a failure and

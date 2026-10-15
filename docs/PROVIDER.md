@@ -224,7 +224,14 @@ never less than 1e-10 (stress) or 1e-14 (state), the fixed values used before
 not scale with the stress: a component that cancels to about zero carries the
 rounding of the large terms it was computed from, about 1e-15 of the largest
 stress, which for stresses of order 1e5 is above 1e-10, and valid providers
-were rejected for it.
+were rejected for it. The limit of the rule, stated plainly: a primal mismatch
+smaller than 1e-12 times the run's largest magnitude of that array is not
+detected, in any entry, however small the entry itself is. One unit in the
+last place of a double is between 1.1e-16 and 2.2e-16 of its value, so the
+undetected band is about 4,500 to 9,000 units in the last place of the largest
+value; for a run whose largest stress is of order 1e5 it is of order 1e-7 in
+the stress units. The derivative checks are separate and are not widened by
+it.
 
 **Check path.** The path comes from the contract's `validation.check_path`,
 in one of two forms:

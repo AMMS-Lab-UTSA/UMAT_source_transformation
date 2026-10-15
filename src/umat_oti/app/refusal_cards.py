@@ -498,7 +498,23 @@ def _discovered(text, state):
         "model as a small-deformation 3D solid can this check command run it.)")
 
 
+def _beyond_scale(text, state):
+    return (
+        "The material did act, but its stress grew far beyond the scale this problem supplies "
+        "(its constants and the smallest test loading), so the agreement shown is not counted "
+        "as a verification.", YOU,
+        "Check the units of the material constants and of the loading, and whether the stress "
+        "really grows that fast; a smaller loading with --abaqus-experiment FILE keeps the test "
+        "within the scale. If the response is right, send the report folder to the "
+        "maintainers so the scale rule can be reviewed.")
+
+
 RULES: tuple = (
+    # The informativeness gate failed on its scale rule while the material did
+    # act: not the "did nothing" card, which would ask for a STRONGER loading.
+    ("beyond_scale", r"(?s)^(?!.*indicates the material did anything)"
+                     r"(?=.*not accounted for by the scales this problem supplies)",
+     _beyond_scale),
     ("discovered", DISCOVERED_UNSUPPORTED.pattern, _discovered),
     ("anchor_args", r"anchors not located.*own_argument_names|umat_interface_uses_the_authors_own_argument_names", _anchor_args),
     ("anchor", r"anchors not located", _anchor),

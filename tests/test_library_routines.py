@@ -1052,6 +1052,7 @@ def test_the_primal_tolerance_scales_with_the_run_and_a_function_result_keeps_it
     report = verify_provider(model / "contract.json", tmp_path / "out", require_j2_branches=False)
     assert report["passed"] is True
     assert report["primal_tolerance"]["stress_atol"] > 1e-10
+    assert "units in the last place" in report["primal_tolerance"]["not_detected"]
     lifted = next((tmp_path / "out").glob("build-*/umat_oti_lifted.f90")).read_text().upper()
     assert "REAL(MYNRM2" not in lifted
 

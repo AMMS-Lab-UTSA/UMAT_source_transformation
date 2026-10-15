@@ -544,7 +544,11 @@ def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branche
         "primal_stress_max_abs": float(np.max(np.abs(stress - expected_stress))),
         "primal_tolerance": {"rtol": PRIMAL_RTOL, "stress_atol": stress_atol, "state_atol": state_atol,
                              "rule": "atol = rtol x the largest magnitude of the array over the run, "
-                                     "at least 1e-10 (stress) / 1e-14 (state)"},
+                                     "at least 1e-10 (stress) / 1e-14 (state)",
+                             "not_detected": "a primal mismatch smaller than atol, in any entry, "
+                                             "however small the entry itself is: about 4,500 to "
+                                             "9,000 units in the last place of the array's "
+                                             "largest value"},
         "primal_state_max_abs": float(np.max(np.abs(state - expected_state))) if nstatev else 0.0,
         "carry_reset_stress_derivative_difference": carry_difference,
         "state_growth": float(np.max(np.abs(expected_state[-1]))) if nstatev else 0.0,

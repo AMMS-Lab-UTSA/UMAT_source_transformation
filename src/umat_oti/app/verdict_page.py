@@ -70,6 +70,56 @@ CHECK_QUESTION = {
 }
 
 
+#: What a failed ``mechanically_informative`` says, by the sub-rule that failed
+#: (``informative_failed_rules`` in the record). The gate fails when the material
+#: did not act, but also when it acted and the stress grew far beyond the scales
+#: the problem supplies, or a criterion of its family was not reached; the
+#: generic question named only the first.
+INFORMATIVE_QUESTION = {
+    "no_activation": CHECK_QUESTION["mechanically_informative"],
+    "response_beyond_scale": ("did the stress stay within the scale the problem supplies? "
+                              "(the material acted, but the stress grew far beyond the scale "
+                              "its constants and the smallest probe set)"),
+}
+
+
+def _informative_block(obj: Any) -> dict:
+    """The ``mechanically_informative`` record (informative, reason), wherever it sits."""
+    if isinstance(obj, dict):
+        block = obj.get("mechanically_informative")
+        if isinstance(block, dict) and "reason" in block:
+            return block
+        for value in obj.values():
+            found = _informative_block(value)
+            if found:
+                return found
+    elif isinstance(obj, list):
+        for value in obj:
+            found = _informative_block(value)
+            if found:
+                return found
+    return {}
+
+
+def informative_question(record: Any, reason: str = "") -> str:
+    """The yes-or-no question a failed ``mechanically_informative`` stands for here."""
+    rules = _find(record, "informative_failed_rules")
+    if not isinstance(rules, list) or not rules:
+        text = str(_informative_block(record).get("reason") or reason or "")
+        rules = (["no_activation"] if "indicates the material did anything" in text
+                 else ["response_beyond_scale"] if "not accounted for by the scales" in text
+                 else [])
+    said = []
+    for rule in rules:
+        rule = str(rule)
+        if rule in INFORMATIVE_QUESTION:
+            said.append(INFORMATIVE_QUESTION[rule])
+        elif rule.startswith("coverage:"):
+            said.append(f"did the test reach what this kind of material needs "
+                        f"({rule.split(':', 1)[1]})?")
+    return "; ".join(dict.fromkeys(said)) or CHECK_QUESTION["mechanically_informative"]
+
+
 def _n(x) -> int:
     return len(x) if isinstance(x, (list, tuple, set)) else int(x or 0)
 
@@ -188,6 +238,10 @@ def verdict_for(record: Any, elsewhere: Optional[str] = None, command: Optional[
     summary = verified_summary(flat)
     reason = _reason_of(record)
     state = state_after_reading(_state_of(record), reason)
+    if state == "experiment_not_informative":
+        # The informativeness gate's own reason says which of its sub-rules
+        # failed; the record's first reason may be another stage's.
+        reason = str(_informative_block(record).get("reason") or reason)
     pipeline_word = str(_find(record, "verdict") or "")
     caution = []
     # The pipeline's own numerical check passed and none of the six Abaqus
@@ -278,12 +332,16 @@ def render_verdict(record: Any, elsewhere: Optional[str] = None, command: Option
         out.append("Abaqus checks: not run.")
         out.append('The word "verified" needs all the Abaqus checks: ' + VERIFIED_SENTENCE)
         return "\n".join(out)
-    def names(items) -> str:
-        return "; ".join(CHECK_QUESTION.get(x, str(x).replace("_", " ")) for x in items) or "none"
+    def names(items, failed: bool = False) -> str:
+        def question(x):
+            if failed and x == "mechanically_informative":
+                return informative_question(record, v["reason recorded"])
+            return CHECK_QUESTION.get(x, str(x).replace("_", " "))
+        return "; ".join(question(x) for x in items) or "none"
 
     held, broke, never = v["gates that hold"], v["gates that did not hold"], v["gates never established"]
     out.append("The six checks the word 'verified' needs, each a yes-or-no question about the Abaqus runs: "
-               f"held: {names(held)}. Failed: {names(broke)}. "
+               f"held: {names(held)}. Failed: {names(broke, failed=True)}. "
                + (f"Not run here (they need Abaqus, which this check command does not run): {names(never)}."
                   if _n(never) else "Not run here: none."))
     if _n(never) and not _n(held) and not _n(broke) and v["terminal state"] in NUMERICAL_CHECK_STATES:
