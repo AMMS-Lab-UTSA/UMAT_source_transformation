@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from umat_oti.core.model import FortranLogicalLine, ParsedFortranSource
-from umat_oti.fortran.parser import split_top_level
+from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines, split_top_level
 from umat_oti.fortran.variables import ASSIGNMENT_RE, FORTRAN_KEYWORDS, TOKEN_RE, collect_variables
 
 
@@ -326,6 +326,24 @@ def _inferred_edges_for_call(
     return edges
 
 
+def _supplied_library_bodies(parsed: ParsedFortranSource) -> list:
+    """Parsed bodies of the supplied library routines the file calls and does
+    not define (with what those call in turn); [] when there are none."""
+    from umat_oti.transform.abaqus_utility_definitions import (
+        LIBRARY_ROUTINES, available_definitions, definition_text)
+
+    defined = {str(r.name).upper() for r in getattr(parsed, "subroutines", ()) or ()}
+    called = set()
+    for line in getattr(parsed, "logical_lines", ()) or ():
+        match = CALL_RE.match(line.text)
+        if match and match.group(1).upper() in LIBRARY_ROUTINES:
+            called.add(match.group(1).upper())
+    wanted = sorted(set(available_definitions(called - defined)) - defined)
+    if not wanted:
+        return []
+    return list(parse_subroutines(logical_lines_from_text(definition_text(wanted), "fixed")))
+
+
 def _routine_effect_table(
     parsed: ParsedFortranSource,
 ) -> dict[str, dict[int, set[int]]]:
@@ -364,13 +382,24 @@ def _routine_effect_table(
     so every entry here is a LOWER bound on what the routine depends on.
     :func:`_constant_variables` is the one place that distinction changes an
     answer, and it is handled there.
+
+    One kind of callee the file does not define IS recorded: a library
+    routine the transform supplies a body for (DGESV, DGETRF, DSYEV, DGEMM,
+    ...; :mod:`umat_oti.transform.abaqus_utility_definitions`). Its body is
+    read for its effect like an author's helper. Without it, ``CALL DGESV(N,
+    1, S, 6, IPIV, B, 6, INFO)`` carried no edge from S to B, so whatever fed
+    S -- a scalar FACTOR built from the strain -- was not on the stress path:
+    S itself was promoted at the call (an OTI dummy needs an OTI actual) but
+    FACTOR stayed REAL, and every derivative through it was lost while the
+    stress stayed right.
     """
     bodies: dict[str, Any] = {}
-    for routine in getattr(parsed, "subroutines", ()) or ():
+    for routine in list(getattr(parsed, "subroutines", ()) or ()) + _supplied_library_bodies(parsed):
         name = str(routine.name).upper()
         # A file that defines one name twice -- a common way of shipping a
         # 2-D and a 3-D variant -- gets the first definition. Merging two
         # bodies under one name would invent edges belonging to neither.
+        # The author's own definition comes first, so it wins over a supplied one.
         bodies.setdefault(name, routine)
     table: dict[str, dict[int, set[int]]] = {name: {} for name in bodies}
     if not table:
