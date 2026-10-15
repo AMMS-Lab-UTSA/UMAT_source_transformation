@@ -88,6 +88,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   builds and the provider have their real twins. DASUM, IDAMAX, DLAMCH and the
   other LAPACK/BLAS functions on the derivative path are refused with their
   names, as CALLed routines are.
+- **The supplied BLAS follow MKL where it and reference BLAS disagree.** DNRM2
+  with INCX <= 0 returned zero (reference BLAS 3.9.0) where Abaqus's MKL
+  computes the norm, so a UMAT taking DNRM2(NTENS,B,-1) transformed with no
+  warning and its stress differed from the original's inside Abaqus. Measured
+  against MKL 2023.2 over increments 1, 2, -1, -2, 0, N <= 0 and invalid
+  arguments: DNRM2 and DSCAL now follow MKL for INCX <= 0, and DGEMV and DGEMM
+  leave their output alone for an invalid argument, as both libraries do. A
+  stand-alone build of a source that calls DNRM2 or DSCAL links MKL or the
+  twins.
+- **A DOUBLE PRECISION function whose name begins with I-N keeps its
+  derivative.** Its result was declared OTI but stores to it were read as
+  stores to an integer and wrapped in REAL() (MYNRM2 = REAL(...)), so the
+  derivative through it was lost.
+- **Provider verifier primal tolerance.** The absolute tolerance is now 1e-12
+  of the array's largest magnitude over the run (never tighter than the fixed
+  1e-10 / 1e-14 before); a stress component cancelling to about zero in a large
+  stress was rejected for rounding of 1e-15 of the largest stress. Predates
+  this branch.
 - **Provider verifier.** Without `--elastic`, a UMAT with no state variables
   ended in an IndexError (the J2 branch check reads STATEV(1)); it now stops
   with a message that names the missing state and `--elastic`. The bug

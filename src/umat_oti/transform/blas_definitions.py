@@ -13,6 +13,19 @@ ascending order and, for JOBZ='V', orthonormal eigenvectors, which are copied
 back into A. Eigenvalues agree with LAPACK's to rounding; eigenvectors agree up
 to sign (and, inside a repeated cluster, up to a rotation within the cluster).
 
+Where reference BLAS and Abaqus's MKL disagree about arguments, these follow
+MKL, the library the original UMAT runs with inside Abaqus (measured with MKL
+2023.2): DNRM2 computes the norm for INCX < 0 (as LAPACK 3.10 and later do)
+and for INCX = 0 (N copies of X(1)), where reference BLAS 3.9.0 returns zero;
+DSCAL scales X(1), X(1+|INCX|), ... for INCX < 0 and scales X(1) N times for
+INCX = 0, where reference BLAS does nothing. DGEMV and DGEMM return without
+touching their output for an invalid argument (TRANS, a negative dimension, a
+leading dimension too small, INCX or INCY zero), as both libraries do after
+reporting it. Everything else -- DDOT, DAXPY and DCOPY for any increments, every
+routine for N <= 0 -- is the same in both. MKL's results differ from reference
+BLAS's in the last bits even for unit increments (it fuses multiply-adds and
+reorders sums); the twins follow reference BLAS's arithmetic.
+
 DDOT and DNRM2 are functions. DDOT sums in index order, which is the order of
 reference BLAS's unrolled loop. DNRM2 is the scaled sum of squares of
 reference BLAS 3.9.0 (a running scale and a sum of squares of ratios, so no
@@ -56,11 +69,11 @@ DSCAL_DEFINITION = """
       IMPLICIT NONE
       INTEGER N,INCX,I,IX
       DOUBLE PRECISION DA,DX(*)
-      IF (N.LE.0 .OR. INCX.LE.0) RETURN
+      IF (N.LE.0) RETURN
       IX = 1
       DO I = 1,N
         DX(IX) = DA*DX(IX)
-        IX = IX+INCX
+        IX = IX+ABS(INCX)
       END DO
       END
 """
@@ -91,6 +104,10 @@ DGEMV_DEFINITION = """
       DOUBLE PRECISION ALPHA,BETA,A(LDA,*),X(*),Y(*),TEMP
       LOGICAL NORMAL
       NORMAL = TRANS.EQ.'N' .OR. TRANS.EQ.'n'
+      IF (.NOT.NORMAL .AND. TRANS.NE.'T' .AND. TRANS.NE.'t' .AND.
+     &    TRANS.NE.'C' .AND. TRANS.NE.'c') RETURN
+      IF (M.LT.0 .OR. N.LT.0 .OR. LDA.LT.MAX(1,M)) RETURN
+      IF (INCX.EQ.0 .OR. INCY.EQ.0) RETURN
       IF (M.EQ.0 .OR. N.EQ.0) RETURN
       IF (NORMAL) THEN
         LENX = N
@@ -149,8 +166,20 @@ DGEMM_DEFINITION = """
       INTEGER M,N,K,LDA,LDB,LDC,I,J,L
       DOUBLE PRECISION ALPHA,BETA,A(LDA,*),B(LDB,*),C(LDC,*),TEMP
       LOGICAL NOTA,NOTB
+      INTEGER NROWA,NROWB
       NOTA = TRANSA.EQ.'N' .OR. TRANSA.EQ.'n'
       NOTB = TRANSB.EQ.'N' .OR. TRANSB.EQ.'n'
+      NROWA = K
+      NROWB = N
+      IF (NOTA) NROWA = M
+      IF (NOTB) NROWB = K
+      IF (.NOT.NOTA .AND. TRANSA.NE.'T' .AND. TRANSA.NE.'t' .AND.
+     &    TRANSA.NE.'C' .AND. TRANSA.NE.'c') RETURN
+      IF (.NOT.NOTB .AND. TRANSB.NE.'T' .AND. TRANSB.NE.'t' .AND.
+     &    TRANSB.NE.'C' .AND. TRANSB.NE.'c') RETURN
+      IF (M.LT.0 .OR. N.LT.0 .OR. K.LT.0) RETURN
+      IF (LDA.LT.MAX(1,NROWA) .OR. LDB.LT.MAX(1,NROWB) .OR.
+     &    LDC.LT.MAX(1,M)) RETURN
       IF (M.EQ.0 .OR. N.EQ.0) RETURN
       IF (NOTB) THEN
         IF (NOTA) THEN
@@ -304,9 +333,9 @@ DDOT_DEFINITION = """
 DNRM2_DEFINITION = """
       DOUBLE PRECISION FUNCTION DNRM2(N,X,INCX)
       IMPLICIT NONE
-      INTEGER N,INCX,IX
+      INTEGER N,INCX,I,IX
       DOUBLE PRECISION X(*),ABSXI,NORM,SCALE,SSQ
-      IF (N.LT.1 .OR. INCX.LT.1) THEN
+      IF (N.LT.1) THEN
         NORM = 0.0D0
       ELSE IF (N.EQ.1) THEN
         IF (X(1).EQ.0.0D0) THEN
@@ -317,7 +346,8 @@ DNRM2_DEFINITION = """
       ELSE
         SCALE = 0.0D0
         SSQ = 1.0D0
-        DO IX = 1,1+(N-1)*INCX,INCX
+        DO I = 1,N
+          IX = 1+(I-1)*ABS(INCX)
           IF (X(IX).NE.0.0D0) THEN
             ABSXI = ABS(X(IX))
             IF (SCALE.LT.ABSXI) THEN

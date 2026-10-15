@@ -1485,6 +1485,15 @@ def _lift_helper_routine(
         upper = arg.upper()
         if upper not in declared_non_oti and not _is_implicit_integer_name(upper):
             oti_names.add(upper)
+    # A function whose result the lifted body declares OTI -- a DOUBLE
+    # PRECISION FUNCTION MYNRM2, whose name begins with I-N -- holds an OTI
+    # result whatever the implicit rule says. Left out, every store to it was
+    # read as a store to an integer and wrapped in REAL(), dropping the
+    # derivative parts of the result.
+    if (function_match and result_name not in declaration_oti_names
+            and result_name not in declared_non_oti
+            and _result_type_spec(declared_result_type, result_name, type_name).startswith("type(")):
+        oti_names.add(result_name)
     oti_names.update(
         _implicit_oti_names(
             [_split_label_and_statement(raw, form)[1] for raw in body],
