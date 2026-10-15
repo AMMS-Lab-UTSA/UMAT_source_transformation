@@ -460,7 +460,7 @@
   },
   {
    "commit": "d4a3c85",
-   "bug": "The Abaqus tangent gate verified on best-relative-per-entry against a 1e-6 tolerance with 2-step plateaus, chose states from the transformed history and on the flattened point list, took the author's tangent and a one-sided branch difference as verdicts, and used the increment as the step scale (Curie B7 tangent_not_verified diagnosis, Vera A1-A8).",
+   "bug": "The Abaqus tangent gate verified on best-relative-per-entry against a 1e-6 tolerance with 2-step plateaus, chose states from the transformed history and on the flattened point list, took the author's tangent and a one-sided branch difference as verdicts, and used the increment as the step scale (review B7 tangent_not_verified diagnosis, review A1-A8).",
    "tests": [
     "tests/test_the_abaqus_tangent_gate_is_entrywise.py",
     "tests/test_the_gate_chooses_states_from_the_original.py",
@@ -469,14 +469,14 @@
   },
   {
    "commit": "f53c0b5",
-   "bug": "cells.fold merged the cells of different D-21 parameter sets of one source, and resolve_entry resolved a bare key of a multi-set plan to its first set and resolved refused plans (Vera's G review C6).",
+   "bug": "cells.fold merged the cells of different D-21 parameter sets of one source, and resolve_entry resolved a bare key of a multi-set plan to its first set and resolved refused plans (review G C6).",
    "tests": [
     "tests/test_every_council_cell_carries_both_origins.py"
    ]
   },
   {
    "commit": "6378078",
-   "bug": "A council row's kinematics and ceiling were recorded as author_published, identical parameter sets were accepted as independent, and a documented domain stated in words was dropped without a mark (Vera's G review C2, C4, C5).",
+   "bug": "A reviewer row's kinematics and ceiling were recorded as author_published, identical parameter sets were accepted as independent, and a documented domain stated in words was dropped without a mark (review G C2, C4, C5).",
    "tests": [
     "tests/test_a_council_experiment_reads_only_the_source_and_the_row.py"
    ]
@@ -490,7 +490,7 @@
   },
   {
    "commit": "33ac0cd",
-   "bug": "The Abaqus gate paired records across steps (increment restarts each step), fd.judge_column's value-under-test round-off divided |F|-sized terms by the increment so a 1e-4 defect passed under quad, and the A6 shrink rule could clear a kink (Vera G10 review B1, B2, A6).",
+   "bug": "The Abaqus gate paired records across steps (increment restarts each step), fd.judge_column's value-under-test round-off divided |F|-sized terms by the increment so a 1e-4 defect passed under quad, and the A6 shrink rule could clear a kink (review G10 review B1, B2, A6).",
    "tests": [
     "tests/test_the_gate_chooses_states_from_the_original.py::test_states_pair_on_step_as_well_as_increment",
     "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py::test_a_1e_4_defect_fails_under_quad_whatever_the_block",
@@ -499,7 +499,7 @@
   },
   {
    "commit": "b3210d8",
-   "bug": "The gate re-selected states on every run instead of using a row's frozen states, did not prefer an activating integration point, and failed a row whose seed map could not be read (Vera G10 review A5, A8).",
+   "bug": "The gate re-selected states on every run instead of using a row's frozen states, did not prefer an activating integration point, and failed a row whose seed map could not be read (review G10 review A5, A8).",
    "tests": [
     "tests/test_the_gate_on_a_replayed_toy.py"
    ]
@@ -513,14 +513,14 @@
   },
   {
    "commit": "a578c57",
-   "bug": "ddsdde_legacy_gate labelled every non-verified Abaqus tangent 'failed' (an unresolved row such as 26606e08 read as a measured disagreement), the registry did not read the D-4 gate's tangent.failed, the corpus page and plain language said 'could not pin the tangent down' / 'did not settle' over rows whose gate measured a disagreement, and a council row with no council_sets could count (Vera's final review before pass21).",
+   "bug": "ddsdde_legacy_gate labelled every non-verified Abaqus tangent 'failed' (an unresolved row such as 26606e08 read as a measured disagreement), the registry did not read the D-4 gate's tangent.failed, the corpus page and plain language said 'could not pin the tangent down' / 'did not settle' over rows whose gate measured a disagreement, and a reviewer row with no council_sets could count (the review's final review before pass21).",
    "tests": [
     "tests/test_registry_fields_tangent_verdict.py"
    ]
   },
   {
    "commit": "4cc93e4",
-   "bug": "The D-4 zero rule failed an exact zero in both precisions against a 1e-27 OTI residue (pass21 A3 false FAIL); Vera's floor NOISE_FACTOR*eps*max(S,|block derivative|), times the increment count for total derivatives and capped at RESOLUTION*S, now bounds the zero branch, while 1e-6*S still fails.",
+   "bug": "The D-4 zero rule failed an exact zero in both precisions against a 1e-27 OTI residue (pass21 A3 false FAIL); the review's floor NOISE_FACTOR*eps*max(S,|block derivative|), times the increment count for total derivatives and capped at RESOLUTION*S, now bounds the zero branch, while 1e-6*S still fails.",
    "tests": [
     "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py",
     "tests/test_corpus_features_zero_scale.py"
@@ -528,14 +528,14 @@
   },
   {
    "commit": "b14dcb8",
-   "bug": "A quad replay staged the author's double-precision INCLUDE files as links, so its reference was mixed-precision (davidmorin UMAT_MODEL.f, jpsferreira PARAM_UMAT.INC; Vera B10 condition A); an absolute or .. INCLUDE was staged from outside the source tree (condition B).",
+   "bug": "A quad replay staged the author's double-precision INCLUDE files as links, so its reference was mixed-precision (davidmorin UMAT_MODEL.f, jpsferreira PARAM_UMAT.INC; review B10 condition A); an absolute or .. INCLUDE was staged from outside the source tree (condition B).",
    "tests": [
     "tests/test_staged_includes_are_guarded_and_promoted.py"
    ]
   },
   {
    "commit": "3d9aa7e",
-   "bug": "A zero-branch FAIL reported a tolerance larger than the one its decision used (err/t < 1 on a failed entry), and the worst entry was chosen in the nonzero branch only, so a column failing on a zero entry reported a passing worst (ShapeProgramming CASE4 5ea29ed7; Vera B10).",
+   "bug": "A zero-branch FAIL reported a tolerance larger than the one its decision used (err/t < 1 on a failed entry), and the worst entry was chosen in the nonzero branch only, so a column failing on a zero entry reported a passing worst (ShapeProgramming CASE4 5ea29ed7; review B10).",
    "tests": [
     "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py"
    ]
@@ -598,7 +598,7 @@
   },
   {
    "commit": "4492958",
-   "bug": "beae90e bound a local named frames inside verify_one, so frames.points_for(...) -- the imported module -- raised UnboundLocalError on every row that reached it and every real pass23-prep run was a harness_error (Vera, pass23-prep blocker).",
+   "bug": "beae90e bound a local named frames inside verify_one, so frames.points_for(...) -- the imported module -- raised UnboundLocalError on every row that reached it and every real pass23-prep run was a harness_error (review pass23-prep blocker).",
    "tests": [
     "tests/test_no_function_shadows_a_module_it_uses.py",
     "tests/test_verify_one_runs_a_recorded_row_to_the_tangent_stage.py"
@@ -606,7 +606,7 @@
   },
   {
    "commit": "c9179ca",
-   "bug": "A module defined identically in both copies of the Jacobian-matched bundle was dropped from the second even when it held variables, assignments or procedures, i.e. shared state (Vera, pass23-prep).",
+   "bug": "A module defined identically in both copies of the Jacobian-matched bundle was dropped from the second even when it held variables, assignments or procedures, i.e. shared state (review pass23-prep).",
    "tests": [
     "tests/test_the_jacobian_matched_bundle_declares_each_unit_once.py"
    ],
@@ -614,7 +614,7 @@
   },
   {
    "commit": "e9bfe26",
-   "bug": "A comparison of 0 calls was read as a primal disagreement (biofilm_visco, template_umat, neo_hookean_umat), and a disagreement on shared records that first appears after the paths part was indistinguishable from one before it (Vera, pass23-prep).",
+   "bug": "A comparison of 0 calls was read as a primal disagreement (biofilm_visco, template_umat, neo_hookean_umat), and a disagreement on shared records that first appears after the paths part was indistinguishable from one before it (review pass23-prep).",
    "tests": [
     "tests/test_a_control_that_walked_other_increments_is_judged_on_what_it_shares.py",
     "tests/test_a_control_that_did_not_compare_is_not_a_disagreement.py"
@@ -976,7 +976,7 @@
   {
    "commit": "9eb3202",
    "selected_by": "manual",
-   "bug": "B20: Vera's five D-28 separate-line rules and the published-text-compiles relabel rule had no implementation; each is now an additional labelled verdict beside the published one (tools/d28_lines.py), with the canaries Vera specified.",
+   "bug": "B20: the review's five D-28 separate-line rules and the published-text-compiles relabel rule had no implementation; each is now an additional labelled verdict beside the published one (tools/d28_lines.py), with the canaries the review specified.",
    "tests": [
     "tests/test_the_b20_separate_line_rules.py::test_the_double_epsilon_reproduces_the_published_comparison_exactly",
     "tests/test_the_b20_separate_line_rules.py::test_canary_a_1e6_relative_error_fails_when_the_stiffness_is_modest",
@@ -989,7 +989,7 @@
   {
    "commit": "301b97c",
    "selected_by": "manual",
-   "bug": "B20: rule 2 amended by Vera after the first run; variant kept beside the first-written one.",
+   "bug": "B20: rule 2 amended by the review after the first run; variant kept beside the first-written one.",
    "tests": [
     "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_the_same_store_into_a_different_slot_flags",
     "tests/test_the_b20_separate_line_rules.py::test_rule_2_amended_canary_nint_times_stress_still_flags"
@@ -1016,7 +1016,7 @@
   {
    "commit": "3c225c4",
    "selected_by": "manual",
-   "bug": "The registry said a sibling example's deck was the author's own single-element test of the material (neo_hookean_umat on the _template job.inp; Worlthen array_with_two_pixel_z on simplified_job.inp); it now says verified with a sibling example's deck, and the census follows Vera's wording with separate lines read from census_lines.json.",
+   "bug": "The registry said a sibling example's deck was the author's own single-element test of the material (neo_hookean_umat on the _template job.inp; Worlthen array_with_two_pixel_z on simplified_job.inp); it now says verified with a sibling example's deck, and the census follows the review's wording with separate lines read from census_lines.json.",
    "tests": [
     "tests/test_b20_sibling_decks_and_the_census_wording.py::test_a_sibling_examples_deck_is_said_to_be_one_and_the_sentence_is_dropped",
     "tests/test_b20_sibling_decks_and_the_census_wording.py::test_the_rule_changes_exactly_the_two_rows_it_was_written_for"
@@ -1130,7 +1130,7 @@
   },
   {
    "commit": "f0ba475",
-   "reason": "Feature (S2, D-19a rev 2): registry origins, tiers and R6 council counting; 'refusal' appears only as the field name refusal_kind and the pairing refusal it records, it corrects no behaviour. Tested by tests/test_registry_fields_tiers.py."
+   "reason": "Feature (S2, D-19a rev 2): registry origins, tiers and R6 reviewer counting; 'refusal' appears only as the field name refusal_kind and the pairing refusal it records, it corrects no behaviour. Tested by tests/test_registry_fields_tiers.py."
   },
   {
    "commit": "b55b7ee",
@@ -1186,7 +1186,7 @@
   },
   {
    "commit": "0c2705f",
-   "reason": "New behaviour: check reads the files with Ada's intake scanner first and stops at the first blocking item; 'exits 3' and 'refusal' in its message describe the new exit code and the cards, not a corrected result."
+   "reason": "New behaviour: check reads the files with the review's intake scanner first and stops at the first blocking item; 'exits 3' and 'refusal' in its message describe the new exit code and the cards, not a corrected result."
   },
   {
    "commit": "66c5536",
@@ -1214,7 +1214,7 @@
   },
   {
    "commit": "b85295c",
-   "reason": "Regeneration of the pass25 registry with the council plans the runs used. 'stale' names the wrong input folder of the registry build command, which is not code in this repository; no defect in the repository is corrected."
+   "reason": "Regeneration of the pass25 registry with the reviewer plans the runs used. 'stale' names the wrong input folder of the registry build command, which is not code in this repository; no defect in the repository is corrected."
   }
  ],
  "changelog_fixed": {

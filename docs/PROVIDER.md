@@ -75,6 +75,28 @@ bundled copy. With `--abaqus-toolchain` that object is built by `abaqus make`
 (the Abaqus site compiler and flags) instead. Its SHA-256 is recorded in the
 contract under `regular_object`.
 
+**Locals read before they are assigned.** A UMAT that can read a local before
+any statement sets it has undefined behaviour there (a plasticity model that
+sets its plastic-strain increment only inside its Newton loop, and adds it to
+the state on every call, is the example). The build names each such local
+(`build.reads_before_assignment` in the contract, and on standard error),
+starts it at zero on entry to the lifted routine, and compiles the original
+with the same statement at its entry (`build.original_entry_statements`; the
+regular object's `role` says so and `compiled_source_sha256_full` is the digest
+of what was compiled). The source file is not changed. The analysis is a data flow over the UMAT routine only; a bare CALL argument counts as assigned and an array is reported only when no element can have been set, so the equivalence with `-init=zero` holds for the reported locals, not for every read. `--zero-init-locals`
+(every local zero in every build, by compiler flags) is still accepted.
+
+**Library routines.** A UMAT may call LAPACK routines Abaqus supplies (DGESV,
+DGETRF, DGETRS, DGETRI, DSPEVD). The lift calls the OTI copies the transform
+supplies; the original is linked against the real copies of the same
+algorithm, so both builds pivot and round alike. These copies are not LAPACK or MKL:
+DGETRF is an unblocked LU with partial pivoting, DGESV/DGETRS/DGETRI are built on
+it, and DSPEVD is a cyclic Jacobi method. The stand-alone original can therefore
+differ in the last bits from the same original running under Abaqus, which links
+MKL (measured on one plasticity UMAT with a Newton loop: the six-check gate's offline replay of the
+original reproduced the Abaqus record to 9e-16). Only these supplied routines get a
+real twin; an author's own helper is never defined twice.
+
 **Hashes and status.** `object.sha256` holds the legacy 16-character SHA-256
 prefix; `object.sha256_full` holds the full digest. The build runs a
 no-undefined-symbol shared-library link check but leaves
