@@ -2196,6 +2196,22 @@
   "mock:tests/test_library_routines.py:test_the_host_lapack_is_found_without_ldconfig_on_path_and_its_version_recorded:monkeypatch.setattr:31ca868b": {
    "verdict": "justified",
    "reason": "Hides ldconfig from PATH (shutil.which returns None for that name only) and empties the /sbin and /usr/sbin fallback list, so the test exercises the two ways the host LAPACK is found without ldconfig on PATH: the fallback paths and the direct read of the standard library directories. The discovery, the link probe and the version record are the real code."
+  },
+  "tolerance:src/umat_oti/validation/parameter_sensitivity_provider.py:verify_provider:kwarg:np.testing.assert_allclose:atol": {
+   "verdict": "justified",
+   "reason": "The primal comparison's rtol is unchanged (1e-12, now the named constant PRIMAL_RTOL). The absolute tolerance is now 1e-12 times the array's largest magnitude over the run, never less than the former fixed 1e-10 (stress) / 1e-14 (state), so it is never tighter and only looser where the run's stress is large; the value used is recorded in verification.json (primal_tolerance). Derivative checks are unchanged.",
+   "quote": "A fixed absolute tolerance does not scale with the stress: a component that cancels to about zero carries the rounding of the large terms it was computed from, about 1e-15 of the largest stress, which for stresses of order 1e5 is above 1e-10, and valid providers were rejected for it.",
+   "quote_source": "docs/PROVIDER.md"
+  },
+  "tolerance:src/umat_oti/validation/parameter_sensitivity_provider.py:verify_provider:kwarg:np.testing.assert_allclose:rtol": {
+   "verdict": "justified",
+   "reason": "The primal comparison's rtol is unchanged (1e-12, now the named constant PRIMAL_RTOL). The absolute tolerance is now 1e-12 times the array's largest magnitude over the run, never less than the former fixed 1e-10 (stress) / 1e-14 (state), so it is never tighter and only looser where the run's stress is large; the value used is recorded in verification.json (primal_tolerance). Derivative checks are unchanged.",
+   "quote": "A fixed absolute tolerance does not scale with the stress: a component that cancels to about zero carries the rounding of the large terms it was computed from, about 1e-15 of the largest stress, which for stresses of order 1e5 is above 1e-10, and valid providers were rejected for it.",
+   "quote_source": "docs/PROVIDER.md"
+  },
+  "skip:tests/test_library_routines.py:test_the_twins_follow_mkl_for_every_increment_and_invalid_argument:call:skip:323dd34b": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compares the twins with Intel MKL, the library Abaqus links, and skips only where no MKL links on the machine (host_lapack kind is not 'mkl'). On this machine oneAPI MKL 2023.2 links and the test runs."
   }
  }
 }
