@@ -213,22 +213,22 @@ frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
 against the new code. The script and its output are in
 `corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
 
-**Harness `cfd84cd2fe97e72b` -> `43d9a6de2e929b02` -> `2da74ab4f74c09b2`
-(2026-10-14, not re-run).** The replay stub block (`abaqus/replay.py`) now
-carries the real bodies of the LAPACK routines the transform supplies (DGESV,
-DGETRF, DGETRS, DGETRI, DSPEVD), dropped wherever the source defines its own,
-so the offline replays of an original that calls LAPACK (the D-12 init probe,
-the routine-level primal, the finite-difference reference) build where they
-did not link before. The bodies are an unblocked LU with partial pivoting and a
-cyclic Jacobi method, not MKL, so such a replay can differ from the solver's
-record in the last bits (measured on one plasticity UMAT with a Newton loop: 9e-16, inside
-`REPLAY_REPRODUCES`). The second step changes comments and docstrings only
-(neutral wording for review attributions). The transform fingerprint moved
-with these changes (`c61511ea0ffe58e2` -> `a57f1534146fcdd3`; see CHANGELOG):
-no pass was run at the new fingerprints, so every pass25 row and every
-regression case remains evidence at `cfd84cd2fe97e72b` / `c61511ea0ffe58e2`.
-A source that called LAPACK and was recorded "no init build set could be
-built" may decide differently at the new harness.
+**Harness `cfd84cd2fe97e72b` -> `@@HARNESS@@` (2026-10-15, not re-run).** The
+offline replays of an original (the D-12 init probe, the routine-level primal,
+the finite-difference reference, the routine-level harness) now link the host's
+LAPACK (`umat_oti.core.host_lapack`: MKL, OpenBLAS or reference LAPACK, recorded
+in each build record as `lapack`); where none links, and in every REAL(16)
+build, the stub block carries the transform's real twins of the supplied
+routines, dropped wherever the source defines its own. Before, an original that
+called LAPACK did not link and the probe recorded "no init build set could be
+built". Such a replay can differ from the solver's record in the last bits (a
+different MKL, or reference LAPACK; measured on one plasticity UMAT with a
+Newton loop: 9e-16, inside `REPLAY_REPRODUCES`). Comments and docstrings were
+also reworded (neutral wording for review attributions). The transform
+fingerprint moved with these changes (`c61511ea0ffe58e2` -> `@@TRANSFORM@@`; see
+CHANGELOG): no pass was run at the new fingerprints, so every pass25 row and
+every regression case remains evidence at `cfd84cd2fe97e72b` /
+`c61511ea0ffe58e2`.
 
 ### Binary32 stores (rule B32)
 

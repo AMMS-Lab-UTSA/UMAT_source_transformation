@@ -882,13 +882,16 @@ with no compiler flag; `--zero-init-locals` (all locals zero in every build)
 still exists. The verifier below builds its reference the same way and says so
 in `verification.json` (`reference_entry_statements`).
 
-**Library routines Abaqus supplies.** A UMAT that calls LAPACK (DGESV, DGETRF,
-DGETRS, DGETRI, DSPEVD) links against Abaqus's copy in a job. The provider and
-the verifier's reference link the transform's own real bodies of those routines
-instead, one archive member each, so only what the source leaves undefined is
-taken. They are not LAPACK or MKL (DGETRF is an unblocked LU with partial pivoting,
-DSPEVD a cyclic Jacobi method), so a stand-alone build of the original can differ
-in the last bits from the same original running under Abaqus.
+**Library routines Abaqus supplies.** A UMAT that calls LAPACK/BLAS links
+against Abaqus's MKL in a job. The generated files never define a standard
+LAPACK/BLAS name (inside Abaqus that definition would serve every caller in the
+solver): the transformed UMAT keeps its real calls for the host library and
+calls private OTI copies (`UMATOTI_DGESV_OTI`); the provider's copy of the
+original calls private real twins (`UMATOTI_DGESV_R`). The verifier's reference
+links the host's LAPACK (MKL, OpenBLAS or reference LAPACK, recorded as
+`reference_lapack`), or the twins where there is none. Supplied routines:
+DGESV, DGETRF, DGETRS, DGETRI, DSYEV, DSPEVD, DGEMM, DGEMV, DCOPY, DSCAL,
+DAXPY; any other is refused by name. See PROVIDER.md, "Library routines".
 
 **When it refuses.** Measured:
 
