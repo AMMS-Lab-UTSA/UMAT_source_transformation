@@ -307,6 +307,21 @@ def run_with_cards(command: str, args: Sequence[str]) -> int:
         summary = json.loads(printed) if printed.lstrip().startswith("{") else None
     except ValueError:
         summary = None
+    trial = summary.get("abaqus_trial") if isinstance(summary, dict) else None
+    if (command == "jacobian" and isinstance(trial, dict) and summary.get("transform_success")
+            and not summary.get("blockers") and trial.get("status") not in ("completed", "built")):
+        # The conversion succeeded and only the Abaqus trial did not complete: that is
+        # not a refusal of the routine, and the card for one would name the wrong thing.
+        destination = _out_of(args)
+        if destination is not None and destination.is_dir():
+            (destination / f"umat-oti-{command}-output.json").write_text(printed, encoding="utf-8")
+        wrote = (f" and wrote {summary['combined_source']}" if summary.get("combined_source") else "")
+        print(f"umat-oti jacobian: the conversion succeeded{wrote}; "
+              f"the Abaqus trial did not complete (status {trial.get('status')}"
+              + (f": {trial['error']}" if trial.get("error") else "") + "). "
+              f"Its record is {trial.get('report')}; the solver's own output is in "
+              f"{trial.get('stdout')} and the job's .msg/.dat files.", file=sys.stderr)
+        return int(code)
     if command == "all" and isinstance(summary, dict):
         state, reason = failure_state(summary)
     elif isinstance(summary, dict):
