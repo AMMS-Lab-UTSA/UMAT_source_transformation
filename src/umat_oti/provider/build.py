@@ -6,8 +6,10 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -86,7 +88,8 @@ def _abaqus_make(abaqus: str, source: Path, work: Path, target: Path) -> dict:
 
 def build_provider(contract_path: Path | str, output_dir: Path | str, *,
                    compiler: str = "gfortran", regular_object: str | None = None,
-                   abaqus_toolchain: bool = False, abaqus: str = "abaqus") -> dict:
+                   abaqus_toolchain: bool = False, abaqus: str = "abaqus",
+                   zero_init_locals: bool = False) -> dict:
     """Build the OTI provider; optionally also publish the regular object.
 
     ``regular_object`` names a second output: the ORIGINAL UMAT compiled
@@ -174,9 +177,13 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
         contract=contract, output_dir=build_dir, extra_directions=ntens,
     )
     wrapper = build_dir / "provider_wrappers.f90"
+    # Abaqus 2021 and later declare JSTEP(4) (step, procedure, NLGEOM, perturbation) where older
+    # interfaces have a scalar KSTEP; the wrappers pass whichever form the source declares.
+    source_text = Path(source).read_text(encoding="utf-8", errors="replace") if Path(source).exists() else ""
+    jstep_array = re.search(r"(?im)^[^cC*!\n][^!\n]*\bJSTEP\s*\(\s*4\s*\)", source_text) is not None
     wrapper.write_text(emit_wrappers(
         layout, ntens=ntens, nprops=nprops, nstatev=nstatev,
-        parameters=tuple(parameters), path_dependent=path_dependent,
+        parameters=tuple(parameters), path_dependent=path_dependent, jstep_array=jstep_array,
     ), encoding="utf-8")
     for include in ("ABA_PARAM.INC", "aba_param.inc", "ABA_PARAM.inc", "aba_param.INC"):
         (build_dir / include).write_text(ABA_PARAM, encoding="utf-8")
@@ -188,6 +195,7 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     # compiled from a copy under original/ for the same reason; the prefix map
     # is kept for anything else a newer compiler or -g would record.
     flags = [executable, "-O1", "-fPIC", "-std=legacy", "-ffree-line-length-none", "-fcheck=bounds",
+             *(["-finit-local-zero", "-finit-derived"] if zero_init_locals else []),
              f"-ffile-prefix-map={build_dir}=."]
     recorded_flags = [Path(executable).name, *flags[1:-1], "-ffile-prefix-map=<build>=."]
     sources = [layout.master_parameters, layout.real_utils, layout.otim_module,
@@ -204,11 +212,25 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     shutil.copy2(source, original_copy)
     original_object = build_dir / "original_umat.o"
     form = detect_source_form(source, source.read_text(encoding="utf-8"))
+    # The locals the UMAT can read before it assigns them (undefined behaviour
+    # in the original) start at zero in the lifted routine. The real build of
+    # the original gets the same statements at entry, so both builds compute
+    # the same function; the source on disk is not touched.
+    reads = layout.reads_before_assignment or {}
+    entry_statements = list(reads.get("initialised_in_generated_code") or [])
+    if entry_statements:
+        from umat_oti.fortran.read_before_set import insert_at_entry
+        original_copy.write_text(insert_at_entry(
+            source.read_text(encoding="utf-8"), "UMAT", form, entry_statements), encoding="utf-8")
     form_flags = ["-ffixed-form", "-ffixed-line-length-none"] if form == "fixed" else ["-ffree-form"]
     original_command = [*flags, *form_flags, "-I", ".", "-c", f"original/{source.name}",
                         "-o", original_object.name]
     _run(original_command, build_dir)
     objects.append(original_object.name)
+    twins = _real_library_twins(build_dir, original_object.name, layout.lifted_umat, executable)
+    if twins:
+        _run([*flags, "-c", twins.name, "-o", twins.with_suffix(".o").name], build_dir)
+        objects.append(twins.with_suffix(".o").name)
     bundled_object = build_dir / object_name
     _run([executable, "-nostdlib", "-r", *objects, "-o", object_name], build_dir)
     _run([executable, "-shared", "-Wl,--no-undefined", str(bundled_object),
@@ -245,7 +267,10 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
         "validation": {"status": "not_run", "passed": False},
         "build": {"compiler": _run([executable, "--version"], build_dir).splitlines()[0],
                   "transformer": "transform_umat_for_parameter_sensitivity",
-                  "sources": build_dir.name, "tangent": "dSTRESS_dDSTRAN_at_fixed_incoming_history"},
+                  "sources": build_dir.name, "tangent": "dSTRESS_dDSTRAN_at_fixed_incoming_history",
+                  "zero_init_locals": bool(zero_init_locals),
+                  "reads_before_assignment": reads,
+                  "original_entry_statements": entry_statements},
     }
     if regular_object is not None:
         staged_regular = build_dir / regular_object
@@ -261,11 +286,16 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
             toolchain = {"toolchain": "provider", "compiler": None}
             role = "ORIGINAL UMAT compiled unchanged; the same object is bundled in the OTI provider"
             command = [*recorded_flags, *form_flags, "-I", ".", "-c", f"original/{source.name}"]
+        if entry_statements:
+            role = role.replace("compiled unchanged", "compiled with " + "; ".join(entry_statements)
+                                + " placed at its entry (locals it reads before assigning them; see "
+                                "build.reads_before_assignment)")
         metadata["regular_object"] = {
             "file": regular_object,
             "sha256_full": hashlib.sha256(staged_regular.read_bytes()).hexdigest(),
             "role": role,
             "source_sha256_full": hashlib.sha256(source.read_bytes()).hexdigest(),
+            "compiled_source_sha256_full": hashlib.sha256(original_copy.read_bytes()).hexdigest(),
             "compile_command": command,
             **toolchain,
         }
@@ -275,10 +305,51 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     shutil.copy2(staged_json, output_dir / json_name)
     result = {"object": str(output_dir / object_name), "contract": str(output_dir / json_name),
               "build_dir": str(build_dir)}
+    if reads.get("warnings"):
+        result["warnings"] = list(reads["warnings"])
     if regular_object is not None:
         shutil.copy2(build_dir / regular_object, output_dir / regular_object)
         result["regular_object"] = str(output_dir / regular_object)
     return result
+
+
+
+def _real_library_twins(build_dir: Path, original_object: str, lifted: Path, executable: str):
+    """Real-valued twins of the library routines the transform supplied in OTI form (DGESV, DGETRF, ...).
+
+    The ORIGINAL UMAT calls the real library routine (under Abaqus it comes from the solver's own
+    library, MKL). A provider object must link on its own, so when the original leaves such a name
+    undefined and the lifted source defines its ``<name>_oti`` copy, the real body the transform
+    supplied (:func:`umat_oti.transform.abaqus_utility_definitions.library_twin_sources`: the same
+    unblocked LU with partial pivoting, or Jacobi eigen-solver, that the OTI copy runs) is compiled
+    under the plain name, with what it calls in turn. Only supplied library routines qualify; an
+    author's own helper never gets a second definition. Returns the generated file, or None.
+    """
+    from umat_oti.transform.abaqus_utility_definitions import (
+        LIBRARY_ROUTINES, available_definitions, library_twin_sources)
+
+    nm = shutil.which("nm")
+    if nm is None:
+        return None
+    listed = subprocess.run([nm, original_object], cwd=build_dir, capture_output=True,
+                            text=True).stdout.splitlines()
+    undefined = {line.split()[-1].lower() for line in listed if line.split()[:1] == ["U"]}
+    defined = {line.split()[-1].lower() for line in listed
+               if len(line.split()) == 3 and line.split()[1] in "TtDdBbCc"}
+    text = Path(lifted).read_text(encoding="utf-8")
+    lifted_names = {name.upper() for name in
+                    re.findall(r"(?im)^\s*subroutine\s+(\w+)_oti\s*\(", text)}
+    wanted = {name for name in LIBRARY_ROUTINES
+              if name in lifted_names and name.lower() + "_" in undefined}
+    if not wanted:
+        return None
+    names = [name for name in available_definitions(wanted) if name.lower() + "_" not in defined]
+    bodies = library_twin_sources()
+    path = build_dir / "real_library_twins.f90"
+    path.write_text("! Real-arithmetic twins of the library routines the ORIGINAL calls: the bodies the\n"
+                    "! transform supplies, the same algorithm as their OTI copies in umat_oti_lifted.f90.\n\n"
+                    + "\n".join(bodies[name] for name in names), encoding="utf-8")
+    return path
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -295,12 +366,18 @@ def main(argv: list[str] | None = None) -> int:
                        help="build the regular object with `abaqus make` (the Abaqus site "
                             "compiler and flags) instead of the provider's compiler")
     build.add_argument("--abaqus", default="abaqus", help="Abaqus command for --abaqus-toolchain")
+    build.add_argument("--zero-init-locals", action="store_true",
+                       help="compile with -finit-local-zero -finit-derived: a local the source reads before it sets "
+                            "it starts at zero in both builds (recorded in the contract)")
     args = parser.parse_args(argv)
     try:
         result = build_provider(args.contract, args.out, compiler=args.compiler,
                                 regular_object=args.regular_object,
-                                abaqus_toolchain=args.abaqus_toolchain, abaqus=args.abaqus)
+                                abaqus_toolchain=args.abaqus_toolchain, abaqus=args.abaqus,
+                                zero_init_locals=args.zero_init_locals)
     except (ValueError, OSError, RuntimeError) as error:
         parser.exit(2, f"provider build failed: {error}\n")
+    for warning in result.get("warnings", []):
+        print(f"warning: {warning}", file=sys.stderr)
     print(json.dumps(result, indent=2))
     return 0

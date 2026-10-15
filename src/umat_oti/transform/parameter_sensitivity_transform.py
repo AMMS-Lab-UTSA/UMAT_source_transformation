@@ -101,6 +101,11 @@ class GenericPSLayout:
     #: :func:`umat_oti.transform.binary32.binary32_store_report` of the lifted
     #: code (also written beside it as ``binary32_stores.json``).
     binary32_stores: dict = field(default_factory=dict)
+    #: :func:`umat_oti.fortran.read_before_set.analyse_text` of the UMAT, with
+    #: the statements that start each finding at zero on entry to the lifted
+    #: routine (``initialised_in_generated_code``); also written beside it as
+    #: ``reads_before_assignment.json``.
+    reads_before_assignment: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -182,10 +187,24 @@ def transform_umat_for_parameter_sensitivity(
         BINARY32_WIDENED_SINK.reset(sink_token)
         BINARY32_RULE_CONTEXT.reset(rule_token)
 
+    # A local the UMAT can read before it assigns it is undefined behaviour in
+    # the original; the lifted routine starts it at zero on entry, explicitly,
+    # so that what it computes does not depend on build flags.
+    from umat_oti.fortran.read_before_set import analyse_text, insert_at_entry
+    entry_reads = analyse_text(source_text, "UMAT", form=parsed.form,
+                               source_path=contract.umat_source_path)
+    entry_statements = [finding.zero_statement() for finding in entry_reads.initialisable]
+    lifted_source = insert_at_entry(lifted.source, "UMAT_OTI", "free", entry_statements)
+    reads_before_assignment = {**entry_reads.as_dict(),
+                               "initialised_in_generated_code": entry_statements,
+                               "warnings": entry_reads.warnings()}
+    (output_dir / "reads_before_assignment.json").write_text(
+        json.dumps(reads_before_assignment, indent=2) + "\n", encoding="utf-8")
+
     lifted_path = output_dir / "umat_oti_lifted.f90"
     lifted_path.write_text(
         _source_defined_modules_used(parsed, umat_and_helpers)
-        + _wrap_lifted_in_module(lifted.source, module_name=module_result.module_name,
+        + _wrap_lifted_in_module(lifted_source, module_name=module_result.module_name,
                                  n_param=n_param + extra_directions),
         encoding="utf-8",
     )
@@ -208,7 +227,7 @@ def transform_umat_for_parameter_sensitivity(
                                    module_result.type_name), encoding="utf-8")
 
     # Read off the text the lifter was given, not the published one: a
-    # utility supplied above (ROTSIG for Lemaitre, Gauss B1 F1) is defined
+    # utility supplied above (ROTSIG for Lemaitre, review B1 F1) is defined
     # there, and asking the unsupplied text refused exactly what had just
     # been made available.
     stubs = _required_utility_stubs(parsed.text)
@@ -232,6 +251,7 @@ def transform_umat_for_parameter_sensitivity(
         n_param=n_param,
         umat_and_helpers=umat_and_helpers,
         binary32_stores=binary32_stores,
+        reads_before_assignment=reads_before_assignment,
     )
 
 
@@ -395,7 +415,7 @@ def _source_defined_modules_used(parsed: ParsedFortranSource,
                                  routine_names: tuple[str, ...]) -> str:
     """The source's own modules that the lifted routines USE, as free-form text.
 
-    See :mod:`umat_oti.transform.source_modules` (Gauss, B1 F4: ``use NumKind``).
+    See :mod:`umat_oti.transform.source_modules` (review B1 F4: ``use NumKind``).
     """
     from umat_oti.transform.source_modules import module_text, modules_used_by, source_modules
 
@@ -579,7 +599,7 @@ def _emit_driver(
     # The 36th argument is KSTEP in the classic interface and JSTEP(4) in the
     # newer one (step number, procedure, NLGEOM flag, perturbation flag). A
     # scalar actual against JSTEP(4) is a rank mismatch the module's explicit
-    # interface rejects (Gauss, B1 F2: CAEAssistant), so the driver passes
+    # interface rejects (review B1 F2: CAEAssistant), so the driver passes
     # the shape the routine declares, with the step number in element 1.
     kstep_extent = umat_kstep_extent(contract.umat_source_path)
     kstep_declaration = f"KSTEP({kstep_extent})" if kstep_extent else "KSTEP"
