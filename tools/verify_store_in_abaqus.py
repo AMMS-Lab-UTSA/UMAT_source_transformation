@@ -5638,6 +5638,23 @@ def branch_verdict(oti, sweep, manifest: VerificationManifest, *,
 # ---------------------------------------------------------------------------
 
 
+def _json_scalar(value):
+    """A NumPy number or array in a record, as the plain value it holds.
+
+    A record built from NumPy arithmetic can carry an int64 (an index, a count)
+    that json cannot write; one such field stopped a whole verification with
+    "Object of type int64 is not JSON serializable" after both Abaqus jobs had
+    run, and the entry's evidence was lost.
+    """
+    import numpy as np
+
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
+
+
 def append_record(path: Path, record: dict, lock: Optional[Lock] = None) -> None:
     """One line per entry, flushed to disk before the next entry starts.
 
@@ -5648,7 +5665,7 @@ def append_record(path: Path, record: dict, lock: Optional[Lock] = None) -> None
     why this file is opened, written, flushed and fsynced for each entry rather
     than left to the interpreter to close.
     """
-    line = json.dumps(record, sort_keys=True) + "\n"
+    line = json.dumps(record, sort_keys=True, default=_json_scalar) + "\n"
     if lock is not None:
         lock.acquire()
     try:
@@ -5927,7 +5944,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "store_verification.json").write_text(
         json.dumps(scrub({"summary": summary, "entries": records},
-                         args.work_dir, store.root), indent=1) + "\n",
+                         args.work_dir, store.root), indent=1, default=_json_scalar) + "\n",
         encoding="utf-8")
 
     print("")
@@ -5940,7 +5957,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"    verified: {name}")
     print(f"  wrote {out_dir / 'store_verification.json'}")
     if args.json:
-        print(json.dumps(summary, indent=1))
+        print(json.dumps(summary, indent=1, default=_json_scalar))
 
     outcome = exit_verdict(args.mode, records, required_entries(args, records))
     for line in outcome.lines:
