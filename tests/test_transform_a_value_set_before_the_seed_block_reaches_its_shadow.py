@@ -2,7 +2,7 @@
 
 The seed block zeroes every shadow and is inserted at the first stress-path
 statement; statements above it stay real. A name assigned up there and read on
-the stress path through its shadow was therefore read as zero (Vera, B2 review
+the stress path through its shadow was therefore read as zero (review B2 review
 item 1): czmHealing.f's ``SMALL_K=1.D-8`` became SMALL_K_OTI = 0 (shear stress
 621.7506 against 621.75060622; at the damaged state 2.7e-8 against 6.2e4), and
 ``E=PROPS(1)`` handed to a lifted helper returned STRESS = 0 (toy t4a).

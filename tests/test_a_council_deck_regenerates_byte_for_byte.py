@@ -1,6 +1,6 @@
 """tools/make_council_deck.py (G9, D-19a rev 2 R6.1).
 
---check regenerates every council plan and deck and compares them byte for
+--check regenerates every reviewer plan and deck and compares them byte for
 byte with what is on disk: it passes on fresh output and fails after a
 one-byte change to the row, to a written file, or when a file is missing.
 """

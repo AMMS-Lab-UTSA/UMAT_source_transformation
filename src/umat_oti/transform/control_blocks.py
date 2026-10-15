@@ -6,7 +6,7 @@ they run only on that branch: czmHealing.f had both extractions emitted inside
 the ELSE of ``IF (Da0.LE.0.99999)``, so an undamaged material point returned
 STRESS = 0 and DDSDDE = 0 -- and every semantic check passed, because each of
 them asks *whether* an extraction is there and after which line, never under
-which condition (Vera, B1 review Q4).
+which condition (review B1 review Q4).
 
 :func:`block_spans` reads the routine's logical statements and returns every
 block with its first and last physical line. :func:`hoisted_insertion_line`
@@ -243,7 +243,7 @@ def _jump_past(lines: Sequence[str], form: str, span: tuple[int, int], point: in
 
     A statement inserted after ``point`` runs only on the paths that pass
     it. ``IF (..) GOTO 200`` inside the hoisted-over block, to a label after
-    the block, skipped the hoisted extraction altogether (Vera's t2d: primal
+    the block, skipped the hoisted extraction altogether (the review's t2d: primal
     relative error 1.0, DDSDDE 0 against FD ~100). Such a routine is given
     one exit instead.
     """

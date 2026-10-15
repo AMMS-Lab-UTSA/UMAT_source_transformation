@@ -81,7 +81,7 @@ FUNCTION_WRITE = SOURCE.replace("      S=S+E*DE*(ONE+TEN*DE*DE)*DAMPING\n",
 
 
 def test_an_initialised_real_written_through_a_function_reference_is_refused(tmp_path):
-    """Vera's B8 re-review C1: X = BUMP(TEN), BUMP writing its argument."""
+    """The review's B8 re-review C1: X = BUMP(TEN), BUMP writing its argument."""
     from umat_oti.transform.helper_lifting import HelperLiftingError
 
     try:

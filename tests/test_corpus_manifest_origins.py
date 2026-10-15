@@ -2,9 +2,9 @@
 
 Each acquired row carries an ``origins`` block copied from the registry:
 both origins, the refs, the pairing's refusal kind, the worst constant
-confidence, the council sets, Vera's two acceptances, branch coverage, the
+confidence, the reviewer sets, the review's two acceptances, branch coverage, the
 unenforced domain, the tier and whether the row counted. The enums are the
-registry's, and the schema refuses a counted council row without both
+registry's, and the schema refuses a counted reviewer row without both
 acceptances.
 """
 

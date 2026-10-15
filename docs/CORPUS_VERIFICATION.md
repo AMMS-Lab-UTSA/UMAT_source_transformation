@@ -13,7 +13,7 @@ Abaqus 2021 on 2026-10-08 (pass25: commit a7b6b4b, transform fingerprint
 `c61511ea0ffe58e2`, harness fingerprint `cfd84cd2fe97e72b`, contract 5.0.0), at
 the tip of the B20 engineering batch. 311 sources transform (298 at pass24) and
 285 compile. The discovery cache was read-only for the tools and its SHA-256 over
-all 11,890 files is the same before and after the pass. No council experiment
+all 11,890 files is the same before and after the pass. No reviewer experiment
 counts toward the figures below. The published line and the revised line are
 never pooled with each other or with the new sources:
 
@@ -193,7 +193,7 @@ other harness or store as not current. Routine-level cells carry their own
 fingerprints it records (D-6).
 
 **Harness `d6f92d4704bee702` -> `3648d174377c2280` (2026-10-02, licence
-clean-up before the push, Vera B7).** Two yield-function identifications in
+clean-up before the push, review B7).** Two yield-function identifications in
 `corpus_features/mechanics_checks.py` matched literal statements of a
 republished Abaqus example. They now match the structure instead: the variable
 stored in `STATEV(1+2*NTENS)` is the argument of the `Sy*(0.0001+p)**n` power
@@ -212,6 +212,23 @@ unaffected (D-17: nothing on the Abaqus verification path imports
 frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
 against the new code. The script and its output are in
 `corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
+
+**Harness `cfd84cd2fe97e72b` -> `43d9a6de2e929b02` -> `2da74ab4f74c09b2`
+(2026-10-14, not re-run).** The replay stub block (`abaqus/replay.py`) now
+carries the real bodies of the LAPACK routines the transform supplies (DGESV,
+DGETRF, DGETRS, DGETRI, DSPEVD), dropped wherever the source defines its own,
+so the offline replays of an original that calls LAPACK (the D-12 init probe,
+the routine-level primal, the finite-difference reference) build where they
+did not link before. The bodies are an unblocked LU with partial pivoting and a
+cyclic Jacobi method, not MKL, so such a replay can differ from the solver's
+record in the last bits (measured on one plasticity UMAT with a Newton loop: 9e-16, inside
+`REPLAY_REPRODUCES`). The second step changes comments and docstrings only
+(neutral wording for review attributions). The transform fingerprint moved
+with these changes (`c61511ea0ffe58e2` -> `a57f1534146fcdd3`; see CHANGELOG):
+no pass was run at the new fingerprints, so every pass25 row and every
+regression case remains evidence at `cfd84cd2fe97e72b` / `c61511ea0ffe58e2`.
+A source that called LAPACK and was recorded "no init build set could be
+built" may decide differently at the new harness.
 
 ### Binary32 stores (rule B32)
 

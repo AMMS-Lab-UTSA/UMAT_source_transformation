@@ -1,5 +1,5 @@
-"""The Abaqus-side tangent gate under decision D-4 (G10; Curie B7 items 1-7,
-Vera B7 amendments A1-A8).
+"""The Abaqus-side tangent gate under decision D-4 (G10; review B7 items 1-7,
+review B7 amendments A1-A8).
 
 The value under test is DDSDDE out of the transformed build's own probe
 record; the reference is a centred difference of the ORIGINAL source,
@@ -9,7 +9,7 @@ row, with the same entrywise rule the routine-level harness uses
 (:func:`umat_oti.corpus_features.fd.judge_column`):
 
 * every entry from its own FD-only plateau of >= 3 steps (no 2-step
-  plateaus, no best-relative-per-entry: Curie's G1/G2);
+  plateaus, no best-relative-per-entry: review G1/G2);
 * the round-off magnitude is the largest derivative across the block times
   the TOTAL kinematic input, plus the stress over every perturbed
   evaluation (A1); a bitwise-zero double ladder is a structural zero only
@@ -124,7 +124,7 @@ def entry_smoothness(forward: Sequence[np.ndarray], backward: Sequence[np.ndarra
     # its curvature times h: between consecutive steps it falls by about the
     # ladder ratio. A kink's is the jump between two branch slopes, which
     # does not fall while the step still crosses it. Judged step by step over
-    # the pairs where both gaps are above their round-off (Vera G10 review
+    # the pairs where both gaps are above their round-off (review G10 review
     # A6; an entry whose centred value is ~0 by symmetry -- an even function
     # of the input -- has a curvature gap above 1e-3 |0| at every step and
     # decays exactly like h).
@@ -274,7 +274,7 @@ def canonical_strain_direction(j: int, ndi: int, nshr: int) -> np.ndarray:
     """Abaqus strain direction of Voigt column ``j`` (1-based), from the
     kinematics alone: ``eps_aa = 1`` for a direct component, ``eps_ab =
     eps_ba = 1/2`` for an ENGINEERING shear. Built without reading the
-    store's seed map (Vera B1/A: the FD direction must not come from the code
+    store's seed map (review B1/A: the FD direction must not come from the code
     path under test). The routine-level harness uses this same function."""
     from umat_oti.corpus_features.paths import VOIGT_3D, voigt_components
     a, b = VOIGT_3D[voigt_components(ndi, nshr)[j - 1]]
@@ -287,7 +287,7 @@ def canonical_strain_direction(j: int, ndi: int, nshr: int) -> np.ndarray:
 
 
 def direction_check(transformed_text: str, ntens: int, ndi: int, nshr: int) -> dict:
-    """Vera B7 A8: for a source driven through the deformation gradient, the
+    """review B7 A8: for a source driven through the deformation gradient, the
     direction the transform seeded for each DDSDDE column must be the Abaqus
     strain direction of that column, built from the kinematics alone. A
     mismatch means the store's columns are derivatives in other directions,

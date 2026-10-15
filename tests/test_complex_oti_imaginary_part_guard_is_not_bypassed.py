@@ -3,7 +3,7 @@
 A source that computes its own complex-step tangent and branches on an
 imaginary part is refused: under the complex OTI type every primal imaginary
 part is zero, the branch is never taken, and DDSDDE is the derivative of the
-value algorithm where the author needed the other one. Vera (B2 review item 5)
+value algorithm where the author needed the other one. The review (B2 review item 5)
 bypassed the guard three ways, each giving DDSDDE(1,1) = 0 against FD of the
 original = 100:
 

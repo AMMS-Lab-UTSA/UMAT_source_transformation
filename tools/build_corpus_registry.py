@@ -301,7 +301,7 @@ DEFAULT_ACQUISITION = (REPO / "paper_results/corpus/companions.json",
 #: rebuilt on a machine with no Fortran compiler and get the same answers.
 DEFAULT_AUDIT = REPO / "paper_results/corpus/transform_refusal_audit.json"
 
-#: Reviewed per-source rulings (Vera), keyed by source_id AND sha256: a ruling
+#: Reviewed per-source rulings (review), keyed by source_id AND sha256: a ruling
 #: is about the text it read, so a file that changed since is not ruled.
 DEFAULT_SOURCE_RULINGS = REPO / "paper_results/corpus/reviewed_source_rulings.json"
 
@@ -337,7 +337,7 @@ class Record:
     refusal_class: str = ""
     refusal_class_confident: Optional[bool] = None
     #: A verdict the source's own text decides before any run does
-    #: (umat_oti.corpus.source_rulings; Vera B10 pre-pass22 rulings b and c):
+    #: (umat_oti.corpus.source_rulings; review B10 pre-pass22 rulings b and c):
     #: ``visualisation_umat`` (the UMAT only displays its UEL's state ->
     #: not_a_umat), ``unpublished_absolute_input`` (it READs a file at the
     #: author's absolute path that the repository does not publish ->
@@ -499,9 +499,9 @@ class Record:
     #: :data:`MATERIAL_DATA_ORIGINS` (``author_deck``,
     #: ``author_published_outside_deck``, ``council_chosen``) and
     #: ``experiment_origin`` one of :data:`EXPERIMENT_ORIGINS` (``author``,
-    #: ``council``); empty where no material data exists for the source at
+    #: ``reviewer``); empty where no material data exists for the source at
     #: all. ``material_data_ref`` names the harvest or D-21 row the constants
-    #: came from, ``council_deck_ref`` the council plan, ``council_fingerprint``
+    #: came from, ``council_deck_ref`` the reviewer plan, ``council_fingerprint``
     #: that plan's fingerprint (make_council_deck: tool + harness + row).
     material_data_origin: str = ""
     experiment_origin: str = ""
@@ -516,27 +516,27 @@ class Record:
     #: and how many of them are ``interpreted`` (counted, but flagged: D-19a R5).
     harvest_confidence: str = ""
     interpreted_constants: Optional[int] = None
-    #: The council's parameter sets, ``;``-joined (D-21: >= 2, and the source
+    #: The reviewer's parameter sets, ``;``-joined (D-21: >= 2, and the source
     #: counts only if every one passes).
     council_sets: str = ""
-    #: Vera's acceptance of the template and of this instance (R6.5). Both
-    #: must be True before a council row counts.
+    #: the review's acceptance of the template and of this instance (R6.5). Both
+    #: must be True before a reviewer row counts.
     vera_accepted_template: Optional[bool] = None
     vera_accepted_instance: Optional[bool] = None
     #: The layout branch exercised (D-21c), as JSON, and the documented-domain
-    #: entries stated only in words and so not enforced (Vera G review C2). A
+    #: entries stated only in words and so not enforced (review G C2). A
     #: row with any of the latter does not count.
     branch_coverage: str = ""
     domain_not_enforced: str = ""
-    #: The council plan was refused because an author deck now pairs this
-    #: source (R6.2): the row is re-routed, never counted as a council row.
+    #: The reviewer plan was refused because an author deck now pairs this
+    #: source (R6.2): the row is re-routed, never counted as a reviewer row.
     pairing_changed: Optional[bool] = None
-    #: Any other refusal of the council plan, ``code: text``.
+    #: Any other refusal of the reviewer plan, ``code: text``.
     council_refusal: str = ""
     #: D-21a licence hold (default excluded until Santiago decides).
     licence_hold: str = ""
     #: The D-2 redistribution decision (permitted / not_permitted / unknown).
-    #: Recorded for every row that has an origin; a council row counts only
+    #: Recorded for every row that has an origin; a reviewer row counts only
     #: once it is recorded ("D-2 handled"), and a row that is not
     #: ``permitted`` is counted locally and never pushed as a case.
     redistribution: str = ""
@@ -545,7 +545,7 @@ class Record:
     #: the deck-only figures stay reportable on their own (D-19).
     adequacy_tier: str = ""
     adequacy_tier_basis: str = ""
-    #: Whether a council-experiment row passes every R6 condition, and if not,
+    #: Whether a reviewer-experiment row passes every R6 condition, and if not,
     #: every condition it fails. None for author-experiment rows.
     counted_in_tier: Optional[bool] = None
     not_counted_in_tier_reason: str = ""
@@ -934,7 +934,7 @@ def licence_for(source_id: str, entry: dict) -> str:
     A subdirectory may carry its own licence that the root one does not
     override: laufogh/fe-large-displacement is MIT at the root, but
     ``constitutive/hypoplasticity-staubach/`` has its own GPL-3.0 LICENSE and
-    a PROVENANCE.md saying the root licence does not apply (Vera B10 pass21).
+    a PROVENANCE.md saying the root licence does not apply (review B10 pass21).
     ``license_by_path`` entries (``path_prefix``, ``license_spdx``) in the
     acquisition manifest decide by the longest matching prefix; otherwise the
     repository's licence applies.
@@ -1732,7 +1732,7 @@ def _published_names(cache: Optional[Path], source_id: str) -> list:
 
 def apply_source_rulings(records, cache: Optional[Path],
                          reviewed: Optional[list] = None) -> None:
-    """Verdicts the source's own text decides, and Vera's reviewed rulings.
+    """Verdicts the source's own text decides, and the review's reviewed rulings.
 
     Two general rules (umat_oti.corpus.source_rulings), applied to every
     record whose file the cache holds:
@@ -1842,7 +1842,7 @@ def _adequacy(record: Record) -> tuple:
 
     D-19/D-21: this is the DECK-ONLY D2, and it stays so, because D-19 keeps
     the deck-only figures reportable on their own. Constants the author
-    published outside a deck (D-19) or the council chose (D-21) do not move a
+    published outside a deck (D-19) or the reviewer chose (D-21) do not move a
     source into it; they put the source into its own tier's denominator
     (``adequacy_tier``, set by :func:`apply_origins`), and every verified
     count is split by tier (:func:`tier_summary`).
@@ -1981,7 +1981,7 @@ def _refused_sources(transform_report: Optional[Path]) -> list:
 
 
 # ---------------------------------------------------------------------------
-# Origins, tiers and council counting (D-19, D-21, D-19a rev 2 R0/R6)
+# Origins, tiers and reviewer counting (D-19, D-21, D-19a rev 2 R0/R6)
 # ---------------------------------------------------------------------------
 
 AUTHOR_DECK = "author_deck"
@@ -1999,7 +1999,7 @@ TIERS = (TIER_AUTHOR_DECK, TIER_PUBLISHED_AUTHOR, TIER_PUBLISHED_COUNCIL,
          TIER_COUNCIL_CHOSEN)
 
 #: ``deck_pairing.Pairing.refusal_kind`` (R0), and the two that route to a
-#: council experiment.
+#: reviewer experiment.
 NO_DECK_IN_REPOSITORY = "no_deck_in_repository"
 NO_DECK_NAMES_THIS_SOURCE = "no_deck_names_this_source"
 AUTHOR_BLOCK_REJECTED = "author_block_rejected"
@@ -2029,7 +2029,7 @@ Q4_STATEMENT = (
 
 
 def experiment_origin_of(value) -> str:
-    """``author`` or ``council`` from what a plan or a row wrote."""
+    """``author`` or ``reviewer`` from what a plan or a row wrote."""
     text = str(value or "")
     if text in ("council", "council_deck"):
         return "council"
@@ -2046,7 +2046,7 @@ def tier_of(material_data_origin: str, experiment_origin: str) -> str:
             (AUTHOR_PUBLISHED_OUTSIDE_DECK, "council"): TIER_PUBLISHED_COUNCIL,
             (COUNCIL_CHOSEN, "council"): TIER_COUNCIL_CHOSEN,
             # D-21b (b): the author's LHS design points, run on the author's
-            # own deck, are still council-chosen constants
+            # own deck, are still reviewer-chosen constants
             (COUNCIL_CHOSEN, "author"): TIER_COUNCIL_CHOSEN,
             }.get((material_data_origin, experiment_origin), "")
 
@@ -2085,9 +2085,9 @@ def origin_inputs(harvest: Optional[Path] = None, council: Optional[Path] = None
                   acceptance: Optional[Path] = None) -> dict:
     """Everything :func:`apply_origins` reads, keyed for lookup.
 
-    ``harvest`` is the D-19 harvest (d19_harvest.jsonl), ``council`` the
-    D-21 council constants, ``plans`` the make_council_deck output
-    directory (``<key>/council_plan.json``), ``acceptance`` Vera's
+    ``harvest`` is the D-19 harvest (d19_harvest.jsonl), ``reviewer`` the
+    D-21 reviewer constants, ``plans`` the make_council_deck output
+    directory (``<key>/council_plan.json``), ``acceptance`` the review's
     acceptances (rows of key or source_id with vera_accepted_template /
     vera_accepted_instance), which override what a row says of itself."""
     out = {"harvest": {}, "council": {}, "plans": {}, "plans_by_source": {},
@@ -2138,8 +2138,8 @@ def apply_origins(records: list, inputs: dict, *, cache: Optional[Path] = None) 
 
     * an ELIGIBLE harvest row whose constants the author published outside a
       deck -> ``author_published_outside_deck``, with the experiment of the
-      route: the author's for ``author_deck_unresolved`` (R1), the council's
-      for the two council routes (R2). ``author_block_rejected`` stays
+      route: the author's for ``author_deck_unresolved`` (R1), the reviewer's
+      for the two reviewer routes (R2). ``author_block_rejected`` stays
       refused even with an eligible row (D-19a R0: czmHealing);
     * else a D-21 row that counts in its tier and is not a duplicate ->
       ``council_chosen``; a licence hold keeps it out (D-21a).
@@ -2246,7 +2246,7 @@ def apply_origins(records: list, inputs: dict, *, cache: Optional[Path] = None) 
 
 
 def is_council_row(record: Record) -> bool:
-    """A row whose constants or experiment the council chose (R6 applies)."""
+    """A row whose constants or experiment the reviewer chose (R6 applies)."""
     return (record.experiment_origin == "council"
             or record.material_data_origin == COUNCIL_CHOSEN)
 
@@ -2254,18 +2254,18 @@ def is_council_row(record: Record) -> bool:
 def council_counted(record: Record, set_cells, *,
                     author_rerun_harness: str = "") -> tuple:
     """``(counts, [(code, text) for every R6 condition it fails])`` for a
-    council row (:func:`is_council_row`); ``(None, [])`` for any other.
+    reviewer row (:func:`is_council_row`); ``(None, [])`` for any other.
 
-    Counts only if: both Vera acceptances (R6.5); the pairing has not changed
-    (R6.2); for a council experiment, a council plan that was not refused and
-    leaves no documented-domain entry unenforced (Vera G review C2); no
+    Counts only if: both review acceptances (R6.5); the pairing has not changed
+    (R6.2); for a reviewer-designed experiment, a reviewer plan that was not refused and
+    leaves no documented-domain entry unenforced (review G C2); no
     licence hold (D-21a); a D-2 redistribution decision is recorded; the
-    author-deck rows were re-run at the harness the council cells came from
-    (R6.6, ``author_rerun_harness``); >= 2 sets for council-chosen constants
+    author-deck rows were re-run at the harness the reviewer cells came from
+    (R6.6, ``author_rerun_harness``); >= 2 sets for reviewer-chosen constants
     (D-21.3); and EVERY planned set's primal_stress_state and ddsdde cells
     are verified with STRESS and DDSDDE defined throughout, combined by
-    ``cells.combine_council_sets`` (D-21.3, Vera G review C6). A cell with
-    no council set is refused for a council row: it cannot say which
+    ``cells.combine_council_sets`` (D-21.3, review G C6). A cell with
+    no reviewer set is refused for a reviewer row: it cannot say which
     experiment it judged.
     """
     if not is_council_row(record):
@@ -2342,7 +2342,7 @@ def informative_gate_hidden(record) -> bool:
     derivatives_verified and mechanically_informative to
     ``tangent_not_verified`` -- a later stage that hides the gate. pass20
     counted three shell-growth sources at routine level whose informativeness
-    was never established (Vera B10 pass21). Accepts a Record or a registry
+    was never established (review B10 pass21). Accepts a Record or a registry
     row dict."""
     get = (record.get if isinstance(record, dict)
            else lambda k, d=None: getattr(record, k, d))
@@ -2371,9 +2371,9 @@ def tier_summary(records: list, cells=None, *, council_cells=None,
 
     ``verified_abaqus`` is the six-gate registry verdict; ``verified_routine``
     the D-8 routine-level count, given the primal+ddsdde harness cells
-    (``None`` without them). A council-experiment row counts only under R6
+    (``None`` without them). A reviewer-experiment row counts only under R6
     (:func:`council_counted`); its Abaqus count is not established, because
-    the registry holds one Abaqus row per source and a council source needs
+    the registry holds one Abaqus row per source and a reviewer source needs
     every set."""
     by_source = _cells_by_source(cells)
     council_cells = list(council_cells or ())
@@ -2388,7 +2388,7 @@ def tier_summary(records: list, cells=None, *, council_cells=None,
         members = [r for r in records if r.adequacy_tier == tier]
         council_tier = tier in (TIER_PUBLISHED_COUNCIL, TIER_COUNCIL_CHOSEN)
         if council_tier:
-            # every member is a council row: counted only under R6
+            # every member is a reviewer row: counted only under R6
             abaqus = None
             routine = [r for r in members if r.counted_in_tier]
         else:
@@ -2574,7 +2574,7 @@ def summarise(records: list) -> dict:
                                   clusters.items(), key=lambda kv: -len(kv[1]))},
         "verified_sources": [r.source_id for r in verified],
         # A primal-gate-passed stage over an informativeness gate that is not
-        # true: routine_verified never counts these (Vera B10 pass21).
+        # true: routine_verified never counts these (review B10 pass21).
         "primal_gate_passed_informative_gate_not_true": sorted(
             f"{r.source_id} ({r.terminal_state}; mechanically_informative="
             f"{r.gate_mechanically_informative or 'unset'})"
@@ -2725,7 +2725,7 @@ def pass23_census(records, population_path: Optional[Path] = None,
     count of eligible sources, as the denominator: the denominator of the published
     figure is the pass23 population of 242.
 
-    Wording (Vera, pass25): "x of 242 as published (pass23)"; "y of 242 under the
+    Wording (review pass25): "x of 242 as published (pass23)"; "y of 242 under the
     corrected pipeline (pass25), repeated once, identical"; "+k on separate
     lines"; the revised callee rule "of 252" with the freed sources that publish no
     material KEPT IN; "247" on its own line with its rule, never "of 247" alone.

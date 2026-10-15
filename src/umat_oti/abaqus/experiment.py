@@ -1361,9 +1361,9 @@ def plan(source: Path, repository: Path, name: str = "",
 
 
 # ---------------------------------------------------------------------------
-# a council-designed experiment (D-19a rev 2 R2; D-21)
+# a reviewer-designed experiment (D-19a rev 2 R2; D-21)
 # ---------------------------------------------------------------------------
-#: The pairing refusals that route to a council deck.
+#: The pairing refusals that route to a reviewer deck.
 COUNCIL_ROUTES = ("no_deck_in_repository", "no_deck_names_this_source")
 #: Amplitude ceilings when the domain is undocumented (R3).
 COUNCIL_SMALL_STRAIN_CEILING = 0.02
@@ -1413,7 +1413,7 @@ _STATED_FORMULATION = (
 
 @dataclass(frozen=True)
 class CouncilPlan:
-    """A council-designed experiment for a source with no usable author deck,
+    """A reviewer-designed experiment for a source with no usable author deck,
     one manifest per parameter set (D-21: >= 2 independent sets; the source
     counts only if every set passes)."""
 
@@ -1429,10 +1429,10 @@ class CouncilPlan:
     refusal_code: str = ""
     notes: tuple = ()
     #: Documented-domain entries stated only in words, so not enforced: a
-    #: plan carrying any cannot count silently (Vera's G review C2).
+    #: plan carrying any cannot count silently (review G C2).
     domain_not_enforced: tuple = ()
     #: Which layout branch of a routine that tests its own tensor layout the
-    #: experiment exercises, and which it does not (Vera, G8 condition).
+    #: experiment exercises, and which it does not (review G8 condition).
     branch_coverage: Optional[dict] = None
     #: the row's documented domain, so the routine-level paths can be held
     #: inside it (loading_paths.model_domain)
@@ -1464,7 +1464,7 @@ class CouncilPlan:
 
 def _council_sets(row: dict) -> tuple[str, list, str]:
     """``(material_data_origin, [(set_id, {index: (value, provenance)})], why_not)``."""
-    if row.get("sets") is not None:                    # a D-21 council row
+    if row.get("sets") is not None:                    # a D-21 reviewer row
         sets = []
         for chosen in row["sets"]:
             values = {int(c["index"]): (float(c["value"]),
@@ -1503,19 +1503,19 @@ def _numeric(stated) -> Optional[float]:
 
 def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                  source_text: Optional[str] = None) -> CouncilPlan:
-    """The council-designed experiment for one source (D-19a rev 2 R2).
+    """The reviewer-designed experiment for one source (D-19a rev 2 R2).
 
     Only for ``no_deck_in_repository`` and ``no_deck_names_this_source``;
     the pairing is re-run every time and an author deck that pairs now wins.
     Reads the SOURCE (settle with no deck, classify, build with no deck
     periods, body force or supports) and the row (a harvest row, or a D-21
-    council row with its parameter sets); never an author's deck. Every
+    reviewer row with its parameter sets); never an author's deck. Every
     manifest value carries its origin. Refusals: a source reading TEMP
     (needs_documented_temperature, until G5), COORDS / NOEL
     (needs_documented_geometry), a formulation neither the source nor the
     row settles (formulation_not_documented: no silent 3D default), an NSTATV
     nobody states (needs_nstatv), a body force, a growth law without a total
-    time, and fewer than two sets for council constants.
+    time, and fewer than two sets for reviewer constants.
     """
     from umat_oti.abaqus import deck_pairing
     from umat_oti.abaqus.formulation import from_source, settle
@@ -1543,15 +1543,15 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
     if row.get("sets") is not None and row.get("experiment_origin") not in (None, "council_deck"):
         return refused("not_a_council_deck", f"the row's experiment is "
                        f"{row.get('experiment_origin')}, not a council deck", **common)
-    # TEMP / COORDS / NOEL reads are the ROW's reviewed static scan (Scout,
-    # with Curie's overrides): a name scan of the text also finds a local
+    # TEMP / COORDS / NOEL reads are the ROW's reviewed static scan (review
+    # with the review's overrides): a name scan of the text also finds a local
     # called ``temp`` and NOEL passed through to a helper. Where the two
     # disagree the plan says so for review; where the row has no answer the
     # source is not planned.
     body = _strip_header(executable)
     notes = []
     # D-21a (e): a static-scan false positive cleared by a machine-readable
-    # override that Vera accepted for this instance. It carries the dynamic
+    # override that the review accepted for this instance. It carries the dynamic
     # check that has to pass on every pass (harness.static_scan_override_check).
     overrides = []
     row = dict(row)
@@ -1604,7 +1604,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
         element = settle(text, str(source)).element
         element_origin = ("source", "; ".join(found.evidence[:2]))
     elif stated_element and _known_element(stated_element):
-        # D-21 amendment 2: a formulation the council derived from the code,
+        # D-21 amendment 2: a formulation the reviewer derived from the code,
         # with its line evidence
         element = stated_element
         element_origin = (str(formulation.get("origin") or "council_choice"),
@@ -1730,8 +1730,8 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
         if family.name == "growth" and tau and origin == "council_chosen" \
                 and built.requirement is not None and built.requirement.declared:
             # D-21a (a): exp(-time/tau) is bounded and enters only through
-            # time/tau, and tau is a council-chosen PROPS constant, so the
-            # duration is a council choice: T/tau is recorded.
+            # time/tau, and tau is a reviewer-chosen PROPS constant, so the
+            # duration is a reviewer choice: T/tau is recorded.
             ratio = built.requirement.total_time / tau
             built = _reworded(built, (
                 f"this routine's driver is exp(-time/tau) with tau = {tau:g}, a "
@@ -1830,7 +1830,7 @@ def _reworded(built: "Experiment", reason: str) -> "Experiment":
 
 
 def _council_initial_state(row: dict, text: str, nstatv: int, origin: str):
-    """``(initial_statev, from_sdvini, (origin, provenance))`` for a council
+    """``(initial_statev, from_sdvini, (origin, provenance))`` for a reviewer
     manifest. A numeric list the row states is used when it fills NSTATV (a
     single 0 means zeros); a source that defines SDVINI is started by it; a
     statement in words ("zeros", "code zeroes STATEV at KINC==1") starts at

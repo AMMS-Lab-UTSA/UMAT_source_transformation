@@ -1,4 +1,4 @@
-"""fd.judge_column round-off model, Vera B7 A1 and A3 (P0).
+"""fd.judge_column round-off model, review B7 A1 and A3 (P0).
 
 PureGravity (Jeff97): a stress K (J - 1) built from the TOTAL deformation
 gradient carries the round-off of K |F|, while the Euler term used the
@@ -97,7 +97,7 @@ def test_the_harness_measures_the_total_input_and_the_block():
 
 
 def test_a_1e_4_defect_fails_under_quad_whatever_the_block(tmp_path=None):
-    """Vera G10 review B2: the value-under-test allowance divided |F|-sized
+    """review G10 review B2: the value-under-test allowance divided |F|-sized
     terms by the increment, so with a big block a 1e-4 defect passed quad."""
     est = [np.array([1.0]) for _ in L]
     v = fd.judge_column(np.array([1.0 + 1e-4]), est, list(range(len(L))), L, steps=STEPS,
@@ -111,7 +111,7 @@ def test_a_1e_4_defect_fails_under_quad_whatever_the_block(tmp_path=None):
 
 
 def test_the_a3_floor_scales_with_the_block_and_the_increment_count():
-    """floor_v = NOISE eps max(S, |block|) x n, capped at 1e-3 S (Vera pass21)."""
+    """floor_v = NOISE eps max(S, |block|) x n, capped at 1e-3 S (review pass21)."""
     est = [np.zeros(1) for _ in L]
     kw = dict(magnitude=np.array([1.0]), eps=fd.EPS_QUAD, double_zero=np.array([True]),
               derivative_scale=1.0, steps=STEPS)
@@ -128,7 +128,7 @@ def test_the_a3_floor_scales_with_the_block_and_the_increment_count():
 
 
 def test_a_zero_branch_fail_reports_the_threshold_it_used_and_is_the_worst_entry():
-    """Vera B10: the reported tolerance is the one the decision used, so a FAIL
+    """review B10: the reported tolerance is the one the decision used, so a FAIL
     never shows err/t < 1; ``worst`` is the largest err/t over BOTH branches
     (ShapeProgramming CASE4 5ea29ed7 reported a passing nonzero entry as worst
     while a zero entry failed)."""

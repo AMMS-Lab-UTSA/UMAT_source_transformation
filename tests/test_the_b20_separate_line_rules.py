@@ -1,7 +1,7 @@
-"""B20: Vera's five D-28 separate-line rules and the published-text-compiles rule.
+"""B20: the review's five D-28 separate-line rules and the published-text-compiles rule.
 
 Each rule yields an ADDITIONAL verdict beside the published one. These tests pin
-the rule text's constants, the planted canaries Vera specified, and the fact
+the rule text's constants, the planted canaries the review specified, and the fact
 that the published comparison code is untouched (the rule-1 code path at the
 double epsilon reproduces compare_calls exactly).
 """
@@ -34,7 +34,7 @@ def _calls(n, stress, k, state=None):
              "DDSDDE": [k]} for i in range(n)]
 
 
-# ---- constants fixed by Vera ------------------------------------------------
+# ---- constants fixed by the review ------------------------------------------------
 
 def test_the_constants_vera_fixed_are_the_ones_in_the_code():
     assert (D.R1_FACTOR, D.R1_MIN_ULPS, D.R1_CAP_ULPS) == (4.0, 2.0, 64.0)

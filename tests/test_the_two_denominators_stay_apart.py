@@ -167,7 +167,7 @@ def test_every_record_says_where_its_file_was_searched_for_a_stress_update():
 # the report a person reads
 # ---------------------------------------------------------------------------
 #: The five growth rows whose RECORDED reason quotes time_scale.py's "above the 25% search
-#: heuristic". The text comes from fingerprint-covered code (ENOUGH_OF_THE_SCALE) and Vera
+#: heuristic". The text comes from fingerprint-covered code (ENOUGH_OF_THE_SCALE) and the review
 #: ruled it is not changed in this batch; the exception below is scoped to a percentage that is
 #: part of that quoted reason of exactly these rows, and every other percentage stays strict.
 #: Fix in the next batch (review file: integrity_review.json).

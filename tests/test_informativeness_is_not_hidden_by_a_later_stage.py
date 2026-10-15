@@ -1,6 +1,6 @@
 """stage_supported_by_gates: a row failing BOTH derivatives_verified and
 mechanically_informative reported tangent_not_verified, a later stage that
-hid the informativeness gate (Scout; the shell-growth trio, Vera B10
+hid the informativeness gate (the review; the shell-growth trio, review B10
 pass21). The informativeness failure is now the stage; a gate never measured
 is "not established", not "not informative"; rows where informative is true
 keep their stage."""

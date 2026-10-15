@@ -2,7 +2,7 @@
 
 ``DATA XI/1.D0/`` handed to a lifted helper that increments it: the shadow is
 SAVEd beside XI, and was re-copied from the never-updated real XI at every
-entry, so the carried value was lost (Vera, B2 review item 4, toy t4c: call 2
+entry, so the carried value was lost (review B2 review item 4, toy t4c: call 2
 STRESS 0.200 against the original's 0.210). The DATA value is now copied once,
 on the first call, behind a SAVEd flag; on later calls the carried value
 enters as incoming state, its derivative parts from the previous increment

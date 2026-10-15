@@ -91,7 +91,7 @@ def test_the_real_package_has_a_harness_fingerprint():
 
 
 def test_the_harness_fingerprint_covers_the_abaqus_gate_tool(tmp_path):
-    """Vera G10 review: the D-4 gate's decision code lives in
+    """review G10 review: the D-4 gate's decision code lives in
     tools/verify_store_in_abaqus.py, so the harness identity covers it."""
     import shutil
     from pathlib import Path

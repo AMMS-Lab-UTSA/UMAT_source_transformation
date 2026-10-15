@@ -1,9 +1,9 @@
 """Loading paths for the routine-level harness.
 
-The owner of loading paths is Curie (``loading_paths.py`` in this package,
+The owner of loading paths is the review (``loading_paths.py`` in this package,
 interface agreed in ``corpus_campaign/OWNERSHIP.md``). Until that module lands
 this file supplies a MINIMAL internal set -- elastic, plastic-amplitude load,
-unload -- with the same shape, and :func:`paths_for` switches to Curie's module
+unload -- with the same shape, and :func:`paths_for` switches to the review's module
 automatically as soon as it is importable.
 
 Shape (identical to the agreed interface)::
@@ -96,7 +96,7 @@ def internal_paths(entry: Mapping) -> list:
 
 
 def paths_for(entry: Mapping) -> list:
-    """Curie's paths when available, the internal minimal ones otherwise."""
+    """The review's paths when available, the internal minimal ones otherwise."""
     try:
         from umat_oti.corpus_features import loading_paths as curie   # type: ignore
     except Exception:                                                   # noqa: BLE001

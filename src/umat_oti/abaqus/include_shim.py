@@ -204,10 +204,10 @@ def stage_includes(text: str, search: Sequence[Path], shim: Path, *,
     ``shim`` (already on the compiler's -I path) under the name as spelled.
     Shipped Abaqus headers already in the shim are left alone, and so is
     ``aba_param.inc`` (the build installs it). An absolute name or one with
-    ``..`` is refused (Vera B10 condition B). Files the staged files include
+    ``..`` is refused (review B10 condition B). Files the staged files include
     are staged too, looked up beside them first.
 
-    ``convert`` (Vera B10 condition A): a staged file is not linked but
+    ``convert`` (review B10 condition A): a staged file is not linked but
     written through ``convert`` -- the quad replay promotes an include as it
     promotes the source, so the reference is not mixed-precision. Each
     record carries the sha256 of the author's file and of what was staged.

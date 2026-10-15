@@ -1,4 +1,4 @@
-"""The quad replay reference of the Abaqus tangent gate (G10, Vera B7 A2).
+"""The quad replay reference of the Abaqus tangent gate (G10, review B7 A2).
 
 A stress formed from a quantity near 1 (``E ((1 + a + DSTRAN) - 1)``, the
 PureGravity shape K (J - 1)) quantises a double centred difference at small

@@ -1756,7 +1756,7 @@ def discover_loading(manifest: VerificationManifest, original: Path,
         reversal_at=2 * coarse, ceiling=ceiling)
     record = found.as_dict()
     if capped(ceiling) < CEILING:
-        # a council experiment's documented (or default) domain (D-19a R3)
+        # a reviewer-designed experiment's documented (or default) domain (D-19a R3)
         record["ceiling"] = capped(ceiling)
     record["ran"] = True
     record["jobs"] = len(found.attempts)
@@ -3380,7 +3380,7 @@ def routine_level_primal(original_dir: Path, transformed_dir: Path,
     if not right.ok and not right.calls:
         outcome["reason"] = f"the transformed build did not replay: {right.reason}"
         return outcome
-    # B2c (Vera B2 item 4): the stiffness of the bound comes from the
+    # B2c (review B2 item 4): the stiffness of the bound comes from the
     # ORIGINAL (its history maximum caps it) and, per call, from the smaller of
     # the two builds' max|DDSDDE| -- never from the build under test alone.
     stiffness = stiffness_scale(original_history) or stiffness_scale(left.calls)
@@ -5010,7 +5010,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                             (precision_note, tangent.get("reason", "")) if part))
 
 
-#: States the D-4 gate chooses per row (Curie item 5): two either side of
+#: States the D-4 gate chooses per row (review item 5): two either side of
 #: the activation of one integration point, or four spread along the path.
 GATE_STATES_EACH_SIDE = 2
 
@@ -5050,7 +5050,7 @@ def choose_gate_states(original_history: Sequence[dict],
                        each_side: int = GATE_STATES_EACH_SIDE) -> tuple[list, dict]:
     """The states the tangent is judged at, chosen from the ORIGINAL (A5).
 
-    Activation is found on ONE integration point's own records (Curie item
+    Activation is found on ONE integration point's own records (review item
     5; the flattened list of eight points of a C3D8 put "activation" at the
     record where the first point moved, whatever the others did), and the
     states are taken either side of it on that point, clear of it by one
@@ -5073,7 +5073,7 @@ def choose_gate_states(original_history: Sequence[dict],
         return sum(1 for r in groups[point]
                    if (r.get("step"), r.get("increment")) + point in transformed)
 
-    # An integration point that activates is preferred (Vera G10 review): the
+    # An integration point that activates is preferred (review G10 review): the
     # states either side of ITS activation are the evidence about the
     # inelastic law; then the one with the most replayable states; then the
     # first by label.
@@ -5112,7 +5112,7 @@ def choose_gate_states(original_history: Sequence[dict],
             before = sorted(before + adjacent[: each_side - len(before)])
         # A side with too few states lends its share to the other: a growth
         # law active from its first increment has no state before activation
-        # (Curie item 5: >= 4 states).
+        # (review item 5: >= 4 states).
         take_before = min(each_side, len(before))
         take_after = min(len(after), 2 * each_side - take_before)
         take_before = min(len(before), 2 * each_side - take_after)
@@ -5226,7 +5226,7 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
     if not build.ok:
         outcome["reason"] = build.reason or "the replay driver did not build"
         return outcome
-    # Curie item 4: the step scale never falls below the 1e-6 floor.
+    # review item 4: the step scale never falls below the 1e-6 floor.
     scale = FD.step_scale(perturbation_scale(record["entry"]), floor=1e-6)
     outcome["perturbation_scale"] = scale
     ladder = tuple(manifest.fd_steps)
@@ -5239,7 +5239,7 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
         outcome["reason"] = sweep.reason or "the difference produced no tangent"
         return outcome
     # The replay restores the state: the unperturbed call, run again after
-    # the sweep, returns the same bits (Curie item 2).
+    # the sweep, returns the same bits (review item 2).
     again, _ = run_replay(build, work_dir, 0, 0.0)
     outcome["state_restored"] = bool(again) and list(again) == list(sweep.unperturbed)
     if not outcome["state_restored"]:
@@ -5269,7 +5269,7 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
         qbuild = build_replay(Path(original), quad_dir, name=manifest.name,
                               flags=replay_flags(form, quad_dir, original), timeout=timeout, quad=True)
         note: dict[str, Any] = {"status": "unavailable", "reason": qbuild.reason}
-        # Vera B10 condition A: every staged include must be the promoted
+        # review B10 condition A: every staged include must be the promoted
         # copy, else the reference is mixed-precision and is refused.
         mixed = [r["include"] for r in qbuild.includes
                  if r.get("found") and r.get("staged_as") != "converted copy"]
@@ -5332,7 +5332,7 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     The value under test is DDSDDE out of the transformed build's own probe
     record; the reference is the ORIGINAL source compiled on its own and
     replayed from the state that record began in. States are chosen from the
-    ORIGINAL history, on one integration point (A5, Curie item 5); each is
+    ORIGINAL history, on one integration point (A5, review item 5); each is
     judged entry by entry (:mod:`umat_oti.abaqus.tangent_gate`), with a quad
     reference for what double leaves unresolved (A2, A3). The row is verified
     iff no entry fails anywhere, >= 2 states are judged and judged >= 50% of
@@ -5352,7 +5352,7 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
             check = gate.direction_check(Path(transformed).read_text(errors="replace"),
                                          manifest.ntens, manifest.ndi, manifest.nshr)
         except Exception as error:                      # noqa: BLE001 - a parse failure
-            # cannot show a wrong direction: unresolved, not failed (Vera G10)
+            # cannot show a wrong direction: unresolved, not failed (review G10)
             outcome["direction_check"] = {"applies": None,
                                           "error": f"{type(error).__name__}: {error}"}
             outcome["reason"] = ("the seeded directions could not be read from the transformed "

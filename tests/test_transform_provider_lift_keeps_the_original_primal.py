@@ -1,6 +1,6 @@
 """The provider's lifted UMAT reproduces the ORIGINAL's stress to round-off.
 
-Noether (B2, finding 2) found providers built from the working tree off the
+The review (B2, finding 2) found providers built from the working tree off the
 original by 1.1e-8 (abaci), 5.9e-7 (Sina CompresibleNeoHookean) and 9.3e-7
 (keisuke biofilm visco), with Newton failing at increment 1. Cause: for a
 14-minute window the lifter's binary32 rule typed each routine from its

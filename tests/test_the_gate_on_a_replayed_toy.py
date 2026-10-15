@@ -1,4 +1,4 @@
-"""The Abaqus D-4 gate end to end on replayed Fortran toys (G10; Vera's G10
+"""The Abaqus D-4 gate end to end on replayed Fortran toys (G10; review G10
 review: A2 refusal, A8 direction mismatch and parse failure, frozen states).
 """
 import shutil

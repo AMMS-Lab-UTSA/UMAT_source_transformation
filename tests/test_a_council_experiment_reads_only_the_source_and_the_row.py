@@ -1,7 +1,7 @@
 """plan_council (G3, D-19a rev 2 R2; D-21 sets).
 
-For a source with no author deck the council designs the experiment: it
-reads the SOURCE and the row (a harvest row, or a D-21 council row with >= 2
+For a source with no author deck the reviewer designs the experiment: it
+reads the SOURCE and the row (a harvest row, or a D-21 reviewer row with >= 2
 parameter sets, each its own experiment) and never an author's deck. Every
 manifest value carries its origin; author-deck manifests do not serialise
 an ``origins`` key, so they read as before. Corpus run over the 34 D-21 rows
@@ -264,7 +264,7 @@ PLANS = Path(__file__).resolve().parents[2] / "corpus_campaign" / "council_plans
 
 
 def test_no_real_council_plan_cites_an_authors_deck():
-    """Vera's G review C4: the A1 string test on the generated plans, with the
+    """review G C4: the A1 string test on the generated plans, with the
     verbatim row-provenance fields left out (constant provenance, origin
     provenance, documented-domain quotes, notes)."""
     files = sorted(PLANS.glob("*/council_plan.json"))
@@ -295,7 +295,7 @@ GROWTH_EXP = HEADER + """\
 
 
 def test_a_bounded_clock_in_time_over_tau_gets_a_council_total_time(tmp_path):
-    """G11, D-21a (a): exp(-time/tau), tau a council PROPS constant."""
+    """G11, D-21a (a): exp(-time/tau), tau a reviewer PROPS constant."""
     cp = _plan(tmp_path, GROWTH_EXP, sets=[_set("A", 0.25, 0.3), _set("B", 0.5, 0.3)])
     assert cp.found, cp.refusal
     experiment = cp.sets[0][1].experiment

@@ -1,6 +1,6 @@
 """What the source computes in binary32 stays binary32 in the transformed routine.
 
-Curie-G (B2 growth diagnosis) traced 24-28 growth rows whose transformed
+The review (B2 growth diagnosis) traced 24-28 growth rows whose transformed
 primal drifted from the original by 1e7-1e8 ulpK to two constructs:
 
 * B-W: a variable declared ``REAL`` (binary32) is shadowed by a double OTI

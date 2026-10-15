@@ -1,4 +1,4 @@
-"""Registry fields that contradicted the record they sit in (Vera, B6 note 3).
+"""Registry fields that contradicted the record they sit in (review B6 note 3).
 
 * ``compiled`` was copied from the batch row even where the transform was
   refused. The row's flag is about whatever Fortran the attempt emitted, and a

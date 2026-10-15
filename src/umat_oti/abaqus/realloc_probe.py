@@ -1,4 +1,4 @@
-"""Whether a user-subroutine object needs ``for_realloc_lhs`` (Vera B10).
+"""Whether a user-subroutine object needs ``for_realloc_lhs`` (review B10).
 
 Abaqus jobs compile with ``-assume norealloc_lhs`` (include_shim.environment_text)
 because the Fortran runtime Abaqus 2021 loads does not define

@@ -1,6 +1,6 @@
 """The inserted STRESS/DDSDDE extractions run on every path, and nothing overwrites them.
 
-Two defects from Vera's B1 review, both of which passed every semantic check:
+Two defects from the review's B1 review, both of which passed every semantic check:
 
 * czmHealing.f: both extractions were emitted inside the ELSE of
   ``IF (Da0.LE.0.99999)``, so an undamaged material point returned STRESS = 0
@@ -189,7 +189,7 @@ WHERE = BRANCHED.replace(
 @pytest.mark.parametrize("source, keyword", [(FORALL, "FORALL"), (WHERE, "WHERE")],
                          ids=["forall", "where"])
 def test_a_masked_write_to_ddsdde_after_the_update_is_seen(tmp_path, source, keyword):
-    """matmodlab umat_neohooke (Vera Q1): a FORALL/WHERE write after the extraction
+    """matmodlab umat_neohooke (review question 1): a FORALL/WHERE write after the extraction
     would overwrite the OTI tangent; it is refused, naming the statement."""
     summary, code = _transform(tmp_path, source)
     # Only the diagnostics: the whole summary holds tmp_path, whose name

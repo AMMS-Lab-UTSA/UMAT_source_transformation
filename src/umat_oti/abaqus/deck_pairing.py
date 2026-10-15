@@ -680,7 +680,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 name.upper(), attributions.get("", ((), "")))
             # A block with a token Abaqus could not read, or a line of more
             # than eight numbers, is not a deck of cards to be zero-filled:
-            # read as written, it is short and not usable (Vera G review C1:
+            # read as written, it is short and not usable (review G C1:
             # williammora1984 GTN test_ht_vol.inp's "0.1. 0.3" would
             # otherwise shift every later constant by one slot).
             published = (packed if garbled else values)[:constants]
@@ -1145,7 +1145,7 @@ def sibling_constants(source: Path, repository: Path,
 
 
 #: The harvest row schema this module reads (corpus_campaign/material_data/
-#: harvest_row.schema.json, schema_version 1, frozen by Scout).
+#: harvest_row.schema.json, schema_version 1, frozen by the review).
 HARVEST_SCHEMA_SHA256 = "321cb44b41958e702b201f479e5229432074a49d1c87d84165e59c96dfd1059f"
 AUTHOR_PUBLISHED_OUTSIDE_DECK = "author_published_outside_deck"
 #: Harvest confidences that count (Q3); everything else never does.

@@ -1,6 +1,6 @@
 """A DATA constant that reaches a lifted helper keeps its DATA value in its shadow.
 
-GOH_Example.f (abuganza, Curie-G B2 cluster E): ``data xi/1,1,1,0,0,0/`` is the
+GOH_Example.f (abuganza, review B2 cluster E): ``data xi/1,1,1,0,0,0/`` is the
 Voigt identity. The classifier keeps a never-assigned DATA name real, but
 ``call move6to33(xi, ximat)`` hands it to a lifted helper, whose argument
 surface gave it a shadow anyway -- SAVEd (DATA implies SAVE), so never zeroed

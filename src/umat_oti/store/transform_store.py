@@ -152,7 +152,7 @@ def transform_fingerprint(package_root: Optional[Path] = None) -> str:
 HARNESS_CODE = ("abaqus", "corpus_features")
 #: Files outside the package that hold harness DECISION code, relative to the
 #: repository root: the Abaqus D-4 tangent gate's state choice, quad adoption
-#: and row verdict live in the verification tool (Vera G10 review).
+#: and row verdict live in the verification tool (review G10 review).
 HARNESS_TOOLS = ("tools/verify_store_in_abaqus.py",)
 
 

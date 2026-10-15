@@ -108,7 +108,7 @@ python -m pytest -q tests/test_lu_oti.py
 ```
 
 The combined LU, eigensolver, helper-safety, sensitivity, dependency, and intrinsic
-regressions passed 163 tests with GNU Fortran 8.5.0. No private JHU source was
+regressions passed 163 tests with GNU Fortran 8.5.0. No private third-party source was
 opened or used, and no result here certifies a particular private UMAT.
 
 ## Pinned Public Input

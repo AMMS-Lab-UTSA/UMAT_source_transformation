@@ -4,7 +4,7 @@ Jeff97 Wrinkle (pass21 key 254a65c2) declares ``REAL ... MMOD,G11,G12,G21,G22``.
 The transform keeps their primal binary32 (rule B-W) but carries their
 derivatives in double, so a sensitivity through them is the double idealisation
 of a binary32 original -- which differed from the original's own derivative by
-a factor of four there (Ada, B8 wrinkle_proof). The list says so, per variable,
+a factor of four there (review B8 wrinkle_proof). The list says so, per variable,
 in the lifted build's layout and ``binary32_stores.json``, the tangent
 transform's report, and the derivative manifest, under ``binary32_stores``.
 """

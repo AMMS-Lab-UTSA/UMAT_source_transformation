@@ -1,4 +1,4 @@
-"""Quad-precision FD reference of the ORIGINAL (lead request after Curie-G B2, cluster F).
+"""Quad-precision FD reference of the ORIGINAL (lead request after review B2, cluster F).
 
 The quad build promotes the original's double precision to REAL(16) and leaves
 its binary32 quantities and every literal exactly as written, so it evaluates

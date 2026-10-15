@@ -141,7 +141,7 @@ def test_only_smooth_regimes_are_verifiable():
 def _regime(kind, increment=1, activated=None):
     from umat_oti.abaqus.state_regime import Regime
     # an inelastic state is one the material had activated at (classify sets
-    # this); an unloading one says so explicitly (Vera B7 A7)
+    # this); an unloading one says so explicitly (review B7 A7)
     if activated is None:
         activated = kind == SMOOTH_INELASTIC
     return Regime(increment=increment, regime=kind, reason="", activated_here=activated)
@@ -395,7 +395,7 @@ def test_the_resolution_ladder_respects_the_ceiling():
 
     tool = (Path(__file__).resolve().parents[1] / "tools"
             / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
-    # the council ceiling (D-19a G4) goes through the package's capped(),
+    # the reviewer ceiling (D-19a G4) goes through the package's capped(),
     # which is min(amplitude, CEILING) for an author deck
     assert "wanted = capped(amplitude * factor, ceiling)" in tool
     assert "would pass " in tool and "the ceiling of" in tool
@@ -406,7 +406,7 @@ def test_the_resolution_ladder_respects_the_ceiling():
 
 
 def test_no_elastic_branch_is_decided_by_the_history_when_given():
-    """Vera G10 review A7: a material that activates later has an elastic
+    """review G10 review A7: a material that activates later has an elastic
     branch even if no elastic state happened to be judged."""
     states = [_regime(SMOOTH_INELASTIC, 7), _regime(SMOOTH_INELASTIC, 9)]
     assert coverage(states, nonlinear=True, no_elastic_branch=True)[0]

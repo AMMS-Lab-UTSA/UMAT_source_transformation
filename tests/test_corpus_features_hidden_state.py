@@ -1,6 +1,6 @@
-"""Hidden-state gate (Vera B1/A) and finite-strain FD direction (Vera B1/A, item 7).
+"""Hidden-state gate (review B1/A) and finite-strain FD direction (review B1/A, item 7).
 
-Vera's three toy UMATs (corpus_campaign/batches/B1/vera/a_hidden/) are linear
+The review's three toy UMATs (corpus_campaign/batches/B1/vera/a_hidden/) are linear
 elasticity with one defect each that makes restored-state finite differences
 of the routine invalid:
 
@@ -20,7 +20,7 @@ toys: the Jeff97 PureGrowth pattern (a local never assigned, written only to
 STATEV(2), which never feeds the stress) must verify STRESS/DDSDDE with
 STATEV(2) listed ``undefined_in_original``; a toy whose uninitialised value
 feeds every STRESS component must not verify anything about the stress. Each toy is built with the toy itself as its "store" build,
-as in Vera's run_hidden.py.
+as in the review's run_hidden.py.
 """
 import shutil
 

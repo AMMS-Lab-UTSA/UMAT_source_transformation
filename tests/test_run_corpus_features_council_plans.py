@@ -1,4 +1,4 @@
-"""tools/run_corpus_features.py --council-plans points the harness at the council
+"""tools/run_corpus_features.py --reviewer-plans points the harness at the reviewer
 plans folder written at the harness fingerprint being run, and nothing else."""
 from __future__ import annotations
 

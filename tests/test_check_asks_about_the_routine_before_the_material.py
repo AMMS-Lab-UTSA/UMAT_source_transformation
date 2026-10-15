@@ -1,4 +1,4 @@
-"""Nico, B11: for a UMAT with no deck ``umat-oti all`` said "no deck with a
+"""The review, B11: for a UMAT with no deck ``umat-oti all`` said "no deck with a
 *USER MATERIAL block" and hid the real blocker -- a helper nobody supplied, a
 module it cannot read. ``check`` runs the transformer's dependency discovery and
 anchor location first, so that is the message.

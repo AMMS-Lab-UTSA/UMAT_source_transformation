@@ -1,6 +1,6 @@
 """A tangent-only helper call does not drag the stress path's lines out with it.
 
-GOH_Example.f (Curie-G, B2 cluster E): ``call move6to33(fginv,fginvmat)``
+GOH_Example.f (review B2 cluster E): ``call move6to33(fginv,fginvmat)``
 feeds only the author's tangent, so it is skipped. The skip region was then
 grown backwards over every statement whose result the call reads -- the six
 ``fginv(i)=...`` lines -- although FGINV also feeds FE and through it the
@@ -167,7 +167,7 @@ CURING = "      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,\n     1 RPL,DD
 
 @pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran required")
 def test_a_literal_constant_exponent_keeps_the_zero_base_finite(tmp_path):
-    """Worlthen curing (Curie-G cluster E): ``(cure/cmax)**m`` at cure = 0.
+    """Worlthen curing (the review cluster E): ``(cure/cmax)**m`` at cure = 0.
 
     m holds only the literal 0.40. Lifted as an OTI value the power went
     OTI**OTI, through LOG(0), and returned a non-finite value where the

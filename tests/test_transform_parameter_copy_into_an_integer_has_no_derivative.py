@@ -6,7 +6,7 @@ ABA_PARAM.INC must carry its derivative), and it used to decide "implicitly
 typed" from the file's IMPLICIT statements read at column 7 only. So a CNT made
 INTEGER by an INCLUDE'd declaration, an INCLUDE'd IMPLICIT INTEGER, or a
 free-form ``implicit integer (c)`` indented by two columns was promoted:
-dSIGMA/dPROPS(3) came back 0.0809 where the truth is zero (Vera, B1 review Q7,
+dSIGMA/dPROPS(3) came back 0.0809 where the truth is zero (review B1 review Q7,
 toys reproduced here), and with a non-integral PROPS(3) the primal moves too.
 
 Behavioural: the transformed combined entry runs a three-increment history;

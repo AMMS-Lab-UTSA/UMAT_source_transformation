@@ -10,7 +10,7 @@ offered the same way.
 
 The toy hands ROTSIG a 6-long array and a non-trivial rotation (a 36.87
 degree turn about 3), so the rotated strains are not zero and reach the
-stress (Vera, B8 re-review C2: STATEV(1) with NSTATV=2 read out of bounds,
+stress (review B8 re-review C2: STATEV(1) with NSTATV=2 read out of bounds,
 and the driver's DROT=0 zeroed the output). Behavioural, against the
 separately compiled original (with the same ROTSIG body): primal bitwise, DDSDDE against central differences at three step sizes.
 """

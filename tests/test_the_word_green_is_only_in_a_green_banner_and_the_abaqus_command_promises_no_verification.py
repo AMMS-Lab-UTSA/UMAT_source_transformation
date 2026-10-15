@@ -1,4 +1,4 @@
-"""Vera's B17 ruling: GREEN only in a green verdict's banner; the Abaqus command sentence never promises verification."""
+"""The review's B17 ruling: GREEN only in a green verdict's banner; the Abaqus command sentence never promises verification."""
 import re
 import sys
 from pathlib import Path

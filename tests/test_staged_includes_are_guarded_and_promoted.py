@@ -1,4 +1,4 @@
-"""Vera B10 conditions on include staging (Gauss).
+"""review B10 conditions on include staging (review).
 
 A. A quad replay stages each INCLUDE promoted as its source is; a linked
    double-precision include would make the quad reference mixed-precision.

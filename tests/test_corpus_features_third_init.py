@@ -1,8 +1,8 @@
-"""D-12 with three init builds (Vera B2 item 2).
+"""D-12 with three init builds (review B2 item 2).
 
 zero vs snan alone misses an uninitialised value used through a NaN guard
 (``IF (XK.NE.XK) XK=0``), a comparison (``IF (XK.GT.0.5)``) and an INTEGER
-(``IF (NC.GT.0)``, 0 and -77777 both <= 0): in Vera's toys those outputs were
+(``IF (NC.GT.0)``, 0 and -77777 both <= 0): in the review's toys those outputs were
 bit-identical across the pair and the cells verified. The third build (+inf
 reals, +77777 integers, logicals flipped vs the zero build) separates them, on
 the harness side AND on the Abaqus-side init check; the clean toy is unchanged.

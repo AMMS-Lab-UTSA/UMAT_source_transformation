@@ -1,9 +1,9 @@
-"""B20, Vera's pass25 rulings (rules written before they were run).
+"""B20, the review's pass25 rulings (rules written before they were run).
 
 1. A deck from a SIBLING example folder is not "the author's own single-element test of this
    material": the provenance says it was verified with a sibling example's deck. Sibling =
    same repository, neither directory an ancestor of the other, common ancestor below the root.
-2. The census uses Vera's wording; the rows on separate lines and the freed sources without
+2. The census uses the review's wording; the rows on separate lines and the freed sources without
    material come from paper_results/corpus/census_lines.json and are not counted in the headline.
 """
 import json

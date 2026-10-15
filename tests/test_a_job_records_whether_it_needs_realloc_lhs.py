@@ -1,5 +1,5 @@
 """Per build: does the object compiled WITHOUT -assume norealloc_lhs reference
-for_realloc_lhs (Vera B10)? The flag changes code only where it does."""
+for_realloc_lhs (review B10)? The flag changes code only where it does."""
 import shutil
 from pathlib import Path
 

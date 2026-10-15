@@ -254,7 +254,7 @@ def quadify(text: str) -> str:
     become generic; DBLE becomes QEXT. Default REAL (binary32) declarations
     and every literal are left exactly as written, so the author's binary32
     quantities stay binary32 and every constant keeps the value the double
-    build gives it: the quad build evaluates the same function (Curie-G B2,
+    build gives it: the quad build evaluates the same function (review B2,
     scripts/quadfd.py) with less rounding. A source whose real kind comes
     from a named constant (``REAL(dp)``) is NOT promoted; the primal check
     against the double build is what refuses such a reference.

@@ -1,4 +1,4 @@
-"""The Abaqus-side D-4 tangent gate (G10; Curie B7 items 1-3, 6; Vera A1, A3,
+"""The Abaqus-side D-4 tangent gate (G10; review B7 items 1-3, 6; review A1, A3,
 A4, A6), on synthetic sweeps of a known function.
 """
 from types import SimpleNamespace
@@ -96,7 +96,7 @@ def test_a_zero_in_both_precisions_against_a_nonzero_tangent_fails():
 
 
 def test_a_kink_that_the_ladder_crosses_is_never_cleared():
-    """Vera G10 review A6 (her kinktest): a one-entry kink at distance d below
+    """review G10 review A6 (her kinktest): a one-entry kink at distance d below
     the state; wherever A6 flags it, the decay rule must keep it flagged."""
     ladder = LADDER
     for jump in (1.5e-3, 1e-2, 0.5):

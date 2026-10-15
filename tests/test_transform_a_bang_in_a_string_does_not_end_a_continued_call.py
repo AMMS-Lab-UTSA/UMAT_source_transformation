@@ -5,7 +5,7 @@ on the second line of the call). Free form marks the continuation with a
 trailing ``&``, and the comment was split off at the first ``!`` -- also the
 one in ``'a!b'``, so ``call hstr2(e, 'a!b', &`` read as complete, the seed on
 the next line went unseen, and a correct transform was refused for a zero
-tangent (Vera B5 toy b3). Behavioural: transforms; primal bit-identical to the
+tangent (review B5 toy b3). Behavioural: transforms; primal bit-identical to the
 author's routine, DDSDDE against central differences of it.
 """
 import shutil

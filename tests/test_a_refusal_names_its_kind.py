@@ -2,7 +2,7 @@
 
 The routing of a source with no usable author deck depends on WHY there is
 none: a repository with no *USER MATERIAL block at all, or one whose blocks
-all belong to other sources, may get a council-designed experiment; an
+all belong to other sources, may get a reviewer-designed experiment; an
 author's own block that does not fit stays refused; an author's deck that
 fits and leaves its constants as placeholders is completed from the harvest
 and stays the author's experiment.

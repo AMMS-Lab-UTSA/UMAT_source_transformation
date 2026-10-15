@@ -4,7 +4,7 @@ Blanks are insignificant in fixed form. Jeff97's shell sources end a line
 ``...G12*G23*G3`` and continue ``1+G13*G21*G32...``: the name is ``G31``. The
 lifter stitched continuations with a blank, so the free-form helper read
 ``G3 1+...`` and the Petal and SeaShell provider builds failed on
-"G3 1.0D0" (Noether's B8 RA run). The lifter now closes the break up between
+"G3 1.0D0" (the review's B8 RA run). The lifter now closes the break up between
 name characters, as the emitter's own join does, but keeps the blank after a
 keyword (``CALL`` / ``FOO(X)``).
 

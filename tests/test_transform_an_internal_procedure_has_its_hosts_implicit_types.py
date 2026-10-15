@@ -4,7 +4,7 @@ An internal procedure without an IMPLICIT statement of its own types its names
 by its host's rules -- here ABA_PARAM.INC's IMPLICIT REAL*8 (A-H,O-Z). The
 lifted copy was typed from its own text alone, so its implicitly typed dummy,
 local and result read as default REAL, and every store to them was rounded to
-binary32 (OTI_R4): primal 2e-8..7e-8 off the author's routine (Vera B5 toys
+binary32 (OTI_R4): primal 2e-8..7e-8 off the author's routine (review B5 toys
 a1_chain, a3_implicit_dummy). Behavioural: primal bit-identical to the author's
 routine (own object), DDSDDE against central differences of it.
 """
@@ -46,10 +46,10 @@ UMAT = """      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
       END
 """
 
-#: Vera's a1_chain: a chain of host constants, an implicit dummy and result.
+#: the review's a1_chain: a chain of host constants, an implicit dummy and result.
 CHAIN = {"constants": "      PARAMETER (ONE=1.D0)\n      PARAMETER (TWO=2.D0*ONE, HALF=ONE/TWO)",
          "function": "      FUNCTION F(X)\n      F = TWO*X + HALF*X*X*1.1D3"}
-#: Vera's a3_implicit_dummy: an implicit local as well.
+#: the review's a3_implicit_dummy: an implicit local as well.
 IMPLICIT_LOCAL = {"constants": "      PARAMETER (TWO=2.D0)",
                   "function": "      FUNCTION F(Y)\n      Z = Y*Y\n      F = TWO*Y + Z*0.7D2"}
 

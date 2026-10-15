@@ -9,7 +9,7 @@ does not disable: matmodlab's umat_neohooke.f90 ends with
 after the transform's OTI extraction, so the author's symmetrisation overwrote
 the lower triangle of the extracted (unsymmetric) tangent -- DDSDDE(6,5) wrong
 by up to 17% -- while ``old_ddsdde_assignments_disabled`` passed, because the
-statement was never on its list (Vera, B1 review Q1).
+statement was never on its list (review B1, question 1).
 
 :func:`array_writes` returns the statements that write ``name`` in any of these
 forms; :func:`live_writes_after` asks the question the semantic check needs on

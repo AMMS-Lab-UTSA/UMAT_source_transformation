@@ -391,7 +391,7 @@ def substituted_text(deck_text: str) -> str:
 
 
 def _abaqus_on(rule: str) -> dict:
-    """What Abaqus/Standard 2021 itself does with a block that breaks ``rule`` (measured_results.txt of Ada's probe).
+    """What Abaqus/Standard 2021 itself does with a block that breaks ``rule`` (measured_results.txt of the review's probe).
 
     a ninth value on a data line: Abaqus accepts the block and ignores everything after the eighth (case N);
     a blank line between data lines, or more data lines than CONSTANTS needs: Abaqus stops with an input
@@ -787,7 +787,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
     if material is not None and getattr(material, "unreadable", ()):
         # The pipeline's own reader will not use this block (it breaks a measured Abaqus card rule), so it
         # gives no numbers and the two readers cannot be compared; the user is still told, in words, what
-        # the rule was and what Abaqus does with the block itself (Ada's measurements, props_card_probe).
+        # the rule was and what Abaqus does with the block itself (the review's measurements, props_card_probe).
         refuses = {"rules": list(material.unreadable),
                    "abaqus": [dict(rule=r, **_abaqus_on(r)) for r in material.unreadable]}
     if parsed is not None and pipeline_values is not None and not parsed["problems"]:

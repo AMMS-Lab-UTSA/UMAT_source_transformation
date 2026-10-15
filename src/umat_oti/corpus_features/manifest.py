@@ -226,7 +226,7 @@ _PRIMAL_GATE_PASSED = ("fully_verified", "tangent_not_verified",
 
 def _informative_gate_hidden(rec: Mapping) -> bool:
     """A primal-gate-passed stage whose mechanically_informative gate does not
-    read "true": a later stage hiding the gate (Vera B10 pass21)."""
+    read "true": a later stage hiding the gate (review B10 pass21)."""
     return (rec.get("terminal_state") in _PRIMAL_GATE_PASSED
             and rec.get("gate_mechanically_informative") != "true")
 
@@ -565,7 +565,7 @@ class SourceScan:
     #: (``/work/...``, ``C:\\...``, a UNC share, ``~/``), read from the
     #: literal the FILE= expression starts with. Such a file exists only where
     #: the author ran; whether the repository publishes it beside the source
-    #: decides missing_material_data (Vera B10 ruling b, the registry's
+    #: decides missing_material_data (review B10 ruling b, the registry's
     #: ``unpublished_absolute_input`` rule).
     data_files_absolute: list[str] = field(default_factory=list)
     reads_tokens: dict[str, bool] = field(default_factory=dict)
@@ -743,7 +743,7 @@ class ManifestInputs:
     corpus_run: Path
     families: Path
     families_second_pass: Path | None = None
-    #: D-11 reporting classification: Scout's B3 code-evidence review (column
+    #: D-11 reporting classification: the review's B3 code-evidence review (column
     #: S1). Rows it did not check fall back to ``families`` (E).
     families_reporting: Path | None = None
     #: Registry revision whose eligible set the summary compares against
@@ -967,7 +967,7 @@ def _mode_of(element: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-#: E's family names in the reporting vocabulary (Scout B3 rules, finalize.py MAP).
+#: E's family names in the reporting vocabulary (review B3 rules, finalize.py MAP).
 E_TO_REPORTING: dict[str, str] = {
     "growth / morphoelasticity": "growth", "plasticity": "rate_independent_plasticity",
     "damage / phase field": "damage_phase_field", "crystal plasticity": "crystal_plasticity",
@@ -1731,7 +1731,7 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
         "interface": interface,
         "registry": {"terminal_state": ts, "kind": kind,
                      "stage": rec.get("stage", ""), "key": key,
-                     # The gate a later stage can hide (Vera B10 pass21):
+                     # The gate a later stage can hide (review B10 pass21):
                      # routine-level counting requires it to read "true".
                      "gate_mechanically_informative":
                          rec.get("gate_mechanically_informative", ""),
@@ -1781,7 +1781,7 @@ def _licence_file(cache: Path, repo_dir_name: str) -> dict | None:
     return _LICENCE_CACHE[key]
 
 
-#: The three answers a pass's Abaqus tangent gate can give one row (Vera's
+#: The three answers a pass's Abaqus tangent gate can give one row (the review's
 #: final review before pass21). ``failed`` only where a judgement measured a
 #: disagreement (the D-4 gate's ``tangent.failed``); ``unresolved`` where
 #: nothing was verified and nothing was shown wrong -- including every row of
@@ -2910,7 +2910,7 @@ def merge_d18(manifest: dict, primal_ddsdde_run: str | Path | Iterable[Mapping],
     return {"primal_ddsdde_run": rep_p, "full_feature_run": rep_f, "guarded": guarded}
 
 
-# ---- Residual Assembler records (Noether, schema ra-corpus-residual/1) ------
+# ---- Residual Assembler records (review schema ra-corpus-residual/1) ------
 
 #: RA features the manifest has a column for, and the scope of each claim.
 RA_FEATURES = {"residual_sens": "local", "global_sens": "total"}
@@ -3182,7 +3182,7 @@ def manifest_schema() -> dict:
             "counted_in_tier": flag,
             "not_counted_in_tier_reason": {"type": "string"}},
         "additionalProperties": False,
-        # a council row counts only with both of Vera's acceptances (R6.5)
+        # a reviewer row counts only with both of the review's acceptances (R6.5)
         "allOf": [{"if": {"properties": {"counted_in_tier": {"const": True}},
                           "required": ["counted_in_tier"]},
                    "then": {"properties": {"vera_accepted_template": {"const": True},

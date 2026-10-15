@@ -242,7 +242,7 @@ def failure_state(summary: dict) -> tuple:
 
 
 def load_scanner():
-    """Ada's intake scanner (``tools/intake_scan.py`` of the checkout), loaded by path
+    """The review's intake scanner (``tools/intake_scan.py`` of the checkout), loaded by path
     because ``tools/`` is not a package; ``None`` when this is an installed copy
     without it, and ``check`` then reads the files with :mod:`check_intake`."""
     import importlib.util
@@ -368,7 +368,7 @@ def blocking_items(found, *, constants_supplied: bool) -> list:
     them (``--props`` or ``--material-config``)."""
     blocking = [i for i in found.needs_user()
                 if i.status == "MISSING" and not (i.key == "props_values" and constants_supplied)]
-    # The routine before the material (Nico, B11): a helper or module nobody supplied is why
+    # The routine before the material (review B11): a helper or module nobody supplied is why
     # the material question is moot, so it is asked first; the constants come last.
     from umat_oti.app.check_compact import ASK_ORDER as order
 
@@ -465,7 +465,7 @@ def _check(argv: Optional[Sequence[str]] = None) -> int:
             deck = None
     prepare_corpus_record(source, deck, suppress=deck_noted)
 
-    # What the files already say, item by item, each with the line it stands on (Ada's scanner).
+    # What the files already say, item by item, each with the line it stands on (the review's scanner).
     scanner = load_scanner()
     found = None
     if scanner is not None:

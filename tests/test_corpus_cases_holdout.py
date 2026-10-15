@@ -1,18 +1,18 @@
-"""The blind hold-out of a council template (D-19a rev 2 R6.3, package A-2; tier ``holdout``).
+"""The blind hold-out of a reviewer template (D-19a rev 2 R6.3, package A-2; tier ``holdout``).
 
-Vera picks >= 5 verified author-deck sources blind; tools/corpus_holdout.py
+The review picks >= 5 verified author-deck sources blind; tools/corpus_holdout.py
 takes her list (it never picks). Their author-deck constants become
 harvest-format rows with origin holdout_from_author_deck, go through
 plan_council (on a deckless copy of the repository, so the source takes the
-council route) and the council deck, and through the same gates as the author
+reviewer route) and the reviewer deck, and through the same gates as the author
 deck. Pinned here:
 
-* a selection that is not Vera's, not blind, or empty is not run; 1-4 sources
+* a selection that is not the review's, not blind, or empty is not run; 1-4 sources
   give a falsification-only report (a disagreement withdraws, agreement
   accepts nothing);
 * the author side is the CURRENT pass's records, and a selected key that moved
   with the transform fingerprint is followed through the source it names;
-* TEMP / COORDS reads follow the reviewed standard of a council row (accepted
+* TEMP / COORDS reads follow the reviewed standard of a reviewer row (accepted
   overrides included); an unreviewed name-scan hit leaves the run incomplete;
 * a source that is not a verified author-deck source is not run;
 * the hold-out rows carry the author deck's constants and an origin the harvest
@@ -171,7 +171,7 @@ def test_the_hold_out_rows_and_plans(env):
             assert eligible and problems and all("material_data_origin" in p
                                                  for p in problems)
         plan = json.loads((prepared["plans"] / row["key"] / "council_plan.json").read_text())
-        # ... in the deckless copy it cannot, so the source takes the council route
+        # ... in the deckless copy it cannot, so the source takes the reviewer route
         assert plan["route"] == "no_deck_in_repository" and not plan["refusal"], plan["refusal"]
         manifest = plan["sets"][0]["plan"]["experiment"]["manifest"]
         assert manifest["props"] == [1000.0 + n, 0.2]
@@ -244,7 +244,7 @@ def test_the_routine_gate_runs_both_sides_of_a_toy_and_they_agree(env):
 
 
 # ---------------------------------------------------------------------------
-# Vera's review before the first hold-out run (2026-10-03)
+# the independent review before the first hold-out run (2026-10-03)
 # ---------------------------------------------------------------------------
 def test_the_author_side_is_the_current_pass_not_pass16(env, monkeypatch):
     from umat_oti.corpus_features import harness as H
@@ -306,7 +306,7 @@ def test_the_reviewed_scan_decides_reads_as_for_a_council_row(env):
         assert "reviewed static scan (reviewed.jsonl)" in row["notes"]
         plan = json.loads((prepared["plans"] / row["key"] / "council_plan.json").read_text())
         assert not plan["refusal"], plan["refusal"]
-    # a reviewed TEMP read is refused exactly as a council row's is
+    # a reviewed TEMP read is refused exactly as a reviewer row's is
     rows[0]["reads_temp"] = True
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     prepared = ho.prepare(KEYS[:5], env / "out2", reviewed_scans=[review])
@@ -387,7 +387,7 @@ def test_a_reviewed_row_is_matched_by_registry_key_or_selection_key(env):
     rows = _review_rows()
     for n, row in enumerate(rows):
         del row["source_id"]
-        # Scout's rows carry the selection's (pass20) key and the current registry key
+        # the review's rows carry the selection's (pass20) key and the current registry key
         row.update(key="f" * 23 + str(n), registry_key=KEYS[n])
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])

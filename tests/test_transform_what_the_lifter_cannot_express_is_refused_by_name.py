@@ -1,6 +1,6 @@
 """A statement function in an internal procedure, and ENTRY in a helper, are refused by name.
 
-Both used to report a successful transform whose output did not build (Vera B5
+Both used to report a successful transform whose output did not build (review B5
 T3): a statement function inside a lifted internal procedure -- including one
 whose dummy or name is a host constant -- came out as an assignment to an
 undeclared array, and a helper with ENTRY had its alternate entry point defined

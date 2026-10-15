@@ -105,7 +105,7 @@ def test_harness_verifies_local_and_total_parameter_sensitivities(tiny):
     # STATEV(1) does not feed back into the stress: d sigma / d STATEV_n == 0
     zero = by[("stress_state_sens_local", "gauss_small_elastic")]
     assert zero["status"] == "not_attempted" and "structural zero" in zero["reason"]
-    # build identity (Vera B1/E) and locators
+    # build identity (review B1/E) and locators
     for record in records:
         assert record["build"] == "lifted"
         assert record["build_identity"]["transformer"].startswith(

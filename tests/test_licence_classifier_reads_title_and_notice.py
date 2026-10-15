@@ -1,6 +1,6 @@
 """A licence file is classified by its notice and title, not by a body search.
 
-Regression (Scout, B1): ``classify_license_text`` searched the whole text with
+Regression (review B1): ``classify_license_text`` searched the whole text with
 AGPL first, and the GPL-3.0 text names the GNU Affero licence in its section 13,
 so every GPL-3.0 file read as AGPL-3.0 (frodal/SCMM-hypo went into the registry
 as AGPL-3.0; makkemal/NGIMASEM's file read the same). The same search read

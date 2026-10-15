@@ -1,6 +1,6 @@
-"""Informativeness of a council experiment, R4 (G7, D-19a rev 2).
+"""Informativeness of a reviewer-designed experiment, R4 (G7, D-19a rev 2).
 
-An inelastic council row (reviewed family plasticity / damage / crystal /
+An inelastic reviewer row (reviewed family plasticity / damage / crystal /
 viscous / concrete, or a routine that writes STATEV) is informative only if
 residual_after_reversal fired, or tangent_change under small strain.
 departure_from_linearity and state_change never count alone, and under

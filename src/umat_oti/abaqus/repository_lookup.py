@@ -72,7 +72,7 @@ ABAQUS_UTILITIES = frozenset({
 })
 
 #: Ptk routines called beside the confirmed ones that no Abaqus header or
-#: reference this project holds declares (Vera, B17): neither resolved nor
+#: reference this project holds declares (review B17): neither resolved nor
 #: external, so they never make a source external; reported as unconfirmed.
 UNCONFIRMED_UTILITIES = frozenset({
     "PTKSETMESHANDEVENTSERIES", "PTKSETEVENTSERIESPROPERTIES", "PTKCOMPUTE",
@@ -436,7 +436,7 @@ def lookup(source: Path, cache_root: Path, *, reason: str = "",
         if label == "call" and name in defined:
             del unpublished[key]
     # BLAS/LAPACK are a library, not an Abaqus utility and not a repository
-    # routine: neither resolved nor external (RULE_G3a item 2, Vera B17). A
+    # routine: neither resolved nor external (RULE_G3a item 2, review B17). A
     # rule that treated them as unavailable would be a new rule made after
     # seeing which sources it removes; it is not implemented.
     library = {key: None for key in unpublished

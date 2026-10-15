@@ -333,7 +333,7 @@ def detect_activation(records: Sequence[dict],
 
 
 # ---------------------------------------------------------------------------
-# informativeness of a council-designed experiment (D-19a rev 2, R4)
+# informativeness of a reviewer-designed experiment (D-19a rev 2, R4)
 # ---------------------------------------------------------------------------
 #: Reviewed-family words that make a source inelastic (R4): plasticity,
 #: damage, crystal plasticity, viscous (visco-elastic/-plastic), concrete.
@@ -368,7 +368,7 @@ def council_informative(activation: Activation, *, family: str,
                         demanded_nstatv: int, finite: bool,
                         statev_write_only_static: bool = False,
                         statev_write_only_dynamic: bool = False) -> dict:
-    """Whether a council experiment exercised an inelastic source (R4).
+    """Whether a reviewer-designed experiment exercised an inelastic source (R4).
 
     *Inelastic* means the reviewed family is plasticity, damage, crystal,
     viscous or concrete, OR the routine writes state (``demanded(text).nstatv

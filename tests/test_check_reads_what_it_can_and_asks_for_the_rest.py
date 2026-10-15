@@ -1,4 +1,4 @@
-"""``umat-oti check UMAT.for [DECK]`` (Nico, B11; Maya's design M1-M2).
+"""``umat-oti check UMAT.for [DECK]`` (review B11; the review's design M1-M2).
 
 It reads the deck from any path and says where each fact came from, takes the
 constants and the loading directly, writes a commented template when there is
