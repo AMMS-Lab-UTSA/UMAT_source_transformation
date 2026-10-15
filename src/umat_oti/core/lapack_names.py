@@ -26,3 +26,22 @@ DLACPY DLASET DLANGE DLANSY DLAMCH DLAPY2 DLASWP DLASCL DTRTRI DTRTRS DTRCON
 """.split())
 
 STANDARD_LAPACK_BLAS = BLAS | LAPACK
+
+
+def standard_names_defined_in(text: str) -> tuple:
+    """The standard LAPACK/BLAS names ``text`` defines as a SUBROUTINE or FUNCTION
+    (an author's own DGETRF), sorted. A line-level read of the source, enough to
+    choose how a stand-alone build links; the transform itself reads the parse."""
+    import re
+
+    header = re.compile(r"(?i)^\s*(?:\d+\s+)?(?:(?:RECURSIVE|PURE|ELEMENTAL|DOUBLE\s*PRECISION|"
+                        r"REAL(?:\s*\*\s*\d+)?|INTEGER(?:\s*\*\s*\d+)?|LOGICAL)\s+)*"
+                        r"(?:SUBROUTINE|FUNCTION)\s+([A-Z][A-Z0-9_]*)")
+    found = set()
+    for line in text.splitlines():
+        if line[:1] in ("*", "!") or (line[:1] in ("c", "C") and line[1:2] in ("", " ", "\t", "-", "=", "*")):
+            continue
+        match = header.match(line)
+        if match and match.group(1).upper() in STANDARD_LAPACK_BLAS:
+            found.add(match.group(1).upper())
+    return tuple(sorted(found))

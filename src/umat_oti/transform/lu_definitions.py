@@ -27,6 +27,16 @@ real part and nonzero derivative parts, and skipping it would drop them. The
 real results are the same except where a zero entry meets a zero diagonal
 (reference LAPACK keeps the 0, this gives 0/0). Invalid arguments return a
 negative INFO without calling XERBLA.
+
+Licence: the algorithm and loop orders of these bodies are derived from
+Reference LAPACK (dgetrf2.f, dgetf2.f, dgetrs.f, dlaswp.f, idamax.f, dger.f,
+dscal.f, dtrsm.f; https://github.com/Reference-LAPACK/lapack), BSD-3-Clause,
+Copyright (c) 1992-2023 The University of Tennessee and The University of
+Tennessee Research Foundation, (c) 2000-2023 The University of California
+Berkeley, (c) 2006-2023 The University of Colorado Denver. The full notice is
+in THIRD_PARTY_NOTICES.md, section 5, and in
+abaqus_utility_definitions.REFERENCE_LAPACK_LICENCE; generated files that hold
+these bodies carry it.
 """
 
 DGETRF_DEFINITION = """

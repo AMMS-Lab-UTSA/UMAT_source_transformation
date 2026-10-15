@@ -53,6 +53,16 @@ body cannot.
 When a SPRINC/SPRIND/SINV/ROTSIG body is supplied, the transform calls the
 LIFTED copy (``SPRINC_OTI``) and the published file keeps calling the solver's
 own routine everywhere else.
+
+Licence: DGESV (dgesv.f) and DGETRI's interface and argument checks (dgetri.f)
+follow Reference LAPACK, as do the bodies imported from lu_definitions and
+blas_definitions; Reference LAPACK/BLAS is BSD-3-Clause, Copyright (c)
+1992-2023 The University of Tennessee and The University of Tennessee Research
+Foundation, (c) 2000-2023 The University of California Berkeley, (c) 2006-2023
+The University of Colorado Denver. The full notice is
+:data:`REFERENCE_LAPACK_LICENCE` (and THIRD_PARTY_NOTICES.md, section 5);
+:func:`library_licence_comment` puts it at the top of every generated file that
+holds one of these bodies.
 """
 from __future__ import annotations
 
@@ -356,6 +366,160 @@ PRIVATE_REAL_FORMAT = "UMATOTI_{name}_R"
 PRIVATE_OTI_FORMAT = "UMATOTI_{name}_OTI"
 
 
+#: The licence of Reference LAPACK/BLAS, which the library bodies follow
+#: (lu_definitions, blas_definitions, DGESV and DGETRI above); see
+#: THIRD_PARTY_NOTICES.md, section 5. Kept with every file the transform or the
+#: provider writes that holds one of those bodies.
+REFERENCE_LAPACK_LICENCE = """\
+Copyright (c) 1992-2023 The University of Tennessee and The University
+                        of Tennessee Research Foundation.  All rights
+                        reserved.
+Copyright (c) 2000-2023 The University of California Berkeley. All
+                        rights reserved.
+Copyright (c) 2006-2023 The University of Colorado Denver.  All rights
+                        reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+- Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+
+- Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer listed
+  in this license in the documentation and/or other materials
+  provided with the distribution.
+
+- Neither the name of the copyright holders nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+The copyright holders provide no reassurances that the source code
+provided does not infringe any patent, copyright, or any other
+intellectual property rights of third parties.  The copyright holders
+disclaim any liability to any recipient for claims brought against
+recipient by any third party for infringement of that parties
+intellectual property rights.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+
+def library_licence_comment(names, comment: str = "!") -> str:
+    """The comment block a generated file holding bodies of the library routines
+    ``names`` (DGESV, DGEMM, ...) starts with: what follows Reference LAPACK/BLAS,
+    and its licence. Empty when ``names`` holds none of them."""
+    held = sorted(set(str(name).upper() for name in names) & set(LIBRARY_ROUTINES) - {"DSPEVD"})
+    if not held:
+        return ""
+    lines = [f"The bodies of {', '.join(held)} in this file (under private names) follow",
+             "Reference LAPACK/BLAS, from which their algorithms and loop orders are derived;",
+             "see THIRD_PARTY_NOTICES.md, section 5, of umat-oti. Licence of Reference LAPACK/BLAS:",
+             "", *REFERENCE_LAPACK_LICENCE.splitlines()]
+    return "".join(f"{comment} {line}".rstrip() + "\n" for line in lines) + "\n"
+
+
+#: The private name an AUTHOR's own definition of a standard LAPACK/BLAS name
+#: gets in everything generated from the source (the transformed file, its
+#: helpers, the provider's objects), with every reference to it.
+PRIVATE_AUTHOR_FORMAT = "UMATOTI_AUTH_{name}"
+
+
+def author_library_definitions(parsed) -> dict[str, str]:
+    """``{NAME: private name}`` for every standard LAPACK/BLAS name (DGETRF) the
+    source defines itself, as a subroutine or a function."""
+    from umat_oti.core.lapack_names import STANDARD_LAPACK_BLAS
+    from umat_oti.transform.helper_lifting import routines_by_name
+
+    return {name: PRIVATE_AUTHOR_FORMAT.format(name=name)
+            for name in sorted(set(routines_by_name(parsed)) & STANDARD_LAPACK_BLAS)}
+
+
+def renamed_names_in_code(text: str, renames: dict, form: str) -> str:
+    """``text`` with each name in ``renames`` replaced as a whole word in the
+    code: comment lines, trailing ``!`` comments and character constants are left
+    as they are. Lines are not split, so line numbers are kept."""
+    import re
+
+    if not renames:
+        return text
+    pattern = re.compile(r"(?<![A-Za-z0-9_$%])(" + "|".join(sorted(map(re.escape, renames), key=len,
+                                                               reverse=True))
+                         + r")(?![A-Za-z0-9_$])", re.IGNORECASE)
+
+    def code(segment: str) -> str:
+        return pattern.sub(lambda m: renames[m.group(1).upper()], segment)
+
+    out = []
+    for line in text.splitlines(keepends=True):
+        if form == "fixed" and line[:1] in "cC*!":
+            out.append(line)
+            continue
+        if line.lstrip().startswith("!"):
+            out.append(line)
+            continue
+        head, body = (line[:6], line[6:]) if form == "fixed" else ("", line)
+        pieces, start, quote, index = [head], 0, "", 0
+        while index < len(body):
+            char = body[index]
+            if quote:
+                if char == quote:
+                    if body[index + 1:index + 2] == quote:
+                        index += 1
+                    else:
+                        pieces.append(body[start:index + 1])
+                        start, quote = index + 1, ""
+            elif char in "'\"":
+                pieces.append(code(body[start:index]))
+                start, quote = index, char
+            elif char == "!":
+                break
+            index += 1
+        if quote:
+            pieces.append(body[start:])
+        else:
+            pieces.append(code(body[start:index]) + body[index:])
+        out.append("".join(pieces))
+    return "".join(out)
+
+
+def privatise_author_library_definitions(parsed):
+    """``(parsed, {NAME: private name})``: the source as the transform reads it,
+    with the author's own definitions of standard LAPACK/BLAS names, and every
+    reference to them, renamed (DGETRF -> UMATOTI_AUTH_DGETRF).
+
+    Left under its standard name, the author's DGETRF would be exported by the
+    user-subroutine object and, in Abaqus, replace the solver's dgetrf_ for
+    every caller in the process (see :func:`strip_supplied_solver_bodies`).
+    The author's own calls keep reaching the author's routine. A library
+    routine the author calls and does not define (DGESV) keeps its whole
+    library chain: Abaqus's MKL runs its own LU inside DGESV, whatever DGETRF a
+    user library defines (measured: an author DGETRF linked beside MKL's DGESV
+    is not called; beside reference LAPACK 3.9.0 it is), so the supplied
+    DGESV calls the supplied DGETRF, never the author's.
+    """
+    from umat_oti.core.model import ParsedFortranSource
+    from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
+
+    renames = author_library_definitions(parsed)
+    if not renames:
+        return parsed, {}
+    text = renamed_names_in_code(parsed.text, renames, parsed.form)
+    lines = logical_lines_from_text(text, parsed.form)
+    return ParsedFortranSource(parsed.path, parsed.form, text, lines, parse_subroutines(lines)), renames
+
+
 def renamed_library_calls(text: str, names, name_format: str) -> str:
     """``text`` with every SUBROUTINE definition of and CALL to the routines in
     ``names`` renamed by ``name_format`` (e.g. DGESV -> UMATOTI_DGESV_R)."""
@@ -381,24 +545,41 @@ def privatise_oti_copies(text: str, supplied) -> str:
 
 
 def library_twin_sources(name_format: str = "{name}") -> dict[str, str]:
-    """``{NAME: free-form Fortran}``: the real bodies of :data:`LIBRARY_ROUTINES`.
+    """The real bodies of :data:`LIBRARY_ROUTINES`, as free form, one routine
+    per entry, so a caller can put each in its own archive member and let the
+    linker take only what the original leaves undefined.
 
     A stand-alone build of an ORIGINAL that calls DGESV has no LAPACK to link,
     where Abaqus would supply one. These are the bodies the transform supplies
     to the transformed build, over plain reals, so the original's reference
-    build and the transformed build pivot and round alike. One routine per
-    entry, so a caller can put each in its own archive member and let the
-    linker take only what the original leaves undefined.
+    build and the transformed build pivot and round alike.
+
+    Inside the bodies, a library routine always calls the private twins
+    (``UMATOTI_DGETRF_R``), never a standard name: the chain stays whole
+    even where the author defines a DGETRF of their own, as it does in MKL
+    (see :func:`privatise_author_library_definitions`).
+
+    ``{NAME: body}`` with the entry points named by ``name_format``; unless
+    that is :data:`PRIVATE_REAL_FORMAT`, the private chain the entry points
+    call is included too, keyed by its private name.
     """
+    import re
+
     from umat_oti.fortran.parser import logical_lines_from_text
 
-    bodies = {name: _without_dble("\n".join(line.text for line in
-                                            logical_lines_from_text(UTILITY_DEFINITIONS[name], "fixed")) + "\n")
-              for name in LIBRARY_ROUTINES}
-    if name_format != "{name}":
-        bodies = {name: renamed_library_calls(text, LIBRARY_ROUTINES, name_format)
-                  for name, text in bodies.items()}
-    return bodies
+    private = {name: renamed_library_calls(
+        _without_dble("\n".join(line.text for line in
+                                 logical_lines_from_text(UTILITY_DEFINITIONS[name], "fixed")) + "\n"),
+        LIBRARY_ROUTINES, PRIVATE_REAL_FORMAT) for name in LIBRARY_ROUTINES}
+    if name_format == PRIVATE_REAL_FORMAT:
+        return private
+    entries = {}
+    for name, text in private.items():
+        own = PRIVATE_REAL_FORMAT.format(name=name)
+        entry = name_format.format(name=name)
+        text = re.sub(rf"(?i)\b(SUBROUTINE\s+){own}\b", lambda m: m.group(1) + entry, text, count=1)
+        entries[name] = re.sub(rf"(?i)(\bEND\s+SUBROUTINE\s+){own}\b", lambda m: m.group(1) + entry, text)
+    return {**entries, **{PRIVATE_REAL_FORMAT.format(name=name): text for name, text in private.items()}}
 
 
 def _without_dble(text: str) -> str:

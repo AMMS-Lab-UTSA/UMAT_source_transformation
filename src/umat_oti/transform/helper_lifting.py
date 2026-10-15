@@ -1144,6 +1144,19 @@ def _lift_helper_routine(
     # side; it is never a constant local (HEAV = 0. / 1.0D0 is a step function).
     literal_constants -= {original_name, result_name}
     constant_real_names: set[str] = set()
+    # Names a type statement declares anywhere in the routine. A DIMENSION
+    # statement above the type statement (``DIMENSION ID6(6,6)`` then
+    # ``DOUBLE PRECISION ID6``) gives such a name its shape only; typed from
+    # its initial letter instead, ID6 came out ``integer :: ID6(6,6)`` beside
+    # ``type(...) :: ID6`` and was passed as an INTEGER array.
+    explicitly_typed: set[str] = set()
+    for raw in stitched_lines[1:-1]:
+        statement = _flattened_attributed_declaration(_statement_text(raw, form) or "")
+        for regex in (_INTEGER_RE, _REAL_RE, _CHARACTER_RE, _LOGICAL_RE):
+            typed = regex.match(statement)
+            if typed and not re.match(r"(?i)^\s*\w[\w\s*()]*\bFUNCTION\b", statement):
+                explicitly_typed.update(_declared_names(typed.group(1)))
+                break
 
     interface_depth = 0
     for raw in stitched_lines[1:-1]:
@@ -1269,7 +1282,7 @@ def _lift_helper_routine(
                 if not payload:
                     continue
             lines, oti_names, ints = _rewrite_dimension_line(
-                payload, type_name, declaration_oti_names | integer_names)
+                payload, type_name, declaration_oti_names | integer_names | explicitly_typed)
             prelude.extend(lines)
             declaration_oti_names.update(oti_names)
             integer_names.update(ints)

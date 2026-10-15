@@ -223,7 +223,7 @@ def driver_source(name: str = "REPLAY", source_text: str = "", compiler: str = "
     """
     from umat_oti.abaqus.replay import utility_stub_block
 
-    stubs = utility_stub_block(compiler)
+    stubs = utility_stub_block(compiler, source_text=source_text)
     if source_text:
         stubs, _ = drop_stubs_defined_by(stubs, source_text)
     return _DRIVER % {"state": STATE_FILE, "out": RESULT_FILE,
@@ -298,7 +298,7 @@ def build_call(source: Path, work_dir: Path, *, compiler: str = "ifort",
     driver = work_dir / "otis_single_call.f90"
     driver.write_text(driver_source(name, text, compiler), encoding="utf-8")
     from umat_oti.abaqus.replay import library_link
-    lapack_flags, _, lapack_record = library_link(compiler)
+    lapack_flags, _, lapack_record = library_link(compiler, source_text=text)
     program = work_dir / "otis_single_call"
     install_headers(work_dir, include)
     includes = [f"-I{work_dir}"] + [f"-I{Path(d)}" for d in module_dirs]

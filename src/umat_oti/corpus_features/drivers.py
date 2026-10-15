@@ -638,7 +638,8 @@ def prepare_original_source(source: Path, work: Path) -> tuple:
 def stub_block(source_text: str, compiler: str = "gfortran", quad: bool = False) -> str:
     from umat_oti.abaqus.replay import utility_stub_block
     from umat_oti.abaqus.single_call import drop_stubs_defined_by
-    stubs, _ = drop_stubs_defined_by(utility_stub_block(compiler, quad=quad), source_text)
+    stubs, _ = drop_stubs_defined_by(utility_stub_block(compiler, quad=quad, source_text=source_text),
+                                     source_text)
     return stubs
 
 
@@ -672,7 +673,7 @@ def build_real(work: Path, units: Sequence[Path], source_text: str, *,
     template = quad_driver("", sdvini) if quad else REAL_DRIVER
     stubs = stub_block(source_text, compiler, quad)
     from umat_oti.abaqus.replay import library_link
-    lapack_flags, _, _ = library_link(compiler, quad=quad)
+    lapack_flags, _, _ = library_link(compiler, quad=quad, source_text=source_text)
     driver.write_text(template % {
         "common": _COMMON_DECL, "read": _READ_CONFIG % {"config": CONFIG_FILE},
         "pert": PERT_FILE, "out": REAL_OUT, "sdvini": _SDVINI if sdvini else "    CONTINUE",

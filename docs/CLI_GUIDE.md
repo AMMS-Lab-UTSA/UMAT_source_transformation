@@ -887,7 +887,10 @@ against Abaqus's MKL in a job. The generated files never define a standard
 LAPACK/BLAS name (inside Abaqus that definition would serve every caller in the
 solver): the transformed UMAT keeps its real calls for the host library and
 calls private OTI copies (`UMATOTI_DGESV_OTI`); the provider's copy of the
-original calls private real twins (`UMATOTI_DGESV_R`). The verifier's reference
+original calls private real twins (`UMATOTI_DGESV_R`). A standard name the
+author defines (a DGETRF of their own) is renamed with every reference to it
+(`UMATOTI_AUTH_DGETRF`, recorded in the transform report and the provider
+contract), and a library routine keeps the library's whole chain. The verifier's reference
 links the host's LAPACK (MKL, OpenBLAS or reference LAPACK, recorded as
 `reference_lapack`), or the twins where there is none. Supplied routines:
 DGESV, DGETRF, DGETRS, DGETRI, DSYEV, DSPEVD, DGEMM, DGEMV, DCOPY, DSCAL,

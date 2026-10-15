@@ -15,6 +15,13 @@ probe program on this machine:
                supplies (umat_oti.transform.abaqus_utility_definitions), which
                follow reference-LAPACK semantics but are not LAPACK.
 
+OpenBLAS and reference LAPACK are found through ``ldconfig -p`` (on PATH, else
+/sbin/ldconfig or /usr/sbin/ldconfig) and by reading the standard library
+directories directly. The record of the chosen library carries its version:
+MKL's mkl_version.h, the files the link resolves to (whose names carry the
+version of OpenBLAS and reference LAPACK), and the LAPACK version the library
+reports through ILAVER.
+
 ``UMAT_OTI_LAPACK`` overrides the choice: one of the names above, or
 ``flags:<link flags>`` for a library given explicitly. Every build that uses
 this records :meth:`HostLapack.as_dict` beside its result.
@@ -63,6 +70,7 @@ class HostLapack:
     flags: tuple = ()
     libraries: tuple = ()
     rejected: tuple = field(default=(), compare=False)
+    version: tuple = field(default=(), compare=False)
 
     @property
     def is_library(self) -> bool:
@@ -71,17 +79,102 @@ class HostLapack:
     def as_dict(self) -> dict:
         return {"kind": self.kind, "description": self.description,
                 "link_flags": list(self.flags), "libraries": list(self.libraries),
+                **({"version": dict(self.version)} if self.version else {}),
                 **({"not_used": list(self.rejected)} if self.rejected else {})}
 
 
+#: Where ldconfig may live when it is not on PATH (a user's PATH often lacks
+#: the sbin directories).
+LDCONFIG_PATHS = ("/sbin/ldconfig", "/usr/sbin/ldconfig")
+#: Directories searched directly as well, so a library is found without
+#: ldconfig, and in the Debian alternatives folders.
+LIBRARY_DIRECTORIES = ("/usr/lib/x86_64-linux-gnu", "/lib/x86_64-linux-gnu", "/usr/lib64", "/lib64",
+                       "/usr/lib", "/usr/local/lib", "/usr/lib/x86_64-linux-gnu/openblas-pthread",
+                       "/usr/lib/x86_64-linux-gnu/openblas-openmp", "/usr/lib/x86_64-linux-gnu/lapack",
+                       "/usr/lib/x86_64-linux-gnu/blas")
+
+
+def _ldconfig_executable() -> str | None:
+    found = shutil.which("ldconfig")
+    if found:
+        return found
+    for path in LDCONFIG_PATHS:
+        if os.access(path, os.X_OK):
+            return path
+    return None
+
+
 def _ldconfig(name: str) -> list:
-    try:
-        listed = subprocess.run(["ldconfig", "-p"], capture_output=True, text=True,
-                                timeout=30).stdout
-    except (OSError, subprocess.SubprocessError):
-        return []
-    return [line.split("=>")[-1].strip() for line in listed.splitlines()
-            if line.strip().startswith(name) and "x86-64" in line]
+    """Paths of ``name`` (``liblapack.so``) for x86-64: from ``ldconfig -p`` (on PATH,
+    else /sbin or /usr/sbin), then from :data:`LIBRARY_DIRECTORIES` read directly;
+    the runtime name (``.so.3``) before the development link, each file once."""
+    found = []
+    executable = _ldconfig_executable()
+    if executable is not None:
+        try:
+            listed = subprocess.run([executable, "-p"], capture_output=True, text=True, timeout=30).stdout
+        except (OSError, subprocess.SubprocessError):
+            listed = ""
+        found += [line.split("=>")[-1].strip() for line in listed.splitlines()
+                  if line.strip().startswith(name) and "x86-64" in line]
+    for directory in LIBRARY_DIRECTORIES:
+        folder = Path(directory)
+        if folder.is_dir():
+            found += sorted(str(path) for path in folder.glob(name + "*")
+                            if path.is_file() and (path.name == name or path.name[len(name):].startswith(".")))
+    unique, seen = [], set()
+    for path in found:
+        real = os.path.realpath(path)
+        if real not in seen and os.path.isfile(real):
+            seen.add(real)
+            unique.append(path)
+    return unique
+
+
+def _version(candidate: "HostLapack", compiler: str) -> dict:
+    """What the build record says about the library's version: the vendor's (MKL's
+    mkl_version.h), the files the link resolves to (their names carry the version
+    of reference LAPACK and OpenBLAS), and the LAPACK version the library reports
+    (ILAVER), each where it can be read."""
+    record = {"files": [os.path.realpath(path) for path in candidate.libraries]}
+    if candidate.kind == "mkl" and candidate.libraries:
+        header = Path(candidate.libraries[0]).parent.parent.parent / "include" / "mkl_version.h"
+        if not header.is_file():
+            header = Path(candidate.libraries[0]).parent.parent / "include" / "mkl_version.h"
+        if header.is_file():
+            import re
+            text = header.read_text(errors="replace")
+            fields = {key: re.search(rf"#define\s+{key}\s+(\d+)", text)
+                      for key in ("__INTEL_MKL__", "__INTEL_MKL_MINOR__", "__INTEL_MKL_UPDATE__")}
+            if all(fields.values()):
+                major, minor, update = (fields[key].group(1) for key in fields)
+                record["vendor_version"] = (f"Intel MKL {major}, minor {minor}, update {update} "
+                                            f"({header})")
+    record["lapack_version"] = _ilaver_of(compiler, tuple(candidate.flags))
+    return record
+
+
+_ILAVER = """      PROGRAM V
+      INTEGER MAJOR, MINOR, PATCH
+      CALL ILAVER(MAJOR, MINOR, PATCH)
+      PRINT '(I0,".",I0,".",I0)', MAJOR, MINOR, PATCH
+      END
+"""
+
+
+@lru_cache(maxsize=None)
+def _ilaver_of(compiler: str, flags: tuple) -> str:
+    if shutil.which(compiler) is None:
+        return "unknown"
+    with tempfile.TemporaryDirectory() as tmp:
+        source = Path(tmp) / "ilaver.f"
+        source.write_text(_ILAVER)
+        built = subprocess.run([compiler, str(source), *flags, "-o", str(Path(tmp) / "ilaver")],
+                               capture_output=True, text=True, cwd=tmp)
+        if built.returncode != 0:
+            return "unknown (ILAVER does not link)"
+        ran = subprocess.run([str(Path(tmp) / "ilaver")], capture_output=True, text=True, cwd=tmp)
+        return ran.stdout.strip() if ran.returncode == 0 and ran.stdout.strip() else "unknown"
 
 
 def _mkl_dir() -> Path | None:
@@ -146,7 +239,8 @@ def host_lapack(compiler: str = "gfortran") -> HostLapack:
         why = _links(chosen, compiler)
         if why:
             raise RuntimeError(f"{ENVIRONMENT}={wanted!r}: {why}")
-        return chosen
+        return HostLapack(chosen.kind, chosen.description, flags, flags,
+                          version=tuple(_version(chosen, compiler).items()))
     rejected = []
     for candidate in _candidates(compiler):
         if wanted not in ("auto", candidate.kind):
@@ -154,7 +248,8 @@ def host_lapack(compiler: str = "gfortran") -> HostLapack:
         why = _links(candidate, compiler)
         if not why:
             return HostLapack(candidate.kind, candidate.description, candidate.flags,
-                              candidate.libraries, tuple(rejected))
+                              candidate.libraries, tuple(rejected),
+                              tuple(_version(candidate, compiler).items()))
         rejected.append(f"{candidate.description}: {why}")
     if wanted not in ("auto",):
         raise RuntimeError(f"{ENVIRONMENT}={wanted!r}: no such library links here ({'; '.join(rejected)})")
