@@ -1105,6 +1105,17 @@
     "tests/test_library_routines.py::test_the_provider_verifier_names_the_missing_state_for_the_j2_branch_check"
    ],
    "selected_by": "message_pattern"
+  },
+  {
+   "commit": "d90b4f8",
+   "bug": "The supplied DNRM2 (and DSCAL) followed reference BLAS 3.9.0 for INCX <= 0 (zero / no action) where Abaqus's MKL computes, so a UMAT taking DNRM2 with INCX = -1 transformed silently to a stress that differed from the original's in Abaqus; DGEMV and DGEMM computed with invalid leading dimensions; a DOUBLE PRECISION function named with I-N lost its derivative (REAL() on stores); the provider verifier rejected valid providers whose stress cancels to about zero in a large stress.",
+   "tests": [
+    "tests/test_library_routines.py::test_the_twins_follow_mkl_for_every_increment_and_invalid_argument",
+    "tests/test_library_routines.py::test_negative_and_zero_increments_are_differentiated_as_mkl_computes_them",
+    "tests/test_library_routines.py::test_the_primal_tolerance_scales_with_the_run_and_a_function_result_keeps_its_derivative",
+    "tests/test_library_routines.py::test_stand_alone_builds_of_a_source_defining_a_standard_name_keep_the_library_chain"
+   ],
+   "selected_by": "message_pattern"
   }
  ],
  "excluded": [
