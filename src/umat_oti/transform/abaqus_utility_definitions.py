@@ -69,8 +69,8 @@ from __future__ import annotations
 from umat_oti.transform.spectral_definitions import DSPEVD_DEFINITION
 from umat_oti.transform.lu_definitions import DGETRF_DEFINITION, DGETRS_DEFINITION
 from umat_oti.transform.blas_definitions import (
-    DAXPY_DEFINITION, DCOPY_DEFINITION, DGEMM_DEFINITION, DGEMV_DEFINITION, DSCAL_DEFINITION,
-    DSYEV_DEFINITION)
+    DAXPY_DEFINITION, DCOPY_DEFINITION, DDOT_DEFINITION, DGEMM_DEFINITION, DGEMV_DEFINITION,
+    DNRM2_DEFINITION, DSCAL_DEFINITION, DSYEV_DEFINITION)
 
 #: ``CALL ROTSIG(S, R, OUTPUT, LSTR, NDI, NSHR)``
 #:
@@ -312,7 +312,13 @@ UTILITY_DEFINITIONS: dict[str, str] = {
     "DCOPY": DCOPY_DEFINITION,
     "DSCAL": DSCAL_DEFINITION,
     "DAXPY": DAXPY_DEFINITION,
+    "DDOT": DDOT_DEFINITION,
+    "DNRM2": DNRM2_DEFINITION,
 }
+
+#: The supplied library routines that are FUNCTIONS: a UMAT references them in
+#: expressions, not with CALL (see :func:`with_supplied_library_functions`).
+LIBRARY_FUNCTIONS = ("DDOT", "DNRM2")
 
 #: What a supplied body itself calls, so supplying it supplies these too.
 UTILITY_DEPENDENCIES: dict[str, tuple[str, ...]] = {
@@ -364,6 +370,10 @@ LIBRARY_ROUTINES = tuple(sorted(set(UTILITY_DEFINITIONS) - SOLVER_UTILITIES))
 PRIVATE_REAL_FORMAT = "UMATOTI_{name}_R"
 #: The private name of the OTI copy the transform calls.
 PRIVATE_OTI_FORMAT = "UMATOTI_{name}_OTI"
+#: The private name of a supplied body that a supplied routine calls when the
+#: author defines a routine of the same name (its OTI copy is then
+#: ``PRIVATE_OTI_FORMAT`` already).
+PRIVATE_SUPPLIED_FORMAT = "UMATOTI_{name}"
 
 
 #: The licence of Reference LAPACK/BLAS, which the library bodies follow
@@ -420,7 +430,8 @@ def library_licence_comment(names, comment: str = "!") -> str:
     """The comment block a generated file holding bodies of the library routines
     ``names`` (DGESV, DGEMM, ...) starts with: what follows Reference LAPACK/BLAS,
     and its licence. Empty when ``names`` holds none of them."""
-    held = sorted(set(str(name).upper() for name in names) & set(LIBRARY_ROUTINES) - {"DSPEVD"})
+    held = sorted({str(name).upper().replace("UMATOTI_", "", 1) for name in names}
+                  & set(LIBRARY_ROUTINES) - {"DSPEVD"})
     if not held:
         return ""
     lines = [f"The bodies of {', '.join(held)} in this file (under private names) follow",
@@ -494,30 +505,31 @@ def renamed_names_in_code(text: str, renames: dict, form: str) -> str:
     return "".join(out)
 
 
-def privatise_author_library_definitions(parsed):
-    """``(parsed, {NAME: private name})``: the source as the transform reads it,
-    with the author's own definitions of standard LAPACK/BLAS names, and every
-    reference to them, renamed (DGETRF -> UMATOTI_AUTH_DGETRF).
+def rename_author_library_definitions(text: str, renames: dict, form: str) -> str:
+    """``text`` (a file the transform writes) with the author's own definitions of
+    standard LAPACK/BLAS names, their lifted copies and every reference to them
+    renamed: DGETRF -> UMATOTI_AUTH_DGETRF, DGETRF_OTI -> UMATOTI_AUTH_DGETRF_OTI.
 
     Left under its standard name, the author's DGETRF would be exported by the
     user-subroutine object and, in Abaqus, replace the solver's dgetrf_ for
     every caller in the process (see :func:`strip_supplied_solver_bodies`).
-    The author's own calls keep reaching the author's routine. A library
-    routine the author calls and does not define (DGESV) keeps its whole
-    library chain: Abaqus's MKL runs its own LU inside DGESV, whatever DGETRF a
-    user library defines (measured: an author DGETRF linked beside MKL's DGESV
-    is not called; beside reference LAPACK 3.9.0 it is), so the supplied
-    DGESV calls the supplied DGETRF, never the author's.
+    The rename is applied to the written text only, after the transform and its
+    checks: up to then the routine is an ordinary helper of the author's,
+    promoted, lifted and checked like one. The author's own calls keep reaching
+    the author's routine. A library routine the author calls and does not
+    define keeps its whole library chain: Abaqus's MKL runs its own LU inside
+    DGESV, whatever DGETRF a user library defines (measured: an author DGETRF
+    linked beside MKL's DGESV is not called; beside reference LAPACK 3.9.0 it
+    is), so the supplied DGESV calls a supplied DGETRF under a private name
+    (:func:`supply_reachable_definitions`), never the author's.
     """
-    from umat_oti.core.model import ParsedFortranSource
-    from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
-
-    renames = author_library_definitions(parsed)
     if not renames:
-        return parsed, {}
-    text = renamed_names_in_code(parsed.text, renames, parsed.form)
-    lines = logical_lines_from_text(text, parsed.form)
-    return ParsedFortranSource(parsed.path, parsed.form, text, lines, parse_subroutines(lines)), renames
+        return text
+    mapping = {}
+    for name, private in renames.items():
+        mapping[name.upper()] = private
+        mapping[f"{name.upper()}_OTI"] = f"{private}_OTI"
+    return renamed_names_in_code(text, mapping, form)
 
 
 def renamed_library_calls(text: str, names, name_format: str) -> str:
@@ -527,6 +539,11 @@ def renamed_library_calls(text: str, names, name_format: str) -> str:
 
     for name in names:
         new = name_format.format(name=name)
+        if name in LIBRARY_FUNCTIONS:
+            # A function's name is also its result variable and appears in
+            # expressions: every occurrence is renamed.
+            text = re.sub(rf"(?i)(?<![A-Za-z0-9_]){name}(?![A-Za-z0-9_])", new, text)
+            continue
         text = re.sub(rf"(?i)\b(SUBROUTINE|CALL|EXTERNAL)(\s+){name}\b(?=\s*(\(|$|,))",
                       lambda m: m.group(1) + m.group(2) + new, text)
         text = re.sub(rf"(?i)(\bEND\s+SUBROUTINE\s+){name}\b", lambda m: m.group(1) + new, text)
@@ -557,7 +574,7 @@ def library_twin_sources(name_format: str = "{name}") -> dict[str, str]:
     Inside the bodies, a library routine always calls the private twins
     (``UMATOTI_DGETRF_R``), never a standard name: the chain stays whole
     even where the author defines a DGETRF of their own, as it does in MKL
-    (see :func:`privatise_author_library_definitions`).
+    (see :func:`rename_author_library_definitions`).
 
     ``{NAME: body}`` with the entry points named by ``name_format``; unless
     that is :data:`PRIVATE_REAL_FORMAT`, the private chain the entry points
@@ -577,6 +594,9 @@ def library_twin_sources(name_format: str = "{name}") -> dict[str, str]:
     for name, text in private.items():
         own = PRIVATE_REAL_FORMAT.format(name=name)
         entry = name_format.format(name=name)
+        if name in LIBRARY_FUNCTIONS:
+            entries[name] = re.sub(rf"(?i)(?<![A-Za-z0-9_]){own}(?![A-Za-z0-9_])", entry, text)
+            continue
         text = re.sub(rf"(?i)\b(SUBROUTINE\s+){own}\b", lambda m: m.group(1) + entry, text, count=1)
         entries[name] = re.sub(rf"(?i)(\bEND\s+SUBROUTINE\s+){own}\b", lambda m: m.group(1) + entry, text)
     return {**entries, **{PRIVATE_REAL_FORMAT.format(name=name): text for name, text in private.items()}}
@@ -606,6 +626,76 @@ def _without_dble(text: str) -> str:
     return "".join(out)
 
 
+#: The comment line that starts the library functions appended to a source
+#: (:func:`with_supplied_library_functions`); it names them.
+LIBRARY_FUNCTIONS_MARKER = "UMAT-OTI SUPPLIED LIBRARY FUNCTIONS:"
+
+
+def _code_lines(text: str):
+    for line in text.splitlines():
+        if line[:1] in ("*", "!") or (line[:1] in ("c", "C") and line[1:2] in ("", " ", "\t", "-", "=", "*")):
+            continue
+        if line.lstrip().startswith("!"):
+            continue
+        yield line.split("!", 1)[0]
+
+
+def library_function_references(text: str) -> tuple:
+    """The standard LAPACK/BLAS FUNCTIONS (DDOT, DNRM2, DLAMCH, ...) ``text``
+    references in an expression and neither defines nor declares as an array,
+    sorted."""
+    import re
+
+    from umat_oti.core.lapack_names import LAPACK_BLAS_FUNCTIONS, standard_names_defined_in
+
+    defined = set(standard_names_defined_in(text))
+    code = list(_code_lines(text))
+    found = set()
+    for name in LAPACK_BLAS_FUNCTIONS - defined:
+        reference = re.compile(rf"(?i)(?<![A-Za-z0-9_%]){name}\s*\(")
+        array = re.compile(rf"(?i)^\s*(?:DIMENSION|REAL|DOUBLE\s*PRECISION|INTEGER|LOGICAL|COMMON)\b"
+                           rf"[^=]*(?<![A-Za-z0-9_]){name}\s*\(")
+        called = re.compile(rf"(?i)\bCALL\s+{name}\b")
+        if any(array.match(line) for line in code):
+            continue
+        if any(reference.search(line) and not called.search(line) for line in code):
+            found.add(name)
+    return tuple(sorted(found))
+
+
+def with_supplied_library_functions(text: str, form: str) -> tuple:
+    """``(text, names)``: ``text`` with the bodies of the supplied library
+    FUNCTIONS it references and does not define (DDOT, DNRM2) appended, after
+    a marker comment that names them.
+
+    A function is referenced in expressions, so nothing that reads the source
+    could tell DNRM2(NTENS,B,1) from an element of an undeclared array: the
+    analysis promoted it as an array with no shape. Read with the bodies
+    appended, the reference is a call of a function the file defines, which
+    the transform lifts like an author's own function; the transform then
+    removes the real body from what it writes (the host's library provides it)
+    and gives the lifted copy a private name (UMATOTI_DNRM2_OTI). Lines are only
+    appended, so every line number of the source is unchanged. Idempotent: a
+    text that already carries the marker is returned as it is.
+    """
+    import re
+
+    marker = re.search(rf"{re.escape(LIBRARY_FUNCTIONS_MARKER)}([A-Z0-9 ]*)", text)
+    if marker:
+        return text, tuple(marker.group(1).split())
+    names = tuple(name for name in library_function_references(text) if name in LIBRARY_FUNCTIONS)
+    if not names:
+        return text, ()
+    from umat_oti.fortran.parser import logical_lines_from_text
+
+    addition = "".join(UTILITY_DEFINITIONS[name] for name in names)
+    comment = "C     " if form == "fixed" else "! "
+    if form != "fixed":
+        addition = "\n".join(line.text for line in logical_lines_from_text(addition, "fixed")) + "\n"
+    return (text.rstrip("\n") + "\n" + f"{comment}{LIBRARY_FUNCTIONS_MARKER} {' '.join(names)}\n"
+            + addition), names
+
+
 def supply_reachable_definitions(parsed, roots):
     """Append missing built-ins reached from roots, preserving supplied sources."""
     from umat_oti.core.model import ParsedFortranSource
@@ -626,19 +716,28 @@ def supply_reachable_definitions(parsed, roots):
             pending.extend(_routine_callees(routines[name], parsed.form, source_lines, function_names=functions))
         elif name in UTILITY_DEFINITIONS:
             supplied.add(name)
-    supplied = set(available_definitions(supplied))
-    # A body is supplied only for a name the source does not define itself.
-    supplied -= set(routines)
-    if not supplied:
+    needed = set(available_definitions(supplied))
+    # A body is supplied under its own name only for a name the source does not
+    # define itself. A library routine's chain stays the library's, though: when
+    # the author defines a routine a supplied body calls (their own DGETRF, under
+    # a supplied DGESV), that body calls a supplied copy under a private name
+    # (UMATOTI_DGETRF, lifted as UMATOTI_DGETRF_OTI), as MKL's DGESV runs its own
+    # LU whatever DGETRF a user library defines.
+    shadowed = sorted(needed & set(routines) & set(LIBRARY_ROUTINES))
+    entries = sorted(needed - set(routines))
+    if not entries:
         return parsed, ()
+    bodies = [renamed_library_calls(UTILITY_DEFINITIONS[name], shadowed, PRIVATE_SUPPLIED_FORMAT)
+              for name in entries + shadowed]
+    supplied = entries + [PRIVATE_SUPPLIED_FORMAT.format(name=name) for name in shadowed]
     # No statement labels anywhere in these bodies: the free-form conversion
     # below goes through fixed-form logical lines, which drop columns 1-5.
-    addition = "".join(UTILITY_DEFINITIONS[name] for name in sorted(supplied))
+    addition = "".join(bodies)
     if parsed.form == "free":
         addition = "\n".join(line.text for line in logical_lines_from_text(addition, "fixed")) + "\n"
     text = parsed.text.rstrip("\n") + "\n" + addition
     lines = logical_lines_from_text(text, parsed.form)
-    return ParsedFortranSource(parsed.path, parsed.form, text, lines, parse_subroutines(lines)), tuple(sorted(supplied))
+    return ParsedFortranSource(parsed.path, parsed.form, text, lines, parse_subroutines(lines)), tuple(supplied)
 
 
 def strip_supplied_solver_bodies(text: str, supplied, form: str = "free") -> str:
@@ -664,19 +763,21 @@ def strip_supplied_solver_bodies(text: str, supplied, form: str = "free") -> str
     """
     import re
 
-    names = sorted(set(str(n).upper() for n in supplied) & set(UTILITY_DEFINITIONS))
+    privates = {PRIVATE_SUPPLIED_FORMAT.format(name=name) for name in LIBRARY_ROUTINES}
+    names = sorted(set(str(n).upper() for n in supplied) & (set(UTILITY_DEFINITIONS) | privates))
     if not names:
         return text
     lines = text.splitlines(keepends=True)
     for name in names:
-        header = re.compile(rf"^\s*SUBROUTINE\s+{name}\s*\(", re.IGNORECASE)
+        header = re.compile(rf"^\s*(?:(?:DOUBLE\s*PRECISION|REAL\s*\*\s*8|INTEGER)\s+)?"
+                            rf"(?:SUBROUTINE|FUNCTION)\s+{name}\s*\(", re.IGNORECASE)
         starts = [i for i, line in enumerate(lines) if header.match(line)]
         if not starts:
             continue
         start = starts[-1]
         end = start
-        while end < len(lines) and not re.match(r"^\s*END\s*(?:SUBROUTINE\b.*)?$", lines[end],
-                                                   re.IGNORECASE):
+        while end < len(lines) and not re.match(r"^\s*END\s*(?:(?:SUBROUTINE|FUNCTION)\b.*)?$",
+                                                   lines[end], re.IGNORECASE):
             end += 1
         if end >= len(lines):
             continue
@@ -684,8 +785,13 @@ def strip_supplied_solver_bodies(text: str, supplied, form: str = "free") -> str
         # column 6 that a fixed-to-free conversion could take for a continuation.
         marker = "C     " if form == "fixed" else "! "
         copy = PRIVATE_OTI_FORMAT.format(name=name) if name in LIBRARY_ROUTINES else f"{name}_OTI"
-        note = (f"{marker}{name}: supplied body removed from the emitted file; the host (Abaqus, "
-                f"its MKL for LAPACK/BLAS) provides the real routine, and the transform calls "
-                f"its OTI copy {copy}.\n")
+        if name.startswith("UMATOTI_"):
+            note = (f"{marker}{name}: supplied body (the library's own, for the supplied routines "
+                    f"that call it) removed from the emitted file; the transform calls its OTI "
+                    f"copy {copy}.\n")
+        else:
+            note = (f"{marker}{name}: supplied body removed from the emitted file; the host "
+                    f"(Abaqus, its MKL for LAPACK/BLAS) provides the real routine, and the "
+                    f"transform calls its OTI copy {copy}.\n")
         lines[start:end + 1] = [note]
     return "".join(lines)

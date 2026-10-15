@@ -888,13 +888,15 @@ LAPACK/BLAS name (inside Abaqus that definition would serve every caller in the
 solver): the transformed UMAT keeps its real calls for the host library and
 calls private OTI copies (`UMATOTI_DGESV_OTI`); the provider's copy of the
 original calls private real twins (`UMATOTI_DGESV_R`). A standard name the
-author defines (a DGETRF of their own) is renamed with every reference to it
+author defines (a DGETRF of their own) is transformed like any helper of the
+author's and then renamed with every reference to it
 (`UMATOTI_AUTH_DGETRF`, recorded in the transform report and the provider
 contract), and a library routine keeps the library's whole chain. The verifier's reference
 links the host's LAPACK (MKL, OpenBLAS or reference LAPACK, recorded as
 `reference_lapack`), or the twins where there is none. Supplied routines:
 DGESV, DGETRF, DGETRS, DGETRI, DSYEV, DSPEVD, DGEMM, DGEMV, DCOPY, DSCAL,
-DAXPY; any other is refused by name. See PROVIDER.md, "Library routines".
+DAXPY and the functions DDOT and DNRM2; any other routine or function
+(DPOTRF, DASUM, DLAMCH, ...) on the derivative path is refused by name. See PROVIDER.md, "Library routines".
 
 **When it refuses.** Measured:
 

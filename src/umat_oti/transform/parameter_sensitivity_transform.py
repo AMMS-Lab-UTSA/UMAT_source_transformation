@@ -53,7 +53,8 @@ from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
 from umat_oti.oti.module_generator import generate_otilib_module
 from umat_oti.transform.abaqus_utility_definitions import (
-    library_licence_comment, privatise_author_library_definitions, supply_reachable_definitions)
+    author_library_definitions, library_licence_comment, supply_reachable_definitions,
+    with_supplied_library_functions)
 from umat_oti.transform.helper_lifting import (
     HelperLiftingError,
     _routine_callees,
@@ -170,10 +171,14 @@ def transform_umat_for_parameter_sensitivity(
         output_dir=output_dir, ntens=n_param + extra_directions, order=1
     )
     parsed = _parse_umat_source(contract.umat_source_path)
-    # An author's own DGETRF is lifted as UMATOTI_AUTH_DGETRF; a supplied DGESV
-    # keeps calling the supplied DGETRF (privatise_author_library_definitions).
-    parsed, author_library_renames = privatise_author_library_definitions(parsed)
+    # An author's own DGETRF is lifted like any helper of the author's (a module
+    # procedure here, so no standard name is exported); a supplied DGESV calls a
+    # supplied DGETRF under a private name (supply_reachable_definitions). The
+    # provider build renames the author's symbols in its objects.
+    author_library_renames = {name: private for name, private in author_library_definitions(parsed).items()
+                              if name not in with_supplied_library_functions(parsed.text, parsed.form)[1]}
     parsed, supplied = supply_reachable_definitions(parsed, ["UMAT"])
+    supplied = tuple(supplied) + with_supplied_library_functions(parsed.text, parsed.form)[1]
     umat_and_helpers = _closure_including_umat(parsed)
 
     widened_names: list = []
@@ -325,6 +330,9 @@ def run_generic_ps(
 def _parse_umat_source(path: Path) -> ParsedFortranSource:
     text = path.read_text(encoding="utf-8", errors="replace")
     form = detect_source_form(path, text)
+    # DDOT, DNRM2 referenced and not defined: read as functions the file
+    # defines, and lifted as module procedures like the author's own.
+    text, _ = with_supplied_library_functions(text, form)
     logical = logical_lines_from_text(text, form)
     subroutines = parse_subroutines(logical)
     return ParsedFortranSource(

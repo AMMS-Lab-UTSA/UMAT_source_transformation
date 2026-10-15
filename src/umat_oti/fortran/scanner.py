@@ -41,6 +41,10 @@ def analyze_fortran_source(path: Path, *, gradient_aliases: dict[str, str] | Non
     except UnicodeDecodeError:
         text = path.read_text(encoding="utf-8", errors="replace")
         warnings.append("Source was decoded with replacement characters because UTF-8 decoding failed.")
+    # The supplied library functions the source references (DDOT, DNRM2) are
+    # read as functions it defines, appended after its last line.
+    from umat_oti.transform.abaqus_utility_definitions import with_supplied_library_functions
+    text, _ = with_supplied_library_functions(text, detect_source_form(path, text))
     try:
         form = detect_source_form(path, text)
         logical_lines = logical_lines_from_text(text, form)

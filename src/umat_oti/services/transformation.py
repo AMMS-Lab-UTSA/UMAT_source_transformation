@@ -138,6 +138,10 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
         bundled_modules[path] for path in module_sources]
     bundle_files = [bundle_manifest, *[out_dir / item["bundled"] for item in bundle_record["files"]]]
     source_text = transform_source_path.read_text(encoding="utf-8", errors="replace")
+    from umat_oti.fortran.normalize import detect_source_form
+    from umat_oti.transform.abaqus_utility_definitions import with_supplied_library_functions
+    source_text, _ = with_supplied_library_functions(
+        source_text, detect_source_form(transform_source_path, source_text))
     aliases = (config.get("analysis", {}).get("finite_strain", {}).get("gradient_aliases"))
     alias_record = None
     if aliases is not None:

@@ -191,8 +191,9 @@ Files:
 - `src/umat_oti/transform/lu_definitions.py` -- DGETRF and DGETRS (from
   `dgetrf2.f`, `dgetf2.f`, `dgetrs.f`, `dlaswp.f`, `idamax.f`, `dger.f`,
   `dscal.f`, `dtrsm.f`).
-- `src/umat_oti/transform/blas_definitions.py` -- DCOPY, DSCAL, DAXPY, DGEMV
-  and DGEMM (from `dcopy.f`, `dscal.f`, `daxpy.f`, `dgemv.f`, `dgemm.f`), and
+- `src/umat_oti/transform/blas_definitions.py` -- DCOPY, DSCAL, DAXPY, DGEMV,
+  DGEMM, DDOT and DNRM2 (from `dcopy.f`, `dscal.f`, `daxpy.f`, `dgemv.f`,
+  `dgemm.f`, `ddot.f`, `dnrm2.f`), and
   DSYEV's interface and argument checks (`dsyev.f`; its eigenvalues come from
   the independent DSPEVD below).
 - `src/umat_oti/transform/abaqus_utility_definitions.py` -- DGESV (`dgesv.f`)

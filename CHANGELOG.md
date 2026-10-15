@@ -22,18 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about `c61511ea0ffe58e2`, not about this code.
 - **Test suite command for this branch.** From the repository root:
   `PYTHONPATH=$PWD/src python -m pytest -q -p no:cacheprovider -o addopts="" -m "not corpus_pass and not abaqus and not gui and not browser and not network and not arc"`.
-  It deselects 21 tests: nine that run Abaqus (`abaqus`, one of them the
-  whole-store re-run, also marked `corpus_pass`: `test_library_routines.py::test_the_transformed_umat_builds_the_abaqus_way_without_standard_names[lu|blas|author]`,
+  It deselects 24 tests: twelve that run Abaqus (`abaqus`, one of them the
+  whole-store re-run, also marked `corpus_pass`: `test_library_routines.py::test_the_transformed_umat_builds_the_abaqus_way_without_standard_names[lu|blas|author|author_dgemm|author_ddot|functions]`,
   `test_provider_regular_object.py::test_the_abaqus_toolchain_builds_the_regular_object_with_abaqus_make`,
   `test_verified_umat_regression.py` (three), `test_a_missing_compiler_or_oti_runtime_is_named.py::test_abaqus_itself_with_ifort_off_path_is_reported_by_name`,
   `test_an_uppercase_include_is_the_same_header.py::test_the_file_that_failed_compiles_unmodified_through_abaqus`),
   five GUI screen tests (`tests/gui/test_developer_screens_browser.py`), six
   browser tests (`test_workbench_browser.py`) and one network test
   (`test_corpus_acquisition.py::test_live_resolution_reproduces_the_pinned_commits`).
-  This branch adds three of the Abaqus tests (the `[lu|blas|author]` cases
-  above; two before the author-defined case was added), and nothing else to
-  the deselected set: listing the marked tests at the branch base and at the
-  branch tip differs by exactly those.
+  This branch adds six of the Abaqus tests (those six cases above; two at
+  6a7a74d, three at 4510185), and nothing else to the deselected set: listing
+  the marked tests at the branch base and at the branch tip differs by exactly
+  those.
 - **LAPACK/BLAS routines.** No generated object defines a standard LAPACK/BLAS
   name any more: inside Abaqus the user library precedes MKL in the solver's
   symbol scope, so the real DGESV/DGETRF/DGETRS the emitted file used to carry
@@ -68,6 +68,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `undefined reference to umatoti_dgetrf_r_` when the author defined DGETRF),
   and a stand-alone build of a source that defines a standard name links MKL or
   the twins, never another library.
+- **An author's own LAPACK/BLAS routine is transformed like any helper.** The
+  rename to `UMATOTI_AUTH_<NAME>` happened before the transform, while the
+  promotion and argument handling read the source's own names: an author's
+  DGEMM on the stress path, handed a constant matrix, was refused
+  (`no_real_argument_reaches_an_oti_helper_dummy`, no advice) where the same
+  body named MYGEMM transformed. The routine is now promoted, lifted and
+  checked under its own name, and renamed in the written files only, after the
+  checks. A supplied routine that calls a name the author defines calls a
+  supplied copy under a private name (`UMATOTI_DGETRF`), so the library chain
+  stays whole.
+- **The BLAS functions DDOT and DNRM2 are supplied; other LAPACK/BLAS functions
+  are refused by name.** A function is referenced in an expression, so DNRM2
+  was read as an undeclared array ("Promoted variable DNRM2 is indexed ... no
+  confirmed shape"). The source is now read with the supplied function bodies
+  appended after its last line (DDOT in index order; DNRM2 the scaled sum of
+  squares of reference BLAS, with a zero derivative at the zero vector), and
+  their lifted copies get private names (`UMATOTI_DNRM2_OTI`); stand-alone
+  builds and the provider have their real twins. DASUM, IDAMAX, DLAMCH and the
+  other LAPACK/BLAS functions on the derivative path are refused with their
+  names, as CALLed routines are.
+- **Provider verifier.** Without `--elastic`, a UMAT with no state variables
+  ended in an IndexError (the J2 branch check reads STATEV(1)); it now stops
+  with a message that names the missing state and `--elastic`. The bug
+  predates this branch (2026-09-18).
+- **Stand-alone builds without MKL.** Tested with `UMAT_OTI_LAPACK=reference`
+  forced: an executable linked plainly against reference LAPACK runs the
+  author's DGETRF inside DGESV, and every stand-alone build umat-oti makes of
+  such a source (the original's reference build, the replays' stub blocks) runs
+  the library's chain, as Abaqus and the transformed code do.
 - **The provider lift gives literals and expressions handed to a hypercomplex
   dummy the OTI type** (`CALL DGEMM('N','N',6,6,6,1.0D0,...)` did not compile:
   the lifted routines are module procedures), as the tangent transform already

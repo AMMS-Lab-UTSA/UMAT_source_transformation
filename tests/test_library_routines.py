@@ -136,7 +136,7 @@ BLAS_EXPRESSION_UMAT = BLAS_UMAT.replace(
     "      DIMENSION ID3(3,3)\n      DOUBLE PRECISION ID3\n      INTEGER INFO\n      HALF = 0.5D0\n"
 ).replace(
     "CALL DGEMV('N', 6, 6, 1.0D0, CC, 6, DSTRAN, 1, 0.0D0, T, 1)",
-    "CALL DGEMV('N', 6, 6, 2.0D0*HALF, CC, 6, DSTRAN, 1, 0.0D0*HALF, T, 1)"
+    "CALL DGEMV('N', 6, 6, 2.0D0*HALF, CC, 6, DSTRAN, 1, 0.0D0*HALF,\n     1 T, 1)"
 ).replace("CALL DSCAL(6, 0.5D0, Q, 1)", "CALL DSCAL(6, PROPS(1)/PROPS(1)*HALF, Q, 1)"
 ).replace("CALL DAXPY(6, 0.25D0, T, 1, Q, 1)", "CALL DAXPY(6, HALF*HALF, T, 1, Q, 1)"
 ).replace(
@@ -145,7 +145,7 @@ BLAS_EXPRESSION_UMAT = BLAS_UMAT.replace(
     "        ID3(I,I) = 1.0D0\n      END DO\n"
     "      CALL DGEMM('N', 'N', 3, 3, 3, 1.0D0, BM, 3, ID3, 3, 0.0D0, CM, 3)\n"
     "      CALL DCOPY(9, CM, 1, BM, 1)\n"
-    "      CALL DGEMM('N', 'T', 3, 3, 3, HALF+HALF, AM, 3, BM, 3, -1.0D0+1.0D0, CM, 3)")
+    "      CALL DGEMM('N', 'T', 3, 3, 3, HALF+HALF, AM, 3, BM, 3,\n     1 -1.0D0+1.0D0, CM, 3)")
 
 #: LU_UMAT whose author also defines DGETRF (no pivoting), counting its calls
 #: into the stress: one call is the author's own; a second would mean the
@@ -171,6 +171,90 @@ AUTHOR_UMAT = LU_UMAT.replace(
             A(I,J) = A(I,J) - A(I,K)*A(K,J)
           END DO
         END DO
+      END DO
+      RETURN
+      END
+"""
+
+#: An author's own DGEMM on the stress path, handed a constant matrix (S0) that
+#: carries no derivative: the routine must be promoted and its arguments handled
+#: as for any helper of the author's (the same body named MYGEMM always was).
+AUTHOR_DGEMM_UMAT = HEADER + """      DIMENSION S0(6,6), CC(6,6), BB(6)
+      DO I = 1, 6
+        DO J = 1, 6
+          S0(I,J) = 0.0D0
+          CC(I,J) = 0.01D0*PROPS(1)*(I+2*J)
+        END DO
+        S0(I,I) = 1.0D0
+        CC(I,I) = PROPS(1)*(1.0D0 + 0.1D0*I + DSTRAN(I))
+      END DO
+      CALL DGEMM('N', 'N', 6, 1, 6, 1.0D0, CC, 6, DSTRAN, 6, 0.0D0,
+     1 BB, 6)
+      CALL DGEMM('N', 'N', 6, 1, 6, 1.0D0, S0, 6, BB, 6, 0.0D0,
+     1 STRESS, 6)
+      DO I = 1, NTENS
+        DO J = 1, NTENS
+          DDSDDE(I,J) = CC(I,J)
+        END DO
+      END DO
+      RETURN
+      END
+      SUBROUTINE DGEMM(TA,TB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)
+      CHARACTER TA,TB
+      INTEGER M,N,K,LDA,LDB,LDC,I,J,L
+      DOUBLE PRECISION ALPHA,BETA,A(LDA,*),B(LDB,*),C(LDC,*)
+      DO J=1,N
+        DO I=1,M
+          C(I,J)=0.0D0
+          DO L=1,K
+            C(I,J)=C(I,J)+2.0D0*A(I,L)*B(L,J)
+          END DO
+        END DO
+      END DO
+      RETURN
+      END
+"""
+
+#: An author's own DDOT function (it adds one), on the stress path.
+AUTHOR_DDOT_UMAT = HEADER + """      DOUBLE PRECISION DDOT, ENRG
+      ENRG = DDOT(NTENS, DSTRAN, 1, DSTRAN, 1)
+      DO I = 1, NTENS
+        STRESS(I) = STRESS(I) + PROPS(1)*DSTRAN(I)*(1.0D0+1.0D2*ENRG)
+      END DO
+      DO I = 1, NTENS
+        DO J = 1, NTENS
+          DDSDDE(I,J) = 0.0D0
+        END DO
+        DDSDDE(I,I) = PROPS(1)
+      END DO
+      RETURN
+      END
+      DOUBLE PRECISION FUNCTION DDOT(N,X,INCX,Y,INCY)
+      INTEGER N,INCX,INCY,I
+      DOUBLE PRECISION X(*),Y(*)
+      DDOT=1.0D0
+      DO I=1,N
+        DDOT=DDOT+X(I)*Y(I)
+      END DO
+      RETURN
+      END
+"""
+
+#: The library functions DDOT and DNRM2 referenced, not defined: supplied.
+FUNCTIONS_UMAT = HEADER + """      DOUBLE PRECISION DDOT, DNRM2, T(6)
+      DO I = 1, NTENS
+        T(I) = PROPS(1)*DSTRAN(I) + 0.1D0*I*DSTRAN(MOD(I,6)+1)
+      END DO
+      XN = DNRM2(NTENS, T, 1)
+      XD = DDOT(3, T, 2, DSTRAN, 1)
+      DO I = 1, NTENS
+        STRESS(I) = STRESS(I) + T(I)*(1.0D0 + 1.0D1*XN) + PROPS(1)*XD
+      END DO
+      DO I = 1, NTENS
+        DO J = 1, NTENS
+          DDSDDE(I,J) = 0.0D0
+        END DO
+        DDSDDE(I,I) = PROPS(1)
       END DO
       RETURN
       END
@@ -416,6 +500,17 @@ def test_blas_twins_give_the_reference_blas_bits(tmp_path):
             getattr(lib, name)(*args(v, w))
             out.append((v, w))
         assert np.array_equal(out[0][0], out[1][0]) and np.array_equal(out[0][1], out[1][1]), routine
+    # the functions: DDOT, and DNRM2 over ordinary, tiny, huge, zero and single entries
+    for function in (tw.tw_ddot_, tw.tw_dnrm2_, ref.ddot_, ref.dnrm2_):
+        function.restype = C.c_double
+    vectors = [rng.standard_normal(9), rng.standard_normal(9) * 1e-170, rng.standard_normal(9) * 1e170,
+               np.zeros(9), np.array([0.0, 3.0, 0.0, -4.0, 0, 0, 0, 0, 0]), np.array([-2.5] + [0.0] * 8)]
+    for v in vectors:
+        for n, inc in ((9, 1), (4, 2), (1, 1)):
+            assert tw.tw_dnrm2_(i(n), _p(v.copy()), i(inc)) == ref.dnrm2_(i(n), _p(v.copy()), i(inc)), (v, n)
+            w = rng.standard_normal(9)
+            assert tw.tw_ddot_(i(n), _p(v.copy()), i(inc), _p(w), i(inc)) == \
+                ref.ddot_(i(n), _p(v.copy()), i(inc), _p(w), i(inc)), (v, n)
 
 
 # --------------------------------------------------------------------------- OTI copies
@@ -573,6 +668,62 @@ def test_an_authors_own_standard_name_is_renamed_and_the_library_chain_stays_who
     np.testing.assert_allclose(tangent, fd, rtol=1e-6, atol=1e-6 * abs(fd).max())
 
 
+@pytest.mark.parametrize("name, umat, renamed", [("author_dgemm", AUTHOR_DGEMM_UMAT, "DGEMM"),
+                                                  ("author_ddot", AUTHOR_DDOT_UMAT, "DDOT")],
+                         ids=["dgemm", "ddot"])
+def test_an_authors_own_library_routine_is_transformed_like_any_helper(tmp_path, name, umat, renamed):
+    """The author's DGEMM (DDOT) is promoted, lifted and checked under its own
+    name exactly as a helper called MYGEMM would be, then written under a
+    private name; its constant arguments (S0) are given shadows like any helper's."""
+    out = _transformed(tmp_path, umat, name)
+    report = json.loads((out / "transform_report.json").read_text())
+    assert report["success"] is True
+    assert report["author_library_definitions_renamed"]["renamed"] == {renamed: f"UMATOTI_AUTH_{renamed}"}
+    transformed = C.CDLL(str(_transformed_library(out)))
+    for obj in out.glob("*.o"):
+        assert not (_defined(obj) & STANDARD_SYMBOLS), obj
+    defined = set().union(*(_defined(o) for o in out.glob("*.o")))
+    assert {f"umatoti_auth_{renamed.lower()}_", f"umatoti_auth_{renamed.lower()}_oti_"} <= defined
+    original = C.CDLL(str(_hosted_original(tmp_path, umat, name)))
+    props, dstran = [2.5], np.array([1e-3, -2e-3, 1.5e-3, 3e-3, -1e-3, 2e-3])
+    s_oti, tangent = call_umat(transformed, props, dstran)
+    np.testing.assert_allclose(s_oti, call_umat(original, props, dstran)[0], rtol=1e-13, atol=0)
+    fd = _fd_tangent(original, props, dstran)
+    np.testing.assert_allclose(tangent, fd, rtol=1e-6, atol=1e-6 * abs(fd).max())
+
+
+def test_the_library_functions_ddot_and_dnrm2_are_supplied(tmp_path):
+    """DDOT and DNRM2 referenced in expressions, not defined: read as functions,
+    lifted under private names, their real bodies left to the host's library."""
+    out = _transformed(tmp_path, FUNCTIONS_UMAT, "functions")
+    report = json.loads((out / "transform_report.json").read_text())
+    assert report["success"] is True and "author_library_definitions_renamed" not in report
+    emitted = next(out.glob("functions_oti.f")).read_text().upper()
+    assert not re.search(r"^\s*DOUBLE PRECISION\s+FUNCTION\s+D(DOT|NRM2)\b", emitted, re.M)
+    helpers = (out / "umat_oti_helpers.f90").read_text().upper()
+    assert "FUNCTION UMATOTI_DNRM2_OTI" in helpers and "FUNCTION UMATOTI_DDOT_OTI" in helpers
+    transformed = C.CDLL(str(_transformed_library(out)))
+    for obj in out.glob("*.o"):
+        assert not (_defined(obj) & STANDARD_SYMBOLS), obj
+    original = C.CDLL(str(_hosted_original(tmp_path, FUNCTIONS_UMAT, "functions")))
+    props = [2.5]
+    for dstran in (np.array([1e-3, -2e-3, 1.5e-3, 3e-3, -1e-3, 2e-3]), np.zeros(6)):
+        s_oti, tangent = call_umat(transformed, props, dstran)
+        assert np.all(np.isfinite(tangent))
+        # the host's DNRM2 (MKL) need not round like the reference algorithm
+        np.testing.assert_allclose(s_oti, call_umat(original, props, dstran)[0], rtol=1e-14, atol=1e-300)
+        if dstran.any():
+            fd = _fd_tangent(original, props, dstran)
+            np.testing.assert_allclose(tangent, fd, rtol=1e-6, atol=1e-6 * abs(fd).max())
+        else:
+            # at the zero vector the norm has no derivative; its contribution is zero
+            expected = np.zeros((6, 6))
+            for i in range(6):
+                expected[i, i] = props[0]
+                expected[i, (i + 1) % 6] += 0.1 * (i + 1)
+            np.testing.assert_allclose(tangent, expected, rtol=1e-14, atol=1e-14)
+
+
 def test_stand_alone_builds_of_a_source_defining_a_standard_name_keep_the_library_chain(monkeypatch):
     """Reference LAPACK's DGESV would call the author's dgetrf_; such a source links
     MKL or the twins, whose chain calls private names only."""
@@ -594,6 +745,79 @@ def test_stand_alone_builds_of_a_source_defining_a_standard_name_keep_the_librar
         host_lapack.cache_clear()
     bodies = library_twin_sources()
     assert "CALL UMATOTI_DGETRF_R(" in bodies["DGESV"] and "CALL DGETRF(" not in bodies["DGESV"].upper()
+
+
+@needs_reference
+def test_without_mkl_every_stand_alone_build_runs_the_library_chain(tmp_path, monkeypatch):
+    """With reference LAPACK forced, a source that defines DGETRF and calls DGESV:
+    linked plainly, reference DGESV calls the author's DGETRF (two calls); every
+    stand-alone build umat-oti makes runs the library's own chain (one call, the
+    author's own), as Abaqus's MKL does and as the transformed code does."""
+    from umat_oti.core.host_lapack import host_lapack
+    from umat_oti.validation.parameter_sensitivity_validation import build_original_driver, replay
+
+    monkeypatch.setenv("UMAT_OTI_LAPACK", "reference")
+    host_lapack.cache_clear()
+    try:
+        props, dstran = [2.5], np.array([1e-3, -2e-3, 1.5e-3, 3e-3, -1e-3, 2e-3])
+        calls = lambda stress: round((stress[0] - stress[1] - (s_ref[0] - s_ref[1])) / 1.0e3)
+        s_ref = call_umat(C.CDLL(str(_transformed_library(_transformed(tmp_path, AUTHOR_UMAT, "author")))),
+                          props, dstran)[0] - np.array([1.0e3, 0, 0, 0, 0, 0])   # the stress without NCALL
+        assert calls(call_umat(C.CDLL(str(_hosted_original(tmp_path, AUTHOR_UMAT, "author"))),
+                               props, dstran)[0]) == 1
+        model = tmp_path / "model"
+        model.mkdir()
+        (model / "umat.f").write_text(AUTHOR_UMAT)
+        # an executable linked plainly against reference LAPACK: its DGESV runs the author's DGETRF
+        plain = build_original_driver(model / "umat.f", tmp_path / "plain", ntens=6, nstatv=1, nprops=1,
+                                      library_twins=False,
+                                      link_libraries=[str(REFERENCE_LAPACK), str(REFERENCE_BLAS)])
+        stress = np.asarray(replay(plain, props, [dstran], ntens=6, nstatv=1).stress)[-1]
+        assert calls(stress) == 2
+        driver = build_original_driver(model / "umat.f", tmp_path / "original", ntens=6, nstatv=1, nprops=1)
+        assert json.loads((tmp_path / "original" / "lapack.json").read_text())["kind"] == "twins"
+        stress = np.asarray(replay(driver, props, [dstran], ntens=6, nstatv=1).stress)[-1]
+        assert calls(stress) == 1
+    finally:
+        host_lapack.cache_clear()
+
+
+def test_the_provider_verifier_names_the_missing_state_for_the_j2_branch_check(tmp_path):
+    """No state variable and no --elastic: a clear refusal, not an IndexError."""
+    from umat_oti.validation import parameter_sensitivity_provider as verifier
+
+    model = tmp_path / "model"
+    model.mkdir()
+    (model / "umat.f").write_text(HEADER + """      DO I = 1, NTENS
+        STRESS(I) = STRESS(I) + PROPS(1)*DSTRAN(I)
+      END DO
+      DO I = 1, NTENS
+        DO J = 1, NTENS
+          DDSDDE(I,J) = 0.0D0
+        END DO
+        DDSDDE(I,I) = PROPS(1)
+      END DO
+      RETURN
+      END
+""")
+    (model / "contract.json").write_text(json.dumps({
+        "schema": "resasm_umat_transform_v2", "source": {"main_file": "umat.f"},
+        "kinematics": "small_strain", "dimensions": {"ntens": 6, "nprops": 1, "nstatev": 0},
+        "parameters": [{"name": "E", "props_index": 1}],
+        "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
+        "history": {"path_dependent": False},
+        "validation": {"props_values": [2.5],
+                       "check_path": {"dstran_per_increment": [1e-4, 0, 0, 0, 0, 0], "n_increments": 3}},
+        "output": {"object": "lu.obj", "contract": "lu.json"}}))
+    with pytest.raises(ValueError, match="no state variables.*--elastic"):
+        verifier.verify_provider(model / "contract.json", tmp_path / "out")
+    with pytest.raises(SystemExit) as stopped:
+        verifier.main([str(model / "contract.json"), "--out", str(tmp_path / "cli")])
+    assert stopped.value.code == 2
+    record = json.loads((tmp_path / "cli" / "verification.json").read_text())
+    assert record["passed"] is False and "--elastic" in record["error"]
+    passed = verifier.verify_provider(model / "contract.json", tmp_path / "elastic", require_j2_branches=False)
+    assert passed["passed"] is True
 
 
 # --------------------------------------------------------------------------- the provider
@@ -631,15 +855,26 @@ def call_provider(lib, props, dstran):
 
 @pytest.mark.fortran
 @pytest.mark.parametrize("name, umat", [("blas", BLAS_UMAT), ("blas_expressions", BLAS_EXPRESSION_UMAT),
-                                        ("author", AUTHOR_UMAT)], ids=["blas", "blas_expressions", "author"])
+                                        ("author", AUTHOR_UMAT), ("author_dgemm", AUTHOR_DGEMM_UMAT),
+                                        ("author_ddot", AUTHOR_DDOT_UMAT), ("functions", FUNCTIONS_UMAT)],
+                         ids=["blas", "blas_expressions", "author", "author_dgemm", "author_ddot",
+                              "functions"])
 def test_the_provider_builds_and_differentiates_library_calls(tmp_path, name, umat):
     built = _provider(tmp_path, umat, name)
     for obj in (built["object"], built["regular_object"]):
         assert not (_defined(Path(obj)) & STANDARD_SYMBOLS), obj
     routines = json.loads(Path(built["contract"]).read_text())["build"]["library_routines"]
-    assert "BSD-3-Clause" in routines["licence"]["note"]
-    assert routines["licence"]["text"].startswith("Copyright (c) 1992-2023 The University of Tennessee")
-    if name == "author":
+    if routines["called_by_the_original"]:
+        assert "BSD-3-Clause" in routines["licence"]["note"]
+        assert routines["licence"]["text"].startswith("Copyright (c) 1992-2023 The University of Tennessee")
+    if name in ("author_dgemm", "author_ddot"):
+        own = name.split("_")[1].upper()
+        assert routines["author_definitions_renamed"] == {own: f"UMATOTI_AUTH_{own}"}
+        assert f"umatoti_auth_{own.lower()}_" in _defined(Path(built["regular_object"]))
+    elif name == "functions":
+        assert routines["called_by_the_original"] == ["DDOT", "DNRM2"]
+        assert {"umatoti_ddot_r_", "umatoti_dnrm2_r_"} <= _defined(Path(built["object"]))
+    elif name == "author":
         assert routines["author_definitions_renamed"] == {"DGETRF": "UMATOTI_AUTH_DGETRF"}
         assert routines["called_by_the_original"] == ["DGESV", "DGETRI"]
         # the whole chain, though the author defines DGETRF
@@ -720,7 +955,10 @@ def test_the_host_lapack_is_found_without_ldconfig_on_path_and_its_version_recor
 @pytest.mark.parametrize("routine, call", [
     ("DPOTRS", "CALL DPOTRS('U', 3, 1, A, 3, B, 3, INFO)"),
     ("DGEEV", "CALL DGEEV('N','N',3,A,3,WR,WI,VL,3,VR,3,WK,9,INFO)"),
-])
+    # functions, referenced in expressions: refused by name, not as arrays
+    ("DASUM", "B(1) = B(1) + DASUM(3, B, 1)"),
+    ("DLAMCH", "B(1) = B(1)*(1.0D0 + DLAMCH('E'))"),
+], ids=["DPOTRS", "DGEEV", "DASUM", "DLAMCH"])
 def test_a_routine_with_no_supplied_body_is_refused_by_name(tmp_path, routine, call):
     umat = HEADER + """      DIMENSION A(3,3), B(3), WR(3), WI(3), VL(3,3), VR(3,3), WK(9)
       INTEGER INFO
@@ -751,12 +989,15 @@ def test_a_routine_with_no_supplied_body_is_refused_by_name(tmp_path, routine, c
     summary = json.loads(done.stdout)
     message = " ".join(summary["blockers"])
     assert routine in message and "LAPACK/BLAS routine" in message and "DGESV" in message
+    assert "no confirmed shape" not in message
 
 
 @pytest.mark.abaqus
 @pytest.mark.skipif(shutil.which("abaqus") is None, reason="needs Abaqus")
-@pytest.mark.parametrize("name, umat", [("lu", LU_UMAT), ("blas", BLAS_UMAT), ("author", AUTHOR_UMAT)],
-                         ids=["lu", "blas", "author"])
+@pytest.mark.parametrize("name, umat", [("lu", LU_UMAT), ("blas", BLAS_UMAT), ("author", AUTHOR_UMAT),
+                                        ("author_dgemm", AUTHOR_DGEMM_UMAT), ("author_ddot", AUTHOR_DDOT_UMAT),
+                                        ("functions", FUNCTIONS_UMAT)],
+                         ids=["lu", "blas", "author", "author_dgemm", "author_ddot", "functions"])
 def test_the_transformed_umat_builds_the_abaqus_way_without_standard_names(tmp_path, name, umat):
     out = _transformed(tmp_path, umat, name)
     combined = next(out.glob("*_oti_combined.f90"))

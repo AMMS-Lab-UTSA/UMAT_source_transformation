@@ -88,10 +88,15 @@ of what was compiled). The source file is not changed. The analysis is a data fl
 
 **Library routines (LAPACK and BLAS).** A UMAT may call routines Abaqus links
 in from its MKL. umat-oti supplies bodies, and so OTI copies, for DGESV,
-DGETRF, DGETRS, DGETRI, DSYEV, DSPEVD, DGEMM, DGEMV, DCOPY, DSCAL and DAXPY;
-a call to any other LAPACK/BLAS routine on the derivative path is refused at
-transform time with the routine's name, and a provider whose original calls
-one is not built (it could not link on its own).
+DGETRF, DGETRS, DGETRI, DSYEV, DSPEVD, DGEMM, DGEMV, DCOPY, DSCAL and DAXPY,
+and for the functions DDOT and DNRM2; a call to or reference of any other
+LAPACK/BLAS routine or function (DPOTRF, DASUM, DLAMCH, ...) on the derivative
+path is refused at transform time with its name, and a provider whose original
+calls one is not built (it could not link on its own). A function is
+referenced in expressions, so the source is read with the supplied function
+bodies appended after its last line (no line number moves): DNRM2(NTENS,B,1)
+is then a call of a function the file defines, not an element of an
+undeclared array.
 
 *No standard name is ever defined by a generated object.* Measured on Abaqus
 2021: the user-subroutine library is loaded as a dependency of the solver's own
@@ -110,18 +115,25 @@ library would be the one every caller in the solver gets. So:
   compiled with its whole chain (`UMATOTI_DGESV_R` calls `UMATOTI_DGETRF_R`);
   the mapping records them under `build.library_routines`. The regular object
   keeps the original's own calls for the host's library;
-- a standard name the AUTHOR defines (a DGETRF of their own) is renamed with
-  every reference to it: `UMATOTI_AUTH_DGETRF` in the transformed file, its
-  helpers and the provider's lifted code, and by `objcopy` in the provider's
-  bundled original and in the regular object. The transform report records it
+- a standard name the AUTHOR defines (a DGETRF of their own) is transformed
+  exactly like any helper of the author's, under its own name, and renamed with
+  every reference to it in what is written: `UMATOTI_AUTH_DGETRF` in the
+  transformed file and its helpers, and by `objcopy` in the provider's bundled
+  original and in the regular object (the provider's lifted copy is a module
+  procedure and exports no standard name). The transform report records it
   (`author_library_definitions_renamed`), and so does the provider contract
   (`build.library_routines.author_definitions_renamed`). The author's own calls
   still reach the author's routine; a library routine the author calls and does
-  not define keeps the library's whole chain, so the supplied DGESV calls the
-  supplied DGETRF, not the author's. That is what Abaqus does: measured, an
+  not define keeps the library's whole chain, so the supplied DGESV calls a
+  supplied DGETRF (under the private name `UMATOTI_DGETRF` when the author
+  defines DGETRF), not the author's. That is what Abaqus does: measured, an
   author's DGETRF linked beside MKL's DGESV is not called by it (beside
-  reference LAPACK 3.9.0 it is, so a stand-alone build of such a source links
-  MKL or the twins, never another library).
+  reference LAPACK 3.9.0 it is: an executable linked plainly against it runs
+  the author's DGETRF inside DGESV). So every stand-alone build umat-oti makes of
+  such a source links MKL or the twins, whose chains call private names only,
+  never another library: the original's reference build, the gate's replays and
+  the routine-level harness compute what Abaqus and the transformed code compute
+  on any host (tested with `UMAT_OTI_LAPACK=reference` forced).
 
 *The twins follow reference LAPACK.* DGETRF/DGETRS/DGESV give the same bits as
 the reference LAPACK on random, ill-conditioned, singular and pivoting cases
