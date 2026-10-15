@@ -225,7 +225,7 @@ built". Such a replay can differ from the solver's record in the last bits (a
 different MKL, or reference LAPACK; measured on one plasticity UMAT with a
 Newton loop: 9e-16, inside `REPLAY_REPRODUCES`). Comments and docstrings were
 also reworded (neutral wording for review attributions). The transform
-fingerprint moved with these changes (`c61511ea0ffe58e2` -> `3c6081c518bae6cc`; see
+fingerprint moved with these changes (`c61511ea0ffe58e2` -> `d5055822e027cb1c`; see
 CHANGELOG): no pass was run at the new fingerprints, so every pass25 row and
 every regression case remains evidence at `cfd84cd2fe97e72b` /
 `c61511ea0ffe58e2`.

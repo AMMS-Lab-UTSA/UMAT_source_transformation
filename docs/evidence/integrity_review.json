@@ -2184,6 +2184,10 @@
   "skip:tests/test_library_routines.py:<module>:mark.skipif:f69b5b3b": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the build the Abaqus way needs the abaqus command (abaqus make); the test is also marked abaqus."
+  },
+  "skip:tests/test_values_feeding_a_library_call_are_promoted.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   }
  }
 }
