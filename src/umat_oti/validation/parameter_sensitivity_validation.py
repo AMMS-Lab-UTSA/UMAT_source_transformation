@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import csv
 import math
+import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -185,8 +186,16 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
                           link_libraries: Sequence[str] = (),
                           extra_sources: Sequence[Path] = (),
                           coords: Sequence[float] = (0.0, 0.0, 0.0),
-                          initial_statev: Sequence[float] = ()) -> Path:
-    """Compile the untransformed source into a replayable reference executable."""
+                          initial_statev: Sequence[float] = (),
+                          library_twins: bool = True) -> Path:
+    """Compile the untransformed source into a replayable reference executable.
+
+    ``library_twins`` links the real bodies of the LAPACK routines the
+    transform supplies (DGESV, DGETRF, DGETRS, DGETRI, DSPEVD), one archive
+    member each and after everything else, so the linker takes only those the
+    source calls and does not define: Abaqus supplies them to a UMAT, a
+    stand-alone reference build has no LAPACK of its own.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     for name in ("aba_param.inc", "ABA_PARAM.INC", "ABA_PARAM.inc", "aba_param.INC"):
         (out_dir / name).write_text(ABA_PARAM, encoding="utf-8")
@@ -226,15 +235,42 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
                 f"{built.stderr[:2000]}")
         extra_objects.append(str(extra_object))
 
+    twins = _library_twin_archive(out_dir, compiler) if library_twins else []
     executable = out_dir / "original_reference_driver"
     link = subprocess.run(
         [compiler, "-O1", "-std=legacy", "-ffree-line-length-none",
-         str(driver), str(obj), *extra_objects, *link_libraries,
+         str(driver), str(obj), *extra_objects, *link_libraries, *twins,
          "-o", str(executable)],
         cwd=out_dir, capture_output=True, text=True)
     if link.returncode != 0:
         raise RuntimeError(f"reference driver link failed:\n{link.stderr[:3000]}")
     return executable
+
+
+def _library_twin_archive(out_dir: Path, compiler: str) -> list:
+    """``[path of library_twins.a]``, one member per supplied library routine, or
+    ``[]`` when ``ar`` is not available."""
+    from umat_oti.transform.abaqus_utility_definitions import library_twin_sources
+
+    archiver = shutil.which("ar")
+    if archiver is None:
+        return []
+    folder = out_dir / "library_twins"
+    folder.mkdir(parents=True, exist_ok=True)
+    members = []
+    for name, text in library_twin_sources().items():
+        source = folder / f"{name.lower()}.f90"
+        source.write_text(text, encoding="utf-8")
+        built = subprocess.run([compiler, "-O1", "-c", source.name, "-o", f"{name.lower()}.o"],
+                               cwd=folder, capture_output=True, text=True)
+        if built.returncode != 0:
+            raise RuntimeError(f"library twin {name} failed to compile:\n{built.stderr[:2000]}")
+        members.append(f"{name.lower()}.o")
+    archive = folder / "library_twins.a"
+    archive.unlink(missing_ok=True)
+    subprocess.run([archiver, "rcs", archive.name, *members], cwd=folder, check=True,
+                   capture_output=True, text=True)
+    return [str(archive)]
 
 
 #: A state slot whose growth marks inelastic response, and the size that counts

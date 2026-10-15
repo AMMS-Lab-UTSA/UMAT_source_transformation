@@ -187,11 +187,11 @@ def defines_sdvini(source_text: str) -> bool:
 
 
 def quad_driver_text(text: str) -> str:
-    """The replay driver with the routine's state in REAL(16) (Vera B7 A2).
+    """The replay driver with the routine's state in REAL(16) (review B7 A2).
 
     The state file is READ into REAL(8) and widened exactly: a decimal string
     read straight into REAL(16) is a different number from the double the
-    solver held (Vera B7 gap (b)). The perturbation step is formed in
+    solver held (review B7 gap (b)). The perturbation step is formed in
     REAL(16) (x + h exact); the outputs are written to 35 significant digits
     so that the difference of two runs is taken exactly
     (:func:`run_replay` with ``exact=True``)."""
@@ -268,16 +268,26 @@ END SUBROUTINE READ8M
     return head + marker + helpers + quadify(stubs)
 
 
-def driver_source(name: str = "REPLAY", *, initialise_state: bool = False) -> str:
+def driver_source(name: str = "REPLAY", *, initialise_state: bool = False,
+                  source_text: str = "") -> str:
     """The replay program, for a source that has to be linked beside it.
 
     ``initialise_state`` emits the call to SDVINI. It is the caller's job to
     say so, because whether that call can link is a property of the source
     being compiled beside the driver, not of the driver.
+
+    ``source_text`` is everything compiled beside the driver: a stub (an Abaqus
+    utility or a LAPACK twin) that it defines itself is left out, or the link
+    fails on a duplicate definition (``multiple definition of dgesv_``).
     """
+    from umat_oti.abaqus.single_call import drop_stubs_defined_by
+
+    stubs = utility_stub_block()
+    if source_text:
+        stubs, _ = drop_stubs_defined_by(stubs, source_text)
     return _DRIVER % {"state": STATE_FILE, "name": name.upper()[:60],
                       "sdvini": _SDVINI_CALL if initialise_state else "",
-                      "stubs": utility_stub_block()}
+                      "stubs": stubs}
 
 
 def utility_stub_block() -> str:
@@ -290,7 +300,26 @@ def utility_stub_block() -> str:
     from umat_oti.validation.actual_umat_higher_order_generic import (
         _abaqus_utility_stubs)
 
-    return _abaqus_utility_stubs() + _replay_utility_stubs()
+    return _abaqus_utility_stubs() + _replay_utility_stubs() + library_twin_block()
+
+
+def library_twin_block() -> str:
+    """Real twins of the LAPACK routines the transform supplies, as free form.
+
+    Abaqus links LAPACK (its MKL) into a user subroutine, so a UMAT may call
+    DGESV, DGETRF, DGETRS, DGETRI or DSPEVD without defining them. A stand-alone
+    build of the ORIGINAL has no such library: the link failed on ``dgesv_``,
+    and every check that replays the original offline -- the D-12 init probe,
+    the routine-level primal, the finite-difference reference -- went
+    undecided for that reason alone. These are the bodies the transform
+    supplies (:mod:`umat_oti.transform.abaqus_utility_definitions`), over plain
+    reals: the same algorithm the transformed build's OTI copies run, so the
+    reference and the value under test pivot and round alike. A source that
+    defines one of them itself keeps its own (``drop_stubs_defined_by``).
+    """
+    from umat_oti.transform.abaqus_utility_definitions import library_twin_sources
+
+    return "\n" + "".join(library_twin_sources().values())
 
 
 def _replay_utility_stubs() -> str:
@@ -952,7 +981,7 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
                  quad: bool = False) -> ReplayBuild:
     """Compile the driver against one UMAT source, once for the whole sweep.
 
-    ``quad`` (Vera B7 A2): the source promoted to REAL(16)
+    ``quad`` (review B7 A2): the source promoted to REAL(16)
     (:func:`umat_oti.corpus_features.drivers.quadify`: REAL*8 / DOUBLE
     PRECISION -> REAL*16, binary32 and every literal unchanged), the header
     an IMPLICIT REAL*16 stub, and the quad driver (:func:`quad_driver_text`).
@@ -1015,7 +1044,8 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     units = cleaned
     driver = work_dir / "otis_replay.f90"
     driver_text = driver_source(name, initialise_state=any(
-        defines_sdvini(_text_of(unit)) for unit in units))
+        defines_sdvini(_text_of(unit)) for unit in units),
+        source_text="\n".join(_text_of(unit) for unit in units))
     driver.write_text(quad_driver_text(driver_text) if quad else driver_text,
                       encoding="utf-8")
     program = work_dir / "otis_replay"
@@ -1031,7 +1061,7 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # header the solver actually compiled against.
     # files the units INCLUDE from beside the author's source, staged into
     # the build directory (on -I) so a cleaned copy compiled here finds them
-    # A quad build stages each include PROMOTED as the source is (Vera B10
+    # A quad build stages each include PROMOTED as the source is (review B10
     # condition A): a linked double include would make the reference
     # mixed-precision.
     from umat_oti.abaqus.include_shim import stage_includes
@@ -1472,12 +1502,12 @@ HISTORY_OUT = "otis_history_out.txt"
 #: thing by "undefined_in_original". An output that differs between ANY two of
 #: the builds is undefined_in_original.
 #:
-#: Why three (Vera B2 item 2): zero vs snan alone misses an uninitialised value
+#: Why three (review B2 item 2): zero vs snan alone misses an uninitialised value
 #: used through a NaN guard (``IF (X.NE.X) X=0`` maps snan back to 0), a comparison
 #: (``IF (X.GT.0.5)`` is false for 0 and for NaN alike) and every INTEGER
 #: (0 and -77777 are both <= 0). The third build sets reals to +inf, integers
 #: to +77777 and logicals to the opposite of the zero build, which separates
-#: all three (measured on Vera's toys b2/b4b/b4c; the clean toy is unchanged).
+#: all three (measured on the review's toys b2/b4b/b4c; the clean toy is unchanged).
 FINIT_SNAN = ("-finit-real=snan", "-finit-integer=-77777", "-finit-logical=true")
 FINIT_ZERO = ("-finit-real=zero", "-finit-integer=0", "-finit-logical=false")
 FINIT_HUGE = ("-finit-real=inf", "-finit-integer=77777", "-finit-logical=true")
