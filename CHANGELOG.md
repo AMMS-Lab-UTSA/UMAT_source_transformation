@@ -109,7 +109,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the array's largest magnitude over the run (never tighter than the fixed
   1e-10 / 1e-14 before); a stress component cancelling to about zero in a large
   stress was rejected for rounding of 1e-15 of the largest stress. Predates
-  this branch.
+  this branch. The limit is stated in PROVIDER.md and in
+  `primal_tolerance.not_detected`: a mismatch below 1e-12 of the array's
+  largest magnitude (about 4,500 to 9,000 ulps of that value) is not detected.
+- **A failed informativeness gate names the rule that failed.** When the
+  material acted but its stress grew far beyond the problem's scales, the
+  verdict said "did the test make the material act?" and asked for a stronger
+  loading. The harness records `informative_failed_rules`; the verdict names
+  the failing rule ("did the stress stay within the scale the problem
+  supplies?") and asks for the units and a smaller loading. The reason no
+  longer repeats a scale finding the family criterion shares.
 - **Provider verifier.** Without `--elastic`, a UMAT with no state variables
   ended in an IndexError (the J2 branch check reads STATEV(1)); it now stops
   with a message that names the missing state and `--elastic`. The bug

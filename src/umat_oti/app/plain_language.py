@@ -679,7 +679,8 @@ GATE_PLAIN: dict[str, str] = {
     "complete_history_finite": "every number in the results is a number",
     "primal_agreed": "both versions computed the same stresses",
     "derivatives_verified": "the derivatives matched a numerical check",
-    "mechanically_informative": "the material actually did something",
+    "mechanically_informative": ("the test exercised the material, within the scales the problem "
+                                 "supplies"),
 }
 
 
