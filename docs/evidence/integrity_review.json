@@ -2188,6 +2188,14 @@
   "skip:tests/test_values_feeding_a_library_call_are_promoted.py:<module>:mark.skipif:6824f295": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "mock:tests/test_library_routines.py:test_the_host_lapack_is_found_without_ldconfig_on_path_and_its_version_recorded:monkeypatch.setattr:253662cd": {
+   "verdict": "justified",
+   "reason": "Hides ldconfig from PATH (shutil.which returns None for that name only) and empties the /sbin and /usr/sbin fallback list, so the test exercises the two ways the host LAPACK is found without ldconfig on PATH: the fallback paths and the direct read of the standard library directories. The discovery, the link probe and the version record are the real code."
+  },
+  "mock:tests/test_library_routines.py:test_the_host_lapack_is_found_without_ldconfig_on_path_and_its_version_recorded:monkeypatch.setattr:31ca868b": {
+   "verdict": "justified",
+   "reason": "Hides ldconfig from PATH (shutil.which returns None for that name only) and empties the /sbin and /usr/sbin fallback list, so the test exercises the two ways the host LAPACK is found without ldconfig on PATH: the fallback paths and the direct read of the standard library directories. The discovery, the link probe and the version record are the real code."
   }
  }
 }
