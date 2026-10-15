@@ -229,7 +229,7 @@ UMAT that inverts a strain-dependent compliance with DGESV (the shape of
 Abaqus 2021, replay linked against oneAPI MKL 2023.2: the replay reproduced the
 Abaqus record exactly (worst relative difference 0.0). Comments and docstrings were
 also reworded (neutral wording for review attributions). The transform
-fingerprint moved with these changes (`c61511ea0ffe58e2` -> `f52e80a401527d9a`; see
+fingerprint moved with these changes (`c61511ea0ffe58e2` -> `2bd8090dbc20cca1`; see
 CHANGELOG): no pass was run at the new fingerprints, so every pass25 row and
 every regression case remains evidence at `cfd84cd2fe97e72b` /
 `c61511ea0ffe58e2`.

@@ -1089,6 +1089,22 @@
     "tests/test_library_routines.py::test_the_host_lapack_is_found_without_ldconfig_on_path_and_its_version_recorded"
    ],
    "selected_by": "message_pattern"
+  },
+  {
+   "commit": "d68b386",
+   "bug": "An author's own DGEMM on the stress path, handed a constant matrix, was refused (no_real_argument_reaches_an_oti_helper_dummy) because the rename to UMATOTI_AUTH_DGEMM happened before promotion read the names; a BLAS function (DNRM2) was refused as an undeclared array; the provider verifier raised IndexError for a UMAT with no state variables without --elastic.",
+   "tests": [
+    "tests/test_library_routines.py::test_an_authors_own_library_routine_is_transformed_like_any_helper[dgemm]",
+    "tests/test_library_routines.py::test_an_authors_own_library_routine_is_transformed_like_any_helper[ddot]",
+    "tests/test_library_routines.py::test_the_library_functions_ddot_and_dnrm2_are_supplied",
+    "tests/test_library_routines.py::test_a_routine_with_no_supplied_body_is_refused_by_name[DASUM]",
+    "tests/test_library_routines.py::test_a_routine_with_no_supplied_body_is_refused_by_name[DLAMCH]",
+    "tests/test_library_routines.py::test_the_provider_builds_and_differentiates_library_calls[author_dgemm]",
+    "tests/test_library_routines.py::test_the_provider_builds_and_differentiates_library_calls[functions]",
+    "tests/test_library_routines.py::test_without_mkl_every_stand_alone_build_runs_the_library_chain",
+    "tests/test_library_routines.py::test_the_provider_verifier_names_the_missing_state_for_the_j2_branch_check"
+   ],
+   "selected_by": "message_pattern"
   }
  ],
  "excluded": [
