@@ -52,7 +52,8 @@ from umat_oti.fortran.literals import without_real_literals
 from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
 from umat_oti.oti.module_generator import generate_otilib_module
-from umat_oti.transform.abaqus_utility_definitions import supply_reachable_definitions
+from umat_oti.transform.abaqus_utility_definitions import (
+    library_licence_comment, privatise_author_library_definitions, supply_reachable_definitions)
 from umat_oti.transform.helper_lifting import (
     HelperLiftingError,
     _routine_callees,
@@ -106,6 +107,9 @@ class GenericPSLayout:
     #: routine (``initialised_in_generated_code``); also written beside it as
     #: ``reads_before_assignment.json``.
     reads_before_assignment: dict = field(default_factory=dict)
+    #: ``{NAME: private name}``: standard LAPACK/BLAS names the source defines
+    #: itself, renamed in the lifted code (UMATOTI_AUTH_DGETRF).
+    author_library_renames: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -166,7 +170,10 @@ def transform_umat_for_parameter_sensitivity(
         output_dir=output_dir, ntens=n_param + extra_directions, order=1
     )
     parsed = _parse_umat_source(contract.umat_source_path)
-    parsed, _ = supply_reachable_definitions(parsed, ["UMAT"])
+    # An author's own DGETRF is lifted as UMATOTI_AUTH_DGETRF; a supplied DGESV
+    # keeps calling the supplied DGETRF (privatise_author_library_definitions).
+    parsed, author_library_renames = privatise_author_library_definitions(parsed)
+    parsed, supplied = supply_reachable_definitions(parsed, ["UMAT"])
     umat_and_helpers = _closure_including_umat(parsed)
 
     widened_names: list = []
@@ -194,7 +201,17 @@ def transform_umat_for_parameter_sensitivity(
     entry_reads = analyse_text(source_text, "UMAT", form=parsed.form,
                                source_path=contract.umat_source_path)
     entry_statements = [finding.zero_statement() for finding in entry_reads.initialisable]
-    lifted_source = insert_at_entry(lifted.source, "UMAT_OTI", "free", entry_statements)
+    # A literal or expression handed to a hypercomplex dummy (``1.0D0`` as the
+    # ALPHA of DGEMM) is given the OTI type, exactly as in the tangent
+    # transform: the lifted routines are module procedures here, so it would
+    # not compile otherwise.
+    from umat_oti.transform.helper_lifting import wrap_free_form
+    from umat_oti.transform.source_transform import (
+        _value_actuals_made_hypercomplex, oti_typed_dummies_of_lifted_helpers)
+    lifted_text = _value_actuals_made_hypercomplex(
+        lifted.source, "free", oti_typed_dummies_of_lifted_helpers(wrap_free_form(lifted.source)),
+        lifted=True)
+    lifted_source = insert_at_entry(lifted_text, "UMAT_OTI", "free", entry_statements)
     reads_before_assignment = {**entry_reads.as_dict(),
                                "initialised_in_generated_code": entry_statements,
                                "warnings": entry_reads.warnings()}
@@ -203,7 +220,8 @@ def transform_umat_for_parameter_sensitivity(
 
     lifted_path = output_dir / "umat_oti_lifted.f90"
     lifted_path.write_text(
-        _source_defined_modules_used(parsed, umat_and_helpers)
+        library_licence_comment(supplied)
+        + _source_defined_modules_used(parsed, umat_and_helpers)
         + _wrap_lifted_in_module(lifted_source, module_name=module_result.module_name,
                                  n_param=n_param + extra_directions),
         encoding="utf-8",
@@ -252,6 +270,7 @@ def transform_umat_for_parameter_sensitivity(
         umat_and_helpers=umat_and_helpers,
         binary32_stores=binary32_stores,
         reads_before_assignment=reads_before_assignment,
+        author_library_renames=dict(author_library_renames),
     )
 
 

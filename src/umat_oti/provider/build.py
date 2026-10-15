@@ -18,6 +18,7 @@ from umat_oti.transform.parameter_sensitivity_transform import (
     GenericPSContract,
     transform_umat_for_parameter_sensitivity,
 )
+from umat_oti.transform.abaqus_utility_definitions import REFERENCE_LAPACK_LICENCE, available_definitions
 from umat_oti.validation.parameter_sensitivity_validation import ABA_PARAM
 
 from .emit import (
@@ -231,19 +232,21 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     # LAPACK: the bundled copy of the original calls private real twins
     # (UMATOTI_DGESV_R), never a standard LAPACK/BLAS name. The regular object
     # keeps the original's own calls, for the host's LAPACK (Abaqus's MKL).
-    twins, library_routines = _real_library_twins(build_dir, original_object.name)
+    twins, library_routines, authored = _real_library_twins(build_dir, original_object.name)
     bundled_original = original_object.name
-    if twins:
-        _run([*flags, "-c", twins.name, "-o", twins.with_suffix(".o").name], build_dir)
-        bundled_original = "original_umat_private_lapack.o"
+    if twins or authored:
         objcopy = shutil.which("objcopy")
         if objcopy is None:
-            raise ProviderBuildError("objcopy is needed to give the original's LAPACK calls their "
+            raise ProviderBuildError("objcopy is needed to give the original's LAPACK names their "
                                      "private names inside the provider")
-        _run([objcopy, *[f"--redefine-sym={name.lower()}_={private.lower()}_"
-                         for name, private in library_routines.items()],
-              original_object.name, bundled_original], build_dir)
+    if twins:
+        _run([*flags, "-c", twins.name, "-o", twins.with_suffix(".o").name], build_dir)
         objects.append(twins.with_suffix(".o").name)
+    if twins or authored:
+        bundled_original = "original_umat_private_lapack.o"
+        _run([objcopy, *[f"--redefine-sym={name.lower()}_={private.lower()}_"
+                         for name, private in {**library_routines, **authored}.items()],
+              original_object.name, bundled_original], build_dir)
     objects.append(bundled_original)
     bundled_object = build_dir / object_name
     _run([executable, "-nostdlib", "-r", *objects, "-o", object_name], build_dir)
@@ -288,10 +291,20 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
                   "library_routines": {
                       "called_by_the_original": sorted(library_routines),
                       "bundled_as": library_routines,
+                      "author_definitions_renamed": authored,
+                      **({"licence": {
+                          "routines": sorted(available_definitions(library_routines)),
+                          "note": "the provider holds bodies of these routines that follow Reference "
+                                  "LAPACK/BLAS (BSD-3-Clause); redistributing the object, keep this "
+                                  "notice with it (THIRD_PARTY_NOTICES.md, section 5)",
+                          "text": REFERENCE_LAPACK_LICENCE}} if library_routines else {}),
                       "rule": "the provider's copy of the original calls private real twins "
-                              "(reference-LAPACK semantics, the algorithm of the OTI copies); the "
-                              "provider defines no standard LAPACK/BLAS name. The regular object "
-                              "keeps the original's own calls for the host LAPACK (Abaqus: MKL)."}},
+                              "(reference-LAPACK semantics, the algorithm of the OTI copies), each "
+                              "with its whole chain; a standard LAPACK/BLAS name the original "
+                              "defines itself is renamed, with the author's calls to it, in the "
+                              "provider and in the regular object. Neither object defines a "
+                              "standard LAPACK/BLAS name. The regular object keeps the original's "
+                              "calls to the library for the host LAPACK (Abaqus: MKL)."}},
     }
     if regular_object is not None:
         staged_regular = build_dir / regular_object
@@ -309,6 +322,14 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
                     + (" with its calls to " + ", ".join(sorted(library_routines))
                        + " renamed to the private real twins" if library_routines else ""))
             command = [*recorded_flags, *form_flags, "-I", ".", "-c", f"original/{source.name}"]
+        if authored:
+            _run([objcopy, *[f"--redefine-sym={name.lower()}_={private.lower()}_"
+                             for name, private in authored.items()],
+                  staged_regular.name, staged_regular.name + ".renamed"], build_dir)
+            os.replace(build_dir / (staged_regular.name + ".renamed"), staged_regular)
+            role += ("; in this object and in the provider, its own definitions of "
+                     + ", ".join(sorted(authored)) + " (standard LAPACK/BLAS names) and its calls "
+                     "to them carry private names (build.library_routines.author_definitions_renamed)")
         if entry_statements:
             role = role.replace("compiled unchanged", "compiled with " + "; ".join(entry_statements)
                                 + " placed at its entry (locals it reads before assigning them; see "
@@ -338,18 +359,23 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
 
 
 def _real_library_twins(build_dir: Path, original_object: str):
-    """``(source file, {NAME: private name})`` of the real twins the bundled original needs,
-    or ``(None, {})``.
+    """``(source file or None, {NAME: private name} for the calls, {NAME: private name} for the
+    author's definitions)`` for the bundled original.
 
     Every supplied library routine (umat_oti.transform.abaqus_utility_definitions.LIBRARY_ROUTINES)
-    the original leaves undefined, with what it calls in turn, is compiled under its private name
-    (UMATOTI_DGESV_R; reference-LAPACK semantics, the same algorithm as its OTI copy). A LAPACK/BLAS
-    routine the original calls for which no body is supplied is refused by name: the provider has
-    to link on its own, and an unresolved dgeev_ would only surface when the provider is loaded.
+    the original calls and does not define is compiled, with its whole chain, under private names
+    (UMATOTI_DGESV_R calling UMATOTI_DGETRF_R; reference-LAPACK semantics, the same algorithm as the
+    OTI copies). The chain is compiled whole even where the author defines part of it (their own
+    DGETRF): a library's DGESV runs the library's LU, as MKL's does inside Abaqus. A standard
+    LAPACK/BLAS name the original defines itself is renamed (UMATOTI_AUTH_DGETRF), definition and
+    the author's calls alike, as the transform renames it in the lifted code. A LAPACK/BLAS routine
+    the original calls for which no body is supplied is refused by name: the provider has to link on
+    its own, and an unresolved dgeev_ would only surface when the provider is loaded.
     """
     from umat_oti.core.lapack_names import STANDARD_LAPACK_BLAS
     from umat_oti.transform.abaqus_utility_definitions import (
-        LIBRARY_ROUTINES, PRIVATE_REAL_FORMAT, available_definitions, library_twin_sources)
+        LIBRARY_ROUTINES, PRIVATE_AUTHOR_FORMAT, PRIVATE_REAL_FORMAT, available_definitions,
+        library_licence_comment, library_twin_sources)
 
     nm = shutil.which("nm")
     if nm is None:
@@ -360,6 +386,8 @@ def _real_library_twins(build_dir: Path, original_object: str):
     defined = {line.split()[-1].lower() for line in listed
                if len(line.split()) == 3 and line.split()[1] in "TtDdBbCc"}
     called = {name for name in STANDARD_LAPACK_BLAS if name.lower() + "_" in undefined}
+    authored = {name: PRIVATE_AUTHOR_FORMAT.format(name=name)
+                for name in sorted(STANDARD_LAPACK_BLAS) if name.lower() + "_" in defined}
     unsupported = sorted(called - set(LIBRARY_ROUTINES))
     if unsupported:
         raise ProviderBuildError(
@@ -367,14 +395,15 @@ def _real_library_twins(build_dir: Path, original_object: str):
             f"body; it supplies {', '.join(LIBRARY_ROUTINES)}. The provider object must link on its "
             f"own, so it is not built.")
     if not called:
-        return None, {}
-    names = [name for name in available_definitions(called) if name.lower() + "_" not in defined]
+        return None, {}, authored
     bodies = library_twin_sources(PRIVATE_REAL_FORMAT)
     path = build_dir / "real_library_twins.f90"
-    path.write_text("! Real twins of the library routines the ORIGINAL calls, under private names: the\n"
-                    "! bodies the transform supplies, the algorithm of their OTI copies.\n\n"
-                    + "\n".join(bodies[name] for name in names), encoding="utf-8")
-    return path, {name: PRIVATE_REAL_FORMAT.format(name=name) for name in sorted(called)}
+    path.write_text("! Real twins of the library routines the ORIGINAL calls, with their whole chain,\n"
+                    "! under private names: the bodies the transform supplies, the algorithm of their\n"
+                    "! OTI copies.\n"
+                    + library_licence_comment(available_definitions(called))
+                    + "\n".join(bodies[name] for name in available_definitions(called)), encoding="utf-8")
+    return path, {name: PRIVATE_REAL_FORMAT.format(name=name) for name in sorted(called)}, authored
 
 
 def main(argv: list[str] | None = None) -> int:

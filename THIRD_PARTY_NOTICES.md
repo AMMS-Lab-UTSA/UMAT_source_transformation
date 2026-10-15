@@ -171,3 +171,87 @@ redistributions and satisfy the upstream license's attribution requirements.
 The generated OTI support also depends on the GPL-licensed components in section 1.
 
 See [the port status](docs/LAPACK_OTI_PORT.md) for scope and verification limits.
+
+---
+
+## 5. Reference LAPACK / BLAS (routines the transform supplies)
+
+A UMAT may call LAPACK and BLAS routines that Abaqus links in (its MKL). The
+transform and the provider supply their own bodies of those routines, so the
+OTI copies can carry derivatives and stand-alone builds can run the original.
+These bodies follow Reference LAPACK and Reference BLAS
+(https://github.com/Reference-LAPACK/lapack): their algorithms, loop orders,
+argument checks and INFO conventions are derived from the reference Fortran,
+and tests/test_library_routines.py checks them bit for bit against the system's
+Reference LAPACK 3.9.0. They are distributed here under the upstream
+BSD-3-Clause licence, reproduced below, as part of the GPL-3.0-only whole.
+
+Files:
+
+- `src/umat_oti/transform/lu_definitions.py` -- DGETRF and DGETRS (from
+  `dgetrf2.f`, `dgetf2.f`, `dgetrs.f`, `dlaswp.f`, `idamax.f`, `dger.f`,
+  `dscal.f`, `dtrsm.f`).
+- `src/umat_oti/transform/blas_definitions.py` -- DCOPY, DSCAL, DAXPY, DGEMV
+  and DGEMM (from `dcopy.f`, `dscal.f`, `daxpy.f`, `dgemv.f`, `dgemm.f`), and
+  DSYEV's interface and argument checks (`dsyev.f`; its eigenvalues come from
+  the independent DSPEVD below).
+- `src/umat_oti/transform/abaqus_utility_definitions.py` -- DGESV (`dgesv.f`)
+  and DGETRI's interface and argument checks (`dgetri.f`), and
+  `REFERENCE_LAPACK_LICENCE`, the notice below.
+
+Not derived from LAPACK: `src/umat_oti/transform/spectral_definitions.py`
+(DSPEVD's interface over an independent cyclic-Jacobi algorithm) and
+`src/umat_oti/core/lapack_names.py` (a list of routine names).
+
+Generated files: the OTI helper file the transform writes
+(`umat_oti_helpers.f90`, and the `*_oti_combined.f90` that includes it), the
+provider's lifted source (`umat_oti_lifted.f90`) and its real twins
+(`real_library_twins.f90`) start with this notice whenever they hold one of
+these bodies, and a provider contract whose object holds them records it under
+`build.library_routines.licence`. Whoever redistributes such a file or object
+keeps the notice with it.
+
+```text
+Copyright (c) 1992-2023 The University of Tennessee and The University
+                        of Tennessee Research Foundation.  All rights
+                        reserved.
+Copyright (c) 2000-2023 The University of California Berkeley. All
+                        rights reserved.
+Copyright (c) 2006-2023 The University of Colorado Denver.  All rights
+                        reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+- Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+
+- Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer listed
+  in this license in the documentation and/or other materials
+  provided with the distribution.
+
+- Neither the name of the copyright holders nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+The copyright holders provide no reassurances that the source code
+provided does not infringe any patent, copyright, or any other
+intellectual property rights of third parties.  The copyright holders
+disclaim any liability to any recipient for claims brought against
+recipient by any third party for infringement of that parties
+intellectual property rights.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```

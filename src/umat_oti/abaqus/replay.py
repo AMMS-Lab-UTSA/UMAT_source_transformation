@@ -282,7 +282,7 @@ def driver_source(name: str = "REPLAY", *, initialise_state: bool = False,
     """
     from umat_oti.abaqus.single_call import drop_stubs_defined_by
 
-    stubs = utility_stub_block(compiler, quad=quad)
+    stubs = utility_stub_block(compiler, quad=quad, source_text=source_text)
     if source_text:
         stubs, _ = drop_stubs_defined_by(stubs, source_text)
     return _DRIVER % {"state": STATE_FILE, "name": name.upper()[:60],
@@ -290,36 +290,50 @@ def driver_source(name: str = "REPLAY", *, initialise_state: bool = False,
                       "stubs": stubs}
 
 
-def utility_stub_block(compiler: str = "gfortran", *, quad: bool = False) -> str:
+def utility_stub_block(compiler: str = "gfortran", *, quad: bool = False,
+                       source_text: str = "") -> str:
     """Every Abaqus-utility stub the replay drivers link, each defined once.
 
     The shared block (``_abaqus_utility_stubs``) carries SPRIND, SPRINC and SINV
     (B17 G2c); the replay block carries the rest. The two are concatenated
     wherever a replay driver is built. The real twins of the supplied LAPACK
-    routines are added only when ``compiler`` has no LAPACK library to link
+    routines are added only when the build links no LAPACK library
     (:func:`library_link`), and always for a REAL(16) build, which no LAPACK
     library serves.
     """
     from umat_oti.validation.actual_umat_higher_order_generic import (
         _abaqus_utility_stubs)
 
-    flags, twins, _ = library_link(compiler, quad=quad)
+    flags, twins, _ = library_link(compiler, quad=quad, source_text=source_text)
     return _abaqus_utility_stubs() + _replay_utility_stubs() + (library_twin_block() if twins else "")
 
 
-def library_link(compiler: str = "gfortran", *, quad: bool = False) -> tuple:
+def library_link(compiler: str = "gfortran", *, quad: bool = False, source_text: str = "") -> tuple:
     """``(link flags, twins in the stub block?, record)`` for a stand-alone replay.
 
     Abaqus gives a UMAT its MKL; a stand-alone build links the host's LAPACK
     (:func:`umat_oti.core.host_lapack.host_lapack`), or, where there is none,
     and for every REAL(16) build, the transform's real twins in the driver.
+
+    A source that defines a standard LAPACK/BLAS name itself (``source_text``,
+    an author's own DGETRF) links MKL or the twins, never another library:
+    reference LAPACK's DGESV calls whatever dgetrf_ the program defines (measured
+    with 3.9.0), MKL's runs its own LU, as in Abaqus, and so do the twins, whose
+    chain calls private names only.
     """
     from umat_oti.core.host_lapack import host_lapack
+    from umat_oti.core.lapack_names import standard_names_defined_in
 
     chosen = host_lapack(compiler)
-    if quad or not chosen.is_library:
-        reason = ("REAL(16) build: the twins, promoted with the source" if quad and chosen.is_library
-                  else chosen.description)
+    own = standard_names_defined_in(source_text) if source_text else ()
+    if quad or not chosen.is_library or (own and chosen.kind != "mkl"):
+        if quad and chosen.is_library:
+            reason = "REAL(16) build: the twins, promoted with the source"
+        elif chosen.is_library:
+            reason = (f"the source defines {', '.join(own)} itself; {chosen.description} would call "
+                      f"it from inside its own routines, which Abaqus's MKL does not: the twins")
+        else:
+            reason = chosen.description
         return [], True, {"kind": "twins", "description": reason}
     return list(chosen.flags), False, chosen.as_dict()
 
@@ -1069,7 +1083,8 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     driver_text = driver_source(name, initialise_state=any(
         defines_sdvini(_text_of(unit)) for unit in units),
         source_text="\n".join(_text_of(unit) for unit in units), compiler=compiler, quad=quad)
-    lapack_flags, _, lapack_record = library_link(compiler, quad=quad)
+    lapack_flags, _, lapack_record = library_link(
+        compiler, quad=quad, source_text="\n".join(_text_of(unit) for unit in units))
     driver.write_text(quad_driver_text(driver_text) if quad else driver_text,
                       encoding="utf-8")
     program = work_dir / "otis_replay"
@@ -1687,6 +1702,8 @@ def build_history_replay(source: Path, work_dir: Path, *, label: str,
     if not text:
         built.reason = f"{source} could not be read"
         return built
+    lapack_flags, _, lapack_record = library_link(compiler, source_text=text)
+    built.lapack = lapack_record
     form = detect_source_form(Path(source), text)
     cleaned, removed = without_the_authors_program(text, form)
     unit = Path(source)

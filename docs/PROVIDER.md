@@ -106,9 +106,22 @@ library would be the one every caller in the solver gets. So:
   (`UMATOTI_DGESV_OTI`, ...) for the differentiated ones; the supplied real
   bodies are removed from the emitted file;
 - inside the provider object the bundled original's calls are renamed to
-  private real twins (`UMATOTI_DGESV_R`, ...; `objcopy --redefine-sym`); the
-  mapping records them under `build.library_routines`. The regular object keeps
-  the original's own calls for the host's library.
+  private real twins (`UMATOTI_DGESV_R`, ...; `objcopy --redefine-sym`), each
+  compiled with its whole chain (`UMATOTI_DGESV_R` calls `UMATOTI_DGETRF_R`);
+  the mapping records them under `build.library_routines`. The regular object
+  keeps the original's own calls for the host's library;
+- a standard name the AUTHOR defines (a DGETRF of their own) is renamed with
+  every reference to it: `UMATOTI_AUTH_DGETRF` in the transformed file, its
+  helpers and the provider's lifted code, and by `objcopy` in the provider's
+  bundled original and in the regular object. The transform report records it
+  (`author_library_definitions_renamed`), and so does the provider contract
+  (`build.library_routines.author_definitions_renamed`). The author's own calls
+  still reach the author's routine; a library routine the author calls and does
+  not define keeps the library's whole chain, so the supplied DGESV calls the
+  supplied DGETRF, not the author's. That is what Abaqus does: measured, an
+  author's DGETRF linked beside MKL's DGESV is not called by it (beside
+  reference LAPACK 3.9.0 it is, so a stand-alone build of such a source links
+  MKL or the twins, never another library).
 
 *The twins follow reference LAPACK.* DGETRF/DGETRS/DGESV give the same bits as
 the reference LAPACK on random, ill-conditioned, singular and pivoting cases
@@ -126,10 +139,25 @@ differences and the complex step.
 *Stand-alone builds link a real LAPACK.* The verifier's reference, the
 six-check gate's offline replays and the routine-level harness link the host's
 library (`umat_oti.core.host_lapack`: oneAPI MKL, else OpenBLAS, else the
-reference LAPACK; `UMAT_OTI_LAPACK` overrides) and record which
-(`reference_lapack` in `verification.json`, `lapack` in each build record). The
-twins are compiled in only where no library links, and in every REAL(16)
-build. Abaqus's own bundled MKL is not used outside Abaqus.
+reference LAPACK, found through `ldconfig` -- on PATH, or in /sbin or
+/usr/sbin -- and by reading the standard library directories;
+`UMAT_OTI_LAPACK` overrides) and record which, with its version (MKL's
+`mkl_version.h`, the library files the link resolves to, and the LAPACK
+version the library reports through ILAVER): `reference_lapack` in
+`verification.json`, `lapack` in each build record. The twins are compiled in
+only where no library links, in every REAL(16) build, and where the source
+defines a standard name itself and the host library is not MKL. Abaqus's own
+bundled MKL is not used outside Abaqus.
+
+*Literals and expressions.* A literal or an expression handed to a library
+routine (`CALL DGEMM('N','N',6,6,6,1.0D0,...)`) is given the OTI type in the
+provider's lifted code as in the transformed UMAT: `(1.0D0) - 0.0D0*E1`, the
+same value with zero derivative parts.
+
+*Licence.* The supplied bodies follow Reference LAPACK/BLAS (BSD-3-Clause);
+THIRD_PARTY_NOTICES.md, section 5, lists them. Every generated file that holds
+one starts with the notice, and a provider contract whose object holds them
+records it under `build.library_routines.licence`.
 
 **Hashes and status.** `object.sha256` holds the legacy 16-character SHA-256
 prefix; `object.sha256_full` holds the full digest. The build runs a

@@ -12,6 +12,16 @@ spectral_definitions): the matrix is packed, DSPEVD gives the eigenvalues in
 ascending order and, for JOBZ='V', orthonormal eigenvectors, which are copied
 back into A. Eigenvalues agree with LAPACK's to rounding; eigenvectors agree up
 to sign (and, inside a repeated cluster, up to a rotation within the cluster).
+
+Licence: DCOPY, DSCAL, DAXPY, DGEMV and DGEMM are derived from Reference BLAS
+(dcopy.f, dscal.f, daxpy.f, dgemv.f, dgemm.f) and DSYEV's interface and argument
+checks from Reference LAPACK's dsyev.f (https://github.com/Reference-LAPACK/lapack),
+BSD-3-Clause, Copyright (c) 1992-2023 The University of Tennessee and The
+University of Tennessee Research Foundation, (c) 2000-2023 The University of
+California Berkeley, (c) 2006-2023 The University of Colorado Denver. The full
+notice is in THIRD_PARTY_NOTICES.md, section 5, and in
+abaqus_utility_definitions.REFERENCE_LAPACK_LICENCE; generated files that hold
+these bodies carry it.
 """
 
 DCOPY_DEFINITION = """

@@ -239,11 +239,20 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
     # the transform's real twins only where there is none.
     from umat_oti.core.host_lapack import host_lapack
 
+    from umat_oti.core.lapack_names import standard_names_defined_in
+
     host = host_lapack(compiler)
-    twins = ((list(host.flags) if host.is_library else _library_twin_archive(out_dir, compiler))
+    # A source defining a standard name itself (its own DGETRF) links MKL or
+    # the twins: see umat_oti.abaqus.replay.library_link.
+    own = standard_names_defined_in(source.read_text(encoding="utf-8", errors="replace"))
+    record = host.as_dict()
+    if host.is_library and own and host.kind != "mkl":
+        record = {"kind": "twins", "description": f"the source defines {', '.join(own)} itself; "
+                  f"{host.description} would call it from inside its own routines: the twins"}
+    twins = ((list(host.flags) if record["kind"] != "twins" else _library_twin_archive(out_dir, compiler))
              if library_twins else [])
     (out_dir / "lapack.json").write_text(__import__("json").dumps(
-        host.as_dict() if library_twins else {"kind": "none"}, indent=2) + "\n", encoding="utf-8")
+        record if library_twins else {"kind": "none"}, indent=2) + "\n", encoding="utf-8")
     executable = out_dir / "original_reference_driver"
     link = subprocess.run(
         [compiler, "-O1", "-std=legacy", "-ffree-line-length-none",

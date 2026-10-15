@@ -11,6 +11,11 @@
   would serve every caller in the solver).
 * A stand-alone build links the host's LAPACK and records which.
 * A routine with no supplied body is refused by name.
+* A standard name the author defines (their own DGETRF) is renamed with every
+  reference to it, in the transform and in the provider; a library routine the
+  author calls (DGESV) keeps the library's whole chain, as MKL does in Abaqus.
+* The provider builds and differentiates UMATs that hand literals and
+  expressions to DGEMM, DGEMV, DSYEV, DSCAL, DAXPY and DCOPY.
 """
 from __future__ import annotations
 
@@ -123,6 +128,54 @@ BLAS_UMAT = HEADER + """      DIMENSION CC(6,6), T(6), Q(6), S3(3,3), W3(3), WK(
       END
 """
 
+#: BLAS_UMAT with every scalar handed to a library routine written as an
+#: expression, and an array given its shape by DIMENSION before a type
+#: statement names it (ID3, an I-N name declared DOUBLE PRECISION).
+BLAS_EXPRESSION_UMAT = BLAS_UMAT.replace(
+    "      INTEGER INFO\n",
+    "      DIMENSION ID3(3,3)\n      DOUBLE PRECISION ID3\n      INTEGER INFO\n      HALF = 0.5D0\n"
+).replace(
+    "CALL DGEMV('N', 6, 6, 1.0D0, CC, 6, DSTRAN, 1, 0.0D0, T, 1)",
+    "CALL DGEMV('N', 6, 6, 2.0D0*HALF, CC, 6, DSTRAN, 1, 0.0D0*HALF, T, 1)"
+).replace("CALL DSCAL(6, 0.5D0, Q, 1)", "CALL DSCAL(6, PROPS(1)/PROPS(1)*HALF, Q, 1)"
+).replace("CALL DAXPY(6, 0.25D0, T, 1, Q, 1)", "CALL DAXPY(6, HALF*HALF, T, 1, Q, 1)"
+).replace(
+    "CALL DGEMM('N', 'T', 3, 3, 3, 1.0D0, AM, 3, BM, 3, 0.0D0, CM, 3)",
+    "DO I = 1, 3\n        DO J = 1, 3\n          ID3(I,J) = 0.0D0\n        END DO\n"
+    "        ID3(I,I) = 1.0D0\n      END DO\n"
+    "      CALL DGEMM('N', 'N', 3, 3, 3, 1.0D0, BM, 3, ID3, 3, 0.0D0, CM, 3)\n"
+    "      CALL DCOPY(9, CM, 1, BM, 1)\n"
+    "      CALL DGEMM('N', 'T', 3, 3, 3, HALF+HALF, AM, 3, BM, 3, -1.0D0+1.0D0, CM, 3)")
+
+#: LU_UMAT whose author also defines DGETRF (no pivoting), counting its calls
+#: into the stress: one call is the author's own; a second would mean the
+#: library's DGESV had run the author's routine.
+AUTHOR_UMAT = LU_UMAT.replace(
+    "      INTEGER IPIV(3), INFO\n",
+    "      INTEGER IPIV(3), INFO, NCALL\n      COMMON /AUTHLU/ NCALL\n      NCALL = 0\n"
+).replace(
+    "      DO I = 1, NTENS\n        DO J = 1, NTENS\n          DDSDDE(I,J) = 0.0D0",
+    "      STRESS(1) = STRESS(1) + 1.0D3*NCALL\n"
+    "      DO I = 1, NTENS\n        DO J = 1, NTENS\n          DDSDDE(I,J) = 0.0D0"
+) + """      SUBROUTINE DGETRF(M, N, A, LDA, IPIV, INFO)
+      INTEGER M, N, LDA, IPIV(*), INFO, NCALL
+      DOUBLE PRECISION A(LDA,*)
+      COMMON /AUTHLU/ NCALL
+      NCALL = NCALL + 1
+      INFO = 0
+      DO K = 1, N
+        IPIV(K) = K
+        DO I = K+1, M
+          A(I,K) = A(I,K)/A(K,K)
+          DO J = K+1, N
+            A(I,J) = A(I,J) - A(I,K)*A(K,J)
+          END DO
+        END DO
+      END DO
+      RETURN
+      END
+"""
+
 ABA_PARAM = "      IMPLICIT REAL*8 (A-H,O-Z)\n      PARAMETER (NPRECD=2)\n"
 
 
@@ -190,6 +243,7 @@ def _original_library(tmp_path: Path, umat: str, name: str, *, complex_step=Fals
     twins = "".join(bodies.values())
     if complex_step:
         lu = ("DGESV", "DGETRF", "DGETRS", "DGETRI")
+        lu += tuple(f"UMATOTI_{n}_R" for n in lu)          # the private chain the entries call
         umat, twins = _complexified(umat), _complexified("".join(bodies[n] for n in lu))
         (work / "ABA_PARAM.INC").write_text("      IMPLICIT COMPLEX*16 (A-H,O-Z)\n      PARAMETER (NPRECD=2)\n")
     else:
@@ -366,7 +420,8 @@ def test_blas_twins_give_the_reference_blas_bits(tmp_path):
 
 # --------------------------------------------------------------------------- OTI copies
 
-@pytest.mark.parametrize("name, umat, complex_step", [("lu", LU_UMAT, True), ("blas", BLAS_UMAT, False)])
+@pytest.mark.parametrize("name, umat, complex_step", [("lu", LU_UMAT, True), ("blas", BLAS_UMAT, False)],
+                         ids=["lu", "blas"])
 def test_the_oti_copies_reduce_to_the_twins_and_their_derivatives_are_right(tmp_path, name, umat,
                                                                              complex_step):
     out = _transformed(tmp_path, umat, name)
@@ -407,7 +462,7 @@ def _defined(path: Path) -> set:
 STANDARD_SYMBOLS = {name.lower() + "_" for name in STANDARD_LAPACK_BLAS}
 
 
-@pytest.mark.parametrize("name, umat", [("lu", LU_UMAT), ("blas", BLAS_UMAT)])
+@pytest.mark.parametrize("name, umat", [("lu", LU_UMAT), ("blas", BLAS_UMAT)], ids=["lu", "blas"])
 def test_no_generated_object_defines_a_standard_lapack_or_blas_name(tmp_path, name, umat):
     out = _transformed(tmp_path, umat, name)
     _transformed_library(out)
@@ -450,6 +505,170 @@ def test_the_provider_defines_no_standard_name_and_its_regular_object_keeps_the_
     assert routines["bundled_as"]["DGESV"] == "UMATOTI_DGESV_R"
 
 
+# --------------------------------------------------------------------------- the author's own standard names
+
+def _hosted_original(tmp_path: Path, umat: str, name: str, *, objects=()) -> Path:
+    """The original as a shared library linked the way the stand-alone builds link it
+    (:func:`umat_oti.abaqus.replay.library_link`): the host LAPACK, or the twins."""
+    from umat_oti.abaqus.replay import library_link, library_twin_block
+    from umat_oti.abaqus.single_call import drop_stubs_defined_by
+
+    work = tmp_path / f"{name}_hosted"
+    work.mkdir()
+    (work / "ABA_PARAM.INC").write_text(ABA_PARAM)
+    flags, twins, _ = library_link("gfortran", source_text=umat)
+    sources = []
+    if not objects:
+        (work / "umat.f").write_text(umat)
+        sources.append(work / "umat.f")
+    if twins:
+        (work / "twins.f90").write_text(drop_stubs_defined_by(library_twin_block(), umat)[0])
+        sources.append(work / "twins.f90")
+    built = []
+    for source in sources:
+        form = ["-ffixed-form"] if source.suffix == ".f" else ["-ffree-form", "-ffree-line-length-none"]
+        subprocess.run(["gfortran", "-O1", "-fPIC", "-std=legacy", *form, f"-I{work}", "-c", str(source),
+                        "-o", str(source.with_suffix(".o"))], check=True, cwd=work)
+        built.append(str(source.with_suffix(".o")))
+    lib = work / f"lib{name}.so"
+    subprocess.run(["gfortran", "-shared", *built, *map(str, objects), *flags, "-o", str(lib)],
+                   check=True, cwd=work)
+    return lib
+
+
+def _fd_tangent(lib, props, dstran, h=1e-7):
+    fd = np.zeros((6, 6))
+    for j in range(6):
+        e = np.zeros(6)
+        e[j] = h
+        fd[:, j] = (call_umat(lib, props, dstran + e)[0] - call_umat(lib, props, dstran - e)[0]) / (2 * h)
+    return fd
+
+
+def test_an_authors_own_standard_name_is_renamed_and_the_library_chain_stays_whole(tmp_path):
+    out = _transformed(tmp_path, AUTHOR_UMAT, "author")
+    report = json.loads((out / "transform_report.json").read_text())
+    assert report["author_library_definitions_renamed"]["renamed"] == {"DGETRF": "UMATOTI_AUTH_DGETRF"}
+    transformed = C.CDLL(str(_transformed_library(out)))
+    objects = list(out.glob("*.o"))
+    for obj in objects:
+        assert not (_defined(obj) & STANDARD_SYMBOLS), obj
+    defined = set().union(*(_defined(o) for o in objects))
+    assert {"umatoti_auth_dgetrf_", "umatoti_auth_dgetrf_oti_", "umatoti_dgetrf_oti_"} <= defined
+    helpers_text = (out / "umat_oti_helpers.f90").read_text()
+    assert helpers_text.startswith("! The bodies of DGESV, DGETRF, DGETRI, DGETRS in this file")
+    assert "! Copyright (c) 1992-2023 The University of Tennessee" in helpers_text
+    assert "University of Tennessee" in next(out.glob("*_oti_combined.f90")).read_text()
+    helpers = helpers_text.upper()
+    dgesv = helpers[helpers.index("SUBROUTINE UMATOTI_DGESV_OTI"):helpers.index("END SUBROUTINE UMATOTI_DGESV_OTI")]
+    assert "CALL UMATOTI_DGETRF_OTI(" in dgesv and "AUTH" not in dgesv
+    original = C.CDLL(str(_hosted_original(tmp_path, AUTHOR_UMAT, "author")))
+    props, dstran = [2.5], np.array([1e-3, -2e-3, 1.5e-3, 3e-3, -1e-3, 2e-3])
+    s_oti, tangent = call_umat(transformed, props, dstran)
+    s_real, _ = call_umat(original, props, dstran)
+    # one call of the author's DGETRF in each: the library's DGESV ran its own LU
+    assert 1.0e3 < s_oti[0] - s_oti[1] < 2.0e3 and 1.0e3 < s_real[0] - s_real[1] < 2.0e3
+    np.testing.assert_allclose(s_oti, s_real, rtol=1e-12, atol=0)
+    fd = _fd_tangent(original, props, dstran)
+    np.testing.assert_allclose(tangent, fd, rtol=1e-6, atol=1e-6 * abs(fd).max())
+
+
+def test_stand_alone_builds_of_a_source_defining_a_standard_name_keep_the_library_chain(monkeypatch):
+    """Reference LAPACK's DGESV would call the author's dgetrf_; such a source links
+    MKL or the twins, whose chain calls private names only."""
+    from umat_oti.abaqus.replay import library_link
+    from umat_oti.core.host_lapack import host_lapack
+
+    try:
+        if REFERENCE_LAPACK.is_file():
+            monkeypatch.setenv("UMAT_OTI_LAPACK", "reference")
+            host_lapack.cache_clear()
+            assert library_link("gfortran", source_text=LU_UMAT)[1] is False
+            flags, twins, record = library_link("gfortran", source_text=AUTHOR_UMAT)
+            assert twins and flags == [] and "DGETRF" in record["description"]
+        monkeypatch.setenv("UMAT_OTI_LAPACK", "auto")
+        host_lapack.cache_clear()
+        if host_lapack("gfortran").kind == "mkl":
+            assert library_link("gfortran", source_text=AUTHOR_UMAT)[2]["kind"] == "mkl"
+    finally:
+        host_lapack.cache_clear()
+    bodies = library_twin_sources()
+    assert "CALL UMATOTI_DGETRF_R(" in bodies["DGESV"] and "CALL DGETRF(" not in bodies["DGESV"].upper()
+
+
+# --------------------------------------------------------------------------- the provider
+
+def _provider(tmp_path: Path, umat: str, name: str) -> dict:
+    from umat_oti.provider.build import build_provider
+
+    model = tmp_path / f"{name}_model"
+    model.mkdir()
+    (model / "umat.f").write_text(umat)
+    (model / "contract.json").write_text(json.dumps({
+        "schema": "resasm_umat_transform_v2", "source": {"main_file": "umat.f"},
+        "kinematics": "small_strain", "dimensions": {"ntens": 6, "nprops": 1, "nstatev": 0},
+        "parameters": [{"name": "E", "props_index": 1}],
+        "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
+        "history": {"path_dependent": False},
+        "output": {"object": f"{name}.obj", "contract": f"{name}.json"}}))
+    return build_provider(model / "contract.json", tmp_path / f"{name}_out", regular_object="REAL_UMAT.obj")
+
+
+def call_provider(lib, props, dstran):
+    """``(STRESS, DSIGMA_DP)`` from the provider's umat_oti_eval_."""
+    f = lambda *shape: np.zeros(shape, order="F")
+    stress, statev, ddsdde = f(6), f(1), f(6, 6)
+    stran, ds, time = f(6), np.asarray(dstran, dtype=float), f(2)
+    dtime, temp, dtemp = np.ones(1), f(1), f(1)
+    pr = np.asarray(props, dtype=float)
+    dsigma, dstatev = f(6, len(pr)), f(1, len(pr))
+    i = lambda v: C.byref(C.c_int(v))
+    lib.umat_oti_eval_(_p(stress), _p(statev), _p(ddsdde), _p(stran), _p(ds), _p(time), _p(dtime),
+                       _p(temp), _p(dtemp), _p(pr), i(len(pr)), i(6), i(0), i(len(pr)),
+                       _p(dsigma), _p(dstatev))
+    return stress, dsigma
+
+
+@pytest.mark.fortran
+@pytest.mark.parametrize("name, umat", [("blas", BLAS_UMAT), ("blas_expressions", BLAS_EXPRESSION_UMAT),
+                                        ("author", AUTHOR_UMAT)], ids=["blas", "blas_expressions", "author"])
+def test_the_provider_builds_and_differentiates_library_calls(tmp_path, name, umat):
+    built = _provider(tmp_path, umat, name)
+    for obj in (built["object"], built["regular_object"]):
+        assert not (_defined(Path(obj)) & STANDARD_SYMBOLS), obj
+    routines = json.loads(Path(built["contract"]).read_text())["build"]["library_routines"]
+    assert "BSD-3-Clause" in routines["licence"]["note"]
+    assert routines["licence"]["text"].startswith("Copyright (c) 1992-2023 The University of Tennessee")
+    if name == "author":
+        assert routines["author_definitions_renamed"] == {"DGETRF": "UMATOTI_AUTH_DGETRF"}
+        assert routines["called_by_the_original"] == ["DGESV", "DGETRI"]
+        # the whole chain, though the author defines DGETRF
+        assert {"umatoti_dgetrf_r_", "umatoti_auth_dgetrf_"} <= _defined(Path(built["object"]))
+        assert "umatoti_auth_dgetrf_" in _defined(Path(built["regular_object"]))
+    else:
+        assert set(routines["called_by_the_original"]) == {"DGEMV", "DCOPY", "DSCAL", "DAXPY", "DGEMM",
+                                                           "DSYEV"}
+    provider = C.CDLL(str(Path(built["build_dir"]) / "provider_link_check.so"))
+    regular = C.CDLL(str(_hosted_original(tmp_path, umat, name, objects=[built["regular_object"]])))
+    props, dstran = [2.5], np.array([1e-3, -2e-3, 1.5e-3, 3e-3, -1e-3, 2e-3])
+    stress, dsigma = call_provider(provider, props, dstran)
+    np.testing.assert_allclose(stress, call_umat(regular, props, dstran)[0], rtol=1e-12, atol=0)
+    # STRESS(1) of the BLAS toys is ~600 with a derivative ~2e-3: a step of 1e-4
+    # keeps the rounding in the difference (~600*eps/h) well below the tolerance.
+    h = 1e-4
+    fd = (call_umat(regular, [props[0] + h], dstran)[0] - call_umat(regular, [props[0] - h], dstran)[0]) / (2 * h)
+    np.testing.assert_allclose(dsigma[:, 0], fd, rtol=1e-6, atol=1e-6 * abs(fd).max())
+
+
+def test_the_licence_of_the_reference_bodies_is_the_one_in_the_notices():
+    from umat_oti.transform.abaqus_utility_definitions import REFERENCE_LAPACK_LICENCE
+
+    notices = (Path(__file__).resolve().parents[1] / "THIRD_PARTY_NOTICES.md").read_text()
+    assert REFERENCE_LAPACK_LICENCE.rstrip("\n") in notices
+    for module in ("lu_definitions.py", "blas_definitions.py", "abaqus_utility_definitions.py"):
+        assert f"src/umat_oti/transform/{module}" in notices
+
+
 # --------------------------------------------------------------------------- host LAPACK and refusals
 
 def test_the_host_lapack_is_recorded_and_the_twins_are_only_a_fallback(monkeypatch):
@@ -472,6 +691,30 @@ def test_the_host_lapack_is_recorded_and_the_twins_are_only_a_fallback(monkeypat
             assert library_link("gfortran", quad=True)[1] is True
     finally:
         host_lapack.cache_clear()
+
+
+@needs_reference
+def test_the_host_lapack_is_found_without_ldconfig_on_path_and_its_version_recorded(monkeypatch):
+    """ldconfig is in /sbin, often not on a user's PATH; the standard library
+    directories are read directly as well."""
+    from umat_oti.core import host_lapack as module
+
+    real_which = shutil.which
+    monkeypatch.setattr(module.shutil, "which", lambda name, *a, **k: None if name == "ldconfig"
+                        else real_which(name, *a, **k))
+    for ldconfig_paths in (module.LDCONFIG_PATHS, ()):
+        monkeypatch.setattr(module, "LDCONFIG_PATHS", ldconfig_paths)
+        assert [os.path.realpath(p) for p in module._ldconfig("liblapack.so")][:1] == \
+            [os.path.realpath(REFERENCE_LAPACK)]
+    monkeypatch.setenv("UMAT_OTI_LAPACK", "reference")
+    module.host_lapack.cache_clear()
+    try:
+        record = module.host_lapack("gfortran").as_dict()
+    finally:
+        module.host_lapack.cache_clear()
+    assert record["kind"] == "reference"
+    assert record["version"]["files"][0] == os.path.realpath(REFERENCE_LAPACK)
+    assert re.fullmatch(r"\d+\.\d+\.\d+", record["version"]["lapack_version"])
 
 
 @pytest.mark.parametrize("routine, call", [
@@ -512,7 +755,8 @@ def test_a_routine_with_no_supplied_body_is_refused_by_name(tmp_path, routine, c
 
 @pytest.mark.abaqus
 @pytest.mark.skipif(shutil.which("abaqus") is None, reason="needs Abaqus")
-@pytest.mark.parametrize("name, umat", [("lu", LU_UMAT), ("blas", BLAS_UMAT)])
+@pytest.mark.parametrize("name, umat", [("lu", LU_UMAT), ("blas", BLAS_UMAT), ("author", AUTHOR_UMAT)],
+                         ids=["lu", "blas", "author"])
 def test_the_transformed_umat_builds_the_abaqus_way_without_standard_names(tmp_path, name, umat):
     out = _transformed(tmp_path, umat, name)
     combined = next(out.glob("*_oti_combined.f90"))

@@ -37,6 +37,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `UMAT_OTI_LAPACK` overrides) and record which; the twins are only the
   fallback. Two of the six checks were undecided for a UMAT calling DGESV
   because the stand-alone original did not link.
+- **An author's own definition of a standard LAPACK/BLAS name is renamed.**
+  A source that defines DGETRF itself still produced objects that exported
+  `dgetrf_` (inside Abaqus, the routine every caller in the solver would get).
+  The transform now renames such a definition, with every reference to it, to
+  `UMATOTI_AUTH_<NAME>` before anything is lifted, and records it in
+  `transform_report.json` (`author_library_definitions_renamed`); the provider
+  does the same in its lifted code and, with `objcopy`, in its bundled original
+  and in the regular object (`build.library_routines.author_definitions_renamed`).
+  The author's own calls still reach the author's routine. A library routine the
+  author calls keeps the library's whole chain -- the supplied DGESV calls the
+  supplied DGETRF, never the author's -- because that is what MKL does inside
+  Abaqus (measured: an author's DGETRF beside MKL's DGESV is not called by it;
+  beside reference LAPACK 3.9.0 it is). So the real twins call private names
+  only, the provider compiles every twin chain whole (it failed to link with
+  `undefined reference to umatoti_dgetrf_r_` when the author defined DGETRF),
+  and a stand-alone build of a source that defines a standard name links MKL or
+  the twins, never another library.
+- **The provider lift gives literals and expressions handed to a hypercomplex
+  dummy the OTI type** (`CALL DGEMM('N','N',6,6,6,1.0D0,...)` did not compile:
+  the lifted routines are module procedures), as the tangent transform already
+  did; and an array shaped by DIMENSION before a type statement names it
+  (`DIMENSION ID6(6,6)` then `DOUBLE PRECISION ID6`) is no longer typed from
+  its initial letter in the lifted code (it came out `integer :: ID6(6,6)`).
+- **The host LAPACK is found without `ldconfig` on PATH** (`/sbin/ldconfig`,
+  `/usr/sbin/ldconfig`, and the standard library directories read directly),
+  and its record carries the version: MKL's `mkl_version.h`, the files the
+  link resolves to, and the LAPACK version from ILAVER.
+- **Licence of the supplied library bodies.** THIRD_PARTY_NOTICES.md section 5
+  names the modules that follow Reference LAPACK/BLAS (`lu_definitions.py`,
+  `blas_definitions.py`, DGESV/DGETRI in `abaqus_utility_definitions.py`) with
+  the BSD-3-Clause text; the module docstrings say so, generated files holding
+  those bodies start with the notice, and the provider contract records it
+  (`build.library_routines.licence`).
 - **A value that reaches the stress only through a library call is on the
   stress path.** The dependency scan had no edge through a routine the file
   does not define, so in ``CALL DGESV(N, 1, S, 6, IPIV, B, 6, INFO)`` nothing

@@ -28,7 +28,8 @@ from umat_oti.fortran.regions import (
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
 from umat_oti.transform import complex_support
 from umat_oti.transform.abaqus_utility_definitions import (
-    privatise_oti_copies, strip_supplied_solver_bodies, supply_reachable_definitions)
+    library_licence_comment, privatise_author_library_definitions, privatise_oti_copies,
+    strip_supplied_solver_bodies, supply_reachable_definitions)
 from umat_oti.transform.control_blocks import block_spans, depth_at, enclosing_blocks, hoisted_insertion_line
 from umat_oti.transform.helper_lifting import PASS_THROUGH_CALLS, HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
 # The intrinsic extension module is generated in one place and used by
@@ -276,6 +277,29 @@ def transform_umat_to_oti_from_config(
     # sources stopped here. Nothing is exempted: a name with no definition
     # available is still refused.
     supplied = ()
+    author_library_record = None
+    # The author's own definitions of standard LAPACK/BLAS names (a DGETRF of
+    # their own) get private names in everything generated, with every
+    # reference to them; see privatise_author_library_definitions.
+    parsed, author_library_renames = privatise_author_library_definitions(parsed)
+    if author_library_renames:
+        source_text = parsed.text
+        helper_roots = tuple(author_library_renames.get(name.upper(), name) for name in helper_roots)
+        narrow_roots = tuple(author_library_renames.get(name.upper(), name) for name in narrow_roots)
+        for role_names in roles.values():
+            for old_name, new_name in author_library_renames.items():
+                if old_name in role_names:
+                    role_names.discard(old_name)
+                    role_names.add(new_name)
+        if config.get("_otis_lifted_function_roots"):
+            config = {**config, "_otis_lifted_function_roots": sorted(
+                author_library_renames.get(name, name) for name in config["_otis_lifted_function_roots"])}
+        author_library_record = {
+            "renamed": dict(author_library_renames),
+            "rule": "a standard LAPACK/BLAS name the source defines itself is renamed, with every "
+                    "reference to it, so the emitted objects define no standard LAPACK/BLAS name; a "
+                    "library routine the source calls and does not define keeps its whole library "
+                    "chain (the supplied routines), as Abaqus's MKL does"}
     if helper_roots:
         parsed, supplied = supply_reachable_definitions(parsed, helper_roots)
         source_text = parsed.text
@@ -335,6 +359,8 @@ def transform_umat_to_oti_from_config(
         tangent_context=tangent_context,
     )
     report_base["reads_before_assignment"] = entry_reads.as_dict()
+    if author_library_record:
+        report_base["author_library_definitions_renamed"] = author_library_record
     if blockers:
         report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
         report_path = _write_report(output_dir, report)
@@ -599,7 +625,8 @@ def transform_umat_to_oti_from_config(
         transformed_source = privatise_oti_copies(transformed_source, supplied)
         transformed_path.write_text(transformed_source, encoding="utf-8")
         if helper_source_path is not None:
-            lifted_helper_text = privatise_oti_copies(lifted_helper_text, supplied)
+            lifted_helper_text = (library_licence_comment(supplied)
+                                  + privatise_oti_copies(lifted_helper_text, supplied))
             helper_source_path.write_text(lifted_helper_text, encoding="utf-8")
     generated_files = [
         module_result.master_parameters_path,
