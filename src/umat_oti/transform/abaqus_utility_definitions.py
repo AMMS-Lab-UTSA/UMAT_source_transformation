@@ -332,6 +332,52 @@ def definition_text(names) -> str:
     return "".join(UTILITY_DEFINITIONS[name] for name in available_definitions(names))
 
 
+#: Library routines Abaqus links into a user subroutine (its LAPACK) whose
+#: bodies are supplied above: everything supplied except the solver utilities.
+LIBRARY_ROUTINES = tuple(sorted(set(UTILITY_DEFINITIONS) - SOLVER_UTILITIES))
+
+
+def library_twin_sources() -> dict[str, str]:
+    """``{NAME: free-form Fortran}``: the real bodies of :data:`LIBRARY_ROUTINES`.
+
+    A stand-alone build of an ORIGINAL that calls DGESV has no LAPACK to link,
+    where Abaqus would supply one. These are the bodies the transform supplies
+    to the transformed build, over plain reals, so the original's reference
+    build and the transformed build pivot and round alike. One routine per
+    entry, so a caller can put each in its own archive member and let the
+    linker take only what the original leaves undefined.
+    """
+    from umat_oti.fortran.parser import logical_lines_from_text
+
+    return {name: _without_dble("\n".join(line.text for line in
+                                          logical_lines_from_text(UTILITY_DEFINITIONS[name], "fixed")) + "\n")
+            for name in LIBRARY_ROUTINES}
+
+
+def _without_dble(text: str) -> str:
+    """``DBLE(n)`` written ``(1.0D0*(n))``: the same double for every integer
+    argument these bodies give it, and a form a REAL(16) build of the stub block
+    (which turns DOUBLE PRECISION into REAL*16 and DBLE into QEXT, an intrinsic
+    gfortran does not have) still compiles."""
+    import re
+
+    out, position = [], 0
+    for match in re.finditer(r"(?i)\bDBLE\s*\(", text):
+        if match.start() < position:
+            continue
+        depth, index = 0, match.end() - 1
+        while index < len(text):
+            depth += {"(": 1, ")": -1}.get(text[index], 0)
+            if depth == 0:
+                break
+            index += 1
+        out.append(text[position:match.start()])
+        out.append("(1.0D0*(" + _without_dble(text[match.end():index]) + "))")
+        position = index + 1
+    out.append(text[position:])
+    return "".join(out)
+
+
 def supply_reachable_definitions(parsed, roots):
     """Append missing built-ins reached from roots, preserving supplied sources."""
     from umat_oti.core.model import ParsedFortranSource

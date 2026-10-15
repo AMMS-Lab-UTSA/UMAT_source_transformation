@@ -224,6 +224,89 @@ def _record_of(layout: Layout) -> Optional[dict]:
 _EXIT = {"green": 0, "amber": 1, "red": 2, "blue": 3}
 
 
+def state_read_back(source_text: str, slot: int) -> list:
+    """Where the routine reads STATEV(slot) back into a local, and where that
+    local is used: ``[(local, line of the read, [lines that use it])]``.
+
+    An undefined value stored in a state slot does not stay there: in the next
+    increment the routine reads the slot back, and the value reaches whatever
+    that local feeds.
+    """
+    import re
+
+    lines = source_text.splitlines()
+    code = [("" if (raw[:1] in "cC*!" or raw.strip().startswith("!")) else raw.split("!")[0]).upper()
+            for raw in lines]
+    found = []
+    pattern = re.compile(rf"^\s*(?:\d+\s+)?([A-Z_]\w*)\s*=(?!=).*\bSTATEV\s*\(\s*{slot}\s*\)")
+    for number, text in enumerate(code, 1):
+        match = pattern.match(text)
+        if not match or match.group(1) == "STATEV":
+            continue
+        name = match.group(1)
+        uses = [n for n, t in enumerate(code, 1)
+                if n != number and re.search(rf"\b{name}\b", t)
+                and not re.match(rf"^\s*(?:\d+\s+)?{name}\s*=(?!=)", t)
+                and not re.match(r"^\s*(DOUBLE|REAL|INTEGER|DIMENSION|COMMON)", t.strip())]
+        found.append((name, number, uses))
+    return found
+
+
+def undefined_behaviour_note(record: dict, store: Path, source: Optional[Path] = None) -> str:
+    """A paragraph on values your original reads before it sets them, or "".
+
+    Two independent sources say so: the transform report (a data flow over the
+    source names the variable and the line) and the init probe (builds of the
+    original that start locals at zero and at a huge value return different
+    outputs). The gate leaves such outputs out of the stress comparison; the
+    paragraph says which, so a green verdict does not hide the finding.
+    """
+    findings = []
+    for report_path in sorted(Path(store).rglob("transform_report.json")):
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        findings = list((report.get("reads_before_assignment") or {}).get("findings") or [])
+        if findings:
+            break
+    outputs = list(record.get("undefined_outputs") or [])
+    if not findings and not outputs:
+        return ""
+    parts = ["Found in your original: it can read a value it never set, which is undefined behaviour "
+             "(its result then depends on the compiler and its flags)."]
+    if findings:
+        named = ", ".join(f"{f.get('name')} (line {', '.join(str(n) for n in f.get('lines') or [f.get('line')])})"
+                          for f in findings)
+        parts.append(f"The transform report names {named}; the converted file starts "
+                     f"{'it' if len(findings) == 1 else 'each'} at zero on entry.")
+    if outputs:
+        pair = (record.get("undefined_in_original") or {}).get("pair") or "different init builds"
+        one = len(outputs) == 1
+        parts.append(f"The init probe confirms it on this run: {', '.join(outputs)} "
+                     f"{'differs' if one else 'differ'} between builds of your original ({pair}), and "
+                     f"{'was' if one else 'were'} left out of the stress comparison.")
+        text = ""
+        try:
+            text = Path(source).read_text(errors="replace") if source else ""
+        except OSError:
+            text = ""
+        for output in outputs:
+            slot = re.fullmatch(r"STATEV\((\d+)\)", output)
+            if not slot or not text:
+                continue
+            for name, line, uses in state_read_back(text, int(slot.group(1))):
+                where = (f", which is used on line{'s' if len(uses) > 1 else ''} "
+                         f"{', '.join(str(n) for n in uses[:6])}{' and later' if len(uses) > 6 else ''}"
+                         if uses else "")
+                parts.append(f"{output} is not only an output: the routine reads it back on line {line} "
+                             f"({name} = ... {output}){where}, so in the next increment the undefined value "
+                             f"enters the computation through {name}. The stress comparison held on this run; "
+                             f"it does not make {output} defined.")
+    parts.append("Setting the variable before its first use in your source removes it.")
+    return " ".join(parts)
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     from umat_oti.app import check_command as check
     from umat_oti.app import front_door
@@ -326,6 +409,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print("\n" + render_verdict(record))
     if verdict["colour"] == "green":
         print("\n" + LIMIT_PARAGRAPH)
+    note = undefined_behaviour_note(record, layout.store, source)
+    if note:
+        print("\n" + note)
     print(f"\nWhat was run: {SCRATCH_REPOSITORY}/{source.name} with {deck.name}, in {time.time() - started:.0f} s.")
     print(f"The full record of the six checks: {layout.results / 'store_verification.json'}")
     _cleanup(layout, args.keep_work)
