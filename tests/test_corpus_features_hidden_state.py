@@ -1,6 +1,6 @@
 """Hidden-state gate (review B1/A) and finite-strain FD direction (review B1/A, item 7).
 
-The review's three toy UMATs (corpus_campaign/batches/B1/vera/a_hidden/) are linear
+The review's three toy UMATs (corpus_campaign/batches/B1, review folder, a_hidden/) are linear
 elasticity with one defect each that makes restored-state finite differences
 of the routine invalid:
 

@@ -1,6 +1,6 @@
 """Entrywise, resolution-aware tolerance (B2) against the review's B1 injection cases.
 
-The review (corpus_campaign/batches/B1/vera/b_c_inject.py) injected known errors
+The review (corpus_campaign/batches/B1, review folder, b_c_inject.py) injected known errors
 into an exact tangent of a synthetic stiffness-like map with a wide spread of
 entry sizes; the B1 column-norm rule passed a -100% error on an entry at 6e-7
 of its column, +0.5% at 1.5e-4 and x10 at 9e-8. Under the B2 rule every
