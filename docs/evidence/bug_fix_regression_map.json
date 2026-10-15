@@ -1066,6 +1066,16 @@
     "tests/test_library_routines.py::test_the_host_lapack_is_recorded_and_the_twins_are_only_a_fallback"
    ],
    "selected_by": "message_pattern"
+  },
+  {
+   "commit": "185424e",
+   "selected_by": "manual",
+   "bug": "A scalar built from the strain that scaled a matrix passed to DGESV was not on the stress path (no dependency edge through a library routine the file does not define), so it was emitted as REAL(...) and every derivative through it was lost while the stress stayed right.",
+   "tests": [
+    "tests/test_values_feeding_a_library_call_are_promoted.py::test_a_value_feeding_a_library_call_is_promoted_and_its_derivative_kept[scalar_into_matrix]",
+    "tests/test_values_feeding_a_library_call_are_promoted.py::test_a_value_feeding_a_library_call_is_promoted_and_its_derivative_kept[accumulated_scalar_into_matrix]",
+    "tests/test_values_feeding_a_library_call_are_promoted.py::test_a_value_feeding_a_library_call_is_promoted_and_its_derivative_kept[scalar_through_an_array]"
+   ]
   }
  ],
  "excluded": [
