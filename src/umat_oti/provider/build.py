@@ -226,11 +226,25 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     original_command = [*flags, *form_flags, "-I", ".", "-c", f"original/{source.name}",
                         "-o", original_object.name]
     _run(original_command, build_dir)
-    objects.append(original_object.name)
-    twins = _real_library_twins(build_dir, original_object.name, layout.lifted_umat, executable)
+    # The library routines the original calls (DGESV, DSYEV, ...) must resolve
+    # inside the provider, which is loaded into processes that may hold another
+    # LAPACK: the bundled copy of the original calls private real twins
+    # (UMATOTI_DGESV_R), never a standard LAPACK/BLAS name. The regular object
+    # keeps the original's own calls, for the host's LAPACK (Abaqus's MKL).
+    twins, library_routines = _real_library_twins(build_dir, original_object.name)
+    bundled_original = original_object.name
     if twins:
         _run([*flags, "-c", twins.name, "-o", twins.with_suffix(".o").name], build_dir)
+        bundled_original = "original_umat_private_lapack.o"
+        objcopy = shutil.which("objcopy")
+        if objcopy is None:
+            raise ProviderBuildError("objcopy is needed to give the original's LAPACK calls their "
+                                     "private names inside the provider")
+        _run([objcopy, *[f"--redefine-sym={name.lower()}_={private.lower()}_"
+                         for name, private in library_routines.items()],
+              original_object.name, bundled_original], build_dir)
         objects.append(twins.with_suffix(".o").name)
+    objects.append(bundled_original)
     bundled_object = build_dir / object_name
     _run([executable, "-nostdlib", "-r", *objects, "-o", object_name], build_dir)
     _run([executable, "-shared", "-Wl,--no-undefined", str(bundled_object),
@@ -270,7 +284,14 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
                   "sources": build_dir.name, "tangent": "dSTRESS_dDSTRAN_at_fixed_incoming_history",
                   "zero_init_locals": bool(zero_init_locals),
                   "reads_before_assignment": reads,
-                  "original_entry_statements": entry_statements},
+                  "original_entry_statements": entry_statements,
+                  "library_routines": {
+                      "called_by_the_original": sorted(library_routines),
+                      "bundled_as": library_routines,
+                      "rule": "the provider's copy of the original calls private real twins "
+                              "(reference-LAPACK semantics, the algorithm of the OTI copies); the "
+                              "provider defines no standard LAPACK/BLAS name. The regular object "
+                              "keeps the original's own calls for the host LAPACK (Abaqus: MKL)."}},
     }
     if regular_object is not None:
         staged_regular = build_dir / regular_object
@@ -284,7 +305,9 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
         else:
             shutil.copy2(original_object, staged_regular)
             toolchain = {"toolchain": "provider", "compiler": None}
-            role = "ORIGINAL UMAT compiled unchanged; the same object is bundled in the OTI provider"
+            role = ("ORIGINAL UMAT compiled unchanged; the same object is bundled in the OTI provider"
+                    + (" with its calls to " + ", ".join(sorted(library_routines))
+                       + " renamed to the private real twins" if library_routines else ""))
             command = [*recorded_flags, *form_flags, "-I", ".", "-c", f"original/{source.name}"]
         if entry_statements:
             role = role.replace("compiled unchanged", "compiled with " + "; ".join(entry_statements)
@@ -314,42 +337,44 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
 
 
 
-def _real_library_twins(build_dir: Path, original_object: str, lifted: Path, executable: str):
-    """Real-valued twins of the library routines the transform supplied in OTI form (DGESV, DGETRF, ...).
+def _real_library_twins(build_dir: Path, original_object: str):
+    """``(source file, {NAME: private name})`` of the real twins the bundled original needs,
+    or ``(None, {})``.
 
-    The ORIGINAL UMAT calls the real library routine (under Abaqus it comes from the solver's own
-    library, MKL). A provider object must link on its own, so when the original leaves such a name
-    undefined and the lifted source defines its ``<name>_oti`` copy, the real body the transform
-    supplied (:func:`umat_oti.transform.abaqus_utility_definitions.library_twin_sources`: the same
-    unblocked LU with partial pivoting, or Jacobi eigen-solver, that the OTI copy runs) is compiled
-    under the plain name, with what it calls in turn. Only supplied library routines qualify; an
-    author's own helper never gets a second definition. Returns the generated file, or None.
+    Every supplied library routine (umat_oti.transform.abaqus_utility_definitions.LIBRARY_ROUTINES)
+    the original leaves undefined, with what it calls in turn, is compiled under its private name
+    (UMATOTI_DGESV_R; reference-LAPACK semantics, the same algorithm as its OTI copy). A LAPACK/BLAS
+    routine the original calls for which no body is supplied is refused by name: the provider has
+    to link on its own, and an unresolved dgeev_ would only surface when the provider is loaded.
     """
+    from umat_oti.core.lapack_names import STANDARD_LAPACK_BLAS
     from umat_oti.transform.abaqus_utility_definitions import (
-        LIBRARY_ROUTINES, available_definitions, library_twin_sources)
+        LIBRARY_ROUTINES, PRIVATE_REAL_FORMAT, available_definitions, library_twin_sources)
 
     nm = shutil.which("nm")
     if nm is None:
-        return None
+        raise ProviderBuildError("nm is needed to list the library routines the original calls")
     listed = subprocess.run([nm, original_object], cwd=build_dir, capture_output=True,
                             text=True).stdout.splitlines()
     undefined = {line.split()[-1].lower() for line in listed if line.split()[:1] == ["U"]}
     defined = {line.split()[-1].lower() for line in listed
                if len(line.split()) == 3 and line.split()[1] in "TtDdBbCc"}
-    text = Path(lifted).read_text(encoding="utf-8")
-    lifted_names = {name.upper() for name in
-                    re.findall(r"(?im)^\s*subroutine\s+(\w+)_oti\s*\(", text)}
-    wanted = {name for name in LIBRARY_ROUTINES
-              if name in lifted_names and name.lower() + "_" in undefined}
-    if not wanted:
-        return None
-    names = [name for name in available_definitions(wanted) if name.lower() + "_" not in defined]
-    bodies = library_twin_sources()
+    called = {name for name in STANDARD_LAPACK_BLAS if name.lower() + "_" in undefined}
+    unsupported = sorted(called - set(LIBRARY_ROUTINES))
+    if unsupported:
+        raise ProviderBuildError(
+            f"the UMAT calls {', '.join(unsupported)} (LAPACK/BLAS), for which umat-oti has no "
+            f"body; it supplies {', '.join(LIBRARY_ROUTINES)}. The provider object must link on its "
+            f"own, so it is not built.")
+    if not called:
+        return None, {}
+    names = [name for name in available_definitions(called) if name.lower() + "_" not in defined]
+    bodies = library_twin_sources(PRIVATE_REAL_FORMAT)
     path = build_dir / "real_library_twins.f90"
-    path.write_text("! Real-arithmetic twins of the library routines the ORIGINAL calls: the bodies the\n"
-                    "! transform supplies, the same algorithm as their OTI copies in umat_oti_lifted.f90.\n\n"
+    path.write_text("! Real twins of the library routines the ORIGINAL calls, under private names: the\n"
+                    "! bodies the transform supplies, the algorithm of their OTI copies.\n\n"
                     + "\n".join(bodies[name] for name in names), encoding="utf-8")
-    return path
+    return path, {name: PRIVATE_REAL_FORMAT.format(name=name) for name in sorted(called)}
 
 
 def main(argv: list[str] | None = None) -> int:

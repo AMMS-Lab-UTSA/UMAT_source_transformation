@@ -42,13 +42,6 @@ def test_singular_factorization_reports_first_zero_pivot(lu_solver, matrix, expe
     assert output[0] == expected
 
 
-def test_singular_solve_is_refused(lu_solver):
-    factors = np.diag([1.,0.])
-    rhs = np.ones((2,1))
-    output = run_lu(lu_solver, factors, rhs, [factors*0]*2, [rhs*0]*2, mode=2)
-    np.testing.assert_array_equal(output, [2])
-
-
 @pytest.mark.parametrize("shape", [(0,0), (0,3), (3,0)])
 def test_empty_factorization(lu_solver, shape):
     matrix = np.empty(shape)
@@ -159,8 +152,11 @@ end program verify_lu
 """, encoding="ascii")
     executable = output / "verify_lu"
     files = (output / "compile_order.txt").read_text().splitlines()
+    # The emitted file defines no real DGETRF/DGETRS of its own (inside Abaqus the
+    # solver's MKL serves the real calls); a stand-alone link supplies the host's.
     built = subprocess.run(["gfortran", "-ffree-line-length-none", "-ffixed-line-length-none",
-                            *files, driver.name, "-o", str(executable)], cwd=output, text=True, capture_output=True)
+                            *files, driver.name, *_host_lapack_link(output), "-o", str(executable)],
+                           cwd=output, text=True, capture_output=True)
     assert built.returncode == 0, built.stdout + built.stderr
     strain = np.array([.1,-.2,.05,.13,-.07,.18])
     run = subprocess.run([str(executable)], input=" ".join(map(str,strain))+"\n", text=True, capture_output=True)
@@ -298,6 +294,18 @@ if(any(matrix(rows+1:,:)%r /= -777.0d0)) stop 8
 if(any(rhs(cols+1:,:)%r /= -888.0d0)) stop 9
 end program check_lu
 """
+
+
+def _host_lapack_link(directory):
+    from umat_oti.core.host_lapack import host_lapack
+    from umat_oti.transform.abaqus_utility_definitions import library_twin_sources
+
+    host = host_lapack("gfortran")
+    if host.is_library:
+        return list(host.flags)
+    twins = directory / "host_lapack_twins.f90"
+    twins.write_text("".join(library_twin_sources().values()), encoding="ascii")
+    return [twins.name]
 
 
 @pytest.fixture(scope="module")

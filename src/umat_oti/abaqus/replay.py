@@ -269,7 +269,7 @@ END SUBROUTINE READ8M
 
 
 def driver_source(name: str = "REPLAY", *, initialise_state: bool = False,
-                  source_text: str = "") -> str:
+                  source_text: str = "", compiler: str = "gfortran", quad: bool = False) -> str:
     """The replay program, for a source that has to be linked beside it.
 
     ``initialise_state`` emits the call to SDVINI. It is the caller's job to
@@ -282,7 +282,7 @@ def driver_source(name: str = "REPLAY", *, initialise_state: bool = False,
     """
     from umat_oti.abaqus.single_call import drop_stubs_defined_by
 
-    stubs = utility_stub_block()
+    stubs = utility_stub_block(compiler, quad=quad)
     if source_text:
         stubs, _ = drop_stubs_defined_by(stubs, source_text)
     return _DRIVER % {"state": STATE_FILE, "name": name.upper()[:60],
@@ -290,17 +290,38 @@ def driver_source(name: str = "REPLAY", *, initialise_state: bool = False,
                       "stubs": stubs}
 
 
-def utility_stub_block() -> str:
+def utility_stub_block(compiler: str = "gfortran", *, quad: bool = False) -> str:
     """Every Abaqus-utility stub the replay drivers link, each defined once.
 
     The shared block (``_abaqus_utility_stubs``) carries SPRIND, SPRINC and SINV
     (B17 G2c); the replay block carries the rest. The two are concatenated
-    wherever a replay driver is built.
+    wherever a replay driver is built. The real twins of the supplied LAPACK
+    routines are added only when ``compiler`` has no LAPACK library to link
+    (:func:`library_link`), and always for a REAL(16) build, which no LAPACK
+    library serves.
     """
     from umat_oti.validation.actual_umat_higher_order_generic import (
         _abaqus_utility_stubs)
 
-    return _abaqus_utility_stubs() + _replay_utility_stubs() + library_twin_block()
+    flags, twins, _ = library_link(compiler, quad=quad)
+    return _abaqus_utility_stubs() + _replay_utility_stubs() + (library_twin_block() if twins else "")
+
+
+def library_link(compiler: str = "gfortran", *, quad: bool = False) -> tuple:
+    """``(link flags, twins in the stub block?, record)`` for a stand-alone replay.
+
+    Abaqus gives a UMAT its MKL; a stand-alone build links the host's LAPACK
+    (:func:`umat_oti.core.host_lapack.host_lapack`), or, where there is none,
+    and for every REAL(16) build, the transform's real twins in the driver.
+    """
+    from umat_oti.core.host_lapack import host_lapack
+
+    chosen = host_lapack(compiler)
+    if quad or not chosen.is_library:
+        reason = ("REAL(16) build: the twins, promoted with the source" if quad and chosen.is_library
+                  else chosen.description)
+        return [], True, {"kind": "twins", "description": reason}
+    return list(chosen.flags), False, chosen.as_dict()
 
 
 def library_twin_block() -> str:
@@ -848,6 +869,8 @@ class ReplayBuild:
     #: What the units INCLUDE, staged into the build directory
     #: (include_shim.stage_includes records: sha256, link or converted copy).
     includes: list = field(default_factory=list)
+    #: The LAPACK/BLAS the build linked (:func:`library_link`).
+    lapack: dict = field(default_factory=dict)
 
 
 #: A PROGRAM unit an author shipped beside the UMAT -- a standalone driver
@@ -1045,7 +1068,8 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     driver = work_dir / "otis_replay.f90"
     driver_text = driver_source(name, initialise_state=any(
         defines_sdvini(_text_of(unit)) for unit in units),
-        source_text="\n".join(_text_of(unit) for unit in units))
+        source_text="\n".join(_text_of(unit) for unit in units), compiler=compiler, quad=quad)
+    lapack_flags, _, lapack_record = library_link(compiler, quad=quad)
     driver.write_text(quad_driver_text(driver_text) if quad else driver_text,
                       encoding="utf-8")
     program = work_dir / "otis_replay"
@@ -1102,7 +1126,7 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # the build directory.
     command = [compiler, *flags, *includes,
                *[str(path) for path in units], str(driver),
-               "-o", str(program)]
+               *lapack_flags, "-o", str(program)]
     try:
         done = subprocess.run(command, cwd=str(work_dir), capture_output=True,
                               text=True, timeout=timeout)
@@ -1114,6 +1138,7 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
                                   f"{Path(source).name} (exit {done.returncode})",
                            log=(done.stdout + done.stderr)[-6000:])
     return ReplayBuild(program=program, compiler=compiler, ok=True, includes=staged_includes,
+                       lapack=lapack_record,
                        header=used, log=(done.stdout + done.stderr)[-2000:])
 
 
@@ -1590,11 +1615,13 @@ class HistoryBuild:
     ok: bool = False
     reason: str = ""
     log: str = ""
+    #: The LAPACK/BLAS the build linked (:func:`library_link`).
+    lapack: dict = field(default_factory=dict)
 
     def as_dict(self) -> dict:
         return {"label": self.label, "compiler": self.compiler,
                 "flags": list(self.flags), "ok": self.ok,
-                "reason": self.reason, "log": self.log[-1500:]}
+                "reason": self.reason, "log": self.log[-1500:], "lapack": self.lapack}
 
 
 @dataclass
@@ -1649,7 +1676,8 @@ def build_history_replay(source: Path, work_dir: Path, *, label: str,
     """
     from umat_oti.abaqus import single_call
 
-    built = HistoryBuild(label=label, compiler=compiler, flags=tuple(flags))
+    lapack_flags, _, lapack_record = library_link(compiler)
+    built = HistoryBuild(label=label, compiler=compiler, flags=tuple(flags), lapack=lapack_record)
     work_dir = Path(work_dir)
     work_dir.mkdir(parents=True, exist_ok=True)
     if shutil.which(compiler) is None:
@@ -1665,7 +1693,7 @@ def build_history_replay(source: Path, work_dir: Path, *, label: str,
     if removed:
         unit = work_dir / f"noprogram_{Path(source).name}"
         unit.write_text(cleaned, encoding="utf-8")
-    stubs = single_call.driver_source(name, text).split(
+    stubs = single_call.driver_source(name, text, compiler=compiler).split(
         "END PROGRAM otis_single_call", 1)[1]
     driver = work_dir / "otis_history.f90"
     driver.write_text(_HISTORY_DRIVER % {
@@ -1685,10 +1713,10 @@ def build_history_replay(source: Path, work_dir: Path, *, label: str,
                  [compiler, "-O0", *includes, "-c", str(driver), "-o",
                   str(work_dir / "driver.o")],
                  [compiler, str(work_dir / "unit.o"), *map(str, objects),
-                  str(work_dir / "driver.o"), "-o", str(program)]]
+                  str(work_dir / "driver.o"), *lapack_flags, "-o", str(program)]]
     else:
         steps = [[compiler, *flags, *includes, str(unit), *map(str, objects),
-                  str(driver), "-o", str(program)]]
+                  str(driver), *lapack_flags, "-o", str(program)]]
     log = ""
     for command in steps:
         try:

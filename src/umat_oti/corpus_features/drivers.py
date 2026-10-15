@@ -635,10 +635,10 @@ def prepare_original_source(source: Path, work: Path) -> tuple:
     return prepared, text, _gfortran_form_flags(Path(source), text)
 
 
-def stub_block(source_text: str) -> str:
+def stub_block(source_text: str, compiler: str = "gfortran", quad: bool = False) -> str:
     from umat_oti.abaqus.replay import utility_stub_block
     from umat_oti.abaqus.single_call import drop_stubs_defined_by
-    stubs, _ = drop_stubs_defined_by(utility_stub_block(), source_text)
+    stubs, _ = drop_stubs_defined_by(utility_stub_block(compiler, quad=quad), source_text)
     return stubs
 
 
@@ -670,7 +670,9 @@ def build_real(work: Path, units: Sequence[Path], source_text: str, *,
                                      "      parameter (nprecd=2)\n", encoding="utf-8")
     driver = work / "cf_real_driver.f90"
     template = quad_driver("", sdvini) if quad else REAL_DRIVER
-    stubs = stub_block(source_text)
+    stubs = stub_block(source_text, compiler, quad)
+    from umat_oti.abaqus.replay import library_link
+    lapack_flags, _, _ = library_link(compiler, quad=quad)
     driver.write_text(template % {
         "common": _COMMON_DECL, "read": _READ_CONFIG % {"config": CONFIG_FILE},
         "pert": PERT_FILE, "out": REAL_OUT, "sdvini": _SDVINI if sdvini else "    CONTINUE",
@@ -691,7 +693,7 @@ def build_real(work: Path, units: Sequence[Path], source_text: str, *,
         objs.append(obj)
     program = work / "cf_real_driver"
     cmd = [compiler, opt, "-ffree-line-length-none", *includes, str(driver), *map(str, objs),
-           *map(str, objects), "-o", str(program)]
+           *map(str, objects), *lapack_flags, "-o", str(program)]
     done = subprocess.run(cmd, cwd=work, capture_output=True, text=True)
     log += done.stdout + done.stderr
     if done.returncode != 0 or not program.is_file():

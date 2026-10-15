@@ -486,6 +486,8 @@ def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branche
                      + (" (with " + "; ".join(entry_statements) + " at its entry: locals it reads before "
                         "assigning them, see reads_before_assignment)" if entry_statements else ""),
         "reference_entry_statements": entry_statements,
+        "reference_lapack": json.loads((output_dir / "original_reference" / "lapack.json").read_text())
+        if (output_dir / "original_reference" / "lapack.json").is_file() else None,
         "reads_before_assignment": (completed.get("build") or {}).get("reads_before_assignment"),
         "provider": built, "source_hash": completed["regular_source_hash"],
         "object_sha256_full": hashlib.sha256(Path(built["object"]).read_bytes()).hexdigest(),
