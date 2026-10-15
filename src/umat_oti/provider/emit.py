@@ -68,7 +68,19 @@ FINITE_SIGNATURE = TOTAL_SIGNATURE + [
 
 def emit_wrappers(layout: GenericPSLayout, *, ntens: int, nprops: int,
                   nstatev: int, parameters: tuple[tuple[str, int], ...],
-                  path_dependent: bool) -> str:
+                  path_dependent: bool, jstep_array: bool = False) -> str:
+    text = _emit_wrappers(layout, ntens=ntens, nprops=nprops, nstatev=nstatev, parameters=parameters,
+                          path_dependent=path_dependent)
+    if jstep_array:
+        # the UMAT declares JSTEP(4): pass a 4-array (step, procedure 1 = static, NLGEOM off, no perturbation)
+        text = text.replace(",1,1,1,1,1,INCREMENT)", ",1,1,1,1,(/1,1,0,0/),INCREMENT)")
+        text = text.replace("NOEL,NPT,1,1,KSTEP,KINC)", "NOEL,NPT,1,1,(/KSTEP,1,0,0/),KINC)")
+    return text
+
+
+def _emit_wrappers(layout: GenericPSLayout, *, ntens: int, nprops: int,
+                   nstatev: int, parameters: tuple[tuple[str, int], ...],
+                   path_dependent: bool) -> str:
     nparam = len(parameters)
     declarations = """
   INTEGER, INTENT(IN) :: NPROPS,NTENS,NSTATV,NPARAM

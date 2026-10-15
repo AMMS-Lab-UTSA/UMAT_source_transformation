@@ -17,6 +17,7 @@ import argparse
 import ctypes
 import hashlib
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -313,8 +314,28 @@ def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branche
         raise ValueError("validation.props_values must contain one finite value per PROPS slot")
     path, path_source = check_path(raw, ntens)
     library = ProviderLibrary(Path(built["object"]), completed, output_dir / "abi_check")
+    # A local the original reads before it assigns it makes the original's
+    # output undefined there. The provider starts each such local at zero
+    # (build.reads_before_assignment); the reference is the original with the
+    # same statements at its entry, so both sides compute one defined function.
+    # The source on disk is not touched, and the report says what was added.
+    source = contract_path.parent / raw["source"]["main_file"]
+    entry_statements = list((completed.get("build") or {}).get("original_entry_statements") or [])
+    reference_source = source
+    if entry_statements:
+        from umat_oti.fortran.normalize import detect_source_form
+        from umat_oti.fortran.read_before_set import insert_at_entry
+
+        text = source.read_text(encoding="utf-8")
+        reference_source = output_dir / "original_reference_source" / source.name
+        reference_source.parent.mkdir(parents=True, exist_ok=True)
+        reference_source.write_text(insert_at_entry(text, "UMAT", detect_source_form(source, text),
+                                                    entry_statements), encoding="utf-8")
+        for include in source.parent.iterdir():
+            if include.suffix.lower() in (".inc", ".h") and include.is_file():
+                shutil.copy2(include, reference_source.parent / include.name)
     original = build_original_driver(
-        contract_path.parent / raw["source"]["main_file"], output_dir / "original_reference",
+        reference_source, output_dir / "original_reference",
         ntens=ntens, nstatv=nstatev, nprops=nprops,
     )
 
@@ -461,7 +482,11 @@ def verify_provider(contract_path: Path, output_dir: Path, *, require_j2_branche
     report = {
         "passed": True,
         "verdict": "verified" if not unresolved else "verified_with_unresolved_columns",
-        "reference": "separately compiled ORIGINAL UMAT; centred finite differences over a step ladder",
+        "reference": "separately compiled ORIGINAL UMAT; centred finite differences over a step ladder"
+                     + (" (with " + "; ".join(entry_statements) + " at its entry: locals it reads before "
+                        "assigning them, see reads_before_assignment)" if entry_statements else ""),
+        "reference_entry_statements": entry_statements,
+        "reads_before_assignment": (completed.get("build") or {}).get("reads_before_assignment"),
         "provider": built, "source_hash": completed["regular_source_hash"],
         "object_sha256_full": hashlib.sha256(Path(built["object"]).read_bytes()).hexdigest(),
         "props": props.tolist(), "path": path.tolist(), "path_source": path_source,

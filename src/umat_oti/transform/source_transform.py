@@ -209,6 +209,10 @@ def transform_umat_to_oti_from_config(
             roles["constant"].discard(name)
             roles["keep_real"].discard(name)
     parsed = _parse_source(source_text, source_file)
+    # Locals the selected routine can read before it assigns them: undefined
+    # behaviour in the original, reported, and started at zero in the
+    # generated code so that it does not depend on build flags.
+    entry_reads = _reads_before_assignment(source_text, selected_umat, parsed.form, source_file)
     umat_span = _selected_routine_span(parsed, selected_umat)
     # The floor is the first executable line, not the routine's first line.
     # A finite-strain UMAT names DFGRD1 in its own argument list and again in
@@ -302,7 +306,7 @@ def transform_umat_to_oti_from_config(
         required = {"PROPS", mappings.get("stress", "STRESS"), mappings.get("statev", "STATEV")}
         if not required <= arguments:
             blockers.append("Combined parameter extraction requires PROPS, STRESS and STATEV arguments in the selected routine.")
-    warnings: list[str] = []
+    warnings: list[str] = list(entry_reads.warnings())
     if {"DGETRF", "DGETRS"}.intersection(supplied):
         warnings.append("DGETRF/DGETRS use built-in unblocked OTI LU routines with primal pivot selection; "
                         "callers must check INFO and only solve with nonsingular factors.")
@@ -329,6 +333,7 @@ def transform_umat_to_oti_from_config(
         regions=regions,
         tangent_context=tangent_context,
     )
+    report_base["reads_before_assignment"] = entry_reads.as_dict()
     if blockers:
         report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
         report_path = _write_report(output_dir, report)
@@ -427,6 +432,9 @@ def transform_umat_to_oti_from_config(
         transformed_source, parsed.form, selected_umat, roles, source_text, source_file)
     transformed_source = complex_support.retype_umat_complex_shadows(
         transformed_source, complex_plan, module_result.type_name, parsed.form)
+    transformed_source, entry_statements = _with_entry_zero_initialisation(
+        transformed_source, parsed.form, selected_umat, entry_reads)
+    report_base["reads_before_assignment"]["initialised_in_generated_code"] = entry_statements
     complex_blockers = complex_support.complex_consistency_issues(
         complex_plan, source_text, parsed.form, transformed_source, lifted_helper_text,
         module_result.type_name)
@@ -629,6 +637,48 @@ def transform_umat_to_oti_from_config(
         warnings=warnings,
         report=report,
     )
+
+
+def _reads_before_assignment(source_text: str, selected_umat: str, form: str, source_file: str):
+    """:func:`umat_oti.fortran.read_before_set.analyse_text` on the selected routine."""
+    from umat_oti.fortran.read_before_set import analyse_text
+
+    source_path = Path(source_file) if source_file else None
+    return analyse_text(source_text, selected_umat or "UMAT", form=form,
+                        source_path=source_path if source_path and source_path.parent.is_dir() else None)
+
+
+def _with_entry_zero_initialisation(text: str, form: str, routine: str, analysis) -> tuple[str, list[str]]:
+    """``text`` with every initialisable read-before-assignment local started at
+    zero on entry to ``routine``, and the statements that were added.
+
+    A finding the generated routine still names is set to zero; its OTI shadow,
+    when the routine declares one, is set to zero as well (the seed block zeroes
+    shadows too, but later, and a read before that block would still see an
+    undefined value). Nothing is added for a name the generated routine no
+    longer mentions.
+    """
+    from umat_oti.fortran.read_before_set import executable_text, insert_at_entry, routine_span
+
+    findings = [finding for finding in analysis.initialisable]
+    if not findings:
+        return text, []
+    first, last = routine_span(text, routine, form)
+    if not first:
+        return text, []
+    lines = text.split("\n")
+    specification = "\n".join(lines[:first - 1]).upper()
+    body = executable_text(text, routine, form)
+    statements: list[str] = []
+    for finding in findings:
+        name = finding.name.upper()
+        shadow = f"{name}_OTI"
+        if (finding.type in ("real", "integer") and
+                re.search(rf"::[^\n]*\b{re.escape(shadow)}\b", specification)):
+            statements.append(f"{shadow} = 0.0D0")
+        if re.search(rf"\b{re.escape(name)}\b", body):
+            statements.append(finding.zero_statement(name))
+    return insert_at_entry(text, routine, form, statements), statements
 
 
 def _parse_source(source_text: str, source_file: str) -> ParsedFortranSource:
@@ -4134,7 +4184,7 @@ def _tangent_skip_regions(
         # GOH_Example.f's detf/finv feed the fibre stretch and through it the
         # growth and the stress, and skipping them left DETF and FINV unset --
         # the transformed primal was off by an order of magnitude at the first
-        # call (Curie-G cluster E). Kept live it costs the arithmetic it always
+        # call (the review cluster E). Kept live it costs the arithmetic it always
         # cost; skipped wrongly it costs the answer.
         if own & stress_lines:
             continue
@@ -4238,8 +4288,7 @@ def _expanded_tangent_helper_region(source_lines: list[str], region: dict[str, A
     takes one in: GOH_Example.f's ``call move6to33(fginv,fginvmat)`` feeds
     only the old tangent, but the six ``fginv(i)=...`` above it also feed FE
     and through it the stress, and bridging over them commented them out --
-    FGINV_OTI stayed zero and the transformed routine took LOG(0) (Curie-G,
-    B2 cluster E).
+    FGINV_OTI stayed zero and the transformed routine took LOG(0) (review B2 cluster E).
     """
     protected = protected_lines or set()
     start = _as_int(region.get("start_line"))
@@ -4630,12 +4679,12 @@ def _initialization_lines(
     # see -- takes its value from the real variable, which keeps its DATA
     # statement. GOH_Example.f: ``data xi/1,1,1,0,0,0/`` handed to
     # MOVE6TO33 left XI_OTI SAVEd at zero, dropped the whole pressure term
-    # (sigma_11 off by 0.085, Curie-G replay) and compiled cleanly.
+    # (sigma_11 off by 0.085, the review replay) and compiled cleanly.
     copy_shadow_names = set(argument_variables) | {
         str(name).upper() for name in (data_constant_shadows or ())} | {
         str(name).upper() for name in (prelude_assigned_shadows or ())}
     # A DATA-initialised name reaching a lifted helper may be CHANGED there
-    # (Vera's t4c: ``DATA XI/1.D0/`` incremented inside the helper). Its
+    # (the review's t4c: ``DATA XI/1.D0/`` incremented inside the helper). Its
     # shadow is SAVEd beside it and carries that change; the real variable
     # never sees it. Copying from the real one at every entry threw the
     # carried value away on the second call (0.200 against 0.210). The DATA
@@ -5559,6 +5608,33 @@ def _transform_executable_line(
     return _normalize_numeric_literals_in_oti_expression(replaced, type_name)
 
 
+
+def _is_logical_expression(rhs: str) -> bool:
+    text = _without_character_literals(rhs).strip()
+    while text.startswith("(") and text.endswith(")"):
+        depth = 0
+        closes_at_end = True
+        for index, char in enumerate(text):
+            depth += char == "("
+            depth -= char == ")"
+            if depth == 0 and index < len(text) - 1:
+                closes_at_end = False
+                break
+        if not closes_at_end:
+            break
+        text = text[1:-1].strip()
+    outer, depth = [], 0
+    for char in text:
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+        elif depth == 0:
+            outer.append(char)
+    outer_text = "".join(outer)
+    return re.search(r"\.(?:LT|LE|GT|GE|EQ|NE|AND|OR|NOT|EQV|NEQV)\.|<=|>=|==|/=|<|>", outer_text,
+                     flags=re.IGNORECASE) is not None
+
 def _wrap_real_assignment_rhs(line: str) -> str:
     if "_OTI" not in line.upper():
         return line
@@ -5581,6 +5657,12 @@ def _wrap_real_assignment_rhs(line: str) -> str:
     # A logical or character constant is not a number: REAL(.TRUE.) is a compile error
     # (the condition of "IF (...OTI...) FULL = .TRUE." made the line look differentiated).
     if re.fullmatch(r"\.(?:TRUE|FALSE)\.(?:_\w+)?|'[^']*'|\"[^\"]*\"", rhs, flags=re.IGNORECASE):
+        return line
+    # A comparison is a logical value too: "ELASTIC = (PHI_OTI .LE. TOL)" assigns a LOGICAL, and
+    # REAL((PHI_OTI .LE. TOL)) does not compile. Judged on the right-hand side's outermost level
+    # (after one enclosing pair of parentheses), so a comparison inside a function argument such
+    # as MERGE(A, B, X .GT. Y) still leaves a numeric right-hand side wrapped.
+    if _is_logical_expression(rhs):
         return line
     # This function is handed ONE physical line, and a statement may run over
     # several. Where the right-hand side's parentheses do not balance, the
@@ -5826,7 +5908,7 @@ def _normalize_mixed_minmax_intrinsics_in_oti_expression(line: str) -> str:
         # first hypercomplex argument: 0.0*anchor has the sign of anchor's
         # real part, so -0.0 came out +0.0 whenever that was positive, and a
         # non-finite derivative part of the anchor put a NaN into the REAL
-        # argument's derivative (coordinator's B8 follow-up to Vera's R1).
+        # argument's derivative (coordinator's B8 follow-up to the review's R1).
         normalized_args = [arg if _contains_oti_value_reference(arg) else f"(({arg}) - 0.0D0*OTI_E1)" for arg in args]
         result = result[: open_paren + 1] + ", ".join(normalized_args) + result[close_paren:]
         search_from = close_paren + 1
@@ -8402,7 +8484,7 @@ def _value_actuals_made_hypercomplex(
     without changing what the program means: ``(1.D-3) - 0.0D0*OTI_E1`` has
     real part 1.D-3 exactly and zero derivative parts. Subtracted, not added:
     x - (+0.0) is x for every x including -0.0, where x + 0.0 would turn a
-    -0.0 into +0.0 and flip the sign a SIGN(1, x) downstream reads (Vera, B8
+    -0.0 into +0.0 and flip the sign a SIGN(1, x) downstream reads (review B8
     review R1), and a value that was hypercomplex already keeps every
     part. In the UMAT an expression that names a shadow is left as it is; in
     the lifted helpers, where most names are hypercomplex through IMPLICIT,
@@ -9837,7 +9919,7 @@ def _real_statements_reading_the_seed(
     # Transitive: a REAL statement reading the seed taints what it assigns,
     # and a REAL statement reading a tainted name taints its target too --
     # ``T = DSTRAN(2)`` then ``G = PROPS(1)*(1+T)`` loses dG/dDSTRAN just as
-    # surely as one statement would (Vera, B8 review R2). A REAL CALL that
+    # surely as one statement would (review B8 review R2). A REAL CALL that
     # reads a tainted name taints every plain-name actual it is given.
     # Shadows and the emitter's own OTI_ names are never REAL targets here.
     def names_in(text: str) -> set[str]:
