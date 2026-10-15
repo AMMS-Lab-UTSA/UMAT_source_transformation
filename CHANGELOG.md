@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Transform generation not re-frozen.** These changes move the transform
   fingerprint from `c61511ea0ffe58e2` (the value recorded in
   `src/umat_oti/contract/schemas/transform_generation.json` and in Residual
-  Assembler's copy) to `d5055822e027cb1c`, and the harness fingerprint from
-  `cfd84cd2fe97e72b` to `0034d7873e401b46`. The generation file is deliberately left at
+  Assembler's copy) to `f52e80a401527d9a`, and the harness fingerprint from
+  `cfd84cd2fe97e72b` to `048b4576a79e2ece`. The generation file is deliberately left at
   `c61511ea0ffe58e2`: its own procedure (`how_to_update`) requires everything
   frozen at the old value -- the pass25 corpus evidence, the 122 frozen
   regression cases and the two Residual Assembler fixtures -- to be re-frozen
@@ -20,6 +20,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_contract_fixtures.py::test_the_recorded_generation_is_this_worktrees_actual_transform`
   fails on a fresh clone, by design, and all frozen evidence is evidence
   about `c61511ea0ffe58e2`, not about this code.
+- **Test suite command for this branch.** From the repository root:
+  `PYTHONPATH=$PWD/src python -m pytest -q -p no:cacheprovider -o addopts="" -m "not corpus_pass and not abaqus and not gui and not browser and not network and not arc"`.
+  It deselects 21 tests: nine that run Abaqus (`abaqus`, one of them the
+  whole-store re-run, also marked `corpus_pass`: `test_library_routines.py::test_the_transformed_umat_builds_the_abaqus_way_without_standard_names[lu|blas|author]`,
+  `test_provider_regular_object.py::test_the_abaqus_toolchain_builds_the_regular_object_with_abaqus_make`,
+  `test_verified_umat_regression.py` (three), `test_a_missing_compiler_or_oti_runtime_is_named.py::test_abaqus_itself_with_ifort_off_path_is_reported_by_name`,
+  `test_an_uppercase_include_is_the_same_header.py::test_the_file_that_failed_compiles_unmodified_through_abaqus`),
+  five GUI screen tests (`tests/gui/test_developer_screens_browser.py`), six
+  browser tests (`test_workbench_browser.py`) and one network test
+  (`test_corpus_acquisition.py::test_live_resolution_reproduces_the_pinned_commits`).
+  This branch adds three of the Abaqus tests (the `[lu|blas|author]` cases
+  above; two before the author-defined case was added), and nothing else to
+  the deselected set: listing the marked tests at the branch base and at the
+  branch tip differs by exactly those.
 - **LAPACK/BLAS routines.** No generated object defines a standard LAPACK/BLAS
   name any more: inside Abaqus the user library precedes MKL in the solver's
   symbol scope, so the real DGESV/DGETRF/DGETRS the emitted file used to carry

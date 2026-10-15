@@ -213,7 +213,7 @@ frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
 against the new code. The script and its output are in
 `corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
 
-**Harness `cfd84cd2fe97e72b` -> `0034d7873e401b46` (2026-10-15, not re-run).** The
+**Harness `cfd84cd2fe97e72b` -> `048b4576a79e2ece` (2026-10-15, not re-run).** The
 offline replays of an original (the D-12 init probe, the routine-level primal,
 the finite-difference reference, the routine-level harness) now link the host's
 LAPACK (`umat_oti.core.host_lapack`: MKL, OpenBLAS or reference LAPACK, recorded
@@ -221,11 +221,15 @@ in each build record as `lapack`); where none links, and in every REAL(16)
 build, the stub block carries the transform's real twins of the supplied
 routines, dropped wherever the source defines its own. Before, an original that
 called LAPACK did not link and the probe recorded "no init build set could be
-built". Such a replay can differ from the solver's record in the last bits (a
-different MKL, or reference LAPACK; measured on one plasticity UMAT with a
-Newton loop: 9e-16, inside `REPLAY_REPRODUCES`). Comments and docstrings were
+built". Such a replay can differ from the solver's record in the last bits when its
+library is not the solver's MKL (OpenBLAS, reference LAPACK, another MKL
+build); `REPLAY_REPRODUCES` decides. Measured on a synthetic nonlinear-elastic
+UMAT that inverts a strain-dependent compliance with DGESV (the shape of
+`tests/test_values_feeding_a_library_call_are_promoted.py`), single element,
+Abaqus 2021, replay linked against oneAPI MKL 2023.2: the replay reproduced the
+Abaqus record exactly (worst relative difference 0.0). Comments and docstrings were
 also reworded (neutral wording for review attributions). The transform
-fingerprint moved with these changes (`c61511ea0ffe58e2` -> `d5055822e027cb1c`; see
+fingerprint moved with these changes (`c61511ea0ffe58e2` -> `f52e80a401527d9a`; see
 CHANGELOG): no pass was run at the new fingerprints, so every pass25 row and
 every regression case remains evidence at `cfd84cd2fe97e72b` /
 `c61511ea0ffe58e2`.

@@ -1076,6 +1076,19 @@
     "tests/test_values_feeding_a_library_call_are_promoted.py::test_a_value_feeding_a_library_call_is_promoted_and_its_derivative_kept[accumulated_scalar_into_matrix]",
     "tests/test_values_feeding_a_library_call_are_promoted.py::test_a_value_feeding_a_library_call_is_promoted_and_its_derivative_kept[scalar_through_an_array]"
    ]
+  },
+  {
+   "commit": "77e7ff7",
+   "bug": "A standard LAPACK/BLAS name the author defined (their own DGETRF) was still exported by the generated objects; the provider failed to link when the author defined part of a twin chain (undefined umatoti_dgetrf_r_); the provider lift did not compile a literal handed to a library routine (DGEMM with 1.0D0) and typed an array shaped by DIMENSION before its type statement from its initial letter; the host LAPACK was not found when ldconfig was not on PATH.",
+   "tests": [
+    "tests/test_library_routines.py::test_an_authors_own_standard_name_is_renamed_and_the_library_chain_stays_whole",
+    "tests/test_library_routines.py::test_the_provider_builds_and_differentiates_library_calls[author]",
+    "tests/test_library_routines.py::test_the_provider_builds_and_differentiates_library_calls[blas]",
+    "tests/test_library_routines.py::test_the_provider_builds_and_differentiates_library_calls[blas_expressions]",
+    "tests/test_library_routines.py::test_stand_alone_builds_of_a_source_defining_a_standard_name_keep_the_library_chain",
+    "tests/test_library_routines.py::test_the_host_lapack_is_found_without_ldconfig_on_path_and_its_version_recorded"
+   ],
+   "selected_by": "message_pattern"
   }
  ],
  "excluded": [
