@@ -618,6 +618,10 @@ usage: umat-oti transform [-h] --out OUT [--config CONFIG] [--no-validation]
 umat-oti transform UMATs/UMATs/ICP/elasticity/elastic.f --out umat_oti_workspace/cli/transform --no-validation
 ```
 
+`elastic.f` is Dunne & Petrinic book code. It has no redistribution licence and
+is no longer in this repository; download it from the publisher first (see
+`UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md`), or run the command on your own UMAT.
+
 Output (0.2 s, exit code 0):
 
 ```text

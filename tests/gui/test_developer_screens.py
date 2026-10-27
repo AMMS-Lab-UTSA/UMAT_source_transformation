@@ -36,6 +36,9 @@ J2_SOURCE = REPO_ROOT / "parameter_sensitivity" / "models" / "m3_j2" / "umat.for
 FCC_SOURCE = REPO_ROOT / "parameter_sensitivity" / "models" / "m6_fcc" / "umat.for"
 ELASTIC_SOURCE = REPO_ROOT / "UMATs" / "UMATs" / "ICP" / "elasticity" / "elastic.f"
 ELASTIC_CONTRACT = REPO_ROOT / "examples" / "elastic_minimal.json"
+#: ELASTIC_SOURCE is Dunne & Petrinic book code that is no longer shipped.
+NEEDS_ELASTIC = pytest.mark.skipif(
+    not ELASTIC_SOURCE.is_file(), reason="elastic.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 
 #: The parameter tables the presentation shows: slide 41 (J2) and slide 17 (FCC).
 J2_TABLE = [("E", 1, 200000.0), ("nu", 2, 0.3), ("SIGY0", 3, 250.0), ("H", 4, 2000.0)]
@@ -87,7 +90,8 @@ BLOCKS = {
 
 @pytest.mark.integration
 @pytest.mark.parametrize("source,ntens,model", [
-    (J2_SOURCE, 6, "m3_j2"), (ELASTIC_SOURCE, 4, "elastic"), (FCC_SOURCE, 6, "m6_fcc"),
+    (J2_SOURCE, 6, "m3_j2"), pytest.param(ELASTIC_SOURCE, 4, "elastic", marks=NEEDS_ELASTIC),
+    (FCC_SOURCE, 6, "m6_fcc"),
 ], ids=["m3_j2", "elastic", "m6_fcc"])
 def test_four_fields_and_one_click_give_what_the_command_line_gives(workspace, source, ntens, model):
     run = _jacobian_run(source, ntens)
@@ -142,6 +146,7 @@ def test_a_routine_that_is_not_a_umat_is_refused_with_the_services_reasons(works
 
 
 @pytest.mark.integration
+@NEEDS_ELASTIC
 def test_the_inferred_block_reproduces_the_curated_elastic_example(workspace):
     """The four fields give byte-for-byte the output of the hand-written contract."""
     run = _jacobian_run(ELASTIC_SOURCE, 4)
@@ -157,8 +162,9 @@ def test_the_inferred_block_reproduces_the_curated_elastic_example(workspace):
 @pytest.mark.fortran
 @pytest.mark.parametrize("source,ntens,nstatv,props,path", [
     (J2_SOURCE, 6, 1, [200000.0, 0.3, 250.0, 2000.0], J2_PATH),
-    (ELASTIC_SOURCE, 4, 0, [210000.0, 0.3],
-     np.array([[4e-4, -1e-4, 0.0, 2e-4], [3e-4, 5e-5, -1e-4, -1e-4]])),
+    pytest.param(ELASTIC_SOURCE, 4, 0, [210000.0, 0.3],
+                 np.array([[4e-4, -1e-4, 0.0, 2e-4], [3e-4, 5e-5, -1e-4, -1e-4]]),
+                 marks=NEEDS_ELASTIC),
 ], ids=["m3_j2", "elastic"])
 def test_the_downloaded_umat_returns_the_tangent_of_the_original(workspace, source, ntens,
                                                                  nstatv, props, path):

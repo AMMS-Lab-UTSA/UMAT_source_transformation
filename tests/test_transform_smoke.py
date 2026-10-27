@@ -18,7 +18,14 @@ import pytest
 
 from umat_oti.cli_json import run_config_transform
 
+#: examples/elastic_minimal.json names Dunne & Petrinic book code that is no
+#: longer shipped; these tests run only if a user has downloaded it.
+_ELASTIC_F = Path(__file__).resolve().parents[1] / "UMATs/UMATs/ICP/elasticity/elastic.f"
+needs_elastic_f = pytest.mark.skipif(
+    not _ELASTIC_F.is_file(), reason="elastic.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 
+
+@needs_elastic_f
 def test_elastic_minimal_transform_succeeds(examples_dir: Path, tmp_path: Path) -> None:
     config = examples_dir / "elastic_minimal.json"
     assert config.is_file(), f"missing bundled example: {config}"
@@ -44,6 +51,7 @@ def test_elastic_minimal_transform_succeeds(examples_dir: Path, tmp_path: Path) 
     assert manifest["execution"]["status"] == "generated_not_compiled"
 
 
+@needs_elastic_f
 def test_order_four_transform_emits_direction_metadata(examples_dir: Path, tmp_path: Path) -> None:
     source_config = examples_dir / "elastic_minimal.json"
     config = json.loads(source_config.read_text(encoding="utf-8"))
@@ -107,6 +115,7 @@ def test_literal_schema_compiles_through_canonical_json_cli(examples_dir: Path, 
     assert manifest["execution"]["returncode"] == 0
 
 
+@needs_elastic_f
 def test_evidence_command_consumes_literal_schema(examples_dir: Path, tmp_path: Path) -> None:
     source_config = examples_dir / "elastic_minimal.json"
     compact = json.loads(source_config.read_text(encoding="utf-8"))
