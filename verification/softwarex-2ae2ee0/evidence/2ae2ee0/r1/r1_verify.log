@@ -1,0 +1,180 @@
+{
+ "label": "NEWLY GENERATED EVIDENCE (Ada, 2026-10-27); builder output, not independently reviewed",
+ "umat_oti_commit": "2ae2ee07547ae86c5c4c9bb9fe123b1245c13dbc",
+ "r1_source": "evidence\\replacement-models\\j2_voce_newton\\umat_j2_voce.f",
+ "r1_sha256": "06902c554f58121ce40c7ab2bbb7ce9b0a1969356656d38ca41d976f9e51149e",
+ "props": {
+  "YMOD": 200000.0,
+  "PNU": 0.3,
+  "SIGY0": 250.0,
+  "HLIN": 1000.0,
+  "QSAT": 150.0,
+  "BSAT": 20.0
+ },
+ "platform": "Windows 11, MinGW-w64 GNU Fortran 16.1.0, refreeze POSIX shim (see refreeze/MANIFEST.md)",
+ "tangent_and_primal": {
+  "uniaxial_strain": {
+   "increments": 30,
+   "plastic_increments": 22,
+   "worst_primal_parity_rel": 1.2947580374573709e-15,
+   "worst_python_vs_fortran_primal_rel": 0.0,
+   "all_transformed_outputs_finite": true,
+   "worst_tangent": {
+    "oti_vs_eqT": 6.170351808337348e-16,
+    "oti_vs_hand": 6.170351808337349e-16,
+    "oti_vs_cs": 3.7011440576507977e-16,
+    "oti_vs_fd_best": 4.9706248604531245e-11,
+    "hand_vs_eqT": 2.466199384967647e-16
+   }
+  },
+  "multiaxial_nonproportional": {
+   "increments": 23,
+   "plastic_increments": 9,
+   "worst_primal_parity_rel": 1.8907796315160887e-16,
+   "worst_python_vs_fortran_primal_rel": 0.0,
+   "all_transformed_outputs_finite": true,
+   "worst_tangent": {
+    "oti_vs_eqT": 2.3853892523769505e-16,
+    "oti_vs_hand": 1.193356209597068e-16,
+    "oti_vs_cs": 2.2302103457116923e-16,
+    "oti_vs_fd_best": 1.717755890877513e-11,
+    "hand_vs_eqT": 1.1930234807961797e-16
+   }
+  },
+  "large_increment_multiaxial": {
+   "increments": 4,
+   "plastic_increments": 4,
+   "worst_primal_parity_rel": 3.0538953553652486e-16,
+   "worst_python_vs_fortran_primal_rel": 0.0,
+   "all_transformed_outputs_finite": true,
+   "worst_tangent": {
+    "oti_vs_eqT": 1.5547758679969596e-16,
+    "oti_vs_hand": 1.5547758679969596e-16,
+    "oti_vs_cs": 1.5547758679969593e-16,
+    "oti_vs_fd_best": 2.7158358344468783e-11,
+    "hand_vs_eqT": 1.5547758679969596e-16
+   }
+  },
+  "hydrostatic": {
+   "increments": 5,
+   "plastic_increments": 0,
+   "worst_primal_parity_rel": 0.0,
+   "worst_python_vs_fortran_primal_rel": 0.0,
+   "all_transformed_outputs_finite": true,
+   "worst_tangent": {
+    "oti_vs_eqT": 0.0,
+    "oti_vs_hand": 0.0,
+    "oti_vs_cs": 5.4049970848219746e-17,
+    "oti_vs_fd_best": 2.7024985424109873e-16,
+    "hand_vs_eqT": 0.0
+   }
+  },
+  "check_path": {
+   "increments": 40,
+   "plastic_increments": 37,
+   "worst_primal_parity_rel": 2.7601066619149177e-15,
+   "worst_python_vs_fortran_primal_rel": 0.0,
+   "all_transformed_outputs_finite": true,
+   "worst_tangent": {
+    "oti_vs_eqT": 4.285661714716093e-16,
+    "oti_vs_hand": 4.285661714716093e-16,
+    "oti_vs_cs": 8.574807273381634e-16,
+    "oti_vs_fd_best": 7.768738639906196e-11,
+    "hand_vs_eqT": 2.792766109618535e-16
+   }
+  }
+ },
+ "parameter_sensitivities": {
+  "path": "uniaxial strain out to +0.02, back to -0.02, unloaded to 0 (40 increments), written by umat-oti check --peak",
+  "entries_compared": 1680,
+  "closed_form_entries": 180,
+  "worst_relative": {
+   "closed_form": 9.227464466886107e-15,
+   "complex_step": 1.2482382213628385e-12,
+   "fd_best": 8.334084416422018e-09
+  },
+  "note": "relative errors use the complex-step value as scale; entries whose reference is exactly zero report the absolute OTI value"
+ },
+ "truncated_newton": [
+  {
+   "newton_updates": 1,
+   "path": "uniaxial_strain",
+   "worst_oti_vs_eqT_at_converged": 1.4274561439700712e-05,
+   "worst_oti_vs_cs_of_same_k_step_python": 3.702633389362095e-16
+  },
+  {
+   "newton_updates": 1,
+   "path": "multiaxial_nonproportional",
+   "worst_oti_vs_eqT_at_converged": 1.3951211088145502e-05,
+   "worst_oti_vs_cs_of_same_k_step_python": 2.386041762987932e-16
+  },
+  {
+   "newton_updates": 1,
+   "path": "large_increment_multiaxial",
+   "worst_oti_vs_eqT_at_converged": 0.00043049019635139874,
+   "worst_oti_vs_cs_of_same_k_step_python": 1.5544363380708319e-16
+  },
+  {
+   "newton_updates": 2,
+   "path": "uniaxial_strain",
+   "worst_oti_vs_eqT_at_converged": 7.898513596770567e-15,
+   "worst_oti_vs_cs_of_same_k_step_python": 4.935707397367509e-16
+  },
+  {
+   "newton_updates": 2,
+   "path": "multiaxial_nonproportional",
+   "worst_oti_vs_eqT_at_converged": 3.317530262679849e-14,
+   "worst_oti_vs_cs_of_same_k_step_python": 2.3587799364307687e-16
+  },
+  {
+   "newton_updates": 2,
+   "path": "large_increment_multiaxial",
+   "worst_oti_vs_eqT_at_converged": 1.8815602147084286e-10,
+   "worst_oti_vs_cs_of_same_k_step_python": 1.5547758678955648e-16
+  },
+  {
+   "newton_updates": 3,
+   "path": "uniaxial_strain",
+   "worst_oti_vs_eqT_at_converged": 6.170351808337348e-16,
+   "worst_oti_vs_cs_of_same_k_step_python": 3.7011440576507977e-16
+  },
+  {
+   "newton_updates": 3,
+   "path": "multiaxial_nonproportional",
+   "worst_oti_vs_eqT_at_converged": 2.3853892523769505e-16,
+   "worst_oti_vs_cs_of_same_k_step_python": 2.2302103457116923e-16
+  },
+  {
+   "newton_updates": 3,
+   "path": "large_increment_multiaxial",
+   "worst_oti_vs_eqT_at_converged": 3.09598267588775e-16,
+   "worst_oti_vs_cs_of_same_k_step_python": 1.5547758679969593e-16
+  },
+  {
+   "newton_updates": 4,
+   "path": "uniaxial_strain",
+   "worst_oti_vs_eqT_at_converged": 4.936281446669878e-16,
+   "worst_oti_vs_cs_of_same_k_step_python": 3.701780548025639e-16
+  },
+  {
+   "newton_updates": 4,
+   "path": "multiaxial_nonproportional",
+   "worst_oti_vs_eqT_at_converged": 2.3853892523769505e-16,
+   "worst_oti_vs_cs_of_same_k_step_python": 2.3847391589267766e-16
+  },
+  {
+   "newton_updates": 4,
+   "path": "large_increment_multiaxial",
+   "worst_oti_vs_eqT_at_converged": 1.5547758679969596e-16,
+   "worst_oti_vs_cs_of_same_k_step_python": 1.5547758679969593e-16
+  },
+  {
+   "newton_updates": 5,
+   "path": "uniaxial_strain",
+   "worst_oti_vs_eqT_at_converged": 4.936281446669878e-16,
+   "worst_oti_vs_cs_of_same_k_step_python": 3.701780548025639e-16
+  },
+  {
+   "newton_updates": 5,
+   "path": "multiaxial_nonproportional",
+   "worst_oti_vs_eqT_at_converged": 2.3853892523769505e-1

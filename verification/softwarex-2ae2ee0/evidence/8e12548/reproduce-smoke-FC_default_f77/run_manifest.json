@@ -1,0 +1,34 @@
+{
+  "counts": {
+    "failed": 1,
+    "succeeded": 1,
+    "total": 2,
+    "unavailable": 0,
+    "verifying_steps": 1,
+    "verifying_steps_succeeded": 0
+  },
+  "generated_at": "2026-10-27T17:31:08.043251+00:00",
+  "nothing_was_verified": true,
+  "profile": "smoke",
+  "steps": [
+    {
+      "detail": "umat_oti imports and its transform modules load",
+      "name": "import_package",
+      "seconds": 1.234,
+      "status": "succeeded",
+      "supports_claims": [
+        "INSTALL"
+      ]
+    },
+    {
+      "detail": "",
+      "name": "material_point_smoke",
+      "reason": "sweep produced no readable verdict for m3_j2: 'derivatives_verified'",
+      "seconds": 17.063,
+      "status": "failed",
+      "supports_claims": [
+        "TABLE-6"
+      ]
+    }
+  ]
+}

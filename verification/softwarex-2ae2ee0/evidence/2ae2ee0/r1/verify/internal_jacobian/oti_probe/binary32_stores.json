@@ -1,0 +1,9 @@
+{
+  "binary32_rule": "author",
+  "present": false,
+  "rounded_operations": 0,
+  "rule": "B-W (umat_oti.transform.binary32.round_binary32_stores): after every store to the variable's OTI value its REAL PART is rounded to binary32 (X%R = REAL(REAL(X%R, 4), 8)); its derivative parts stay double and the rounding is differentiated as the identity. Operations whose operands are all binary32 are wrapped in OTI_R4(...), which does the same to one result.",
+  "schema": "umat-oti/binary32-stores/1",
+  "statement": "No binary32 value is rounded on the derivative path: every sensitivity is of the author's own double-precision arithmetic.",
+  "stores": []
+}

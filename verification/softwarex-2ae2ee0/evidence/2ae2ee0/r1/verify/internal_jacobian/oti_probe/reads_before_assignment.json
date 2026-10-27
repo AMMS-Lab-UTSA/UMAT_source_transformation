@@ -1,0 +1,8 @@
+{
+  "routine": "UMAT",
+  "decided": true,
+  "findings": [],
+  "rule": "forward data flow over the routine's executable statements: a scalar is reported when some path reaches a read without assigning it, an array when no path to the read assigns any element of it; a bare actual argument of a CALL counts as assigned by the callee",
+  "initialised_in_generated_code": [],
+  "warnings": []
+}

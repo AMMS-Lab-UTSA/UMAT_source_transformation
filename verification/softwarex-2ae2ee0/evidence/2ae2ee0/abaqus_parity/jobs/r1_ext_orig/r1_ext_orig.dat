@@ -1,0 +1,2353 @@
+1
+
+   Abaqus 2024                                  Date 27-Oct-2026   Time 14:24:25
+   For use by UNIVERSITY OF TEXAS AT SAN ANTONIO under license from Dassault Systemes or its subsidiary.
+
+
+
+                         The Abaqus Software is a product of:
+
+                           Dassault Systemes SIMULIA Corp.
+                           1301 Atwood Avenue, Suite 101W
+                              Johnston, RI 02919, USA
+ 
+
+
+                   The Abaqus Software is available only under license
+                   from Dassault Systemes or its subsidiary and may be
+                   used or reproduced only in accordance with the terms
+                   of such license.
+ 
+                          On machine RR714387IP01 
+                          you are authorized to run
+                          Abaqus/Standard until 30-Nov-2026
+
+                          Your site id is: 200000000017647 
+
+
+ 
+                    For assistance or any other information you may
+                    obtain contact information for your local office
+                    from the world wide web at:
+
+                      https://www.3ds.com/products-services/simulia/services-support/
+
+ 
+                * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+                *                                                         * 
+                *                   *****************                     * 
+                *                   *  N O T I C E  *                     * 
+                *                   *****************                     * 
+                *                                                         * 
+                *                                                         * 
+                *                       Abaqus 2024                       * 
+                *                                                         * 
+                *       BUILD ID: 2023_09_21-07.55.25 RELr426 190762      * 
+                *                                                         * 
+                *                                                         * 
+                *  Please make sure you are using                         * 
+                *  release Abaqus 2024 manuals                            * 
+                *  plus the notes accompanying this release.              * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *   This program may not be used for commercial purposes  * 
+                *           without payment of a commercial fee.          * 
+                *                                                         * 
+                * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+
+ 
+
+
+
+     PROCESSING PART, INSTANCE, AND ASSEMBLY INFORMATION
+   *******************************************************
+
+
+     END PROCESSING PART, INSTANCE, AND ASSEMBLY INFORMATION
+   ***********************************************************
+
+
+
+
+     OPTIONS BEING PROCESSED
+   ***************************
+
+
+  *HEADING
+          Paired primal-parity deck: model=r1 case=ext. All 24 nodal DOFs prescribed in every step from u_i = eps_ij X_j (one value per DOF).                                                                                                                                                                                                                                                                                                                                                                                             
+  *ELEMENT, TYPE=C3D8, ELSET=CUBE
+  *MATERIAL, NAME=UMATMAT
+  *DEPVAR
+  *USER MATERIAL, CONSTANTS=6
+  *SOLID SECTION, ELSET=CUBE, MATERIAL=UMATMAT
+  *SOLID SECTION, ELSET=CUBE, MATERIAL=UMATMAT
+  *BOUNDARY, OP=MOD
+  *BOUNDARY, OP=MOD
+  *BOUNDARY, OP=MOD
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *OUTPUT, FIELD, FREQUENCY=1
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *OUTPUT, FIELD, FREQUENCY=1
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *OUTPUT, FIELD, FREQUENCY=1
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *NODE OUTPUT
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *NODE PRINT, NSET=ALLN, FREQUENCY=1, TOTALS=YES
+  *EL PRINT, ELSET=CUBE, FREQUENCY=1
+  *NODE FILE, NSET=ALLN, FREQUENCY=1
+  *EL FILE, ELSET=CUBE, FREQUENCY=1
+  *END STEP
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *NODE OUTPUT
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *NODE PRINT, NSET=ALLN, FREQUENCY=1, TOTALS=YES
+  *EL PRINT, ELSET=CUBE, FREQUENCY=1
+  *NODE FILE, NSET=ALLN, FREQUENCY=1
+  *EL FILE, ELSET=CUBE, FREQUENCY=1
+  *END STEP
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *NODE OUTPUT
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *NODE PRINT, NSET=ALLN, FREQUENCY=1, TOTALS=YES
+  *EL PRINT, ELSET=CUBE, FREQUENCY=1
+  *NODE FILE, NSET=ALLN, FREQUENCY=1
+  *EL FILE, ELSET=CUBE, FREQUENCY=1
+  *END STEP
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *END STEP
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *END STEP
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *END STEP
+
+
+
+                            P R O B L E M   S I Z E
+
+
+          NUMBER OF ELEMENTS IS                                     1
+          NUMBER OF NODES IS                                        8
+          NUMBER OF NODES DEFINED BY THE USER                       8
+          TOTAL NUMBER OF VARIABLES IN THE MODEL                   24
+          (DEGREES OF FREEDOM PLUS MAX NO. OF ANY LAGRANGE MULTIPLIER
+           VARIABLES. INCLUDE *PRINT,SOLVE=YES TO GET THE ACTUAL NUMBER.)
+
+
+
+                              END OF USER INPUT PROCESSING
+
+
+
+     JOB TIME SUMMARY
+       USER TIME (SEC)      =     0.10    
+       SYSTEM TIME (SEC)    =      0.0    
+       TOTAL CPU TIME (SEC) =     0.10    
+       WALLCLOCK TIME (SEC) =            0
+1
+
+   Abaqus 2024                                  Date 27-Oct-2026   Time 14:24:28
+   For use by UNIVERSITY OF TEXAS AT SAN ANTONIO under license from Dassault Systemes or its subsidiary.
+
+     Paired primal-parity deck: model=r1 case=ext. All 24 nodal DOFs prescribed in ev          STEP    1  INCREMENT    1
+                                                                                          TIME COMPLETED IN THIS STEP   0.00    
+
+
+                        S T E P       1     S T A T I C   A N A L Y S I S
+
+
+                                                                                          
+
+          FIXED TIME INCREMENTS
+          TIME INCREMENT IS                                    0.100    
+          TIME PERIOD IS                                        1.00    
+
+     LINEAR EQUATION SOLVER TYPE         DIRECT SPARSE
+  
+                   M E M O R Y   E S T I M A T E
+  
+ PROCESS      FLOATING PT       MINIMUM MEMORY        MEMORY TO
+              OPERATIONS           REQUIRED          MINIMIZE I/O
+             PER ITERATION           (MB)               (MB)
+  
+     1          4.90E+03               17                 24
+  
+ NOTE:
+      (1) SINCE ABAQUS DOES NOT PRE-ALLOCATE MEMORY AND ONLY ALLOCATES MEMORY AS NEEDED DURING THE ANALYSIS,
+          THE MEMORY REQUIREMENT PRINTED HERE CAN ONLY BE VIEWED AS A GENERAL GUIDELINE BASED ON THE BEST
+          KNOWLEDGE AVAILABLE AT THE BEGINNING OF A STEP BEFORE THE SOLUTION PROCESS HAS BEGUN.
+      (2) THE ESTIMATE IS NORMALLY UPDATED AT THE BEGINNING OF EVERY STEP. IT IS THE MAXIMUM VALUE OF THE
+          ESTIMATE FROM THE CURRENT STEP TO THE LAST STEP OF THE ANALYSIS, WITH UNSYMMETRIC SOLUTION TAKEN
+          INTO ACCOUNT IF APPLICABLE. 
+      (3) SINCE THE ESTIMATE IS BASED ON THE ACTIVE DEGREES OF FREEDOM IN THE FIRST ITERATION OF THE 
+          CURRENT STEP, THE MEMORY ESTIMATE MIGHT BE SIGNIFICANTLY DIFFERENT THAN ACTUAL USAGE FOR 
+          PROBLEMS WITH SUBSTANTIAL CHANGES IN ACTIVE DEGREES OF FREEDOM BETWEEN STEPS (OR EVEN WITHIN
+          THE SAME STEP). EXAMPLES ARE: PROBLEMS WITH SIGNIFICANT CONTACT CHANGES, PROBLEMS WITH MODEL
+          CHANGE, PROBLEMS WITH BOTH STATIC STEP AND STEADY STATE DYNAMIC PROCEDURES WHERE ACOUSTIC 
+          ELEMENTS WILL ONLY BE ACTIVATED IN THE STEADY STATE DYNAMIC STEPS.
+      (4) FOR MULTI-PROCESS EXECUTION, THE ESTIMATED VALUE OF FLOATING POINT OPERATIONS FOR EACH PROCESS
+          IS BASED ON AN INITIAL SCHEDULING OF OPERATIONS AND MIGHT NOT REFLECT THE ACTUAL FLOATING 
+          POINT OPERATIONS COMPLETED ON EACH PROCESS. OPERATIONS ARE DYNAMICALLY BALANCED DURING EXECUTION, 
+          SO THE ACTUAL BALANCE OF OPERATIONS BETWEEN PROCESSES IS EXPECTED TO BE BETTER THAN THE ESTIMATE
+          PRINTED HERE.
+      (5) THE UPPER LIMIT OF MEMORY THAT CAN BE ALLOCATED BY ABAQUS WILL IN GENERAL DEPEND ON THE VALUE OF
+          THE "MEMORY" PARAMETER AND THE AMOUNT OF PHYSICAL MEMORY AVAILABLE ON THE MACHINE. PLEASE SEE
+          THE "ABAQUS ANALYSIS USER'S MANUAL" FOR MORE DETAILS. THE ACTUAL USAGE OF MEMORY AND OF DISK
+          SPACE FOR SCRATCH DATA WILL DEPEND ON THIS UPPER LIMIT AS WELL AS THE MEMORY REQUIRED TO MINIMIZE
+          I/O. IF THE MEMORY UPPER LIMIT IS GREATER THAN THE MEMORY REQUIRED TO MINIMIZE I/O, THEN THE ACTUAL
+          MEMORY USAGE WILL BE CLOSE TO THE ESTIMATED "MEMORY TO MINIMIZE I/O" VALUE, AND THE SCRATCH DISK
+          USAGE WILL BE CLOSE-TO-ZERO; OTHERWISE, THE ACTUAL MEMORY USED WILL BE CLOSE TO THE PREVIOUSLY
+          MENTIONED MEMORY LIMIT, AND THE SCRATCH DISK USAGE WILL BE ROUGHLY PROPORTIONAL TO THE DIFFERENCE
+          BETWEEN THE ESTIMATED "MEMORY TO MINIMIZE I/O" AND THE MEMORY UPPER LIMIT. HOWEVER ACCURATE
+          ESTIMATE OF THE SCRATCH DISK SPACE IS NOT POSSIBLE.
+      (6) USING "*RESTART, WRITE" CAN GENERATE A LARGE AMOUNT OF DATA WRITTEN IN THE WORK DIRECTORY.
+
+
+                                INCREMENT     1 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.100    
+ STEP TIME COMPLETED       0.100    ,  TOTAL TIME COMPLETED        0.100    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          46.15      -23.08      -23.08       0.000      5.2125E-16 -5.2125E-16   0.000
+           1   2          46.15      -23.08      -23.08       0.000       0.000     -1.3031E-16   0.000
+           1   3          46.15      -23.08      -23.08       0.000       0.000     -7.8188E-16   0.000
+           1   4          46.15      -23.08      -23.08       0.000      2.0850E-15 -3.2578E-16   0.000
+           1   5          46.15      -23.08      -23.08       0.000       0.000     -3.1275E-15   0.000
+           1   6          46.15      -23.08      -23.08       0.000     -1.0425E-15 -5.2125E-16   0.000
+           1   7          46.15      -23.08      -23.08       0.000      1.0425E-15 -2.0850E-15   0.000
+           1   8          46.15      -23.08      -23.08       0.000      2.0850E-15  1.5638E-15   0.000
+
+ MAXIMUM                 46.15      -23.08      -23.08       0.000      2.0850E-15  1.5638E-15   0.000                            
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 46.15      -23.08      -23.08       0.000     -1.0425E-15 -3.1275E-15   0.000                            
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -1.1538462E+01  5.7692308E+00  5.7692308E+00 
+         2      3.0000000E-04  0.0000000E+00  0.0000000E+00  1.1538462E+01  5.7692308E+00  5.7692308E+00 
+         3      3.0000000E-04 -1.5000000E-04  0.0000000E+00  1.1538462E+01 -5.7692308E+00  5.7692308E+00 
+         4      0.0000000E+00 -1.5000000E-04  0.0000000E+00 -1.1538462E+01 -5.7692308E+00  5.7692308E+00 
+         5      0.0000000E+00  0.0000000E+00 -1.5000000E-04 -1.1538462E+01  5.7692308E+00 -5.7692308E+00 
+         6      3.0000000E-04  0.0000000E+00 -1.5000000E-04  1.1538462E+01  5.7692308E+00 -5.7692308E+00 
+         7      3.0000000E-04 -1.5000000E-04 -1.5000000E-04  1.1538462E+01 -5.7692308E+00 -5.7692308E+00 
+         8      0.0000000E+00 -1.5000000E-04 -1.5000000E-04 -1.1538462E+01 -5.7692308E+00 -5.7692308E+00 
+
+ MAXIMUM         3.0000E-04   0.000       0.000       11.54       5.769       5.769    
+ AT NODE                 2           1           1           7           6           1
+
+ MINIMUM          0.000     -1.5000E-04 -1.5000E-04  -11.54      -5.769      -5.769    
+ AT NODE                 1           3           5           8           7           7
+
+ TOTAL         1.2000E-03 -6.0000E-04 -6.0000E-04   0.000      8.8818E-16 -5.3291E-15
+
+
+                                INCREMENT     2 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.200    
+ STEP TIME COMPLETED       0.200    ,  TOTAL TIME COMPLETED        0.200    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          92.31      -46.15      -46.15       0.000      1.1728E-15 -5.2125E-16   0.000
+           1   2          92.31      -46.15      -46.15       0.000     -1.5638E-15 -3.9094E-16   0.000
+           1   3          92.31      -46.15      -46.15       0.000       0.000     -3.3881E-15   0.000
+           1   4          92.31      -46.15      -46.15       0.000      6.2550E-15 -3.7139E-15   0.000
+           1   5          92.31      -46.15      -46.15       0.000      2.6063E-16 -7.2975E-15   0.000
+           1   6          92.31      -46.15      -46.15       0.000     -1.5638E-15 -1.0425E-15   0.000
+           1   7          92.31      -46.15      -46.15       0.000      1.0425E-15 -4.1700E-15   0.000
+           1   8          92.31      -46.15      -46.15       0.000      2.0850E-15  2.8669E-15   0.000
+
+ MAXIMUM                 92.31      -46.15      -46.15       0.000      6.2550E-15  2.8669E-15   0.000                            
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 92.31      -46.15      -46.15       0.000     -1.5638E-15 -7.2975E-15   0.000                            
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -2.3076923E+01  1.1538462E+01  1.1538462E+01 
+         2      6.0000000E-04  0.0000000E+00  0.0000000E+00  2.3076923E+01  1.1538462E+01  1.1538462E+01 
+         3      6.0000000E-04 -3.0000000E-04  0.0000000E+00  2.3076923E+01 -1.1538462E+01  1.1538462E+01 
+         4      0.0000000E+00 -3.0000000E-04  0.0000000E+00 -2.3076923E+01 -1.1538462E+01  1.1538462E+01 
+         5      0.0000000E+00  0.0000000E+00 -3.0000000E-04 -2.3076923E+01  1.1538462E+01 -1.1538462E+01 
+         6      6.0000000E-04  0.0000000E+00 -3.0000000E-04  2.3076923E+01  1.1538462E+01 -1.1538462E+01 
+         7      6.0000000E-04 -3.0000000E-04 -3.0000000E-04  2.3076923E+01 -1.1538462E+01 -1.1538462E+01 
+         8      0.0000000E+00 -3.0000000E-04 -3.0000000E-04 -2.3076923E+01 -1.1538462E+01 -1.1538462E+01 
+
+ MAXIMUM         6.0000E-04   0.000       0.000       23.08       11.54       11.54    
+ AT NODE                 2           1           1           2           1           1
+
+ MINIMUM          0.000     -3.0000E-04 -3.0000E-04  -23.08      -11.54      -11.54    
+ AT NODE                 1           3           5           1           3           7
+
+ TOTAL         2.4000E-03 -1.2000E-03 -1.2000E-03   0.000     -7.1054E-15   0.000    
+
+
+                                INCREMENT     3 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.300    
+ STEP TIME COMPLETED       0.300    ,  TOTAL TIME COMPLETED        0.300    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          138.5      -69.23      -69.23       0.000      1.6941E-15 -1.0425E-15   0.000
+           1   2          138.5      -69.23      -69.23       0.000     -1.5638E-15 -5.2125E-16   0.000
+           1   3          138.5      -69.23      -69.23       0.000       0.000     -4.1700E-15   0.000
+           1   4          138.5      -69.23      -69.23       0.000      8.3400E-15 -4.0397E-15   0.000
+           1   5          138.5      -69.23      -69.23       0.000      2.6063E-16 -1.0425E-14   0.000
+           1   6          138.5      -69.23      -69.23       0.000     -2.6063E-15 -1.5638E-15   0.000
+           1   7          138.5      -69.23      -69.23       0.000      2.0850E-15 -6.2550E-15   0.000
+           1   8          138.5      -69.23      -69.23       0.000      4.1700E-15  4.4306E-15   0.000
+
+ MAXIMUM                 138.5      -69.23      -69.23       0.000      8.3400E-15  4.4306E-15   0.000                            
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 138.5      -69.23      -69.23       0.000     -2.6063E-15 -1.0425E-14   0.000                            
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -3.4615385E+01  1.7307692E+01  1.7307692E+01 
+         2      9.0000000E-04  0.0000000E+00  0.0000000E+00  3.4615385E+01  1.7307692E+01  1.7307692E+01 
+         3      9.0000000E-04 -4.5000000E-04  0.0000000E+00  3.4615385E+01 -1.7307692E+01  1.7307692E+01 
+         4      0.0000000E+00 -4.5000000E-04  0.0000000E+00 -3.4615385E+01 -1.7307692E+01  1.7307692E+01 
+         5      0.0000000E+00  0.0000000E+00 -4.5000000E-04 -3.4615385E+01  1.7307692E+01 -1.7307692E+01 
+         6      9.0000000E-04  0.0000000E+00 -4.5000000E-04  3.4615385E+01  1.7307692E+01 -1.7307692E+01 
+         7      9.0000000E-04 -4.5000000E-04 -4.5000000E-04  3.4615385E+01 -1.7307692E+01 -1.7307692E+01 
+         8      0.0000000E+00 -4.5000000E-04 -4.5000000E-04 -3.4615385E+01 -1.7307692E+01 -1.7307692E+01 
+
+ MAXIMUM         9.0000E-04   0.000       0.000       34.62       17.31       17.31    
+ AT NODE                 2           1           1           2           1           1
+
+ MINIMUM          0.000     -4.5000E-04 -4.5000E-04  -34.62      -17.31      -17.31    
+ AT NODE                 1           3           5           1           4           5
+
+ TOTAL         3.6000E-03 -1.8000E-03 -1.8000E-03   0.000      3.5527E-15  1.4211E-14
+
+
+                                INCREMENT     4 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.400    
+ STEP TIME COMPLETED       0.400    ,  TOTAL TIME COMPLETED        0.400    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          167.0      -83.49      -83.49       0.000      9.4287E-16 -9.4287E-16  1.1468E-04
+           1   2          167.0      -83.49      -83.49       0.000       0.000      4.7144E-16  1.1468E-04
+           1   3          167.0      -83.49      -83.49       0.000       0.000     -6.6001E-15  1.1468E-04
+           1   4          167.0      -83.49      -83.49       0.000      9.4287E-15 -4.0072E-15  1.1468E-04
+           1   5          167.0      -83.49      -83.49       0.000       0.000     -1.0372E-14  1.1468E-04
+           1   6          167.0      -83.49      -83.49     -1.8857E-15 -2.8286E-15 -2.8286E-15  1.1468E-04
+           1   7          167.0      -83.49      -83.49      9.4287E-16  9.4287E-16 -7.5430E-15  1.1468E-04
+           1   8          167.0      -83.49      -83.49       0.000      5.6572E-15  3.0643E-15  1.1468E-04
+
+ MAXIMUM                 167.0      -83.49      -83.49      9.4287E-16  9.4287E-15  3.0643E-15  1.1468E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 167.0      -83.49      -83.49     -1.8857E-15 -2.8286E-15 -1.0372E-14  1.1468E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.1743055E+01  2.0871527E+01  2.0871527E+01 
+         2      1.2000000E-03  0.0000000E+00  0.0000000E+00  4.1743055E+01  2.0871527E+01  2.0871527E+01 
+         3      1.2000000E-03 -6.0000000E-04  0.0000000E+00  4.1743055E+01 -2.0871527E+01  2.0871527E+01 
+         4      0.0000000E+00 -6.0000000E-04  0.0000000E+00 -4.1743055E+01 -2.0871527E+01  2.0871527E+01 
+         5      0.0000000E+00  0.0000000E+00 -6.0000000E-04 -4.1743055E+01  2.0871527E+01 -2.0871527E+01 
+         6      1.2000000E-03  0.0000000E+00 -6.0000000E-04  4.1743055E+01  2.0871527E+01 -2.0871527E+01 
+         7      1.2000000E-03 -6.0000000E-04 -6.0000000E-04  4.1743055E+01 -2.0871527E+01 -2.0871527E+01 
+         8      0.0000000E+00 -6.0000000E-04 -6.0000000E-04 -4.1743055E+01 -2.0871527E+01 -2.0871527E+01 
+
+ MAXIMUM         1.2000E-03   0.000       0.000       41.74       20.87       20.87    
+ AT NODE                 2           1           1           2           1           4
+
+ MINIMUM          0.000     -6.0000E-04 -6.0000E-04  -41.74      -20.87      -20.87    
+ AT NODE                 1           3           5           1           8           7
+
+ TOTAL         4.8000E-03 -2.4000E-03 -2.4000E-03   0.000      3.5527E-15 -1.0658E-14
+
+
+                                INCREMENT     5 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.500    
+ STEP TIME COMPLETED       0.500    ,  TOTAL TIME COMPLETED        0.500    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          167.8      -83.88      -83.88       0.000      2.2930E-16 -7.4215E-16  4.0959E-04
+           1   2          167.8      -83.88      -83.88       0.000      1.2309E-15  1.1916E-15  4.0959E-04
+           1   3          167.8      -83.88      -83.88       0.000       0.000     -7.6568E-15  4.0959E-04
+           1   4          167.8      -83.88      -83.88       0.000      9.0627E-15 -3.4619E-15  4.0959E-04
+           1   5          167.8      -83.88      -83.88       0.000     -2.0514E-16 -8.9843E-15  4.0959E-04
+           1   6          167.8      -83.88      -83.88     -3.1255E-15 -2.6367E-15 -3.4573E-15  4.0959E-04
+           1   7          167.8      -83.88      -83.88      1.5627E-15 -7.8420E-17 -7.5784E-15  4.0959E-04
+           1   8          167.8      -83.88      -83.88       0.000      6.0941E-15  1.5914E-15  4.0959E-04
+
+ MAXIMUM                 167.8      -83.88      -83.88      1.5627E-15  9.0627E-15  1.5914E-15  4.0959E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 167.8      -83.88      -83.88     -3.1255E-15 -2.6367E-15 -8.9843E-15  4.0959E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.1938889E+01  2.0969445E+01  2.0969445E+01 
+         2      1.5000000E-03  0.0000000E+00  0.0000000E+00  4.1938889E+01  2.0969445E+01  2.0969445E+01 
+         3      1.5000000E-03 -7.5000000E-04  0.0000000E+00  4.1938889E+01 -2.0969445E+01  2.0969445E+01 
+         4      0.0000000E+00 -7.5000000E-04  0.0000000E+00 -4.1938889E+01 -2.0969445E+01  2.0969445E+01 
+         5      0.0000000E+00  0.0000000E+00 -7.5000000E-04 -4.1938889E+01  2.0969445E+01 -2.0969445E+01 
+         6      1.5000000E-03  0.0000000E+00 -7.5000000E-04  4.1938889E+01  2.0969445E+01 -2.0969445E+01 
+         7      1.5000000E-03 -7.5000000E-04 -7.5000000E-04  4.1938889E+01 -2.0969445E+01 -2.0969445E+01 
+         8      0.0000000E+00 -7.5000000E-04 -7.5000000E-04 -4.1938889E+01 -2.0969445E+01 -2.0969445E+01 
+
+ MAXIMUM         1.5000E-03   0.000       0.000       41.94       20.97       20.97    
+ AT NODE                 2           1           1           2           1           1
+
+ MINIMUM          0.000     -7.5000E-04 -7.5000E-04  -41.94      -20.97      -20.97    
+ AT NODE                 1           3           5           1           4           5
+
+ TOTAL         6.0000E-03 -3.0000E-03 -3.0000E-03   0.000     -3.5527E-15  3.5527E-15
+
+
+                                INCREMENT     6 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.600    
+ STEP TIME COMPLETED       0.600    ,  TOTAL TIME COMPLETED        0.600    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          168.5      -84.27      -84.27       0.000     -3.3270E-16 -5.8473E-16  7.0452E-04
+           1   2          168.5      -84.27      -84.27       0.000      2.2018E-15  1.7602E-15  7.0452E-04
+           1   3          168.5      -84.27      -84.27       0.000       0.000     -8.4968E-15  7.0452E-04
+           1   4          168.5      -84.27      -84.27       0.000      8.7831E-15 -3.0356E-15  7.0452E-04
+           1   5          168.5      -84.27      -84.27       0.000     -3.6697E-16 -7.8999E-15  7.0452E-04
+           1   6          168.5      -84.27      -84.27     -4.1052E-15 -2.4881E-15 -3.9560E-15  7.0452E-04
+           1   7          168.5      -84.27      -84.27      2.0526E-15 -8.8315E-16 -7.6136E-15  7.0452E-04
+           1   8          168.5      -84.27      -84.27       0.000      6.4441E-15  4.3249E-16  7.0452E-04
+
+ MAXIMUM                 168.5      -84.27      -84.27      2.0526E-15  8.7831E-15  1.7602E-15  7.0452E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 168.5      -84.27      -84.27     -4.1052E-15 -2.4881E-15 -8.4968E-15  7.0452E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.2133876E+01  2.1066938E+01  2.1066938E+01 
+         2      1.8000000E-03  0.0000000E+00  0.0000000E+00  4.2133876E+01  2.1066938E+01  2.1066938E+01 
+         3      1.8000000E-03 -9.0000000E-04  0.0000000E+00  4.2133876E+01 -2.1066938E+01  2.1066938E+01 
+         4      0.0000000E+00 -9.0000000E-04  0.0000000E+00 -4.2133876E+01 -2.1066938E+01  2.1066938E+01 
+         5      0.0000000E+00  0.0000000E+00 -9.0000000E-04 -4.2133876E+01  2.1066938E+01 -2.1066938E+01 
+         6      1.8000000E-03  0.0000000E+00 -9.0000000E-04  4.2133876E+01  2.1066938E+01 -2.1066938E+01 
+         7      1.8000000E-03 -9.0000000E-04 -9.0000000E-04  4.2133876E+01 -2.1066938E+01 -2.1066938E+01 
+         8      0.0000000E+00 -9.0000000E-04 -9.0000000E-04 -4.2133876E+01 -2.1066938E+01 -2.1066938E+01 
+
+ MAXIMUM         1.8000E-03   0.000       0.000       42.13       21.07       21.07    
+ AT NODE                 2           1           1           2           1           4
+
+ MINIMUM          0.000     -9.0000E-04 -9.0000E-04  -42.13      -21.07      -21.07    
+ AT NODE                 1           3           5           1           4           7
+
+ TOTAL         7.2000E-03 -3.6000E-03 -3.6000E-03   0.000     -1.4211E-14   0.000    
+
+
+                                INCREMENT     7 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.700    
+ STEP TIME COMPLETED       0.700    ,  TOTAL TIME COMPLETED        0.700    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          169.3      -84.66      -84.66       0.000     -5.7069E-16 -5.0062E-17  9.9947E-04
+           1   2          169.3      -84.66      -84.66       0.000      1.7364E-15  1.1827E-15  9.9947E-04
+           1   3          169.3      -84.66      -84.66       0.000       0.000     -8.9618E-15  9.9947E-04
+           1   4          169.3      -84.66      -84.66       0.000      1.0215E-14 -3.1133E-15  9.9947E-04
+           1   5          169.3      -84.66      -84.66       0.000     -1.1116E-15 -7.0523E-15  9.9947E-04
+           1   6          169.3      -84.66      -84.66     -3.2375E-15 -2.7844E-15 -3.9420E-15  9.9947E-04
+           1   7          169.3      -84.66      -84.66      1.6188E-15  1.2567E-16 -7.6487E-15  9.9947E-04
+           1   8          169.3      -84.66      -84.66       0.000      6.7264E-15  1.5743E-15  9.9947E-04
+
+ MAXIMUM                 169.3      -84.66      -84.66      1.6188E-15  1.0215E-14  1.5743E-15  9.9947E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 169.3      -84.66      -84.66     -3.2375E-15 -2.7844E-15 -8.9618E-15  9.9947E-04                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.2328019E+01  2.1164010E+01  2.1164010E+01 
+         2      2.1000000E-03  0.0000000E+00  0.0000000E+00  4.2328019E+01  2.1164010E+01  2.1164010E+01 
+         3      2.1000000E-03 -1.0500000E-03  0.0000000E+00  4.2328019E+01 -2.1164010E+01  2.1164010E+01 
+         4      0.0000000E+00 -1.0500000E-03  0.0000000E+00 -4.2328019E+01 -2.1164010E+01  2.1164010E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.0500000E-03 -4.2328019E+01  2.1164010E+01 -2.1164010E+01 
+         6      2.1000000E-03  0.0000000E+00 -1.0500000E-03  4.2328019E+01  2.1164010E+01 -2.1164010E+01 
+         7      2.1000000E-03 -1.0500000E-03 -1.0500000E-03  4.2328019E+01 -2.1164010E+01 -2.1164010E+01 
+         8      0.0000000E+00 -1.0500000E-03 -1.0500000E-03 -4.2328019E+01 -2.1164010E+01 -2.1164010E+01 
+
+ MAXIMUM         2.1000E-03   0.000       0.000       42.33       21.16       21.16    
+ AT NODE                 2           1           1           2           1           1
+
+ MINIMUM          0.000     -1.0500E-03 -1.0500E-03  -42.33      -21.16      -21.16    
+ AT NODE                 1           3           5           1           4           7
+
+ TOTAL         8.4000E-03 -4.2000E-03 -4.2000E-03   0.000     -3.5527E-15   0.000    
+
+
+                                INCREMENT     8 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.800    
+ STEP TIME COMPLETED       0.800    ,  TOTAL TIME COMPLETED        0.800    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          170.1      -85.04      -85.04       0.000     -9.6482E-16 -3.9518E-17  1.2944E-03
+           1   2          170.1      -85.04      -85.04       0.000      2.6051E-15  1.7565E-15  1.2944E-03
+           1   3          170.1      -85.04      -85.04       0.000       0.000     -9.5431E-15  1.2944E-03
+           1   4          170.1      -85.04      -85.04       0.000      9.7096E-15 -2.7662E-15  1.2944E-03
+           1   5          170.1      -85.04      -85.04       0.000     -1.0832E-15 -6.3899E-15  1.2944E-03
+           1   6          170.1      -85.04      -85.04     -4.2015E-15 -2.6094E-15 -4.3462E-15  1.2944E-03
+           1   7          170.1      -85.04      -85.04      2.1008E-15 -7.2373E-16 -7.6836E-15  1.2944E-03
+           1   8          170.1      -85.04      -85.04       0.000      6.9556E-15  4.1980E-16  1.2944E-03
+
+ MAXIMUM                 170.1      -85.04      -85.04      2.1008E-15  9.7096E-15  1.7565E-15  1.2944E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 170.1      -85.04      -85.04     -4.2015E-15 -2.6094E-15 -9.5431E-15  1.2944E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.2521324E+01  2.1260662E+01  2.1260662E+01 
+         2      2.4000000E-03  0.0000000E+00  0.0000000E+00  4.2521324E+01  2.1260662E+01  2.1260662E+01 
+         3      2.4000000E-03 -1.2000000E-03  0.0000000E+00  4.2521324E+01 -2.1260662E+01  2.1260662E+01 
+         4      0.0000000E+00 -1.2000000E-03  0.0000000E+00 -4.2521324E+01 -2.1260662E+01  2.1260662E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.2000000E-03 -4.2521324E+01  2.1260662E+01 -2.1260662E+01 
+         6      2.4000000E-03  0.0000000E+00 -1.2000000E-03  4.2521324E+01  2.1260662E+01 -2.1260662E+01 
+         7      2.4000000E-03 -1.2000000E-03 -1.2000000E-03  4.2521324E+01 -2.1260662E+01 -2.1260662E+01 
+         8      0.0000000E+00 -1.2000000E-03 -1.2000000E-03 -4.2521324E+01 -2.1260662E+01 -2.1260662E+01 
+
+ MAXIMUM         2.4000E-03   0.000       0.000       42.52       21.26       21.26    
+ AT NODE                 2           1           1           6           1           1
+
+ MINIMUM          0.000     -1.2000E-03 -1.2000E-03  -42.52      -21.26      -21.26    
+ AT NODE                 1           3           5           5           4           8
+
+ TOTAL         9.6000E-03 -4.8000E-03 -4.8000E-03   0.000      1.0658E-14  1.0658E-14
+
+
+                                INCREMENT     9 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.900    
+ STEP TIME COMPLETED       0.900    ,  TOTAL TIME COMPLETED        0.900    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          170.9      -85.43      -85.43       0.000     -3.5048E-16 -3.1224E-17  1.5894E-03
+           1   2          170.9      -85.43      -85.43       0.000      8.2281E-16  1.2849E-15  1.5894E-03
+           1   3          170.9      -85.43      -85.43       0.000       0.000     -9.5995E-15  1.5894E-03
+           1   4          170.9      -85.43      -85.43       0.000      1.0967E-14 -4.8112E-15  1.5894E-03
+           1   5          170.9      -85.43      -85.43       0.000     -6.4992E-16 -7.5199E-15  1.5894E-03
+           1   6          170.9      -85.43      -85.43     -3.3197E-15 -1.6499E-15 -3.6399E-15  1.5894E-03
+           1   7          170.9      -85.43      -85.43      1.6599E-15 -5.7184E-16 -9.3658E-15  1.5894E-03
+           1   8          170.9      -85.43      -85.43       0.000      7.1432E-15  5.3762E-16  1.5894E-03
+
+ MAXIMUM                 170.9      -85.43      -85.43      1.6599E-15  1.0967E-14  1.2849E-15  1.5894E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 170.9      -85.43      -85.43     -3.3197E-15 -1.6499E-15 -9.5995E-15  1.5894E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.2713795E+01  2.1356898E+01  2.1356898E+01 
+         2      2.7000000E-03  0.0000000E+00  0.0000000E+00  4.2713795E+01  2.1356898E+01  2.1356898E+01 
+         3      2.7000000E-03 -1.3500000E-03  0.0000000E+00  4.2713795E+01 -2.1356898E+01  2.1356898E+01 
+         4      0.0000000E+00 -1.3500000E-03  0.0000000E+00 -4.2713795E+01 -2.1356898E+01  2.1356898E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.3500000E-03 -4.2713795E+01  2.1356898E+01 -2.1356898E+01 
+         6      2.7000000E-03  0.0000000E+00 -1.3500000E-03  4.2713795E+01  2.1356898E+01 -2.1356898E+01 
+         7      2.7000000E-03 -1.3500000E-03 -1.3500000E-03  4.2713795E+01 -2.1356898E+01 -2.1356898E+01 
+         8      0.0000000E+00 -1.3500000E-03 -1.3500000E-03 -4.2713795E+01 -2.1356898E+01 -2.1356898E+01 
+
+ MAXIMUM         2.7000E-03   0.000       0.000       42.71       21.36       21.36    
+ AT NODE                 2           1           1           7           1           1
+
+ MINIMUM          0.000     -1.3500E-03 -1.3500E-03  -42.71      -21.36      -21.36    
+ AT NODE                 1           3           5           8           3           7
+
+ TOTAL         1.0800E-02 -5.4000E-03 -5.4000E-03   0.000       0.000     -3.5527E-15
+
+
+                                INCREMENT    10 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED   1.00    
+ STEP TIME COMPLETED        1.00    ,  TOTAL TIME COMPLETED         1.00    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          171.6      -85.81      -85.81       0.000     -7.9246E-16 -2.4693E-17  1.8845E-03
+           1   2          171.6      -85.81      -85.81       0.000      1.8874E-15  1.8406E-15  1.8845E-03
+           1   3          171.6      -85.81      -85.81       0.000       0.000     -1.0065E-14  1.8845E-03
+           1   4          171.6      -85.81      -85.81       0.000      1.0322E-14 -4.1141E-15  1.8845E-03
+           1   5          171.6      -85.81      -85.81       0.000     -7.2011E-16 -6.7716E-15  1.8845E-03
+           1   6          171.6      -85.81      -85.81     -4.2743E-15 -1.7171E-15 -4.1153E-15  1.8845E-03
+           1   7          171.6      -85.81      -85.81      2.1372E-15 -1.2767E-15 -9.0559E-15  1.8845E-03
+           1   8          171.6      -85.81      -85.81       0.000      7.2981E-15 -3.9929E-16  1.8845E-03
+
+ MAXIMUM                 171.6      -85.81      -85.81      2.1372E-15  1.0322E-14  1.8406E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 171.6      -85.81      -85.81     -4.2743E-15 -1.7171E-15 -1.0065E-14  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.2905437E+01  2.1452719E+01  2.1452719E+01 
+         2      3.0000000E-03  0.0000000E+00  0.0000000E+00  4.2905437E+01  2.1452719E+01  2.1452719E+01 
+         3      3.0000000E-03 -1.5000000E-03  0.0000000E+00  4.2905437E+01 -2.1452719E+01  2.1452719E+01 
+         4      0.0000000E+00 -1.5000000E-03  0.0000000E+00 -4.2905437E+01 -2.1452719E+01  2.1452719E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.5000000E-03 -4.2905437E+01  2.1452719E+01 -2.1452719E+01 
+         6      3.0000000E-03  0.0000000E+00 -1.5000000E-03  4.2905437E+01  2.1452719E+01 -2.1452719E+01 
+         7      3.0000000E-03 -1.5000000E-03 -1.5000000E-03  4.2905437E+01 -2.1452719E+01 -2.1452719E+01 
+         8      0.0000000E+00 -1.5000000E-03 -1.5000000E-03 -4.2905437E+01 -2.1452719E+01 -2.1452719E+01 
+
+ MAXIMUM         3.0000E-03   0.000       0.000       42.91       21.45       21.45    
+ AT NODE                 2           1           1           3           1           3
+
+ MINIMUM          0.000     -1.5000E-03 -1.5000E-03  -42.91      -21.45      -21.45    
+ AT NODE                 1           3           5           4           7           7
+
+ TOTAL         1.2000E-02 -6.0000E-03 -6.0000E-03   0.000      7.1054E-15  2.4869E-14
+1
+
+   Abaqus 2024                                  Date 27-Oct-2026   Time 14:24:29
+   For use by UNIVERSITY OF TEXAS AT SAN ANTONIO under license from Dassault Systemes or its subsidiary.
+
+     Paired primal-parity deck: model=r1 case=ext. All 24 nodal DOFs prescribed in ev          STEP    2  INCREMENT    1
+                                                                                          TIME COMPLETED IN THIS STEP   0.00    
+
+
+                        S T E P       2     S T A T I C   A N A L Y S I S
+
+
+                                                                                          
+
+          FIXED TIME INCREMENTS
+          TIME INCREMENT IS                                    0.100    
+          TIME PERIOD IS                                        1.00    
+
+     LINEAR EQUATION SOLVER TYPE         DIRECT SPARSE
+  
+                   M E M O R Y   E S T I M A T E
+  
+ PROCESS      FLOATING PT       MINIMUM MEMORY        MEMORY TO
+              OPERATIONS           REQUIRED          MINIMIZE I/O
+             PER ITERATION           (MB)               (MB)
+  
+     1          4.90E+03               17                 24
+  
+ NOTE:
+      (1) SINCE ABAQUS DOES NOT PRE-ALLOCATE MEMORY AND ONLY ALLOCATES MEMORY AS NEEDED DURING THE ANALYSIS,
+          THE MEMORY REQUIREMENT PRINTED HERE CAN ONLY BE VIEWED AS A GENERAL GUIDELINE BASED ON THE BEST
+          KNOWLEDGE AVAILABLE AT THE BEGINNING OF A STEP BEFORE THE SOLUTION PROCESS HAS BEGUN.
+      (2) THE ESTIMATE IS NORMALLY UPDATED AT THE BEGINNING OF EVERY STEP. IT IS THE MAXIMUM VALUE OF THE
+          ESTIMATE FROM THE CURRENT STEP TO THE LAST STEP OF THE ANALYSIS, WITH UNSYMMETRIC SOLUTION TAKEN
+          INTO ACCOUNT IF APPLICABLE. 
+      (3) SINCE THE ESTIMATE IS BASED ON THE ACTIVE DEGREES OF FREEDOM IN THE FIRST ITERATION OF THE 
+          CURRENT STEP, THE MEMORY ESTIMATE MIGHT BE SIGNIFICANTLY DIFFERENT THAN ACTUAL USAGE FOR 
+          PROBLEMS WITH SUBSTANTIAL CHANGES IN ACTIVE DEGREES OF FREEDOM BETWEEN STEPS (OR EVEN WITHIN
+          THE SAME STEP). EXAMPLES ARE: PROBLEMS WITH SIGNIFICANT CONTACT CHANGES, PROBLEMS WITH MODEL
+          CHANGE, PROBLEMS WITH BOTH STATIC STEP AND STEADY STATE DYNAMIC PROCEDURES WHERE ACOUSTIC 
+          ELEMENTS WILL ONLY BE ACTIVATED IN THE STEADY STATE DYNAMIC STEPS.
+      (4) FOR MULTI-PROCESS EXECUTION, THE ESTIMATED VALUE OF FLOATING POINT OPERATIONS FOR EACH PROCESS
+          IS BASED ON AN INITIAL SCHEDULING OF OPERATIONS AND MIGHT NOT REFLECT THE ACTUAL FLOATING 
+          POINT OPERATIONS COMPLETED ON EACH PROCESS. OPERATIONS ARE DYNAMICALLY BALANCED DURING EXECUTION, 
+          SO THE ACTUAL BALANCE OF OPERATIONS BETWEEN PROCESSES IS EXPECTED TO BE BETTER THAN THE ESTIMATE
+          PRINTED HERE.
+      (5) THE UPPER LIMIT OF MEMORY THAT CAN BE ALLOCATED BY ABAQUS WILL IN GENERAL DEPEND ON THE VALUE OF
+          THE "MEMORY" PARAMETER AND THE AMOUNT OF PHYSICAL MEMORY AVAILABLE ON THE MACHINE. PLEASE SEE
+          THE "ABAQUS ANALYSIS USER'S MANUAL" FOR MORE DETAILS. THE ACTUAL USAGE OF MEMORY AND OF DISK
+          SPACE FOR SCRATCH DATA WILL DEPEND ON THIS UPPER LIMIT AS WELL AS THE MEMORY REQUIRED TO MINIMIZE
+          I/O. IF THE MEMORY UPPER LIMIT IS GREATER THAN THE MEMORY REQUIRED TO MINIMIZE I/O, THEN THE ACTUAL
+          MEMORY USAGE WILL BE CLOSE TO THE ESTIMATED "MEMORY TO MINIMIZE I/O" VALUE, AND THE SCRATCH DISK
+          USAGE WILL BE CLOSE-TO-ZERO; OTHERWISE, THE ACTUAL MEMORY USED WILL BE CLOSE TO THE PREVIOUSLY
+          MENTIONED MEMORY LIMIT, AND THE SCRATCH DISK USAGE WILL BE ROUGHLY PROPORTIONAL TO THE DIFFERENCE
+          BETWEEN THE ESTIMATED "MEMORY TO MINIMIZE I/O" AND THE MEMORY UPPER LIMIT. HOWEVER ACCURATE
+          ESTIMATE OF THE SCRATCH DISK SPACE IS NOT POSSIBLE.
+      (6) USING "*RESTART, WRITE" CAN GENERATE A LARGE AMOUNT OF DATA WRITTEN IN THE WORK DIRECTORY.
+
+
+                                INCREMENT     1 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.100    
+ STEP TIME COMPLETED       0.100    ,  TOTAL TIME COMPLETED         1.10    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          133.2      -66.58      -66.58       0.000     -5.3184E-16 -2.4693E-17  1.8845E-03
+           1   2          133.2      -66.58      -66.58       0.000      1.3662E-15  1.1891E-15  1.8845E-03
+           1   3          133.2      -66.58      -66.58       0.000       0.000     -9.0226E-15  1.8845E-03
+           1   4          133.2      -66.58      -66.58       0.000      8.2369E-15 -5.3521E-15  1.8845E-03
+           1   5          133.2      -66.58      -66.58       0.000     -7.2011E-16 -5.7291E-15  1.8845E-03
+           1   6          133.2      -66.58      -66.58     -4.2743E-15 -2.2383E-15 -3.3335E-15  1.8845E-03
+           1   7          133.2      -66.58      -66.58      2.1372E-15 -2.3420E-16 -6.9709E-15  1.8845E-03
+           1   8          133.2      -66.58      -66.58       0.000      5.2131E-15 -1.4418E-15  1.8845E-03
+
+ MAXIMUM                 133.2      -66.58      -66.58      2.1372E-15  8.2369E-15  1.1891E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 133.2      -66.58      -66.58     -4.2743E-15 -2.2383E-15 -9.0226E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -3.3290053E+01  1.6645026E+01  1.6645026E+01 
+         2      2.7500000E-03  0.0000000E+00  0.0000000E+00  3.3290053E+01  1.6645026E+01  1.6645026E+01 
+         3      2.7500000E-03 -1.3750000E-03  0.0000000E+00  3.3290053E+01 -1.6645026E+01  1.6645026E+01 
+         4      0.0000000E+00 -1.3750000E-03  0.0000000E+00 -3.3290053E+01 -1.6645026E+01  1.6645026E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.3750000E-03 -3.3290053E+01  1.6645026E+01 -1.6645026E+01 
+         6      2.7500000E-03  0.0000000E+00 -1.3750000E-03  3.3290053E+01  1.6645026E+01 -1.6645026E+01 
+         7      2.7500000E-03 -1.3750000E-03 -1.3750000E-03  3.3290053E+01 -1.6645026E+01 -1.6645026E+01 
+         8      0.0000000E+00 -1.3750000E-03 -1.3750000E-03 -3.3290053E+01 -1.6645026E+01 -1.6645026E+01 
+
+ MAXIMUM         2.7500E-03   0.000       0.000       33.29       16.65       16.65    
+ AT NODE                 2           1           1           3           1           2
+
+ MINIMUM          0.000     -1.3750E-03 -1.3750E-03  -33.29      -16.65      -16.65    
+ AT NODE                 1           3           5           4           3           7
+
+ TOTAL         1.1000E-02 -5.5000E-03 -5.5000E-03  7.1054E-15  3.5527E-15  1.7764E-14
+
+
+                                INCREMENT     2 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.200    
+ STEP TIME COMPLETED       0.200    ,  TOTAL TIME COMPLETED         1.20    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          94.70      -47.35      -47.35       0.000     -4.0153E-16 -5.4594E-16  1.8845E-03
+           1   2          94.70      -47.35      -47.35       0.000      2.4087E-15  1.1891E-15  1.8845E-03
+           1   3          94.70      -47.35      -47.35       0.000       0.000     -8.2408E-15  1.8845E-03
+           1   4          94.70      -47.35      -47.35       0.000      4.0669E-15 -4.3096E-15  1.8845E-03
+           1   5          94.70      -47.35      -47.35       0.000     -1.9886E-16 -2.6016E-15  1.8845E-03
+           1   6          94.70      -47.35      -47.35     -4.2743E-15 -2.2383E-15 -2.0303E-15  1.8845E-03
+           1   7          94.70      -47.35      -47.35      2.1372E-15 -2.3420E-16 -2.8009E-15  1.8845E-03
+           1   8          94.70      -47.35      -47.35       0.000      5.2131E-15 -9.2054E-16  1.8845E-03
+
+ MAXIMUM                 94.70      -47.35      -47.35      2.1372E-15  5.2131E-15  1.1891E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 94.70      -47.35      -47.35     -4.2743E-15 -2.2383E-15 -8.2408E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -2.3674668E+01  1.1837334E+01  1.1837334E+01 
+         2      2.5000000E-03  0.0000000E+00  0.0000000E+00  2.3674668E+01  1.1837334E+01  1.1837334E+01 
+         3      2.5000000E-03 -1.2500000E-03  0.0000000E+00  2.3674668E+01 -1.1837334E+01  1.1837334E+01 
+         4      0.0000000E+00 -1.2500000E-03  0.0000000E+00 -2.3674668E+01 -1.1837334E+01  1.1837334E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.2500000E-03 -2.3674668E+01  1.1837334E+01 -1.1837334E+01 
+         6      2.5000000E-03  0.0000000E+00 -1.2500000E-03  2.3674668E+01  1.1837334E+01 -1.1837334E+01 
+         7      2.5000000E-03 -1.2500000E-03 -1.2500000E-03  2.3674668E+01 -1.1837334E+01 -1.1837334E+01 
+         8      0.0000000E+00 -1.2500000E-03 -1.2500000E-03 -2.3674668E+01 -1.1837334E+01 -1.1837334E+01 
+
+ MAXIMUM         2.5000E-03   0.000       0.000       23.67       11.84       11.84    
+ AT NODE                 2           1           1           3           1           1
+
+ MINIMUM          0.000     -1.2500E-03 -1.2500E-03  -23.67      -11.84      -11.84    
+ AT NODE                 1           3           5           4           3           7
+
+ TOTAL         1.0000E-02 -5.0000E-03 -5.0000E-03   0.000       0.000      8.8818E-15
+
+
+                                INCREMENT     3 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.300    
+ STEP TIME COMPLETED       0.300    ,  TOTAL TIME COMPLETED         1.30    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          56.24      -28.12      -28.12       0.000     -2.7121E-16 -5.4594E-16  1.8845E-03
+           1   2          56.24      -28.12      -28.12       0.000      2.9299E-15  1.1891E-15  1.8845E-03
+           1   3          56.24      -28.12      -28.12       0.000       0.000     -5.8951E-15  1.8845E-03
+           1   4          56.24      -28.12      -28.12       0.000      4.0669E-15 -4.5702E-15  1.8845E-03
+           1   5          56.24      -28.12      -28.12       0.000     -1.9886E-16 -1.5591E-15  1.8845E-03
+           1   6          56.24      -28.12      -28.12     -4.2743E-15 -1.1958E-15 -1.5091E-15  1.8845E-03
+           1   7          56.24      -28.12      -28.12      2.1372E-15 -2.3420E-16 -7.1586E-16  1.8845E-03
+           1   8          56.24      -28.12      -28.12       0.000      5.2131E-15 -1.4418E-15  1.8845E-03
+
+ MAXIMUM                 56.24      -28.12      -28.12      2.1372E-15  5.2131E-15  1.1891E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 56.24      -28.12      -28.12     -4.2743E-15 -1.1958E-15 -5.8951E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -1.4059284E+01  7.0296418E+00  7.0296418E+00 
+         2      2.2500000E-03  0.0000000E+00  0.0000000E+00  1.4059284E+01  7.0296418E+00  7.0296418E+00 
+         3      2.2500000E-03 -1.1250000E-03  0.0000000E+00  1.4059284E+01 -7.0296418E+00  7.0296418E+00 
+         4      0.0000000E+00 -1.1250000E-03  0.0000000E+00 -1.4059284E+01 -7.0296418E+00  7.0296418E+00 
+         5      0.0000000E+00  0.0000000E+00 -1.1250000E-03 -1.4059284E+01  7.0296418E+00 -7.0296418E+00 
+         6      2.2500000E-03  0.0000000E+00 -1.1250000E-03  1.4059284E+01  7.0296418E+00 -7.0296418E+00 
+         7      2.2500000E-03 -1.1250000E-03 -1.1250000E-03  1.4059284E+01 -7.0296418E+00 -7.0296418E+00 
+         8      0.0000000E+00 -1.1250000E-03 -1.1250000E-03 -1.4059284E+01 -7.0296418E+00 -7.0296418E+00 
+
+ MAXIMUM         2.2500E-03   0.000       0.000       14.06       7.030       7.030    
+ AT NODE                 2           1           1           3           5           2
+
+ MINIMUM          0.000     -1.1250E-03 -1.1250E-03  -14.06      -7.030      -7.030    
+ AT NODE                 1           3           5           4           8           7
+
+ TOTAL         9.0000E-03 -4.5000E-03 -4.5000E-03  1.7764E-15 -1.7764E-15  8.8818E-16
+
+
+                                INCREMENT     4 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.400    
+ STEP TIME COMPLETED       0.400    ,  TOTAL TIME COMPLETED         1.40    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          17.78      -8.888      -8.888       0.000     -1.4090E-16 -5.4594E-16  1.8845E-03
+           1   2          17.78      -8.888      -8.888       0.000      3.4512E-15  1.1891E-15  1.8845E-03
+           1   3          17.78      -8.888      -8.888       0.000       0.000     -3.5495E-15  1.8845E-03
+           1   4          17.78      -8.888      -8.888       0.000      4.0669E-15 -4.8308E-15  1.8845E-03
+           1   5          17.78      -8.888      -8.888       0.000     -1.9886E-16 -5.1659E-16  1.8845E-03
+           1   6          17.78      -8.888      -8.888     -4.2743E-15 -1.5331E-16 -9.8783E-16  1.8845E-03
+           1   7          17.78      -8.888      -8.888      2.1372E-15 -2.3420E-16  1.3691E-15  1.8845E-03
+           1   8          17.78      -8.888      -8.888       0.000      5.2131E-15 -1.9630E-15  1.8845E-03
+
+ MAXIMUM                 17.78      -8.888      -8.888      2.1372E-15  5.2131E-15  1.3691E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 17.78      -8.888      -8.888     -4.2743E-15 -2.3420E-16 -4.8308E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.4438990E+00  2.2219495E+00  2.2219495E+00 
+         2      2.0000000E-03  0.0000000E+00  0.0000000E+00  4.4438990E+00  2.2219495E+00  2.2219495E+00 
+         3      2.0000000E-03 -1.0000000E-03  0.0000000E+00  4.4438990E+00 -2.2219495E+00  2.2219495E+00 
+         4      0.0000000E+00 -1.0000000E-03  0.0000000E+00 -4.4438990E+00 -2.2219495E+00  2.2219495E+00 
+         5      0.0000000E+00  0.0000000E+00 -1.0000000E-03 -4.4438990E+00  2.2219495E+00 -2.2219495E+00 
+         6      2.0000000E-03  0.0000000E+00 -1.0000000E-03  4.4438990E+00  2.2219495E+00 -2.2219495E+00 
+         7      2.0000000E-03 -1.0000000E-03 -1.0000000E-03  4.4438990E+00 -2.2219495E+00 -2.2219495E+00 
+         8      0.0000000E+00 -1.0000000E-03 -1.0000000E-03 -4.4438990E+00 -2.2219495E+00 -2.2219495E+00 
+
+ MAXIMUM         2.0000E-03   0.000       0.000       4.444       2.222       2.222    
+ AT NODE                 2           1           1           7           5           2
+
+ MINIMUM          0.000     -1.0000E-03 -1.0000E-03  -4.444      -2.222      -2.222    
+ AT NODE                 1           3           5           4           8           8
+
+ TOTAL         8.0000E-03 -4.0000E-03 -4.0000E-03 -1.7764E-15 -4.4409E-16 -8.8818E-16
+
+
+                                INCREMENT     5 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.500    
+ STEP TIME COMPLETED       0.500    ,  TOTAL TIME COMPLETED         1.50    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -20.69       10.34       10.34       0.000     -1.0588E-17 -5.4594E-16  1.8845E-03
+           1   2         -20.69       10.34       10.34       0.000      2.9299E-15  6.6781E-16  1.8845E-03
+           1   3         -20.69       10.34       10.34       0.000       0.000     -1.4645E-15  1.8845E-03
+           1   4         -20.69       10.34       10.34       0.000      1.9819E-15 -4.9612E-15  1.8845E-03
+           1   5         -20.69       10.34       10.34       0.000     -4.5948E-16  1.5684E-15  1.8845E-03
+           1   6         -20.69       10.34       10.34     -4.2743E-15 -6.7456E-16 -1.2485E-15  1.8845E-03
+           1   7         -20.69       10.34       10.34      2.1372E-15 -2.3420E-16  5.5391E-15  1.8845E-03
+           1   8         -20.69       10.34       10.34       0.000      1.0431E-15 -1.9630E-15  1.8845E-03
+
+ MAXIMUM                -20.69       10.34       10.34      2.1372E-15  2.9299E-15  5.5391E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -20.69       10.34       10.34     -4.2743E-15 -6.7456E-16 -4.9612E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  5.1714856E+00 -2.5857428E+00 -2.5857428E+00 
+         2      1.7500000E-03  0.0000000E+00  0.0000000E+00 -5.1714856E+00 -2.5857428E+00 -2.5857428E+00 
+         3      1.7500000E-03 -8.7500000E-04  0.0000000E+00 -5.1714856E+00  2.5857428E+00 -2.5857428E+00 
+         4      0.0000000E+00 -8.7500000E-04  0.0000000E+00  5.1714856E+00  2.5857428E+00 -2.5857428E+00 
+         5      0.0000000E+00  0.0000000E+00 -8.7500000E-04  5.1714856E+00 -2.5857428E+00  2.5857428E+00 
+         6      1.7500000E-03  0.0000000E+00 -8.7500000E-04 -5.1714856E+00 -2.5857428E+00  2.5857428E+00 
+         7      1.7500000E-03 -8.7500000E-04 -8.7500000E-04 -5.1714856E+00  2.5857428E+00  2.5857428E+00 
+         8      0.0000000E+00 -8.7500000E-04 -8.7500000E-04  5.1714856E+00  2.5857428E+00  2.5857428E+00 
+
+ MAXIMUM         1.7500E-03   0.000       0.000       5.171       2.586       2.586    
+ AT NODE                 2           1           1           1           4           5
+
+ MINIMUM          0.000     -8.7500E-04 -8.7500E-04  -5.171      -2.586      -2.586    
+ AT NODE                 1           3           5           2           1           1
+
+ TOTAL         7.0000E-03 -3.5000E-03 -3.5000E-03 -1.7764E-15  8.8818E-16  4.4409E-16
+
+
+                                INCREMENT     6 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.600    
+ STEP TIME COMPLETED       0.600    ,  TOTAL TIME COMPLETED         1.60    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -59.15       29.57       29.57       0.000      1.1972E-16 -1.0672E-15  1.8845E-03
+           1   2         -59.15       29.57       29.57       0.000      3.9724E-15  6.6781E-16  1.8845E-03
+           1   3         -59.15       29.57       29.57       0.000       0.000     -6.8262E-16  1.8845E-03
+           1   4         -59.15       29.57       29.57       0.000     -2.1881E-15 -3.9186E-15  1.8845E-03
+           1   5         -59.15       29.57       29.57       0.000      6.1770E-17  4.6959E-15  1.8845E-03
+           1   6         -59.15       29.57       29.57     -4.2743E-15 -6.7456E-16  5.4675E-17  1.8845E-03
+           1   7         -59.15       29.57       29.57      2.1372E-15 -2.3420E-16  9.7092E-15  1.8845E-03
+           1   8         -59.15       29.57       29.57       0.000      1.0431E-15 -1.4418E-15  1.8845E-03
+
+ MAXIMUM                -59.15       29.57       29.57      2.1372E-15  3.9724E-15  9.7092E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -59.15       29.57       29.57     -4.2743E-15 -2.1881E-15 -3.9186E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  1.4786870E+01 -7.3934351E+00 -7.3934351E+00 
+         2      1.5000000E-03  0.0000000E+00  0.0000000E+00 -1.4786870E+01 -7.3934351E+00 -7.3934351E+00 
+         3      1.5000000E-03 -7.5000000E-04  0.0000000E+00 -1.4786870E+01  7.3934351E+00 -7.3934351E+00 
+         4      0.0000000E+00 -7.5000000E-04  0.0000000E+00  1.4786870E+01  7.3934351E+00 -7.3934351E+00 
+         5      0.0000000E+00  0.0000000E+00 -7.5000000E-04  1.4786870E+01 -7.3934351E+00  7.3934351E+00 
+         6      1.5000000E-03  0.0000000E+00 -7.5000000E-04 -1.4786870E+01 -7.3934351E+00  7.3934351E+00 
+         7      1.5000000E-03 -7.5000000E-04 -7.5000000E-04 -1.4786870E+01  7.3934351E+00  7.3934351E+00 
+         8      0.0000000E+00 -7.5000000E-04 -7.5000000E-04  1.4786870E+01  7.3934351E+00  7.3934351E+00 
+
+ MAXIMUM         1.5000E-03   0.000       0.000       14.79       7.393       7.393    
+ AT NODE                 2           1           1           1           4           5
+
+ MINIMUM          0.000     -7.5000E-04 -7.5000E-04  -14.79      -7.393      -7.393    
+ AT NODE                 1           3           5           2           1           1
+
+ TOTAL         6.0000E-03 -3.0000E-03 -3.0000E-03   0.000     -1.7764E-15  1.7764E-15
+
+
+                                INCREMENT     7 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.700    
+ STEP TIME COMPLETED       0.700    ,  TOTAL TIME COMPLETED         1.70    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -97.61       48.80       48.80       0.000      2.5004E-16 -1.0672E-15  1.8845E-03
+           1   2         -97.61       48.80       48.80       0.000      3.4512E-15  1.4655E-16  1.8845E-03
+           1   3         -97.61       48.80       48.80       0.000       0.000      1.4024E-15  1.8845E-03
+           1   4         -97.61       48.80       48.80       0.000     -4.2731E-15 -4.0490E-15  1.8845E-03
+           1   5         -97.61       48.80       48.80       0.000     -1.9886E-16  6.7809E-15  1.8845E-03
+           1   6         -97.61       48.80       48.80     -4.2743E-15 -1.1958E-15 -2.0595E-16  1.8845E-03
+           1   7         -97.61       48.80       48.80      2.1372E-15 -2.3420E-16  1.3879E-14  1.8845E-03
+           1   8         -97.61       48.80       48.80       0.000     -3.1269E-15 -1.4418E-15  1.8845E-03
+
+ MAXIMUM                -97.61       48.80       48.80      2.1372E-15  3.4512E-15  1.3879E-14  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -97.61       48.80       48.80     -4.2743E-15 -4.2731E-15 -4.0490E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  2.4402255E+01 -1.2201127E+01 -1.2201127E+01 
+         2      1.2500000E-03  0.0000000E+00  0.0000000E+00 -2.4402255E+01 -1.2201127E+01 -1.2201127E+01 
+         3      1.2500000E-03 -6.2500000E-04  0.0000000E+00 -2.4402255E+01  1.2201127E+01 -1.2201127E+01 
+         4      0.0000000E+00 -6.2500000E-04  0.0000000E+00  2.4402255E+01  1.2201127E+01 -1.2201127E+01 
+         5      0.0000000E+00  0.0000000E+00 -6.2500000E-04  2.4402255E+01 -1.2201127E+01  1.2201127E+01 
+         6      1.2500000E-03  0.0000000E+00 -6.2500000E-04 -2.4402255E+01 -1.2201127E+01  1.2201127E+01 
+         7      1.2500000E-03 -6.2500000E-04 -6.2500000E-04 -2.4402255E+01  1.2201127E+01  1.2201127E+01 
+         8      0.0000000E+00 -6.2500000E-04 -6.2500000E-04  2.4402255E+01  1.2201127E+01  1.2201127E+01 
+
+ MAXIMUM         1.2500E-03   0.000       0.000       24.40       12.20       12.20    
+ AT NODE                 2           1           1           5           8           8
+
+ MINIMUM          0.000     -6.2500E-04 -6.2500E-04  -24.40      -12.20      -12.20    
+ AT NODE                 1           3           5           6           2           1
+
+ TOTAL         5.0000E-03 -2.5000E-03 -2.5000E-03   0.000      3.5527E-15 -7.1054E-15
+
+
+                                INCREMENT     8 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.800    
+ STEP TIME COMPLETED       0.800    ,  TOTAL TIME COMPLETED         1.80    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -136.1       68.04       68.04       0.000      3.8035E-16 -1.0672E-15  1.8845E-03
+           1   2         -136.1       68.04       68.04       0.000      2.9299E-15 -3.7470E-16  1.8845E-03
+           1   3         -136.1       68.04       68.04       0.000       0.000      3.4874E-15  1.8845E-03
+           1   4         -136.1       68.04       68.04       0.000     -6.3582E-15 -4.1793E-15  1.8845E-03
+           1   5         -136.1       68.04       68.04       0.000     -4.5948E-16  8.8659E-15  1.8845E-03
+           1   6         -136.1       68.04       68.04     -4.2743E-15 -1.7171E-15 -4.6658E-16  1.8845E-03
+           1   7         -136.1       68.04       68.04      2.1372E-15 -2.3420E-16  1.8049E-14  1.8845E-03
+           1   8         -136.1       68.04       68.04       0.000     -7.2969E-15 -1.4418E-15  1.8845E-03
+
+ MAXIMUM                -136.1       68.04       68.04      2.1372E-15  2.9299E-15  1.8049E-14  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -136.1       68.04       68.04     -4.2743E-15 -7.2969E-15 -4.1793E-15  1.8845E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  3.4017639E+01 -1.7008820E+01 -1.7008820E+01 
+         2      1.0000000E-03  0.0000000E+00  0.0000000E+00 -3.4017639E+01 -1.7008820E+01 -1.7008820E+01 
+         3      1.0000000E-03 -5.0000000E-04  0.0000000E+00 -3.4017639E+01  1.7008820E+01 -1.7008820E+01 
+         4      0.0000000E+00 -5.0000000E-04  0.0000000E+00  3.4017639E+01  1.7008820E+01 -1.7008820E+01 
+         5      0.0000000E+00  0.0000000E+00 -5.0000000E-04  3.4017639E+01 -1.7008820E+01  1.7008820E+01 
+         6      1.0000000E-03  0.0000000E+00 -5.0000000E-04 -3.4017639E+01 -1.7008820E+01  1.7008820E+01 
+         7      1.0000000E-03 -5.0000000E-04 -5.0000000E-04 -3.4017639E+01  1.7008820E+01  1.7008820E+01 
+         8      0.0000000E+00 -5.0000000E-04 -5.0000000E-04  3.4017639E+01  1.7008820E+01  1.7008820E+01 
+
+ MAXIMUM         1.0000E-03   0.000       0.000       34.02       17.01       17.01    
+ AT NODE                 2           1           1           1           4           5
+
+ MINIMUM          0.000     -5.0000E-04 -5.0000E-04  -34.02      -17.01      -17.01    
+ AT NODE                 1           3           5           2           1           1
+
+ TOTAL         4.0000E-03 -2.0000E-03 -2.0000E-03   0.000     -3.5527E-15  7.1054E-15
+
+
+                                INCREMENT     9 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.900    
+ STEP TIME COMPLETED       0.900    ,  TOTAL TIME COMPLETED         1.90    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -171.7       85.83       85.83       0.000      5.0229E-16 -1.0497E-15  1.9031E-03
+           1   2         -171.7       85.83       85.83       0.000      2.3692E-15 -8.8126E-16  1.9031E-03
+           1   3         -171.7       85.83       85.83       0.000       0.000      5.4810E-15  1.9031E-03
+           1   4         -171.7       85.83       85.83       0.000     -8.3047E-15 -4.2389E-15  1.9031E-03
+           1   5         -171.7       85.83       85.83       0.000     -7.0830E-16  1.0771E-14  1.9031E-03
+           1   6         -171.7       85.83       85.83     -4.2042E-15 -2.2016E-15 -7.1528E-16  1.9031E-03
+           1   7         -171.7       85.83       85.83      2.1021E-15 -2.3036E-16  2.1855E-14  1.9031E-03
+           1   8         -171.7       85.83       85.83       0.000     -1.1279E-14 -1.4181E-15  1.9031E-03
+
+ MAXIMUM                -171.7       85.83       85.83      2.1021E-15  2.3692E-15  2.1855E-14  1.9031E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -171.7       85.83       85.83     -4.2042E-15 -1.1279E-14 -4.2389E-15  1.9031E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  4.2917494E+01 -2.1458747E+01 -2.1458747E+01 
+         2      7.5000000E-04  0.0000000E+00  0.0000000E+00 -4.2917494E+01 -2.1458747E+01 -2.1458747E+01 
+         3      7.5000000E-04 -3.7500000E-04  0.0000000E+00 -4.2917494E+01  2.1458747E+01 -2.1458747E+01 
+         4      0.0000000E+00 -3.7500000E-04  0.0000000E+00  4.2917494E+01  2.1458747E+01 -2.1458747E+01 
+         5      0.0000000E+00  0.0000000E+00 -3.7500000E-04  4.2917494E+01 -2.1458747E+01  2.1458747E+01 
+         6      7.5000000E-04  0.0000000E+00 -3.7500000E-04 -4.2917494E+01 -2.1458747E+01  2.1458747E+01 
+         7      7.5000000E-04 -3.7500000E-04 -3.7500000E-04 -4.2917494E+01  2.1458747E+01  2.1458747E+01 
+         8      0.0000000E+00 -3.7500000E-04 -3.7500000E-04  4.2917494E+01  2.1458747E+01  2.1458747E+01 
+
+ MAXIMUM         7.5000E-04   0.000       0.000       42.92       21.46       21.46    
+ AT NODE                 2           1           1           8           4           8
+
+ MINIMUM          0.000     -3.7500E-04 -3.7500E-04  -42.92      -21.46      -21.46    
+ AT NODE                 1           3           5           7           1           3
+
+ TOTAL         3.0000E-03 -1.5000E-03 -1.5000E-03   0.000      7.1054E-15 -2.4869E-14
+
+
+                                INCREMENT    10 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED   1.00    
+ STEP TIME COMPLETED        1.00    ,  TOTAL TIME COMPLETED         2.00    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -172.3       86.15       86.15       0.000      5.1873E-16 -8.6074E-16  2.1489E-03
+           1   2         -172.3       86.15       86.15       0.000      1.5153E-15 -1.1500E-15  2.1489E-03
+           1   3         -172.3       86.15       86.15       0.000       0.000      6.2041E-15  2.1489E-03
+           1   4         -172.3       86.15       86.15       0.000     -8.5195E-15 -3.5827E-15  2.1489E-03
+           1   5         -172.3       86.15       86.15       0.000     -7.9451E-16  1.0542E-14  2.1489E-03
+           1   6         -172.3       86.15       86.15     -3.4474E-15 -2.2327E-15 -8.0023E-16  2.1489E-03
+           1   7         -172.3       86.15       86.15      1.7237E-15 -1.8889E-16  2.1340E-14  2.1489E-03
+           1   8         -172.3       86.15       86.15       0.000     -1.2668E-14 -1.1629E-15  2.1489E-03
+
+ MAXIMUM                -172.3       86.15       86.15      1.7237E-15  1.5153E-15  2.1340E-14  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -172.3       86.15       86.15     -3.4474E-15 -1.2668E-14 -3.5827E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  4.3076523E+01 -2.1538261E+01 -2.1538261E+01 
+         2      5.0000000E-04  0.0000000E+00  0.0000000E+00 -4.3076523E+01 -2.1538261E+01 -2.1538261E+01 
+         3      5.0000000E-04 -2.5000000E-04  0.0000000E+00 -4.3076523E+01  2.1538261E+01 -2.1538261E+01 
+         4      0.0000000E+00 -2.5000000E-04  0.0000000E+00  4.3076523E+01  2.1538261E+01 -2.1538261E+01 
+         5      0.0000000E+00  0.0000000E+00 -2.5000000E-04  4.3076523E+01 -2.1538261E+01  2.1538261E+01 
+         6      5.0000000E-04  0.0000000E+00 -2.5000000E-04 -4.3076523E+01 -2.1538261E+01  2.1538261E+01 
+         7      5.0000000E-04 -2.5000000E-04 -2.5000000E-04 -4.3076523E+01  2.1538261E+01  2.1538261E+01 
+         8      0.0000000E+00 -2.5000000E-04 -2.5000000E-04  4.3076523E+01  2.1538261E+01  2.1538261E+01 
+
+ MAXIMUM         5.0000E-04   0.000       0.000       43.08       21.54       21.54    
+ AT NODE                 2           1           1           5           8           5
+
+ MINIMUM          0.000     -2.5000E-04 -2.5000E-04  -43.08      -21.54      -21.54    
+ AT NODE                 1           3           5           6           5           1
+
+ TOTAL         2.0000E-03 -1.0000E-03 -1.0000E-03   0.000       0.000     -1.7764E-14
+1
+
+   Abaqus 2024                                  Date 27-Oct-2026   Time 14:24:29
+   For use by UNIVERSITY OF TEXAS AT SAN ANTONIO under license from Dassault Systemes or its subsidiary.
+
+     Paired primal-parity deck: model=r1 case=ext. All 24 nodal DOFs prescribed in ev          STEP    3  INCREMENT    1
+                                                                                          TIME COMPLETED IN THIS STEP   0.00    
+
+
+                        S T E P       3     S T A T I C   A N A L Y S I S
+
+
+                                                                                          
+
+          FIXED TIME INCREMENTS
+          TIME INCREMENT IS                                    0.100    
+          TIME PERIOD IS                                        1.00    
+
+     LINEAR EQUATION SOLVER TYPE         DIRECT SPARSE
+  
+                   M E M O R Y   E S T I M A T E
+  
+ PROCESS      FLOATING PT       MINIMUM MEMORY        MEMORY TO
+              OPERATIONS           REQUIRED          MINIMIZE I/O
+             PER ITERATION           (MB)               (MB)
+  
+     1          4.90E+03               17                 24
+  
+ NOTE:
+      (1) SINCE ABAQUS DOES NOT PRE-ALLOCATE MEMORY AND ONLY ALLOCATES MEMORY AS NEEDED DURING THE ANALYSIS,
+          THE MEMORY REQUIREMENT PRINTED HERE CAN ONLY BE VIEWED AS A GENERAL GUIDELINE BASED ON THE BEST
+          KNOWLEDGE AVAILABLE AT THE BEGINNING OF A STEP BEFORE THE SOLUTION PROCESS HAS BEGUN.
+      (2) THE ESTIMATE IS NORMALLY UPDATED AT THE BEGINNING OF EVERY STEP. IT IS THE MAXIMUM VALUE OF THE
+          ESTIMATE FROM THE CURRENT STEP TO THE LAST STEP OF THE ANALYSIS, WITH UNSYMMETRIC SOLUTION TAKEN
+          INTO ACCOUNT IF APPLICABLE. 
+      (3) SINCE THE ESTIMATE IS BASED ON THE ACTIVE DEGREES OF FREEDOM IN THE FIRST ITERATION OF THE 
+          CURRENT STEP, THE MEMORY ESTIMATE MIGHT BE SIGNIFICANTLY DIFFERENT THAN ACTUAL USAGE FOR 
+          PROBLEMS WITH SUBSTANTIAL CHANGES IN ACTIVE DEGREES OF FREEDOM BETWEEN STEPS (OR EVEN WITHIN
+          THE SAME STEP). EXAMPLES ARE: PROBLEMS WITH SIGNIFICANT CONTACT CHANGES, PROBLEMS WITH MODEL
+          CHANGE, PROBLEMS WITH BOTH STATIC STEP AND STEADY STATE DYNAMIC PROCEDURES WHERE ACOUSTIC 
+          ELEMENTS WILL ONLY BE ACTIVATED IN THE STEADY STATE DYNAMIC STEPS.
+      (4) FOR MULTI-PROCESS EXECUTION, THE ESTIMATED VALUE OF FLOATING POINT OPERATIONS FOR EACH PROCESS
+          IS BASED ON AN INITIAL SCHEDULING OF OPERATIONS AND MIGHT NOT REFLECT THE ACTUAL FLOATING 
+          POINT OPERATIONS COMPLETED ON EACH PROCESS. OPERATIONS ARE DYNAMICALLY BALANCED DURING EXECUTION, 
+          SO THE ACTUAL BALANCE OF OPERATIONS BETWEEN PROCESSES IS EXPECTED TO BE BETTER THAN THE ESTIMATE
+          PRINTED HERE.
+      (5) THE UPPER LIMIT OF MEMORY THAT CAN BE ALLOCATED BY ABAQUS WILL IN GENERAL DEPEND ON THE VALUE OF
+          THE "MEMORY" PARAMETER AND THE AMOUNT OF PHYSICAL MEMORY AVAILABLE ON THE MACHINE. PLEASE SEE
+          THE "ABAQUS ANALYSIS USER'S MANUAL" FOR MORE DETAILS. THE ACTUAL USAGE OF MEMORY AND OF DISK
+          SPACE FOR SCRATCH DATA WILL DEPEND ON THIS UPPER LIMIT AS WELL AS THE MEMORY REQUIRED TO MINIMIZE
+          I/O. IF THE MEMORY UPPER LIMIT IS GREATER THAN THE MEMORY REQUIRED TO MINIMIZE I/O, THEN THE ACTUAL
+          MEMORY USAGE WILL BE CLOSE TO THE ESTIMATED "MEMORY TO MINIMIZE I/O" VALUE, AND THE SCRATCH DISK
+          USAGE WILL BE CLOSE-TO-ZERO; OTHERWISE, THE ACTUAL MEMORY USED WILL BE CLOSE TO THE PREVIOUSLY
+          MENTIONED MEMORY LIMIT, AND THE SCRATCH DISK USAGE WILL BE ROUGHLY PROPORTIONAL TO THE DIFFERENCE
+          BETWEEN THE ESTIMATED "MEMORY TO MINIMIZE I/O" AND THE MEMORY UPPER LIMIT. HOWEVER ACCURATE
+          ESTIMATE OF THE SCRATCH DISK SPACE IS NOT POSSIBLE.
+      (6) USING "*RESTART, WRITE" CAN GENERATE A LARGE AMOUNT OF DATA WRITTEN IN THE WORK DIRECTORY.
+
+
+                                INCREMENT     1 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.100    
+ STEP TIME COMPLETED       0.100    ,  TOTAL TIME COMPLETED         2.10    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -118.5       59.23       59.23       0.000      7.7935E-16 -8.6074E-16  2.1489E-03
+           1   2         -118.5       59.23       59.23       0.000      2.0365E-15 -3.6817E-16  2.1489E-03
+           1   3         -118.5       59.23       59.23       0.000       0.000      4.1191E-15  2.1489E-03
+           1   4         -118.5       59.23       59.23       0.000     -2.2645E-15 -4.2343E-15  2.1489E-03
+           1   5         -118.5       59.23       59.23       0.000     -5.3388E-16  8.4571E-15  2.1489E-03
+           1   6         -118.5       59.23       59.23     -3.4474E-15 -1.1902E-15 -1.3215E-15  2.1489E-03
+           1   7         -118.5       59.23       59.23      1.7237E-15 -1.8889E-16  1.9255E-14  2.1489E-03
+           1   8         -118.5       59.23       59.23     -2.0850E-15 -1.0583E-14 -3.5085E-15  2.1489E-03
+
+ MAXIMUM                -118.5       59.23       59.23      1.7237E-15  2.0365E-15  1.9255E-14  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -118.5       59.23       59.23     -3.4474E-15 -1.0583E-14 -4.2343E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  2.9614984E+01 -1.4807492E+01 -1.4807492E+01 
+         2      8.5000000E-04  0.0000000E+00  0.0000000E+00 -2.9614984E+01 -1.4807492E+01 -1.4807492E+01 
+         3      8.5000000E-04 -4.2500000E-04  0.0000000E+00 -2.9614984E+01  1.4807492E+01 -1.4807492E+01 
+         4      0.0000000E+00 -4.2500000E-04  0.0000000E+00  2.9614984E+01  1.4807492E+01 -1.4807492E+01 
+         5      0.0000000E+00  0.0000000E+00 -4.2500000E-04  2.9614984E+01 -1.4807492E+01  1.4807492E+01 
+         6      8.5000000E-04  0.0000000E+00 -4.2500000E-04 -2.9614984E+01 -1.4807492E+01  1.4807492E+01 
+         7      8.5000000E-04 -4.2500000E-04 -4.2500000E-04 -2.9614984E+01  1.4807492E+01  1.4807492E+01 
+         8      0.0000000E+00 -4.2500000E-04 -4.2500000E-04  2.9614984E+01  1.4807492E+01  1.4807492E+01 
+
+ MAXIMUM         8.5000E-04   0.000       0.000       29.61       14.81       14.81    
+ AT NODE                 2           1           1           1           8           8
+
+ MINIMUM          0.000     -4.2500E-04 -4.2500E-04  -29.61      -14.81      -14.81    
+ AT NODE                 1           3           5           2           5           1
+
+ TOTAL         3.4000E-03 -1.7000E-03 -1.7000E-03   0.000      1.7764E-15  3.5527E-15
+
+
+                                INCREMENT     2 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.200    
+ STEP TIME COMPLETED       0.200    ,  TOTAL TIME COMPLETED         2.20    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -64.61       32.31       32.31       0.000      1.0400E-15 -3.3949E-16  2.1489E-03
+           1   2         -64.61       32.31       32.31       0.000      1.5153E-15 -1.0754E-16  2.1489E-03
+           1   3         -64.61       32.31       32.31       0.000       0.000      1.5128E-15  2.1489E-03
+           1   4         -64.61       32.31       32.31       0.000      1.9056E-15 -5.2768E-15  2.1489E-03
+           1   5         -64.61       32.31       32.31       0.000     -5.3388E-16  5.3296E-15  2.1489E-03
+           1   6         -64.61       32.31       32.31     -5.5324E-15  1.4160E-15 -2.6246E-15  2.1489E-03
+           1   7         -64.61       32.31       32.31      2.7662E-15  8.5361E-16  1.3000E-14  2.1489E-03
+           1   8         -64.61       32.31       32.31     -2.0850E-15 -8.4980E-15 -1.1629E-15  2.1489E-03
+
+ MAXIMUM                -64.61       32.31       32.31      2.7662E-15  1.9056E-15  1.3000E-14  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -64.61       32.31       32.31     -5.5324E-15 -8.4980E-15 -5.2768E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  1.6153446E+01 -8.0767230E+00 -8.0767230E+00 
+         2      1.2000000E-03  0.0000000E+00  0.0000000E+00 -1.6153446E+01 -8.0767230E+00 -8.0767230E+00 
+         3      1.2000000E-03 -6.0000000E-04  0.0000000E+00 -1.6153446E+01  8.0767230E+00 -8.0767230E+00 
+         4      0.0000000E+00 -6.0000000E-04  0.0000000E+00  1.6153446E+01  8.0767230E+00 -8.0767230E+00 
+         5      0.0000000E+00  0.0000000E+00 -6.0000000E-04  1.6153446E+01 -8.0767230E+00  8.0767230E+00 
+         6      1.2000000E-03  0.0000000E+00 -6.0000000E-04 -1.6153446E+01 -8.0767230E+00  8.0767230E+00 
+         7      1.2000000E-03 -6.0000000E-04 -6.0000000E-04 -1.6153446E+01  8.0767230E+00  8.0767230E+00 
+         8      0.0000000E+00 -6.0000000E-04 -6.0000000E-04  1.6153446E+01  8.0767230E+00  8.0767230E+00 
+
+ MAXIMUM         1.2000E-03   0.000       0.000       16.15       8.077       8.077    
+ AT NODE                 2           1           1           1           8           8
+
+ MINIMUM          0.000     -6.0000E-04 -6.0000E-04  -16.15      -8.077      -8.077    
+ AT NODE                 1           3           5           2           1           4
+
+ TOTAL         4.8000E-03 -2.4000E-03 -2.4000E-03   0.000      3.5527E-15  1.7764E-15
+
+
+                                INCREMENT     3 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.300    
+ STEP TIME COMPLETED       0.300    ,  TOTAL TIME COMPLETED         2.30    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1         -10.77       5.384       5.384       0.000      1.3006E-15  1.8176E-16  2.1489E-03
+           1   2         -10.77       5.384       5.384       0.000      9.9402E-16  1.5308E-16  2.1489E-03
+           1   3         -10.77       5.384       5.384       0.000       0.000     -1.0934E-15  2.1489E-03
+           1   4         -10.77       5.384       5.384       0.000      6.0756E-15 -6.3193E-15  2.1489E-03
+           1   5         -10.77       5.384       5.384       0.000     -5.3388E-16  2.2021E-15  2.1489E-03
+           1   6         -10.77       5.384       5.384     -7.6174E-15  4.0223E-15 -3.9277E-15  2.1489E-03
+           1   7         -10.77       5.384       5.384      3.8087E-15  1.8961E-15  6.7451E-15  2.1489E-03
+           1   8         -10.77       5.384       5.384     -2.0850E-15 -6.4130E-15  1.1828E-15  2.1489E-03
+
+ MAXIMUM                -10.77       5.384       5.384      3.8087E-15  6.0756E-15  6.7451E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                -10.77       5.384       5.384     -7.6174E-15 -6.4130E-15 -6.3193E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00  2.6919075E+00 -1.3459538E+00 -1.3459538E+00 
+         2      1.5500000E-03  0.0000000E+00  0.0000000E+00 -2.6919075E+00 -1.3459538E+00 -1.3459538E+00 
+         3      1.5500000E-03 -7.7500000E-04  0.0000000E+00 -2.6919075E+00  1.3459538E+00 -1.3459538E+00 
+         4      0.0000000E+00 -7.7500000E-04  0.0000000E+00  2.6919075E+00  1.3459538E+00 -1.3459538E+00 
+         5      0.0000000E+00  0.0000000E+00 -7.7500000E-04  2.6919075E+00 -1.3459538E+00  1.3459538E+00 
+         6      1.5500000E-03  0.0000000E+00 -7.7500000E-04 -2.6919075E+00 -1.3459538E+00  1.3459538E+00 
+         7      1.5500000E-03 -7.7500000E-04 -7.7500000E-04 -2.6919075E+00  1.3459538E+00  1.3459538E+00 
+         8      0.0000000E+00 -7.7500000E-04 -7.7500000E-04  2.6919075E+00  1.3459538E+00  1.3459538E+00 
+
+ MAXIMUM         1.5500E-03   0.000       0.000       2.692       1.346       1.346    
+ AT NODE                 2           1           1           1           8           8
+
+ MINIMUM          0.000     -7.7500E-04 -7.7500E-04  -2.692      -1.346      -1.346    
+ AT NODE                 1           3           5           2           1           4
+
+ TOTAL         6.2000E-03 -3.1000E-03 -3.1000E-03   0.000       0.000     -6.6613E-16
+
+
+                                INCREMENT     4 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.400    
+ STEP TIME COMPLETED       0.400    ,  TOTAL TIME COMPLETED         2.40    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          43.08      -21.54      -21.54       0.000      1.5612E-15  1.8176E-16  2.1489E-03
+           1   2          43.08      -21.54      -21.54       0.000      1.5153E-15  9.3496E-16  2.1489E-03
+           1   3          43.08      -21.54      -21.54       0.000       0.000     -3.1784E-15  2.1489E-03
+           1   4          43.08      -21.54      -21.54       0.000      1.2331E-14 -6.9709E-15  2.1489E-03
+           1   5          43.08      -21.54      -21.54       0.000     -2.7326E-16  1.1708E-16  2.1489E-03
+           1   6          43.08      -21.54      -21.54     -7.6174E-15  5.0648E-15 -4.4490E-15  2.1489E-03
+           1   7          43.08      -21.54      -21.54      3.8087E-15  1.8961E-15  4.6601E-15  2.1489E-03
+           1   8          43.08      -21.54      -21.54     -2.0850E-15 -4.3280E-15 -1.1629E-15  2.1489E-03
+
+ MAXIMUM                 43.08      -21.54      -21.54      3.8087E-15  1.2331E-14  4.6601E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 43.08      -21.54      -21.54     -7.6174E-15 -4.3280E-15 -6.9709E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -1.0769631E+01  5.3848155E+00  5.3848155E+00 
+         2      1.9000000E-03  0.0000000E+00  0.0000000E+00  1.0769631E+01  5.3848155E+00  5.3848155E+00 
+         3      1.9000000E-03 -9.5000000E-04  0.0000000E+00  1.0769631E+01 -5.3848155E+00  5.3848155E+00 
+         4      0.0000000E+00 -9.5000000E-04  0.0000000E+00 -1.0769631E+01 -5.3848155E+00  5.3848155E+00 
+         5      0.0000000E+00  0.0000000E+00 -9.5000000E-04 -1.0769631E+01  5.3848155E+00 -5.3848155E+00 
+         6      1.9000000E-03  0.0000000E+00 -9.5000000E-04  1.0769631E+01  5.3848155E+00 -5.3848155E+00 
+         7      1.9000000E-03 -9.5000000E-04 -9.5000000E-04  1.0769631E+01 -5.3848155E+00 -5.3848155E+00 
+         8      0.0000000E+00 -9.5000000E-04 -9.5000000E-04 -1.0769631E+01 -5.3848155E+00 -5.3848155E+00 
+
+ MAXIMUM         1.9000E-03   0.000       0.000       10.77       5.385       5.385    
+ AT NODE                 2           1           1           7           2           2
+
+ MINIMUM          0.000     -9.5000E-04 -9.5000E-04  -10.77      -5.385      -5.385    
+ AT NODE                 1           3           5           8           3           6
+
+ TOTAL         7.6000E-03 -3.8000E-03 -3.8000E-03 -3.5527E-15 -8.8818E-16  5.3291E-15
+
+
+                                INCREMENT     5 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.500    
+ STEP TIME COMPLETED       0.500    ,  TOTAL TIME COMPLETED         2.50    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          96.92      -48.46      -48.46       0.000      1.8219E-15  1.8176E-16  2.1489E-03
+           1   2          96.92      -48.46      -48.46       0.000      2.0365E-15  1.7168E-15  2.1489E-03
+           1   3          96.92      -48.46      -48.46       0.000       0.000     -5.2634E-15  2.1489E-03
+           1   4          96.92      -48.46      -48.46       0.000      1.8586E-14 -7.6224E-15  2.1489E-03
+           1   5          96.92      -48.46      -48.46       0.000     -1.2632E-17 -1.9679E-15  2.1489E-03
+           1   6          96.92      -48.46      -48.46     -7.6174E-15  6.1073E-15 -4.9702E-15  2.1489E-03
+           1   7          96.92      -48.46      -48.46      3.8087E-15  1.8961E-15  2.5751E-15  2.1489E-03
+           1   8          96.92      -48.46      -48.46     -2.0850E-15 -2.2429E-15 -3.5085E-15  2.1489E-03
+
+ MAXIMUM                 96.92      -48.46      -48.46      3.8087E-15  1.8586E-14  2.5751E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 96.92      -48.46      -48.46     -7.6174E-15 -2.2429E-15 -7.6224E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -2.4231169E+01  1.2115585E+01  1.2115585E+01 
+         2      2.2500000E-03  0.0000000E+00  0.0000000E+00  2.4231169E+01  1.2115585E+01  1.2115585E+01 
+         3      2.2500000E-03 -1.1250000E-03  0.0000000E+00  2.4231169E+01 -1.2115585E+01  1.2115585E+01 
+         4      0.0000000E+00 -1.1250000E-03  0.0000000E+00 -2.4231169E+01 -1.2115585E+01  1.2115585E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.1250000E-03 -2.4231169E+01  1.2115585E+01 -1.2115585E+01 
+         6      2.2500000E-03  0.0000000E+00 -1.1250000E-03  2.4231169E+01  1.2115585E+01 -1.2115585E+01 
+         7      2.2500000E-03 -1.1250000E-03 -1.1250000E-03  2.4231169E+01 -1.2115585E+01 -1.2115585E+01 
+         8      0.0000000E+00 -1.1250000E-03 -1.1250000E-03 -2.4231169E+01 -1.2115585E+01 -1.2115585E+01 
+
+ MAXIMUM         2.2500E-03   0.000       0.000       24.23       12.12       12.12    
+ AT NODE                 2           1           1           2           2           2
+
+ MINIMUM          0.000     -1.1250E-03 -1.1250E-03  -24.23      -12.12      -12.12    
+ AT NODE                 1           3           5           1           3           7
+
+ TOTAL         9.0000E-03 -4.5000E-03 -4.5000E-03  3.5527E-15   0.000      1.7764E-15
+
+
+                                INCREMENT     6 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.600    
+ STEP TIME COMPLETED       0.600    ,  TOTAL TIME COMPLETED         2.60    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          150.8      -75.39      -75.39       0.000      2.0825E-15  7.0301E-16  2.1489E-03
+           1   2          150.8      -75.39      -75.39       0.000      1.5153E-15  1.9775E-15  2.1489E-03
+           1   3          150.8      -75.39      -75.39       0.000       0.000     -7.8697E-15  2.1489E-03
+           1   4          150.8      -75.39      -75.39       0.000      2.2756E-14 -8.6649E-15  2.1489E-03
+           1   5          150.8      -75.39      -75.39       0.000     -1.2632E-17 -5.0954E-15  2.1489E-03
+           1   6          150.8      -75.39      -75.39     -9.7024E-15  8.7136E-15 -6.2734E-15  2.1489E-03
+           1   7          150.8      -75.39      -75.39      4.8512E-15  2.9386E-15 -3.6799E-15  2.1489E-03
+           1   8          150.8      -75.39      -75.39     -2.0850E-15 -1.5794E-16 -1.1629E-15  2.1489E-03
+
+ MAXIMUM                 150.8      -75.39      -75.39      4.8512E-15  2.2756E-14  1.9775E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 150.8      -75.39      -75.39     -9.7024E-15 -1.5794E-16 -8.6649E-15  2.1489E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -3.7692708E+01  1.8846354E+01  1.8846354E+01 
+         2      2.6000000E-03  0.0000000E+00  0.0000000E+00  3.7692708E+01  1.8846354E+01  1.8846354E+01 
+         3      2.6000000E-03 -1.3000000E-03  0.0000000E+00  3.7692708E+01 -1.8846354E+01  1.8846354E+01 
+         4      0.0000000E+00 -1.3000000E-03  0.0000000E+00 -3.7692708E+01 -1.8846354E+01  1.8846354E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.3000000E-03 -3.7692708E+01  1.8846354E+01 -1.8846354E+01 
+         6      2.6000000E-03  0.0000000E+00 -1.3000000E-03  3.7692708E+01  1.8846354E+01 -1.8846354E+01 
+         7      2.6000000E-03 -1.3000000E-03 -1.3000000E-03  3.7692708E+01 -1.8846354E+01 -1.8846354E+01 
+         8      0.0000000E+00 -1.3000000E-03 -1.3000000E-03 -3.7692708E+01 -1.8846354E+01 -1.8846354E+01 
+
+ MAXIMUM         2.6000E-03   0.000       0.000       37.69       18.85       18.85    
+ AT NODE                 2           1           1           2           1           2
+
+ MINIMUM          0.000     -1.3000E-03 -1.3000E-03  -37.69      -18.85      -18.85    
+ AT NODE                 1           3           5           1           4           5
+
+ TOTAL         1.0400E-02 -5.2000E-03 -5.2000E-03   0.000     -1.4211E-14 -7.1054E-15
+
+
+                                INCREMENT     7 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.700    
+ STEP TIME COMPLETED       0.700    ,  TOTAL TIME COMPLETED         2.70    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          172.8      -86.42      -86.42       0.000      1.9792E-15  5.9383E-16  2.3555E-03
+           1   2          172.8      -86.42      -86.42       0.000     -4.0950E-17  2.1106E-15  2.3555E-03
+           1   3          172.8      -86.42      -86.42       0.000       0.000     -7.5281E-15  2.3555E-03
+           1   4          172.8      -86.42      -86.42       0.000      2.0983E-14 -7.9797E-15  2.3555E-03
+           1   5          172.8      -86.42      -86.42       0.000      2.0948E-16 -6.9459E-15  2.3555E-03
+           1   6          172.8      -86.42      -86.42     -8.1956E-15  5.5991E-15 -5.7394E-15  2.3555E-03
+           1   7          172.8      -86.42      -86.42      3.2172E-15  1.6016E-15 -3.1084E-15  2.3555E-03
+           1   8          172.8      -86.42      -86.42     -3.5224E-15 -1.3341E-16 -3.2182E-16  2.3555E-03
+
+ MAXIMUM                 172.8      -86.42      -86.42      3.2172E-15  2.0983E-14  2.1106E-15  2.3555E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 172.8      -86.42      -86.42     -8.1956E-15 -1.3341E-16 -7.9797E-15  2.3555E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.3209680E+01  2.1604840E+01  2.1604840E+01 
+         2      2.9500000E-03  0.0000000E+00  0.0000000E+00  4.3209680E+01  2.1604840E+01  2.1604840E+01 
+         3      2.9500000E-03 -1.4750000E-03  0.0000000E+00  4.3209680E+01 -2.1604840E+01  2.1604840E+01 
+         4      0.0000000E+00 -1.4750000E-03  0.0000000E+00 -4.3209680E+01 -2.1604840E+01  2.1604840E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.4750000E-03 -4.3209680E+01  2.1604840E+01 -2.1604840E+01 
+         6      2.9500000E-03  0.0000000E+00 -1.4750000E-03  4.3209680E+01  2.1604840E+01 -2.1604840E+01 
+         7      2.9500000E-03 -1.4750000E-03 -1.4750000E-03  4.3209680E+01 -2.1604840E+01 -2.1604840E+01 
+         8      0.0000000E+00 -1.4750000E-03 -1.4750000E-03 -4.3209680E+01 -2.1604840E+01 -2.1604840E+01 
+
+ MAXIMUM         2.9500E-03   0.000       0.000       43.21       21.60       21.60    
+ AT NODE                 2           1           1           2           1           3
+
+ MINIMUM          0.000     -1.4750E-03 -1.4750E-03  -43.21      -21.60      -21.60    
+ AT NODE                 1           3           5           1           4           7
+
+ TOTAL         1.1800E-02 -5.9000E-03 -5.9000E-03   0.000       0.000      3.5527E-15
+
+
+                                INCREMENT     8 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.800    
+ STEP TIME COMPLETED       0.800    ,  TOTAL TIME COMPLETED         2.80    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          173.7      -86.86      -86.86       0.000      1.7165E-15  8.5456E-16  2.6997E-03
+           1   2          173.7      -86.86      -86.86       0.000     -4.3085E-16  1.8173E-15  2.6997E-03
+           1   3          173.7      -86.86      -86.86       0.000       0.000     -7.7666E-15  2.6997E-03
+           1   4          173.7      -86.86      -86.86       0.000      1.9276E-14 -6.9142E-15  2.6997E-03
+           1   5          173.7      -86.86      -86.86       0.000      1.6054E-16 -7.7199E-15  2.6997E-03
+           1   6          173.7      -86.86      -86.86     -7.8787E-15  6.2883E-15 -5.3971E-15  2.6997E-03
+           1   7          173.7      -86.86      -86.86      3.2645E-15  2.0264E-15 -7.1758E-15  2.6997E-03
+           1   8          173.7      -86.86      -86.86     -2.6994E-15  1.4956E-15  1.5510E-15  2.6997E-03
+
+ MAXIMUM                 173.7      -86.86      -86.86      3.2645E-15  1.9276E-14  1.8173E-15  2.6997E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 173.7      -86.86      -86.86     -7.8787E-15 -4.3085E-16 -7.7666E-15  2.6997E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.3430697E+01  2.1715349E+01  2.1715349E+01 
+         2      3.3000000E-03  0.0000000E+00  0.0000000E+00  4.3430697E+01  2.1715349E+01  2.1715349E+01 
+         3      3.3000000E-03 -1.6500000E-03  0.0000000E+00  4.3430697E+01 -2.1715349E+01  2.1715349E+01 
+         4      0.0000000E+00 -1.6500000E-03  0.0000000E+00 -4.3430697E+01 -2.1715349E+01  2.1715349E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.6500000E-03 -4.3430697E+01  2.1715349E+01 -2.1715349E+01 
+         6      3.3000000E-03  0.0000000E+00 -1.6500000E-03  4.3430697E+01  2.1715349E+01 -2.1715349E+01 
+         7      3.3000000E-03 -1.6500000E-03 -1.6500000E-03  4.3430697E+01 -2.1715349E+01 -2.1715349E+01 
+         8      0.0000000E+00 -1.6500000E-03 -1.6500000E-03 -4.3430697E+01 -2.1715349E+01 -2.1715349E+01 
+
+ MAXIMUM         3.3000E-03   0.000       0.000       43.43       21.72       21.72    
+ AT NODE                 2           1           1           2           1           1
+
+ MINIMUM          0.000     -1.6500E-03 -1.6500E-03  -43.43      -21.72      -21.72    
+ AT NODE                 1           3           5           1           4           8
+
+ TOTAL         1.3200E-02 -6.6000E-03 -6.6000E-03   0.000      3.5527E-15 -7.1054E-15
+
+
+                                INCREMENT     9 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED  0.900    
+ STEP TIME COMPLETED       0.900    ,  TOTAL TIME COMPLETED         2.90    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          174.6      -87.30      -87.30       0.000      1.3170E-15  6.5566E-16  3.0440E-03
+           1   2          174.6      -87.30      -87.30       0.000     -1.5304E-15  1.9942E-15  3.0440E-03
+           1   3          174.6      -87.30      -87.30       0.000       0.000     -8.3585E-15  3.0440E-03
+           1   4          174.6      -87.30      -87.30       0.000      1.6389E-14 -5.8049E-15  3.0440E-03
+           1   5          174.6      -87.30      -87.30       0.000      1.2317E-16 -8.3226E-15  3.0440E-03
+           1   6          174.6      -87.30      -87.30     -6.0449E-15  4.8247E-15 -4.5409E-15  3.0440E-03
+           1   7          174.6      -87.30      -87.30      1.7048E-15  7.5487E-16 -5.5056E-15  3.0440E-03
+           1   8          174.6      -87.30      -87.30     -3.6709E-15  1.1475E-15  1.7899E-15  3.0440E-03
+
+ MAXIMUM                 174.6      -87.30      -87.30      1.7048E-15  1.6389E-14  1.9942E-15  3.0440E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 174.6      -87.30      -87.30     -6.0449E-15 -1.5304E-15 -8.3585E-15  3.0440E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.3650611E+01  2.1825305E+01  2.1825305E+01 
+         2      3.6500000E-03  0.0000000E+00  0.0000000E+00  4.3650611E+01  2.1825305E+01  2.1825305E+01 
+         3      3.6500000E-03 -1.8250000E-03  0.0000000E+00  4.3650611E+01 -2.1825305E+01  2.1825305E+01 
+         4      0.0000000E+00 -1.8250000E-03  0.0000000E+00 -4.3650611E+01 -2.1825305E+01  2.1825305E+01 
+         5      0.0000000E+00  0.0000000E+00 -1.8250000E-03 -4.3650611E+01  2.1825305E+01 -2.1825305E+01 
+         6      3.6500000E-03  0.0000000E+00 -1.8250000E-03  4.3650611E+01  2.1825305E+01 -2.1825305E+01 
+         7      3.6500000E-03 -1.8250000E-03 -1.8250000E-03  4.3650611E+01 -2.1825305E+01 -2.1825305E+01 
+         8      0.0000000E+00 -1.8250000E-03 -1.8250000E-03 -4.3650611E+01 -2.1825305E+01 -2.1825305E+01 
+
+ MAXIMUM         3.6500E-03   0.000       0.000       43.65       21.83       21.83    
+ AT NODE                 2           1           1           3           1           1
+
+ MINIMUM          0.000     -1.8250E-03 -1.8250E-03  -43.65      -21.83      -21.83    
+ AT NODE                 1           3           5           4           4           7
+
+ TOTAL         1.4600E-02 -7.3000E-03 -7.3000E-03  7.1054E-15 -1.4211E-14  3.5527E-15
+
+
+                                INCREMENT    10 SUMMARY
+
+
+ TIME INCREMENT COMPLETED  0.100    ,  FRACTION OF STEP COMPLETED   1.00    
+ STEP TIME COMPLETED        1.00    ,  TOTAL TIME COMPLETED         3.00    
+
+
+
+                                                  E L E M E N T   O U T P U T
+
+
+
+
+
+   THE FOLLOWING TABLE IS PRINTED AT THE INTEGRATION POINTS FOR ELEMENT TYPE C3D8 AND ELEMENT SET 
+   CUBE
+
+    ELEMENT  PT FOOT-       S11         S22         S33         S12         S13         S23         SDV1        
+                NOTE 
+
+           1   1          175.5      -87.74      -87.74       0.000      8.1143E-16  1.0324E-16  3.3883E-03
+           1   2          175.5      -87.74      -87.74       0.000      2.5650E-17  1.5318E-15  3.3883E-03
+           1   3          175.5      -87.74      -87.74       0.000      4.0039E-16 -9.4233E-15  3.3883E-03
+           1   4          175.5      -87.74      -87.74       0.000      1.4191E-14 -4.9594E-15  3.3883E-03
+           1   5          175.5      -87.74      -87.74      4.0039E-16  4.9500E-16 -9.5960E-15  3.3883E-03
+           1   6          175.5      -87.74      -87.74     -4.6433E-15  3.3056E-15 -5.0895E-15  3.3883E-03
+           1   7          175.5      -87.74      -87.74      1.3095E-15  5.7984E-16 -7.4321E-15  3.3883E-03
+           1   8          175.5      -87.74      -87.74     -4.4212E-15  2.4830E-15  7.7427E-16  3.3883E-03
+
+ MAXIMUM                 175.5      -87.74      -87.74      1.3095E-15  1.4191E-14  1.5318E-15  3.3883E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+
+ MINIMUM                 175.5      -87.74      -87.74     -4.6433E-15  2.5650E-17 -9.5960E-15  3.3883E-03                        
+ ELEMENT                     1           1           1           1           1           1           1                         
+  
+  
+  
+  
+                                       N O D E   O U T P U T
+  
+  
+  
+  
+   THE FOLLOWING TABLE IS PRINTED FOR NODES BELONGING TO NODE SET ALLN
+  
+       NODE FOOT-  U1             U2             U3             RF1            RF2            RF3          
+            NOTE
+  
+         1      0.0000000E+00  0.0000000E+00  0.0000000E+00 -4.3869426E+01  2.1934713E+01  2.1934713E+01 
+         2      4.0000000E-03  0.0000000E+00  0.0000000E+00  4.3869426E+01  2.1934713E+01  2.1934713E+01 
+         3      4.0000000E-03 -2.0000000E-03  0.0000000E+00  4.3869426E+01 -2.1934713E+01  2.1934713E+01 
+         4      0.0000000E+00 -2.0000000E-03  0.0000000E+00 -4.3869426E+01 -2.1934713E+01  2.1934713E+01 
+         5      0.0000000E+00  0.0000000E+00 -2.0000000E-03 -4.3869426E+01  2.1934713E+01 -2.1934713E+01 
+         6      4.0000000E-03  0.0000000E+00 -2.0000000E-03  4.3869426E+01  2.1934713E+01 -2.1934713E+01 
+         7      4.0000000E-03 -2.0000000E-03 -2.0000000E-03  4.3869426E+01 -2.1934713E+01 -2.1934713E+01 
+         8      0.0000000E+00 -2.0000000E-03 -2.0000000E-03 -4.3869426E+01 -2.1934713E+01 -2.1934713E+01 
+
+ MAXIMUM         4.0000E-03   0.000       0.000       43.87       21.93       21.93    
+ AT NODE                 2           1           1           2           1           1
+
+ MINIMUM          0.000     -2.0000E-03 -2.0000E-03  -43.87      -21.93      -21.93    
+ AT NODE                 1           3           5           1           3           5
+
+ TOTAL         1.6000E-02 -8.0000E-03 -8.0000E-03   0.000       0.000     -1.4211E-14
+
+
+          THE ANALYSIS HAS BEEN COMPLETED
+
+
+
+                              ANALYSIS COMPLETE
+
+
+
+     JOB TIME SUMMARY
+       USER TIME (SEC)      =     0.20    
+       SYSTEM TIME (SEC)    =     0.10    
+       TOTAL CPU TIME (SEC) =     0.30    
+       WALLCLOCK TIME (SEC) =            1

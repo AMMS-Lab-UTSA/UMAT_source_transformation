@@ -1,0 +1,16 @@
+d(stress) / d(constant), at the last increment (40) of the path
+                               YMOD            PNU          SIGY0           HLIN           QSAT           BSAT
+stress 11               5.25309e-05       -8.08167       0.635816      0.0297632       0.388065         1.7659
+stress 22              -2.62654e-05        4.04084      -0.317908     -0.0148816      -0.194033      -0.882951
+stress 33              -2.62654e-05        4.04084      -0.317908     -0.0148816      -0.194033      -0.882951
+stress 12                         0              0              0              0              0              0
+stress 13                         0              0              0              0              0              0
+stress 23                         0              0              0              0              0              0
+Entries that match the numerical check of your original routine: YMOD 6 of 6; PNU 6 of 6; SIGY0 6 of 6; HLIN 6 of 6; QSAT 6 of 6; BSAT 6 of 6
+
+d(state variable) / d(constant), at the last increment (40) of the path
+                               YMOD            PNU          SIGY0           HLIN           QSAT           BSAT
+state variable 1        3.58761e-08    -0.00551939   -2.10698e-05   -6.01956e-07   -8.70532e-06     -4.588e-05
+Entries that match the numerical check of your original routine: YMOD 1 of 1; PNU 1 of 1; SIGY0 1 of 1; HLIN 1 of 1; QSAT 1 of 1; BSAT 1 of 1
+
+'Local' here is the derivative of the stress update of one increment at the recorded state (one increment, before the history is carried along). Every increment, and the derivative carried along the whole path, are in sensitivities/verification/verification_entries.csv.

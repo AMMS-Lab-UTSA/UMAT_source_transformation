@@ -1,0 +1,581 @@
+{
+  "artifacts": [
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\j2_props_oti.f",
+      "sha256": "be1cc43c52b2cea861dba0c3a34d6840044f4f85fd0fe787a8521d21472f8a95"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\otim6n4.f90",
+      "sha256": "8f672ba20855ad602468c65b8849d24e44e95329cea35334d8d4da3d9b08e372"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_higher_order_driver.f90",
+      "sha256": "29f4fe1e659b6b9967790128bcb42072c57561b3df5c2e78f15f6bf1223ce718"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_higher_order_driver",
+      "sha256": "d630666b5b7d461dadfe827c63f2328d279a576df31f903e175e0acf36e19525"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\oti_hjac.dat",
+      "sha256": "455c6d9bec8c4303b6dea7cbeadf371f018e9ba30fbb81872780282c0a4e6be6"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_higher_order_comparison.csv",
+      "sha256": "8c1cce39d853919e23304cb043df65d463d070b8491f72113f364c7214b15577"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\table4_higher_order_actual_umat.csv",
+      "sha256": "b5f8c296e99b4d90a641327eb7df0df3b8e89c34e2bb15ccce1d62f7f7509282"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_primal.csv",
+      "sha256": "b9d5b5bf5c31abc767ebe0086b51482b017eba369db227544737727d16b085e5"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_ddsdde.csv",
+      "sha256": "c788e2b9a84a63b944bd14c25168d020faf9e0ea8d93b3020dbe9c308cfc4abc"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\table2_ddsdde_illustrative.csv",
+      "sha256": "7e4edf371b8a384eb05a0aca25d4ed2bf0af9598de96d08c0db980cdff56ba36"
+    }
+  ],
+  "branch_history": [
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 1,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 2,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 3,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 4,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 5,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 6,
+      "yielded": false
+    },
+    {
+      "dgamma": 8.26173165895574e-05,
+      "eqplas_after": 8.26173165895574e-05,
+      "eqplas_before": 0.0,
+      "increment": 7,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.0001652346331791143,
+      "eqplas_after": 0.0002478519497686717,
+      "eqplas_before": 8.26173165895574e-05,
+      "increment": 8,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.0001652346331791142,
+      "eqplas_after": 0.00041308658294778586,
+      "eqplas_before": 0.0002478519497686717,
+      "increment": 9,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00016523463317911406,
+      "eqplas_after": 0.0005783212161268999,
+      "eqplas_before": 0.00041308658294778586,
+      "increment": 10,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00016523463317911396,
+      "eqplas_after": 0.0007435558493060139,
+      "eqplas_before": 0.0005783212161268999,
+      "increment": 11,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00016523463317911396,
+      "eqplas_after": 0.0009087904824851278,
+      "eqplas_before": 0.0007435558493060139,
+      "increment": 12,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00023755116395937347,
+      "eqplas_after": 0.0011463416464445014,
+      "eqplas_before": 0.0009087904824851278,
+      "increment": 13,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0011463416464445014,
+      "eqplas_before": 0.0011463416464445014,
+      "increment": 14,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0011463416464445014,
+      "eqplas_before": 0.0011463416464445014,
+      "increment": 15,
+      "yielded": false
+    }
+  ],
+  "canonical_manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\derivative_manifest.json",
+  "comparison": {
+    "absolute_tolerances_by_order": {
+      "2": 1e-05,
+      "3": 0.02,
+      "4": 0.1
+    },
+    "csv": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_higher_order_comparison.csv",
+    "failed_rows": 0,
+    "max_absolute_error": 11892.05078125,
+    "max_relative_error": 1.000410215594899,
+    "max_relative_error_when_absolute_tolerance_exceeded": 1.8937976950208375e-09,
+    "passed_rows": 540,
+    "publication_table": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\table4_higher_order_actual_umat.csv",
+    "relative_tolerance": 1e-07,
+    "rows": 540,
+    "rows_judged_by_tolerance": 66,
+    "rows_that_are_zeros_of_their_family": 474,
+    "structural_zero_fraction": 1e-08
+  },
+  "compiler": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "directions": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2,
+      2
+    ]
+  ],
+  "driver_compile": {
+    "command": [
+      "gfortran",
+      "-O1",
+      "-std=legacy",
+      "-ffree-line-length-none",
+      "-I",
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work",
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_higher_order_driver.f90",
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\master_parameters.o",
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\real_utils.o",
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\otim6n4.o",
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\transformed_umat.o",
+      "-o",
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_higher_order_driver"
+    ],
+    "returncode": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  "execution": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\actual_umat_higher_order_driver"
+    ],
+    "returncode": 0
+  },
+  "factorial_recovery": "OTI coefficients are multiplied by product factorials before oti_hjac.dat output.",
+  "increments": [
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0003,
+      -0.0001,
+      0.0,
+      0.0002,
+      0.0,
+      0.0
+    ],
+    [
+      -0.001,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0005,
+      0.0,
+      0.0,
+      -0.0002,
+      0.0,
+      0.0
+    ]
+  ],
+  "model": "controlled_j2_actual_umat",
+  "normalized_request": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "XNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "primal_rows": [
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "1",
+      "stress_1": "  6.7307692307692307E+01",
+      "stress_2": "  2.8846153846153843E+01",
+      "stress_3": "  2.8846153846153843E+01",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "2",
+      "stress_1": "  1.3461538461538461E+02",
+      "stress_2": "  5.7692307692307686E+01",
+      "stress_3": "  5.7692307692307686E+01",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "3",
+      "stress_1": "  2.0192307692307691E+02",
+      "stress_2": "  8.6538461538461533E+01",
+      "stress_3": "  8.6538461538461533E+01",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "4",
+      "stress_1": "  2.6923076923076923E+02",
+      "stress_2": "  1.1538461538461537E+02",
+      "stress_3": "  1.1538461538461537E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "5",
+      "stress_1": "  3.3653846153846155E+02",
+      "stress_2": "  1.4423076923076923E+02",
+      "stress_3": "  1.4423076923076923E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "6",
+      "stress_1": "  4.0384615384615387E+02",
+      "stress_2": "  1.7307692307692307E+02",
+      "stress_3": "  1.7307692307692307E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  8.2617316589557411E-05",
+      "increment": "7",
+      "stress_1": "  4.5844348975545273E+02",
+      "stress_2": "  2.0827825512227363E+02",
+      "stress_3": "  2.0827825512227363E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  2.4785194976867175E-04",
+      "increment": "8",
+      "stress_1": "  5.0033046926635825E+02",
+      "stress_2": "  2.4983476536682087E+02",
+      "stress_3": "  2.4983476536682087E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  4.1308658294778597E-04",
+      "increment": "9",
+      "stress_1": "  5.4221744877726371E+02",
+      "stress_2": "  2.9139127561136814E+02",
+      "stress_3": "  2.9139127561136814E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  5.7832121612690004E-04",
+      "increment": "10",
+      "stress_1": "  5.8410442828816917E+02",
+      "stress_2": "  3.3294778585591541E+02",
+      "stress_3": "  3.3294778585591541E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  7.4355584930601399E-04",
+      "increment": "11",
+      "stress_1": "  6.2599140779907464E+02",
+      "stress_2": "  3.7450429610046262E+02",
+      "stress_3": "  3.7450429610046262E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  9.0879048248512795E-04",
+      "increment": "12",
+      "stress_1": "  6.6787838730998010E+02",
+      "stress_2": "  4.1606080634500984E+02",
+      "stress_3": "  4.1606080634500984E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  1.1463416464445010E-03",
+      "increment": "13",
+      "stress_1": "  7.0073518883957399E+02",
+      "stress_2": "  4.4331317417901505E+02",
+      "stress_3": "  4.5595163698141062E+02",
+      "stress_4": "  1.2638462802395622E+01",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  1.1463416464445010E-03",
+      "increment": "14",
+      "stress_1": "  4.3150441960880477E+02",
+      "stress_2": "  3.2792855879439969E+02",
+      "stress_3": "  3.4056702159679526E+02",
+      "stress_4": "  1.2638462802395622E+01",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  1.1463416464445010E-03",
+      "increment": "15",
+      "stress_1": "  5.6611980422418935E+02",
+      "stress_2": "  3.8562086648670737E+02",
+      "stress_3": "  3.9825932928910294E+02",
+      "stress_4": " -2.7461525822197626E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    }
+  ],
+  "reference": {
+    "method": "independent tensor-product finite differences of validation.j2_reference.integrate_increment",
+    "stencil": "9-point centered per active strain component",
+    "step": 2e-05
+  },
+  "schema": "umat-oti-actual-higher-order-evidence/1",
+  "source": {
+    "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\refreeze\\wt\\2ae2ee0\\UMATs\\UMATs\\generic_ps\\j2_props.f",
+    "sha256": "4362e759c4642cb2f74e20c50b86a9472b1e80d6a7fef663bf8faa3dfa8de1c8"
+  },
+  "status": "verified_from_generic_transformed_source",
+  "tangent": {
+    "agreeing": 540,
+    "csv": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\rounds\\tangent\\work\\table2_ddsdde_illustrative.csv",
+    "disagreeing": 0,
+    "entries": 540,
+    "measured": 186,
+    "reference_unresolved": 0,
+    "references": [
+      "closed-form elastoplastic consistent tangent from umat_oti.validation.j2_reference",
+      "80-digit centred difference of the independent integrator umat_oti.validation.actual_umat_higher_order._integrate_increment_mp"
+    ],
+    "relative_tolerance": 1e-09,
+    "resolved": 540,
+    "structural_zeros": 354,
+    "structural_zeros_disagreeing": 0,
+    "worst_measured_relative_error": 2.1878975679081053e-15,
+    "worst_reference_spread_relative_where_measured": 4.623756860179139e-14
+  }
+}

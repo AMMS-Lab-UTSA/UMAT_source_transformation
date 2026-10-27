@@ -1,0 +1,187 @@
+1
+
+   Abaqus 2024                                  Date 27-Oct-2026   Time 14:11:50
+   For use by UNIVERSITY OF TEXAS AT SAN ANTONIO under license from Dassault Systemes or its subsidiary.
+
+
+
+                         The Abaqus Software is a product of:
+
+                           Dassault Systemes SIMULIA Corp.
+                           1301 Atwood Avenue, Suite 101W
+                              Johnston, RI 02919, USA
+ 
+
+
+                   The Abaqus Software is available only under license
+                   from Dassault Systemes or its subsidiary and may be
+                   used or reproduced only in accordance with the terms
+                   of such license.
+ 
+                          On machine RR714387IP01 
+                          you are authorized to run
+                          Abaqus/Standard until 30-Nov-2026
+
+                          Your site id is: 200000000017647 
+
+
+ 
+                    For assistance or any other information you may
+                    obtain contact information for your local office
+                    from the world wide web at:
+
+                      https://www.3ds.com/products-services/simulia/services-support/
+
+ 
+                * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+                *                                                         * 
+                *                   *****************                     * 
+                *                   *  N O T I C E  *                     * 
+                *                   *****************                     * 
+                *                                                         * 
+                *                                                         * 
+                *                       Abaqus 2024                       * 
+                *                                                         * 
+                *       BUILD ID: 2023_09_21-07.55.25 RELr426 190762      * 
+                *                                                         * 
+                *                                                         * 
+                *  Please make sure you are using                         * 
+                *  release Abaqus 2024 manuals                            * 
+                *  plus the notes accompanying this release.              * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *   This program may not be used for commercial purposes  * 
+                *           without payment of a commercial fee.          * 
+                *                                                         * 
+                * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+
+ 
+
+
+
+     PROCESSING PART, INSTANCE, AND ASSEMBLY INFORMATION
+   *******************************************************
+
+
+     END PROCESSING PART, INSTANCE, AND ASSEMBLY INFORMATION
+   ***********************************************************
+
+
+
+
+     OPTIONS BEING PROCESSED
+   ***************************
+
+
+  *HEADING
+          Paired primal-parity deck: model=r1 case=ext. All 24 nodal DOFs prescribed in every step from u_i = eps_ij X_j (one value per DOF).                                                                                                                                                                                                                                                                                                                                                                                             
+  *ELEMENT, TYPE=C3D8, ELSET=CUBE
+  *MATERIAL, NAME=UMATMAT
+  *DEPVAR
+  *USER MATERIAL, CONSTANTS=6
+  *SOLID SECTION, ELSET=CUBE, MATERIAL=UMATMAT
+  *SOLID SECTION, ELSET=CUBE, MATERIAL=UMATMAT
+  *BOUNDARY, OP=MOD
+  *BOUNDARY, OP=MOD
+  *BOUNDARY, OP=MOD
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *OUTPUT, FIELD, FREQUENCY=1
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *OUTPUT, FIELD, FREQUENCY=1
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *OUTPUT, FIELD, FREQUENCY=1
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *OUTPUT, FIELD, FREQUENCY=1
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *NODE OUTPUT
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *NODE PRINT, NSET=ALLN, FREQUENCY=1, TOTALS=YES
+  *EL PRINT, ELSET=CUBE, FREQUENCY=1
+  *NODE FILE, NSET=ALLN, FREQUENCY=1
+  *EL FILE, ELSET=CUBE, FREQUENCY=1
+  *END STEP
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *NODE OUTPUT
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *NODE PRINT, NSET=ALLN, FREQUENCY=1, TOTALS=YES
+  *EL PRINT, ELSET=CUBE, FREQUENCY=1
+  *NODE FILE, NSET=ALLN, FREQUENCY=1
+  *EL FILE, ELSET=CUBE, FREQUENCY=1
+  *END STEP
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *OUTPUT, FIELD, FREQUENCY=1
+  *NODE OUTPUT
+  *ELEMENT OUTPUT, ELSET=CUBE
+  *NODE PRINT, NSET=ALLN, FREQUENCY=1, TOTALS=YES
+  *EL PRINT, ELSET=CUBE, FREQUENCY=1
+  *NODE FILE, NSET=ALLN, FREQUENCY=1
+  *EL FILE, ELSET=CUBE, FREQUENCY=1
+  *END STEP
+  *STEP, NAME=load, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *END STEP
+  *STEP, NAME=unload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *END STEP
+  *STEP, NAME=reload, NLGEOM=NO, INC=10
+  *STATIC, DIRECT
+  *BOUNDARY, OP=MOD
+  *END STEP
+
+
+
+                            P R O B L E M   S I Z E
+
+
+          NUMBER OF ELEMENTS IS                                     1
+          NUMBER OF NODES IS                                        8
+          NUMBER OF NODES DEFINED BY THE USER                       8
+          TOTAL NUMBER OF VARIABLES IN THE MODEL                   24
+          (DEGREES OF FREEDOM PLUS MAX NO. OF ANY LAGRANGE MULTIPLIER
+           VARIABLES. INCLUDE *PRINT,SOLVE=YES TO GET THE ACTUAL NUMBER.)
+
+
+
+                              END OF USER INPUT PROCESSING
+
+
+
+     JOB TIME SUMMARY
+       USER TIME (SEC)      =      0.0    
+       SYSTEM TIME (SEC)    =      0.0    
+       TOTAL CPU TIME (SEC) =      0.0    
+       WALLCLOCK TIME (SEC) =            0

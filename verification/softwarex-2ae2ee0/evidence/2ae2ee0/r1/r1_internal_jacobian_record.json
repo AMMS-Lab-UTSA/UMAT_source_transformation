@@ -1,0 +1,229 @@
+{
+ "model": "r1_j2_voce",
+ "source": "umat_j2_voce.f",
+ "stages": {
+  "solve_discovered": {
+   "status": "succeeded"
+  },
+  "probe_injected": {
+   "status": "succeeded"
+  },
+  "recording_is_non_perturbing": {
+   "status": "succeeded",
+   "max_stress_drift": 0.0,
+   "max_state_drift": 0.0,
+   "reason": null
+  },
+  "converged_iterate_located": {
+   "status": "succeeded",
+   "increment": 30,
+   "iterate": 0.00013115294849510933,
+   "residual": 1.1368683772161603e-13
+  },
+  "compiled_original_probe": {
+   "status": "succeeded"
+  },
+  "probe_took_effect": {
+   "status": "succeeded",
+   "residual_evaluations_at_seeded_iterate": 2.0,
+   "recorded_iterate": 0.00013115294849510933,
+   "seeded_iterate": 0.00013115294849510933,
+   "reason": null
+  },
+  "compiled_oti_probe": {
+   "status": "succeeded"
+  },
+  "primal_parity": {
+   "status": "succeeded",
+   "worst_relative_difference": 1.246490874214875e-13,
+   "reason": null
+  },
+  "fd_reference_resolved": {
+   "status": "succeeded",
+   "step": 1.3115294849510934e-08,
+   "value": -234601.99278671123
+  },
+  "jacobian_extracted": {
+   "status": "succeeded",
+   "value": -234601.9927866489
+  },
+  "jacobian_verified": {
+   "status": "succeeded",
+   "reason": null
+  }
+ },
+ "furthest_stage": "jacobian_verified",
+ "rows": [
+  {
+   "increment": 30,
+   "array": "DSTATEV_DP",
+   "component": 3,
+   "parameter": "GSEED",
+   "props_index": 7,
+   "oti_direction": 0,
+   "oti": -234601.9927866489,
+   "reference": -234601.99278671123,
+   "absolute_error": 6.234040483832359e-08,
+   "relative_error": 2.6572836870571886e-13,
+   "judged_by": "within_reference_resolution",
+   "agrees": true,
+   "branch": "local_solve",
+   "branch_crossing": false
+  }
+ ],
+ "solve": {
+  "iteration_variable": "DGAM",
+  "residual_variable": "RES",
+  "hand_coded_jacobian_variable": "DRES",
+  "update_sign": "-",
+  "update_line": 124,
+  "loop_start_line": 118,
+  "loop_end_line": 126,
+  "convergence_variable": null,
+  "convergence_tolerance": null,
+  "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used"
+ },
+ "slot_placement_attempts": [
+  {
+   "offset": 0,
+   "increments_with_intact_sentinel": 22,
+   "increments_with_live_counter": 22
+  }
+ ],
+ "slots": {
+  "statev_iterate": 2,
+  "statev_residual": 3,
+  "statev_jacobian": 4,
+  "statev_counter": 5,
+  "statev_sentinel": 6,
+  "nstatv_extended": 6,
+  "props_seed": 7,
+  "nprops_extended": 7,
+  "offset_past_declared_nstatv": 0
+ },
+ "residual_evaluations_per_increment": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0
+ ],
+ "target_increment": 30,
+ "converged_iterate": 0.00013115294849510933,
+ "residual_at_iterate": 1.1368683772161603e-13,
+ "hand_coded_jacobian": -234601.99278664892,
+ "injection": {
+  "enclosing_routine": "UMAT",
+  "target_increment": 30,
+  "override_iterate": true,
+  "forced_exit": true,
+  "slots": {
+   "statev_iterate": 2,
+   "statev_residual": 3,
+   "statev_jacobian": 4,
+   "statev_counter": 5,
+   "statev_sentinel": 6,
+   "nstatv_extended": 6,
+   "props_seed": 7,
+   "nprops_extended": 7,
+   "offset_past_declared_nstatv": 0
+  },
+  "solve": {
+   "iteration_variable": "DGAM",
+   "residual_variable": "RES",
+   "hand_coded_jacobian_variable": "DRES",
+   "update_sign": "-",
+   "update_line": 124,
+   "loop_start_line": 118,
+   "loop_end_line": 126,
+   "convergence_variable": null,
+   "convergence_tolerance": null,
+   "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used"
+  },
+  "edits": [
+   {
+    "line": 118,
+    "kind": "counter-reset"
+   },
+   {
+    "line": 124,
+    "kind": "record+seed"
+   }
+  ]
+ },
+ "probe_residual_at_iterate": 1.1368683772161603e-13,
+ "probe_hand_coded_jacobian": -234601.99278664892,
+ "probe_evaluations": 2.0,
+ "reference_convergence": {
+  "relative_steps": [
+   0.01,
+   0.0031622776601683794,
+   0.001,
+   0.00031622776601683794,
+   0.0001,
+   3.1622776601683795e-05,
+   1e-05,
+   3.162277660168379e-06,
+   1e-06,
+   3.162277660168379e-07,
+   1e-07
+  ],
+  "values": [
+   -234601.99278697127,
+   -234601.99278667563,
+   -234601.99278649455,
+   -234601.9927866756,
+   -234601.99278671123,
+   -234601.99278461977,
+   -234601.99278237708,
+   -234601.9927846198,
+   -234601.99276070646,
+   -234601.9923049193,
+   -234601.99384423948
+  ],
+  "default_relative_step": 0.0001,
+  "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+  "converged_relative_step": 0.00031622776601683794,
+  "converged_reference": -234601.99278669572,
+  "residual_uncertainty": 1.9441358745098114e-08,
+  "oti_vs_converged_reference_absolute": 4.682806320488453e-08,
+  "oti_vs_converged_reference_relative": 1.9960641701565355e-13,
+  "hand_coded_vs_converged_reference_relative": 1.9948236082111305e-13
+ },
+ "extracted": {
+  "oti": -234601.9927866489,
+  "finite_difference": -234601.99278671123,
+  "hand_coded": -234601.99278664892,
+  "finite_difference_at_converged_step": -234601.99278669572
+ },
+ "hand_coded_audit": {
+  "absolute_difference": 6.231130100786686e-08,
+  "relative_difference": 2.6560431251117836e-13,
+  "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value"
+ }
+}

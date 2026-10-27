@@ -1,0 +1,45 @@
+# Re-freeze archives (Ada). Commit logs, step status, junit, manifests, JSON/CSV
+# results and notes. Do NOT commit build products or copies of model sources:
+# the reproduce-* work trees contain transformed copies of the 20 imported
+# sweep models and bundled third-party UMATs whose provenance or licence is
+# unresolved (reviews/scout-model-provenance.md). Their hashes are kept in
+# each SHA256SUMS file; the files stay local.
+*/reproduce-*/work/
+*/reproduce-*/**/*.f
+*/reproduce-*/**/*.for
+*/reproduce-*/**/*.f90
+*/reproduce-*/**/*.inc
+*/reproduce-*/**/*.INC
+*/r1/verify/**/build_*/
+*/r1/verify/newton_k*/oti/
+*/r1/verify/newton_k*/build_oti/
+*/r1/check/**/build*/
+*/r1/check/**/collaborator/
+*/r1/check/**/abi_check/
+*.o
+*.obj
+*.mod
+*.exe
+*.so
+*.dll
+*.a
+.pytest_cache/
+__pycache__/
+# Round work trees hold transformed copies of the sweep models and of
+# j2_props.f / ICP sources; results keep only tables and JSON.
+*/rounds/*/work/
+*/rounds/**/*.f
+*/rounds/**/*.for
+*/rounds/**/*.f90
+*/rounds/**/*.dat
+*/rounds/**/*.INC
+*/rounds/**/*.inc
+*/rounds/**/*.sh
+# Generated OTI modules (from the vendored GPL OTIlib templates).
+*/r1/**/otim*.f90
+*/r1/**/master_parameters.f90
+*/r1/**/real_utils.f90
+*/r1/**/oti_intrinsics.f90
+*/r1/**/library_twins/
+# Run logs are evidence here; override the workspace-level *.log rule (LaTeX).
+!*.log

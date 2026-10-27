@@ -1,0 +1,57 @@
+{
+  "counts": {
+    "failed": 0,
+    "succeeded": 2,
+    "total": 2,
+    "unavailable": 0,
+    "verifying_steps": 1,
+    "verifying_steps_succeeded": 1
+  },
+  "generated_at": "2026-10-27T17:32:14.946251+00:00",
+  "nothing_was_verified": false,
+  "profile": "smoke",
+  "steps": [
+    {
+      "detail": "umat_oti imports and its transform modules load",
+      "name": "import_package",
+      "seconds": 1.265,
+      "status": "succeeded",
+      "supports_claims": [
+        "INSTALL"
+      ]
+    },
+    {
+      "command": [
+        "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\refreeze\\venv\\ce4255a\\Scripts\\python.exe",
+        "tools/run_parameter_sensitivity_sweep.py",
+        "--model",
+        "m3_j2",
+        "--work-dir",
+        "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\ce4255a\\reproduce-smoke\\work",
+        "--results-dir",
+        "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\ce4255a\\reproduce-smoke\\results"
+      ],
+      "counts": {
+        "attempted": 1,
+        "comparison_rows_agreeing": 560,
+        "comparison_rows_total": 560,
+        "derivatives_verified": 1,
+        "parameter_directions_declared": 4,
+        "parameter_directions_verified": 4,
+        "primal_parity": 1
+      },
+      "detail": "m3_j2 transformed, compiled, executed and verified against centred differences of the original build",
+      "input_sha256": {
+        "parameter_sensitivity/loading_paths.json": "0f754f7891348818e6d8d7819da4dc06dd30c3853463e2a67d28e05334c5506d",
+        "parameter_sensitivity/models/m3_j2/contract_v2.json": "2b58d84c1205138842abaaa605705399e1fbe9f586ec81a6dec3badb704b7bc9",
+        "parameter_sensitivity/models/m3_j2/umat.for": "9b779f0c6cadf9c493068d84cd18bbf91f91ae14cb08aa0e7c8ac4ca119a9b40"
+      },
+      "name": "material_point_smoke",
+      "seconds": 28.922,
+      "status": "succeeded",
+      "supports_claims": [
+        "TABLE-6"
+      ]
+    }
+  ]
+}

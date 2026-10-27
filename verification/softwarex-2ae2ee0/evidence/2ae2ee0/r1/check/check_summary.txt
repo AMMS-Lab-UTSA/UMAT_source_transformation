@@ -1,0 +1,14 @@
+======================================================================
+AMBER: DERIVATIVES CHECKED, ABAQUS NOT RUN
+======================================================================
+Next: Run the Abaqus check to verify the translated routine against your original (a verified result needs the six-check Abaqus comparison. If you have Abaqus, this runs your files there:  umat-oti verify C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\input\umat_j2_voce.f YOUR_DECK.inp  That command runs both versions of your file in Abaqus, in a scratch folder, and applies the same six checks the corpus uses. It needs Abaqus, an Intel Fortran compiler and your deck with its material constants, and takes a few minutes.). Until then call this 'derivatives checked numerically', not 'verified'.
+The numerical derivative check passed; the Abaqus checks were not run.
+Whose move: you.
+Abaqus checks: not run.
+The word "verified" needs all the Abaqus checks: Both versions of your material ran and agreed on the stresses, and the derivatives matched an independent check of your original routine, in this test only.
+
+Constants checked (6): YMOD, PNU, SIGY0, HLIN, QSAT, BSAT; 40 increments of loading.
+Derivatives: 2640 entries agree with a numerical check of your original routine (each constant is nudged a little and the change in stress measured), 3360 are zero in both, 0 disagree; worst relative difference 7.3e-10 (tolerance 2e-06).
+Loading reached the nonlinear range: yes: the internal state variables left zero (largest value 0.046 at the end of the path).
+The derivatives, with names: C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\results_table.txt  (and results_table.csv)
+Everything the run recorded: C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\workflow_summary.json

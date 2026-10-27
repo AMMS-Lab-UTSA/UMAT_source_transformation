@@ -1,0 +1,46 @@
+# Environment for evidence/2ae2ee0/abaqus_parity (captured 2026-10-27T19:12Z by Ada)
+## OS
+Microsoft Windows [Version 10.0.26200.9457]
+## Abaqus
+Abaqus JOB abaqus
+Abaqus 2024
+Abaqus Site ID: 200000000017647
+Abaqus is located in the directory C:\SIMULIA\EstProducts\2024 C:\SIMULIA\EstProducts\2024\win_b64 C:\SIMULIA\EstProducts\2024\win_b64\code C:\SIMULIA\EstProducts\2024\win_b64\code\bin C:\SIMULIA\EstProducts\2024\win_b64\code\bin\SMAExternal C:\SIMULIA\EstProducts\2024\win_b64\CAEresources C:\SIMULIA\EstProducts\2024\win_b64\SMA
+Sequence Information:
+    C:\SIMULIA\EstProducts\2024\win_b64: 2023_09_21-07.55.25 RELr426 190762
+## Abaqus compile_fortran / link_sl / licence server (abaqus information=environment)
+abaquslm_license_file='27004@EB137960.utsarr.net'
+compile_fortran='ifort /c /fpp /extend-source /DABQ_WIN86_64 /DABQ_FORTRAN /iface:cref /recursive /Qauto /align:array64byte /Qpc64 /Qprec-div /Qprec-sqrt /Qfma- /fp:precise /Qimf-arch-consistency:true /Qfp-speculation:safe /Qprotect-parens /Qfp-stack-check /reentrancy:threaded /QxSSE3 /QaxAVX /include:%I /include:C:\\SIMULIA\\EstProducts\\2024 %P'
+license_server_type=FLEXNET
+link_sl='LINK /nologo /NOENTRY /INCREMENTAL:NO /subsystem:console /machine:AMD64 /NODEFAULTLIB:LIBC.LIB /NODEFAULTLIB:LIBCMT.LIB /DEFAULTLIB:OLDNAMES.LIB /DEFAULTLIB:LIBIFCOREMD.LIB /DEFAULTLIB:LIBIFPORTMD.LIB /DEFAULTLIB:LIBMMD.LIB /DEFAULTLIB:kernel32.lib /DEFAULTLIB:user32.lib /DEFAULTLIB:advapi32.lib /FIXED:NO /dll /def:%E /out:%U %F %A %L %B oldnames.lib user32.lib ws2_32.lib netapi32.lib advapi32.lib msvcrt.lib vcruntime.lib ucrt.lib'
+## Licence snapshot (abaqus licensing lmstat -a, 'Users of abaqus' line)
+Users of abaqus:  (Total of 314 licenses issued;  Total of 70 licenses in use)
+## Fortran compilers
+ifort: not installed (no ifort.exe under C:/Program Files (x86)/Intel/oneAPI/compiler/2025.1/bin; not on PATH)
+Intel(R) Fortran Compiler for applications running on Intel(R) 64, Version 2025.1.1 Build 20250418
+Copyright (C) 1985-2025 Intel Corporation. All rights reserved.
+
+MSVC linker: Visual Studio 2022 BuildTools, MSVC 14.44.35207 (link.exe), via vcvars64.bat
+## Abaqus user-subroutine development component (SMAUsubs)
+ls C:/SIMULIA/EstProducts/2024/ ->
+CATEnv
+InstallData
+SetupEnv.log
+SftMgt
+Uninstall.bat
+win_b64
+find C:/SIMULIA -iname 'aba_param*' -> 0 files
+find C:/ -maxdepth 4 -iname SMAUsubs -> none; find C:/ -maxdepth 6 -iname 'ABQSMAUsubsLib*' -> none
+driverSharedLibrary.pyc references ABQSMAUsubsLib, SMAUsubs, PublicInterfaces (strings)
+## Linking method actually used for the archived runs (NON-STANDARD; added after the blocker)
+Supported routes fail here (blocker/): user=*.for -> "aba_param.inc ... not found"; user=*.obj -> "does not
+contain an Abaqus user subroutine"; a standardU.dll exporting only umat -> standard.exe exits without .msg.
+Method (re-implemented from ABSS src/oracle/abaqus_usersub.cpp::directBuild @5dcef95, read-only; no ABSS binary used):
+scripts/build_usublib.py compiles with ifx 2025.1.1 + Abaqus 2024 compile_fortran flags + /libs:dll /threads
+(minus /Qpc64; ifx ignores /Qprec-sqrt, /Qfp-stack-check), aba_param.inc = documented 2-line content, and links
+standardU.dll exporting `umat` from our objects and the other 98 exports of Abaqus' own standardU.dll as lazy
+MASM thunks into an unmodified private copy (abss_abqstub.dll). Jobs load it via usub_lib_dir in the job-local
+abaqus_v6.env and run without user=. Abaqus installation unmodified. DLL imports: KERNEL32, VCRUNTIME140,
+api-ms-win-crt-*, libifcoremd.dll, libmmd.dll (resolved to Abaqus' bundled copies in code/bin at run time,
+assumed; not traced). Static: libircmt.lib (CPU dispatch for /QaxAVX), svml_dispmd.lib.
+Linker: MSVC 14.44.35207 link.exe/ml64/cl (VS 2022 BuildTools). Run: cpus=1, interactive, one job at a time.

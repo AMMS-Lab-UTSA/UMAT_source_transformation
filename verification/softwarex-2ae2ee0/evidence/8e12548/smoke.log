@@ -1,0 +1,5 @@
+reproduce: profile=smoke out=C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\8e12548\reproduce-smoke
+  [                         succeeded] import_package (1.7s)
+  [                         succeeded] material_point_smoke (18.4s)
+
+wrote C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\8e12548\reproduce-smoke/reproduction_summary.md

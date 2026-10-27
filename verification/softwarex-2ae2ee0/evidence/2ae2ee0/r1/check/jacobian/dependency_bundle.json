@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "original": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery\\umat_j2_voce_resolved.f",
+      "bundled": "dependencies/umat_j2_voce_resolved.f",
+      "original_sha256": "e696a70dca0b3e1e5e9ce55fbf8d0a1cbd62fa4bd984951b48e92dce772af1fa",
+      "bundled_sha256": "e696a70dca0b3e1e5e9ce55fbf8d0a1cbd62fa4bd984951b48e92dce772af1fa"
+    }
+  ],
+  "missing_includes": [],
+  "runtime_includes": [
+    {
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery\\umat_j2_voce_resolved.f",
+      "include": "ABA_PARAM.INC"
+    }
+  ],
+  "source_includes_complete": true,
+  "runtime_calls": [],
+  "external_library_calls": {},
+  "include_base": ".",
+  "compile_sources": "compile_order.txt",
+  "note": "Dependency sources are staged for provenance/reuse; do not compile them again alongside the resolved UMAT."
+}

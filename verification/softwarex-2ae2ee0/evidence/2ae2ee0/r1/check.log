@@ -1,0 +1,31 @@
+Reading your files ...
+Results go to: C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check   (what was read from your files: C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check_input)
+Files: umat_j2_voce.f  (no deck)
+Constants: not found (see below).
+Loading: a generated path that makes the material do something, in unit time increments  [default]
+Assumed, not stated in your files (change if wrong): 6 stress values per point (a 3D solid has 6: three normal, three shear); element C3D8; small strain; state variables 1.
+Needs you (one thing first):
+  - I could not find the numbers this material needs: the values of its 6 constants: YMOD, PNU, SIGY0, HLIN, QSAT, BSAT (read from the material definition), in the order the routine reads them.
+    If you say nothing: The run cannot go on, and the constants are never guessed or filled in for you. Put an Abaqus input file with a *USER MATERIAL block next to the UMAT, or type the values into a material file and pass it with --material-config FILE (if the input file lives elsewhere, use --material-discovery-root FOLDER).
+The full list, with the lines quoted: add --details, or read intake.md in the input folder.
+(The same, with the lines quoted: C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check_input\intake.md, C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check_input\intake.json)
+  Conversion    the routine's other subroutines are all found and I can find where it sets stress and stiffness  [ok]
+  Constants     6 typed with --props  [typed]
+  Loading       out to +0.02, back to -0.02, unloaded to 0 (40 increments)  [--peak]
+Working: converting, compiling, running both versions and comparing (about 1 to 3 minutes) ...
+
+======================================================================
+AMBER: DERIVATIVES CHECKED, ABAQUS NOT RUN
+======================================================================
+Next: Run the Abaqus check to verify the translated routine against your original (a verified result needs the six-check Abaqus comparison. If you have Abaqus, this runs your files there:  umat-oti verify C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\input\umat_j2_voce.f YOUR_DECK.inp  That command runs both versions of your file in Abaqus, in a scratch folder, and applies the same six checks the corpus uses. It needs Abaqus, an Intel Fortran compiler and your deck with its material constants, and takes a few minutes.). Until then call this 'derivatives checked numerically', not 'verified'.
+The numerical derivative check passed; the Abaqus checks were not run.
+Whose move: you.
+Abaqus checks: not run.
+The word "verified" needs all the Abaqus checks: Both versions of your material ran and agreed on the stresses, and the derivatives matched an independent check of your original routine, in this test only.
+
+Constants checked (6): YMOD, PNU, SIGY0, HLIN, QSAT, BSAT; 40 increments of loading.
+Derivatives: 2640 entries agree with a numerical check of your original routine (each constant is nudged a little and the change in stress measured), 3360 are zero in both, 0 disagree; worst relative difference 7.3e-10 (tolerance 2e-06).
+Loading reached the nonlinear range: yes: the internal state variables left zero (largest value 0.046 at the end of the path).
+The derivatives, with names: C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\results_table.txt  (and results_table.csv)
+Everything the run recorded: C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\workflow_summary.json
+To call this file verified, the six-check Abaqus comparison is needed, and this check command does not run it. If you have Abaqus, this runs your files there:  umat-oti verify C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\input\umat_j2_voce.f YOUR_DECK.inp  That command runs both versions of your file in Abaqus, in a scratch folder, and applies the same six checks the corpus uses. It needs Abaqus, an Intel Fortran compiler and your deck with its material constants, and takes a few minutes.

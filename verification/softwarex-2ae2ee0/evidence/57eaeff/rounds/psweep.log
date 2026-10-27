@@ -1,0 +1,22 @@
+full round: writing to C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\57eaeff\rounds\psweep\results, leaving the published round untouched
+wrote C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\57eaeff\rounds\psweep\results\table6_parameter_sensitivity.csv
+wrote C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\57eaeff\rounds\psweep\results\table6_comparison_rows.csv
+{
+  "attempted": 20,
+  "contract_complete": 20,
+  "transformed": 15,
+  "compiled_oti": 15,
+  "executed_oti": 15,
+  "executed_original": 15,
+  "primal_parity": 15,
+  "reference_resolved": 15,
+  "derivatives_verified": 0,
+  "parameter_directions_declared": 84,
+  "parameter_directions_verified": 11,
+  "comparison_rows_total": 10600,
+  "comparison_rows_agreeing": 5692
+}
+
+failure taxonomy:
+  derivatives_verified:failed: 15 -> m1_elastic, m2_cubic, m5_cpflow, m6_fcc, sweep_aniso_ortho, sweep_damage_elastic, sweep_drucker_prager, sweep_eco, sweep_lame_elastic, sweep_maxwell_ve, sweep_mooney_small, sweep_real_ECL_TEMP, sweep_real_PCO, sweep_thermoelastic, sweep_transiso
+  transform:transform_failed: 5 -> m3_j2, sweep_j2_bilinear, sweep_j2_combined, sweep_j2_kinematic, sweep_perzyna_linear

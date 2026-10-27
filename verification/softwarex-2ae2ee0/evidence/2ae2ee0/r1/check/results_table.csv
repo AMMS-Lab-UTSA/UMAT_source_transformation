@@ -1,0 +1,43 @@
+quantity,component,constant,derivative,finite_difference_reference,relative_difference,agreement,increment
+stress,stress 11,YMOD,5.2530857946755916e-05,5.253085794284709e-05,7.441010505822769e-11,agrees,40
+stress,stress 11,PNU,-8.081670453352416,-8.081670453580394,2.820922210056561e-11,agrees,40
+stress,stress 11,SIGY0,0.6358155546318252,0.6358155546316404,2.905577096247702e-13,agrees,40
+stress,stress 11,HLIN,0.029763242478032918,0.02976324247802537,2.5353578750932637e-13,agrees,40
+stress,stress 11,QSAT,0.38806512544392446,0.3880651254452473,3.4087853999328633e-12,agrees,40
+stress,stress 11,BSAT,1.7659028711350473,1.7659028711219205,7.433496580432326e-12,agrees,40
+stress,stress 22,YMOD,-2.6265428973382837e-05,-2.626542897568742e-05,8.774208592215317e-11,agrees,40
+stress,stress 22,PNU,4.040835226668875,4.040835226514817,3.8125310973807186e-11,agrees,40
+stress,stress 22,SIGY0,-0.3179077773159123,-0.31790777731605824,4.59060227525944e-13,agrees,40
+stress,stress 22,HLIN,-0.014881621239016514,-0.014881621239005462,7.426558630905345e-13,agrees,40
+stress,stress 22,QSAT,-0.19403256272196304,-0.19403256272071187,6.4482261124085926e-12,agrees,40
+stress,stress 22,BSAT,-0.8829514355675269,-0.8829514355519409,1.765213388376753e-11,agrees,40
+stress,stress 33,YMOD,-2.6265428973382837e-05,-2.626542897568742e-05,8.774208592215317e-11,agrees,40
+stress,stress 33,PNU,4.040835226668875,4.040835226514817,3.8125310973807186e-11,agrees,40
+stress,stress 33,SIGY0,-0.3179077773159123,-0.31790777731605824,4.59060227525944e-13,agrees,40
+stress,stress 33,HLIN,-0.014881621239016514,-0.014881621239005462,7.426558630905345e-13,agrees,40
+stress,stress 33,QSAT,-0.19403256272196304,-0.19403256272071187,6.4482261124085926e-12,agrees,40
+stress,stress 33,BSAT,-0.8829514355675269,-0.8829514355519409,1.765213388376753e-11,agrees,40
+stress,stress 12,YMOD,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 12,PNU,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 12,SIGY0,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 12,HLIN,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 12,QSAT,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 12,BSAT,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 13,YMOD,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 13,PNU,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 13,SIGY0,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 13,HLIN,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 13,QSAT,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 13,BSAT,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 23,YMOD,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 23,PNU,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 23,SIGY0,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 23,HLIN,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 23,QSAT,0.0,0.0,0.0,zero (the check agrees it is zero),40
+stress,stress 23,BSAT,0.0,0.0,0.0,zero (the check agrees it is zero),40
+state variable,state variable 1,YMOD,3.58760611131171e-08,3.587606111324698e-08,3.6202578273752775e-12,agrees,40
+state variable,state variable 1,PNU,-0.005519394017402638,-0.005519394017406,6.091056528743843e-13,agrees,40
+state variable,state variable 1,SIGY0,-2.1069832552352225e-05,-2.1069832552348644e-05,1.6997075283312456e-13,agrees,40
+state variable,state variable 1,HLIN,-6.019559883097248e-07,-6.019559883096773e-07,7.897541529263259e-14,agrees,40
+state variable,state variable 1,QSAT,-8.705320641504195e-06,-8.705320641514612e-06,1.1966028150252025e-12,agrees,40
+state variable,state variable 1,BSAT,-4.58799980039074e-05,-4.587999800382015e-05,1.9017256675412273e-12,agrees,40

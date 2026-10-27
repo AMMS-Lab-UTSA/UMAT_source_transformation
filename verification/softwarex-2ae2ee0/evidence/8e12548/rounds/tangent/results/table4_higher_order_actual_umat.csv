@@ -1,0 +1,7 @@
+model,branch,order,comparison_rows,passed_rows,failed_rows,max_absolute_error,max_relative_error_when_absolute_tolerance_exceeded,rows_judged_by_tolerance,rows_that_are_zeros_of_their_family,structural_zero_fraction,absolute_tolerance,relative_tolerance,reference_method
+controlled_j2_actual_umat,elastic,2,96,96,0,3.1898629555167094e-69,0.0,0,96,1e-08,1e-05,1e-07,independent_high_precision_centered_finite_difference
+controlled_j2_actual_umat,elastic,3,96,96,0,2.758055576593568e-64,0.0,0,96,1e-08,0.02,1e-07,independent_high_precision_centered_finite_difference
+controlled_j2_actual_umat,elastic,4,96,96,0,7.0942374167617015e-59,0.0,0,96,1e-08,0.1,1e-07,independent_high_precision_centered_finite_difference
+controlled_j2_actual_umat,plastic,2,84,84,0,1.874451398429829e-05,2.8796560565630583e-13,20,64,1e-08,1e-05,1e-07,independent_high_precision_centered_finite_difference
+controlled_j2_actual_umat,plastic,3,84,84,0,6.2634124755859375,1.8937976950208375e-09,20,64,1e-08,0.02,1e-07,independent_high_precision_centered_finite_difference
+controlled_j2_actual_umat,plastic,4,84,84,0,11892.05078125,1.6414796432576867e-09,26,58,1e-08,0.1,1e-07,independent_high_precision_centered_finite_difference

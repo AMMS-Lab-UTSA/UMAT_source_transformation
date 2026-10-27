@@ -1,0 +1,21 @@
+model,parameter_directions_declared,parameters,contract_generated,transformed,compiled,executed_oti,executed_original,primal_parity,reference_resolved,numerically_verified,parameter_directions_verified,comparison_rows,worst_relative_error,elastic_increments,inelastic_increments,furthest_stage,failure_reason
+m1_elastic,2,E|nu,True,True,True,True,True,True,True,False,0,240,,20,0,primal_parity,derivatives_verified: 120 of 240 rows disagree with the centred-difference reference
+m2_cubic,3,C11|C12|C44,True,True,True,True,True,True,True,False,1,360,,20,0,primal_parity,derivatives_verified: 60 of 360 rows disagree with the centred-difference reference
+m3_j2,4,E|nu|SIGY0|H,True,False,False,False,False,False,False,False,0,0,,,,contract,transform: transformation failed (transform_failed)
+m5_cpflow,6,tau0|dG|q|p|gam0|H,True,True,True,True,True,True,True,False,0,840,,0,20,primal_parity,derivatives_verified: 458 of 840 rows disagree with the centred-difference reference; 8 of 840 rows sit at the centred-difference noise floor and cannot be resolved by it
+m6_fcc,10,g0|h0|q|gd0|m|gsat|C11|C12|C44|a,True,True,True,True,True,True,True,False,1,3600,,2,18,primal_parity,derivatives_verified: 2346 of 3600 rows disagree with the centred-difference reference; 6 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it
+sweep_aniso_ortho,9,C11|C12|C13|C22|C23|C33|C44|C55|C66,True,True,True,True,True,True,True,False,6,1080,,20,0,primal_parity,derivatives_verified: 60 of 1080 rows disagree with the centred-difference reference
+sweep_damage_elastic,3,E|nu|d,True,True,True,True,True,True,True,False,0,360,,20,0,primal_parity,derivatives_verified: 180 of 360 rows disagree with the centred-difference reference
+sweep_drucker_prager,4,E|nu|k|beta,True,True,True,True,True,True,True,False,0,560,,10,10,primal_parity,derivatives_verified: 220 of 560 rows disagree with the centred-difference reference
+sweep_eco,2,E|nu,True,True,True,True,True,True,True,False,0,240,,20,0,primal_parity,derivatives_verified: 120 of 240 rows disagree with the centred-difference reference
+sweep_j2_bilinear,4,E|nu|SIGY0|Et,True,False,False,False,False,False,False,False,0,0,,,,contract,transform: transformation failed (transform_failed)
+sweep_j2_combined,5,E|nu|SIGY0|HISO|HKIN,True,False,False,False,False,False,False,False,0,0,,,,contract,transform: transformation failed (transform_failed)
+sweep_j2_kinematic,4,E|nu|SIGY0|Hk,True,False,False,False,False,False,False,False,0,0,,,,contract,transform: transformation failed (transform_failed)
+sweep_lame_elastic,2,lambda|mu,True,True,True,True,True,True,True,False,0,240,,20,0,primal_parity,derivatives_verified: 80 of 240 rows disagree with the centred-difference reference
+sweep_maxwell_ve,3,E|nu|tau,True,True,True,True,True,True,True,False,0,720,,0,20,primal_parity,derivatives_verified: 360 of 720 rows disagree with the centred-difference reference
+sweep_mooney_small,2,mu|kappa,True,True,True,True,True,True,True,False,0,240,,20,0,primal_parity,derivatives_verified: 120 of 240 rows disagree with the centred-difference reference
+sweep_perzyna_linear,4,E|nu|SIGY0|eta,True,False,False,False,False,False,False,False,0,0,,,,contract,transform: transformation failed (transform_failed)
+sweep_real_ECL_TEMP,5,E1|E2|G1|G2|CTE,True,True,True,True,True,True,True,False,1,600,,20,0,primal_parity,derivatives_verified: 240 of 600 rows disagree with the centred-difference reference
+sweep_real_PCO,4,E|nu|SIGY0|H,True,True,True,True,True,True,True,False,0,560,,15,5,primal_parity,derivatives_verified: 170 of 560 rows disagree with the centred-difference reference
+sweep_thermoelastic,3,E|nu|alpha,True,True,True,True,True,True,True,False,1,360,,20,0,primal_parity,derivatives_verified: 120 of 360 rows disagree with the centred-difference reference
+sweep_transiso,5,EP|ET|XNUP|XNUPT|GT,True,True,True,True,True,True,True,False,1,600,,20,0,primal_parity,derivatives_verified: 240 of 600 rows disagree with the centred-difference reference

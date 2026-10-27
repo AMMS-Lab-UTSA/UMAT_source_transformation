@@ -1,0 +1,53 @@
+partial or redirected round: writing to C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\rounds\internal_jacobian\results, leaving the published round untouched
+[repo]     m1_elastic
+[repo]     m2_cubic
+[repo]     m2_elastic3d
+[repo]     m3_j2
+[repo]     m5_cpflow
+[repo]     m6_fcc
+[repo]     sweep_aniso_ortho
+[repo]     sweep_damage_elastic
+[repo]     sweep_drucker_prager
+[repo]     sweep_eco
+[repo]     sweep_j2_bilinear
+[repo]     sweep_j2_combined
+[repo]     sweep_j2_kinematic
+[repo]     sweep_lame_elastic
+[repo]     sweep_maxwell_ve
+[repo]     sweep_mooney_small
+[repo]     sweep_perzyna_linear
+[repo]     sweep_real_ECL_TEMP
+[repo]     sweep_real_PCO
+[repo]     sweep_thermoelastic
+[repo]     sweep_transiso
+[external] UMAT_PCL
+[external] UMAT_PCLK
+[external] UMAT_NKH_1.02
+[external] UMAT_PCO
+[external] UMAT_VPDCL
+[external] UMAT_PCLI
+[external] UMAT_VPDCO
+[corpus]   jgomezc1_UMAT_PCO
+[corpus]   jgomezc1_UMAT_VPDCO
+[corpus]   jgomezc1_UMAT_PCL
+[corpus]   jgomezc1_UMAT_PCLK
+[corpus]   jgomezc1_UMAT_ECO
+[corpus]   jgomezc1_UMAT_VPDCL
+[corpus]   jgomezc1_UMAT_NKH_1.02
+[corpus]   ngrilli_umat
+[corpus]   lucarini_neohookean
+[corpus]   lucarini_elastoplastic
+[corpus]   lucarini_crystalplasticity
+
+{
+  "candidate_sources": 39,
+  "unique_source_implementations": 27,
+  "sources_with_a_local_solve": 19,
+  "unique_sources_with_a_local_solve": 8,
+  "verification_executions": 4,
+  "unique_sources_verified": 4,
+  "extracted_and_disagreeing": 0,
+  "blocked": 15,
+  "no_local_solve": 20,
+  "_note": "candidate_sources counts appearances; unique_source_implementations counts distinct code. The same UMAT is reachable from the in-repository archive and from the pinned upstream snapshot, and running it from both with different upstream material is two validation events against one implementation."
+}

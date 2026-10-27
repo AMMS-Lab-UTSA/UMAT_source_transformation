@@ -1,0 +1,3245 @@
+{
+  "failure_taxonomy": {
+    "derivatives_verified:failed": [
+      "m1_elastic",
+      "m2_cubic",
+      "m5_cpflow",
+      "m6_fcc",
+      "sweep_aniso_ortho",
+      "sweep_damage_elastic",
+      "sweep_drucker_prager",
+      "sweep_eco",
+      "sweep_lame_elastic",
+      "sweep_maxwell_ve",
+      "sweep_mooney_small",
+      "sweep_real_ECL_TEMP",
+      "sweep_real_PCO",
+      "sweep_thermoelastic",
+      "sweep_transiso"
+    ],
+    "transform:transform_failed": [
+      "m3_j2",
+      "sweep_j2_bilinear",
+      "sweep_j2_combined",
+      "sweep_j2_kinematic",
+      "sweep_perzyna_linear"
+    ]
+  },
+  "funnel": {
+    "attempted": 20,
+    "comparison_rows_agreeing": 5692,
+    "comparison_rows_total": 10600,
+    "compiled_oti": 15,
+    "contract_complete": 20,
+    "derivatives_verified": 0,
+    "executed_original": 15,
+    "executed_oti": 15,
+    "parameter_directions_declared": 84,
+    "parameter_directions_verified": 11,
+    "primal_parity": 15,
+    "reference_resolved": 15,
+    "transformed": 15
+  },
+  "models": [
+    {
+      "furthest_stage": "primal_parity",
+      "model": "m1_elastic",
+      "parameter_count": 2,
+      "parameters": [
+        "E",
+        "nu"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.00031622776601683794,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\m1_elastic.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "120 of 240 rows disagree with the centred-difference reference",
+          "rows": 240,
+          "rows_agreeing": 120,
+          "rows_disagreeing": 120,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.0107876059605557e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 5.747,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "m2_cubic",
+      "parameter_count": 3,
+      "parameters": [
+        "C11",
+        "C12",
+        "C44"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.00031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C11",
+            "rows_rejudged": 20,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C12",
+            "rows_rejudged": 40,
+            "steps_used": [
+              0.00031622776601683794,
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\m2_cubic.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "60 of 360 rows disagree with the centred-difference reference",
+          "rows": 360,
+          "rows_agreeing": 300,
+          "rows_disagreeing": 60,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.5721004009415394e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.809,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": [
+        "C44"
+      ]
+    },
+    {
+      "furthest_stage": "contract",
+      "model": "m3_j2",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "H"
+      ],
+      "stages": {
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\m3_j2.json",
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 1,
+          "reason": "transformation failed (transform_failed)",
+          "seconds": 0.167,
+          "status": "failed",
+          "status_category": "transform_failed",
+          "warnings": 1
+        }
+      },
+      "targets": [
+        "DSIGMA_DP"
+      ]
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "m5_cpflow",
+      "parameter_count": 6,
+      "parameters": [
+        "tau0",
+        "dG",
+        "q",
+        "p",
+        "gam0",
+        "H"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "H",
+            "rows_rejudged": 52,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "H",
+            "rows_rejudged": 10,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "dG",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.162277660168379e-06,
+              1e-05,
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 3.162277660168379e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "dG",
+            "rows_rejudged": 20,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.1622776601683795e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "gam0",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "gam0",
+            "rows_rejudged": 18,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "p",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.162277660168379e-06,
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "p",
+            "rows_rejudged": 20,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "q",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "q",
+            "rows_rejudged": 19,
+            "steps_used": [
+              1e-06,
+              1e-05,
+              0.0001,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "tau0",
+            "rows_rejudged": 60,
+            "steps_used": [
+              1e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "tau0",
+            "rows_rejudged": 19,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\m5_cpflow.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 0,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 20,
+          "reason": "458 of 840 rows disagree with the centred-difference reference; 8 of 840 rows sit at the centred-difference noise floor and cannot be resolved by it",
+          "rows": 840,
+          "rows_agreeing": 374,
+          "rows_disagreeing": 458,
+          "rows_reference_unresolved": 8,
+          "rows_reference_unresolved_at_noise_floor": 8,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 3.017795740819877e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 3.269,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "m6_fcc",
+      "parameter_count": 10,
+      "parameters": [
+        "g0",
+        "h0",
+        "q",
+        "gd0",
+        "m",
+        "gsat",
+        "C11",
+        "C12",
+        "C44",
+        "a"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C11",
+            "rows_rejudged": 56,
+            "steps_used": [
+              3.162277660168379e-06,
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 3.162277660168379e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C11",
+            "rows_rejudged": 216,
+            "steps_used": [
+              3.162277660168379e-06,
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.00031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C12",
+            "rows_rejudged": 58,
+            "steps_used": [
+              3.162277660168379e-06,
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C12",
+            "rows_rejudged": 216,
+            "steps_used": [
+              1e-05,
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "a",
+            "rows_rejudged": 46,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "a",
+            "rows_rejudged": 204,
+            "steps_used": [
+              3.162277660168379e-06,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0001,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "g0",
+            "rows_rejudged": 54,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "g0",
+            "rows_rejudged": 216,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.001,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "gd0",
+            "rows_rejudged": 54,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 3.1622776601683795e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "gd0",
+            "rows_rejudged": 204,
+            "steps_used": [
+              3.162277660168379e-06,
+              3.1622776601683795e-05,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "gsat",
+            "rows_rejudged": 48,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "gsat",
+            "rows_rejudged": 204,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "h0",
+            "rows_rejudged": 46,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.0001,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "h0",
+            "rows_rejudged": 204,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "m",
+            "rows_rejudged": 54,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "m",
+            "rows_rejudged": 216,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "q",
+            "rows_rejudged": 46,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.0001,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "q",
+            "rows_rejudged": 204,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\m6_fcc.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 2,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 18,
+          "reason": "2346 of 3600 rows disagree with the centred-difference reference; 6 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
+          "rows": 3600,
+          "rows_agreeing": 1248,
+          "rows_disagreeing": 2346,
+          "rows_reference_unresolved": 6,
+          "rows_reference_unresolved_at_noise_floor": 6,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 8.488962583449925e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 3.416,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP"
+      ],
+      "verified_parameter_directions": [
+        "C44"
+      ]
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_aniso_ortho",
+      "parameter_count": 9,
+      "parameters": [
+        "C11",
+        "C12",
+        "C13",
+        "C22",
+        "C23",
+        "C33",
+        "C44",
+        "C55",
+        "C66"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C11",
+            "rows_rejudged": 20,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C12",
+            "rows_rejudged": 20,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "C13",
+            "rows_rejudged": 20,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_aniso_ortho.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "60 of 1080 rows disagree with the centred-difference reference",
+          "rows": 1080,
+          "rows_agreeing": 1020,
+          "rows_disagreeing": 60,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.8196140307940477e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 3.414,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": [
+        "C22",
+        "C23",
+        "C33",
+        "C44",
+        "C55",
+        "C66"
+      ]
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_damage_elastic",
+      "parameter_count": 3,
+      "parameters": [
+        "E",
+        "nu",
+        "d"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "d",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_damage_elastic.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "180 of 360 rows disagree with the centred-difference reference",
+          "rows": 360,
+          "rows_agreeing": 180,
+          "rows_disagreeing": 180,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.7927605638341047e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.778,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_drucker_prager",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "k",
+        "beta"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 10,
+            "steps_used": [
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "beta",
+            "rows_rejudged": 30,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "beta",
+            "rows_rejudged": 10,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "k",
+            "rows_rejudged": 30,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "k",
+            "rows_rejudged": 10,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.162277660168379e-07,
+              1e-06,
+              1e-05,
+              0.0001,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 10,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_drucker_prager.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 10,
+          "increments_with_branch_crossing": [
+            10
+          ],
+          "inelastic_increments": 10,
+          "reason": "220 of 560 rows disagree with the centred-difference reference",
+          "rows": 560,
+          "rows_agreeing": 340,
+          "rows_disagreeing": 220,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.143878944103751e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.861,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_eco",
+      "parameter_count": 2,
+      "parameters": [
+        "E",
+        "nu"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_eco.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "120 of 240 rows disagree with the centred-difference reference",
+          "rows": 240,
+          "rows_agreeing": 120,
+          "rows_disagreeing": 120,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.0107876059605557e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.772,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "contract",
+      "model": "sweep_j2_bilinear",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "Et"
+      ],
+      "stages": {
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_j2_bilinear.json",
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 1,
+          "reason": "transformation failed (transform_failed)",
+          "seconds": 0.25,
+          "status": "failed",
+          "status_category": "transform_failed",
+          "warnings": 1
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ]
+    },
+    {
+      "furthest_stage": "contract",
+      "model": "sweep_j2_combined",
+      "parameter_count": 5,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "HISO",
+        "HKIN"
+      ],
+      "stages": {
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_j2_combined.json",
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 1,
+          "reason": "transformation failed (transform_failed)",
+          "seconds": 0.377,
+          "status": "failed",
+          "status_category": "transform_failed",
+          "warnings": 1
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ]
+    },
+    {
+      "furthest_stage": "contract",
+      "model": "sweep_j2_kinematic",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "Hk"
+      ],
+      "stages": {
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_j2_kinematic.json",
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 1,
+          "reason": "transformation failed (transform_failed)",
+          "seconds": 0.339,
+          "status": "failed",
+          "status_category": "transform_failed",
+          "warnings": 1
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ]
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_lame_elastic",
+      "parameter_count": 2,
+      "parameters": [
+        "lambda",
+        "mu"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "lambda",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "mu",
+            "rows_rejudged": 20,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_lame_elastic.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "80 of 240 rows disagree with the centred-difference reference",
+          "rows": 240,
+          "rows_agreeing": 160,
+          "rows_disagreeing": 80,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 0.0
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 3.623,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_maxwell_ve",
+      "parameter_count": 3,
+      "parameters": [
+        "E",
+        "nu",
+        "tau"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              1e-05,
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "tau",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "tau",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_maxwell_ve.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 0,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 20,
+          "reason": "360 of 720 rows disagree with the centred-difference reference",
+          "rows": 720,
+          "rows_agreeing": 360,
+          "rows_disagreeing": 360,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 8.767423145970197e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.543,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_mooney_small",
+      "parameter_count": 2,
+      "parameters": [
+        "mu",
+        "kappa"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "kappa",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "mu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_mooney_small.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "120 of 240 rows disagree with the centred-difference reference",
+          "rows": 240,
+          "rows_agreeing": 120,
+          "rows_disagreeing": 120,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 3.5527136788004996e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.881,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "contract",
+      "model": "sweep_perzyna_linear",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "eta"
+      ],
+      "stages": {
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_perzyna_linear.json",
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 1,
+          "reason": "transformation failed (transform_failed)",
+          "seconds": 0.242,
+          "status": "failed",
+          "status_category": "transform_failed",
+          "warnings": 1
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ]
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_real_ECL_TEMP",
+      "parameter_count": 5,
+      "parameters": [
+        "E1",
+        "E2",
+        "G1",
+        "G2",
+        "CTE"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E1",
+            "rows_rejudged": 60,
+            "steps_used": [
+              1e-05,
+              0.0001
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E2",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.001
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-07,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "G1",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.162277660168379e-06,
+              3.1622776601683795e-05,
+              0.0001
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "G2",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_real_ECL_TEMP.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "240 of 600 rows disagree with the centred-difference reference",
+          "rows": 600,
+          "rows_agreeing": 360,
+          "rows_disagreeing": 240,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 3.436806487317329e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.718,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": [
+        "CTE"
+      ]
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_real_PCO",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "H"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.1622776601683795e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              1e-05,
+              3.1622776601683795e-05,
+              0.0001,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 5,
+            "steps_used": [
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.00031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "H",
+            "rows_rejudged": 15,
+            "steps_used": [
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.00031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "H",
+            "rows_rejudged": 5,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "SIGY0",
+            "rows_rejudged": 15,
+            "steps_used": [
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "SIGY0",
+            "rows_rejudged": 5,
+            "steps_used": [
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794
+            ]
+          },
+          {
+            "array": "DSTATEV_DP",
+            "group_selected_relative_step": 0.00031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 5,
+            "steps_used": [
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_real_PCO.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 15,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 5,
+          "reason": "170 of 560 rows disagree with the centred-difference reference",
+          "rows": 560,
+          "rows_agreeing": 390,
+          "rows_disagreeing": 170,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.0107876059605557e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 2.452,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_thermoelastic",
+      "parameter_count": 3,
+      "parameters": [
+        "E",
+        "nu",
+        "alpha"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0031622776601683794,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "E",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "nu",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_thermoelastic.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "120 of 360 rows disagree with the centred-difference reference",
+          "rows": 360,
+          "rows_agreeing": 240,
+          "rows_disagreeing": 120,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.0107876059605557e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 1.738,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": [
+        "alpha"
+      ]
+    },
+    {
+      "furthest_stage": "primal_parity",
+      "model": "sweep_transiso",
+      "parameter_count": 5,
+      "parameters": [
+        "EP",
+        "ET",
+        "XNUP",
+        "XNUPT",
+        "GT"
+      ],
+      "reference_step_convergence": {
+        "groups": [
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 1e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "EP",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 0.0001,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "ET",
+            "rows_rejudged": 60,
+            "steps_used": [
+              3.1622776601683795e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.162277660168379e-06,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "XNUP",
+            "rows_rejudged": 60,
+            "steps_used": [
+              0.00031622776601683794,
+              0.001
+            ]
+          },
+          {
+            "array": "DSIGMA_DP",
+            "group_selected_relative_step": 3.1622776601683795e-05,
+            "ladder_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "outcome": "re-judged per entry",
+            "parameter": "XNUPT",
+            "rows_rejudged": 60,
+            "steps_used": [
+              1e-05,
+              0.0001,
+              0.00031622776601683794,
+              0.001,
+              0.0031622776601683794
+            ]
+          }
+        ],
+        "policy": "disagreeing rows are re-judged against a centred difference evaluated at a step chosen by the method's own convergence; the tolerance is unchanged",
+        "rows_reclassified": 0
+      },
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\sweep_transiso.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 0,
+          "reason": "240 of 600 rows disagree with the centred-difference reference",
+          "rows": 600,
+          "rows_agreeing": 360,
+          "rows_disagreeing": 240,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 0,
+          "status": "failed",
+          "verdict_meaning": "at least one row disagrees with a reference that can adjudicate it",
+          "worst_relative_error": null
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 3.653402834284023e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 1.91,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": [
+        "GT"
+      ]
+    }
+  ],
+  "policy": "Counts are a funnel, not a single number. 'compiled' is not 'executed' and neither is 'verified'. Models that fail stay in the denominator.",
+  "schema": "umat-oti-parameter-sensitivity-round/2"
+}

@@ -1,0 +1,42 @@
+{
+  "entry": "UMAT",
+  "entry_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\input\\umat_j2_voce.f",
+  "multi_file": false,
+  "searched_roots": [
+    "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\input\\umat_j2_voce.f",
+    "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\input"
+  ],
+  "excluded_path_fragments": [
+    "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check_input\\preflight/",
+    "/.git/",
+    "/.venv/",
+    "/__pycache__/",
+    "/out/",
+    "/build/",
+    "/umat_oti_workspace/"
+  ],
+  "resolved": {
+    "UMAT": {
+      "name": "UMAT",
+      "kind": "subroutine",
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\input\\umat_j2_voce.f",
+      "start_line": 38,
+      "end_line": 165,
+      "body_sha256": "bd52e95f6cd381adb5a7679a3f63f01605a744af632d337b14446d7b11e3b6c0"
+    }
+  },
+  "external_files": [],
+  "edges": {
+    "UMAT": []
+  },
+  "missing": [],
+  "duplicates": [],
+  "conflicts": [],
+  "abaqus_runtime_calls": [],
+  "external_library_calls": {},
+  "required_libraries": [],
+  "includes": [
+    "ABA_PARAM.INC"
+  ],
+  "declared_donors": []
+}

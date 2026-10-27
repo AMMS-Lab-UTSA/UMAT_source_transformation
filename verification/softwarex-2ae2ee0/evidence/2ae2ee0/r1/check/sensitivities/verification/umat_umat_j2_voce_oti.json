@@ -1,0 +1,209 @@
+{
+  "schema": "resasm_umat_oti_contract_v1",
+  "model_id": "umat_umat_j2_voce_oti",
+  "kinematics": "small_strain",
+  "dimensions": {
+    "ntens": 6,
+    "nprops": 6,
+    "nstatev": 1,
+    "nparam": 6
+  },
+  "drive": "umat_oti_eval_total_",
+  "symbols": {
+    "regular_umat": "umat",
+    "oti_internal": "umat_oti_internal",
+    "oti_eval": "umat_oti_eval_",
+    "oti_eval_signature": [
+      "STRESS(NTENS)",
+      "STATEV(NSTATV)",
+      "DDSDDE(NTENS,NTENS)",
+      "STRAN(NTENS)",
+      "DSTRAN(NTENS)",
+      "TIME(2)",
+      "DTIME",
+      "TEMP",
+      "DTEMP",
+      "PROPS(NPROPS)",
+      "NPROPS",
+      "NTENS",
+      "NSTATV",
+      "NPARAM",
+      "DSIGMA_DP(NTENS,NPARAM)",
+      "DSTATEV_DP(NSTATV,NPARAM)",
+      "DSIGMA_DP_IN(NTENS,NPARAM)",
+      "DSTATEV_DP_IN(NSTATV,NPARAM)"
+    ],
+    "oti_eval_total": "umat_oti_eval_total_",
+    "oti_eval_total_signature": [
+      "STRESS(NTENS)",
+      "STATEV(NSTATV)",
+      "DDSDDE(NTENS,NTENS)",
+      "STRAN(NTENS)",
+      "DSTRAN(NTENS)",
+      "TIME(2)",
+      "DTIME",
+      "TEMP",
+      "DTEMP",
+      "PROPS(NPROPS)",
+      "NPROPS",
+      "NTENS",
+      "NSTATV",
+      "NPARAM",
+      "DSIGMA_DP(NTENS,NPARAM)",
+      "DSTATEV_DP(NSTATV,NPARAM)",
+      "DSIGMA_DP_IN(NTENS,NPARAM)",
+      "DSTATEV_DP_IN(NSTATV,NPARAM)",
+      "STRAN_DP_IN(NTENS,NPARAM)",
+      "DSTRAN_DP_IN(NTENS,NPARAM)",
+      "DSTATEV_DDSTRAN(NSTATV,NTENS)",
+      "COORDS(3)",
+      "CELENT",
+      "NOEL",
+      "NPT",
+      "KSTEP",
+      "KINC",
+      "PNEWDT"
+    ],
+    "oti_eval_total_finite": "umat_oti_eval_total_f_",
+    "oti_eval_total_finite_signature": [
+      "STRESS(NTENS)",
+      "STATEV(NSTATV)",
+      "DDSDDE(NTENS,NTENS)",
+      "STRAN(NTENS)",
+      "DSTRAN(NTENS)",
+      "TIME(2)",
+      "DTIME",
+      "TEMP",
+      "DTEMP",
+      "PROPS(NPROPS)",
+      "NPROPS",
+      "NTENS",
+      "NSTATV",
+      "NPARAM",
+      "DSIGMA_DP(NTENS,NPARAM)",
+      "DSTATEV_DP(NSTATV,NPARAM)",
+      "DSIGMA_DP_IN(NTENS,NPARAM)",
+      "DSTATEV_DP_IN(NSTATV,NPARAM)",
+      "STRAN_DP_IN(NTENS,NPARAM)",
+      "DSTRAN_DP_IN(NTENS,NPARAM)",
+      "DSTATEV_DDSTRAN(NSTATV,NTENS)",
+      "COORDS(3)",
+      "CELENT",
+      "NOEL",
+      "NPT",
+      "KSTEP",
+      "KINC",
+      "PNEWDT",
+      "DFGRD0(3,3)",
+      "DFGRD1(3,3)",
+      "DROT(3,3)",
+      "DFGRD0_DP(3,3,NPARAM)",
+      "DFGRD1_DP(3,3,NPARAM)"
+    ]
+  },
+  "replay": {
+    "mode": "path_marching",
+    "carry": [
+      "DSIGMA_DP",
+      "DSTATEV_DP"
+    ]
+  },
+  "march": {
+    "symbol": "umat_oti_march_",
+    "directions": 12,
+    "signature": [
+      "PROPS(NPROPS)",
+      "NPROPS",
+      "PATH(NTENS,NPATH)",
+      "NPATH",
+      "DTARR(NPATH)",
+      "NTENS",
+      "NSTATV",
+      "NPARAM",
+      "DSIG(NTENS,NPARAM,NPATH)",
+      "STROUT(NTENS)",
+      "DDOUT(NTENS,NTENS,NPATH)"
+    ]
+  },
+  "layouts": {
+    "DSIGMA_DP": "fortran(NTENS,NPARAM)",
+    "DSTATEV_DP": "fortran(NSTATV,NPARAM)",
+    "DDSDDE": "fortran(NTENS,NTENS)",
+    "voigt": [
+      "11",
+      "22",
+      "33",
+      "12",
+      "13",
+      "23"
+    ]
+  },
+  "parameters": [
+    {
+      "name": "YMOD",
+      "props_index": 1,
+      "oti_direction": 1
+    },
+    {
+      "name": "PNU",
+      "props_index": 2,
+      "oti_direction": 2
+    },
+    {
+      "name": "SIGY0",
+      "props_index": 3,
+      "oti_direction": 3
+    },
+    {
+      "name": "HLIN",
+      "props_index": 4,
+      "oti_direction": 4
+    },
+    {
+      "name": "QSAT",
+      "props_index": 5,
+      "oti_direction": 5
+    },
+    {
+      "name": "BSAT",
+      "props_index": 6,
+      "oti_direction": 6
+    }
+  ],
+  "history": {
+    "path_dependent": true,
+    "dstatev_dp": "returned"
+  },
+  "object": {
+    "file": "umat_umat_j2_voce_oti.obj",
+    "sha256": "2d0128ad9a0ee469",
+    "sha256_full": "2d0128ad9a0ee46957ff6ba94adf359cf2a173bf42f9092a3caa505f99b502d1"
+  },
+  "regular_source_hash": "e696a70dca0b3e1e",
+  "validation": {
+    "status": "not_run",
+    "passed": false
+  },
+  "build": {
+    "compiler": "GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0",
+    "transformer": "transform_umat_for_parameter_sensitivity",
+    "sources": "build-3icxj3ml",
+    "tangent": "dSTRESS_dDSTRAN_at_fixed_incoming_history",
+    "zero_init_locals": false,
+    "reads_before_assignment": {
+      "routine": "UMAT",
+      "decided": true,
+      "findings": [],
+      "rule": "forward data flow over the routine's executable statements: a scalar is reported when some path reaches a read without assigning it, an array when no path to the read assigns any element of it; a bare actual argument of a CALL counts as assigned by the callee",
+      "initialised_in_generated_code": [],
+      "warnings": []
+    },
+    "original_entry_statements": [],
+    "library_routines": {
+      "called_by_the_original": [],
+      "bundled_as": {},
+      "author_definitions_renamed": {},
+      "rule": "the provider's copy of the original calls private real twins (reference-LAPACK semantics, the algorithm of the OTI copies), each with its whole chain; a standard LAPACK/BLAS name the original defines itself is renamed, with the author's calls to it, in the provider and in the regular object. Neither object defines a standard LAPACK/BLAS name. The regular object keeps the original's calls to the library for the host LAPACK (Abaqus: MKL)."
+    }
+  }
+}

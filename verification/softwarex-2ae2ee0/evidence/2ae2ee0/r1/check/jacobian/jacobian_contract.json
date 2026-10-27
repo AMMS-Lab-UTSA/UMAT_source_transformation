@@ -1,0 +1,16 @@
+{
+  "name": "umat_j2_voce_resolved",
+  "description": "Constitutive Jacobian requested from four fields (source, NTENS, seed/response/target); tangent block located by the transformer's anchor inference.",
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery\\umat_j2_voce_resolved.f",
+  "jacobian": {
+    "seed": "DSTRAN",
+    "output": "STRESS",
+    "target": "DDSDDE"
+  },
+  "ntens": 6,
+  "order": 1,
+  "promote": [
+    "STRESS"
+  ],
+  "replace": []
+}

@@ -1,0 +1,6 @@
+{
+  "kind": "twins",
+  "description": "no LAPACK library found: the transform's real twins of the supplied routines (reference-LAPACK semantics, not LAPACK)",
+  "link_flags": [],
+  "libraries": []
+}

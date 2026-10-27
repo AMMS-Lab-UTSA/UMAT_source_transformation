@@ -1,0 +1,150 @@
+convergence study: j2
+  regenerating OTI higher-order output for controlled J2
+  sweeping 9 finite-difference steps
+    increment 1 directions 1|1: 9 steps, 9 admissible
+    increment 1 directions 1|2: 9 steps, 8 admissible
+    increment 1 directions 1|1|1: 9 steps, 9 admissible
+    increment 1 directions 1|1|2: 9 steps, 8 admissible
+    increment 1 directions 1|1|1|1: 9 steps, 9 admissible
+    increment 1 directions 1|1|2|2: 9 steps, 8 admissible
+    increment 2 directions 1|1: 9 steps, 8 admissible
+    increment 2 directions 1|2: 9 steps, 8 admissible
+    increment 2 directions 1|1|1: 9 steps, 8 admissible
+    increment 2 directions 1|1|2: 9 steps, 8 admissible
+    increment 2 directions 1|1|1|1: 9 steps, 8 admissible
+    increment 2 directions 1|1|2|2: 9 steps, 8 admissible
+    increment 3 directions 1|1: 9 steps, 8 admissible
+    increment 3 directions 1|2: 9 steps, 7 admissible
+    increment 3 directions 1|1|1: 9 steps, 8 admissible
+    increment 3 directions 1|1|2: 9 steps, 7 admissible
+    increment 3 directions 1|1|1|1: 9 steps, 8 admissible
+    increment 3 directions 1|1|2|2: 9 steps, 7 admissible
+    increment 4 directions 1|1: 9 steps, 7 admissible
+    increment 4 directions 1|2: 9 steps, 7 admissible
+    increment 4 directions 1|1|1: 9 steps, 7 admissible
+    increment 4 directions 1|1|2: 9 steps, 7 admissible
+    increment 4 directions 1|1|1|1: 9 steps, 7 admissible
+    increment 4 directions 1|1|2|2: 9 steps, 7 admissible
+    increment 5 directions 1|1: 9 steps, 7 admissible
+    increment 5 directions 1|2: 9 steps, 6 admissible
+    increment 5 directions 1|1|1: 9 steps, 7 admissible
+    increment 5 directions 1|1|2: 9 steps, 6 admissible
+    increment 5 directions 1|1|1|1: 9 steps, 7 admissible
+    increment 5 directions 1|1|2|2: 9 steps, 6 admissible
+    increment 6 directions 1|1: 9 steps, 5 admissible
+    increment 6 directions 1|2: 9 steps, 5 admissible
+    increment 6 directions 1|1|1: 9 steps, 5 admissible
+    increment 6 directions 1|1|2: 9 steps, 5 admissible
+    increment 6 directions 1|1|1|1: 9 steps, 5 admissible
+    increment 6 directions 1|1|2|2: 9 steps, 5 admissible
+    increment 7 directions 1|1: 9 steps, 5 admissible
+    increment 7 directions 1|2: 9 steps, 5 admissible
+    increment 7 directions 1|1|1: 9 steps, 5 admissible
+    increment 7 directions 1|1|2: 9 steps, 5 admissible
+    increment 7 directions 1|1|1|1: 9 steps, 5 admissible
+    increment 7 directions 1|1|2|2: 9 steps, 5 admissible
+    increment 8 directions 1|1: 9 steps, 6 admissible
+    increment 8 directions 1|2: 9 steps, 6 admissible
+    increment 8 directions 1|1|1: 9 steps, 6 admissible
+    increment 8 directions 1|1|2: 9 steps, 6 admissible
+    increment 8 directions 1|1|1|1: 9 steps, 6 admissible
+    increment 8 directions 1|1|2|2: 9 steps, 6 admissible
+    increment 9 directions 1|1: 9 steps, 6 admissible
+    increment 9 directions 1|2: 9 steps, 6 admissible
+    increment 9 directions 1|1|1: 9 steps, 6 admissible
+    increment 9 directions 1|1|2: 9 steps, 6 admissible
+    increment 9 directions 1|1|1|1: 9 steps, 6 admissible
+    increment 9 directions 1|1|2|2: 9 steps, 6 admissible
+    increment 10 directions 1|1: 9 steps, 6 admissible
+    increment 10 directions 1|2: 9 steps, 6 admissible
+    increment 10 directions 1|1|1: 9 steps, 6 admissible
+    increment 10 directions 1|1|2: 9 steps, 6 admissible
+    increment 10 directions 1|1|1|1: 9 steps, 6 admissible
+    increment 10 directions 1|1|2|2: 9 steps, 6 admissible
+    increment 11 directions 1|1: 9 steps, 6 admissible
+    increment 11 directions 1|2: 9 steps, 6 admissible
+    increment 11 directions 1|1|1: 9 steps, 6 admissible
+    increment 11 directions 1|1|2: 9 steps, 6 admissible
+    increment 11 directions 1|1|1|1: 9 steps, 6 admissible
+    increment 11 directions 1|1|2|2: 9 steps, 6 admissible
+    increment 12 directions 1|1: 9 steps, 6 admissible
+    increment 12 directions 1|2: 9 steps, 6 admissible
+    increment 12 directions 1|1|1: 9 steps, 6 admissible
+    increment 12 directions 1|1|2: 9 steps, 6 admissible
+    increment 12 directions 1|1|1|1: 9 steps, 6 admissible
+    increment 12 directions 1|1|2|2: 9 steps, 6 admissible
+    increment 13 directions 1|1: 9 steps, 7 admissible
+    increment 13 directions 1|2: 9 steps, 6 admissible
+    increment 13 directions 1|1|1: 9 steps, 7 admissible
+    increment 13 directions 1|1|2: 9 steps, 6 admissible
+    increment 13 directions 1|1|1|1: 9 steps, 7 admissible
+    increment 13 directions 1|1|2|2: 9 steps, 6 admissible
+    increment 14 directions 1|1: 9 steps, 8 admissible
+    increment 14 directions 1|2: 9 steps, 7 admissible
+    increment 14 directions 1|1|1: 9 steps, 8 admissible
+    increment 14 directions 1|1|2: 9 steps, 7 admissible
+    increment 14 directions 1|1|1|1: 9 steps, 8 admissible
+    increment 14 directions 1|1|2|2: 9 steps, 7 admissible
+    increment 15 directions 1|1: 9 steps, 7 admissible
+    increment 15 directions 1|2: 9 steps, 6 admissible
+    increment 15 directions 1|1|1: 9 steps, 7 admissible
+    increment 15 directions 1|1|2: 9 steps, 6 admissible
+    increment 15 directions 1|1|1|1: 9 steps, 7 admissible
+    increment 15 directions 1|1|2|2: 9 steps, 6 admissible
+  independent high-precision evaluation at 200 digits
+    high-precision increment 1 done
+    high-precision increment 2 done
+    high-precision increment 3 done
+    high-precision increment 4 done
+    high-precision increment 5 done
+    high-precision increment 6 done
+    high-precision increment 7 done
+    high-precision increment 8 done
+    high-precision increment 9 done
+    high-precision increment 10 done
+    high-precision increment 11 done
+    high-precision increment 12 done
+    high-precision increment 13 done
+    high-precision increment 14 done
+    high-precision increment 15 done
+{
+  "classification_counts": {
+    "cancellation_limited": 0,
+    "empirically_zero_over_stencil": 0,
+    "expected_zero_independently_supported": 474,
+    "reference_unresolved": 0,
+    "resolved": 66
+  },
+  "classification_counts_by_order": {
+    "2": {
+      "cancellation_limited": 0,
+      "empirically_zero_over_stencil": 0,
+      "expected_zero_independently_supported": 160,
+      "reference_unresolved": 0,
+      "resolved": 20
+    },
+    "3": {
+      "cancellation_limited": 0,
+      "empirically_zero_over_stencil": 0,
+      "expected_zero_independently_supported": 160,
+      "reference_unresolved": 0,
+      "resolved": 20
+    },
+    "4": {
+      "cancellation_limited": 0,
+      "empirically_zero_over_stencil": 0,
+      "expected_zero_independently_supported": 154,
+      "reference_unresolved": 0,
+      "resolved": 26
+    }
+  },
+  "max_relative_error_on_resolved_rows": 2.95639158022812e-11,
+  "rows": 540,
+  "rows_empirically_zero_only": 0,
+  "rows_supporting_verification": 540,
+  "rows_with_reference_but_disagreeing": 0,
+  "rows_without_usable_reference": 0,
+  "steps_rejected_for_branch_crossing": 1332,
+  "verification_condition": "every row supports verification (resolved and agreeing, or zero with strong independent support); no row is cancellation-limited, unresolved, or empirically-zero-only; no row disagrees with a reference that resolved it",
+  "verified": true
+}
