@@ -16,8 +16,8 @@ here. To update them, take the new upstream revision and record it in this file.
 
 Both template files are byte-identical to upstream OTIlib
 (https://github.com/mauriaristi/otilib) at commit
-`de3f7fa2b1ba667dff054ad5ba1f6f41f4ba8b54` (2025-08-25), path
-`src/python/pyoti/python/`:
+`de3f7fa2b1ba667dff054ad5ba1f6f41f4ba8b54` (2025-08-25), in the upstream
+directory src/python/pyoti/python (an upstream path, not one in this repository):
 
 | File | Git blob id, here and upstream at `de3f7fa` |
 |---|---|

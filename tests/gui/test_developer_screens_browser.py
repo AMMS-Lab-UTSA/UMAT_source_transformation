@@ -106,7 +106,9 @@ J2_BLOCK = "86-108 replaced; 38-48 kept (read by the stress update); extraction 
 
 @pytest.mark.parametrize("source,ntens,lines,replaced,shot", [
     (J2_SOURCE, 6, J2_BLOCK, "1  (lines 86-108)", "umat_constitutive_jacobian.png"),
-    (ELASTIC_SOURCE, 4, "83-87 replaced; extraction after line 87", "1  (lines 83-87)", None),
+    pytest.param(ELASTIC_SOURCE, 4, "83-87 replaced; extraction after line 87", "1  (lines 83-87)", None,
+                 marks=pytest.mark.skipif(not ELASTIC_SOURCE.is_file(),
+                                          reason="elastic.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")),
     (FCC_SOURCE, 6, "131-133 kept (read by the stress update); extraction after line 189", "0  ()",
      "umat_constitutive_jacobian_fcc.png"),
 ], ids=["m3_j2", "elastic", "m6_fcc"])

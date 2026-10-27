@@ -81,6 +81,7 @@ def test_order_four_transform_emits_direction_metadata(examples_dir: Path, tmp_p
 
 
 @pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran is required")
+@needs_elastic_f
 def test_literal_schema_compiles_through_canonical_json_cli(examples_dir: Path, tmp_path: Path) -> None:
     source_config = examples_dir / "elastic_minimal.json"
     compact = json.loads(source_config.read_text(encoding="utf-8"))
