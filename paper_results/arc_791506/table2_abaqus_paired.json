@@ -12704,7 +12704,7 @@
           "bypassed_ddsdde_assignments": [
             {
               "line": 5212,
-              "source": "!     OTIS-SKIP: DDSDDE(I,J) = DDS(I,J) - DYPROD(I,J)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "compiled_ddsdde_extraction": [
@@ -13571,19 +13571,19 @@
           "bypassed_ddsdde_assignments": [
             {
               "line": 5116,
-              "source": "!     OTIS-SKIP: DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 5121,
-              "source": "!     OTIS-SKIP: DDSDDE(K,4) = TWO*EG*Q*XNV(K)*XNV(4)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 5122,
-              "source": "!     OTIS-SKIP: DDSDDE(4,K) = DDSDDE(K,4)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 5124,
-              "source": "!     OTIS-SKIP: DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "compiled_ddsdde_extraction": [
@@ -14135,11 +14135,11 @@
           "bypassed_ddsdde_assignments": [
             {
               "line": 4916,
-              "source": "!     OTIS-SKIP: DDSDDE(I,J) = DDS(I,J)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 4919,
-              "source": "!     OTIS-SKIP: DDSDDE(4,4) = DDS(4,4)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "compiled_ddsdde_extraction": [
