@@ -1,0 +1,9 @@
+commit fe40e9f6265d56237d8eb3f4eee237a0c5951e49
+2026-07-10 08:44:07 -0500 santiagarcia Reorganize repository into a conventional publication layout
+remote https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
+MINGW64_NT-10.0-26200 RR714387IP01 3.6.10-5a1665c8.x86_64 2026-09-28 10:40 UTC x86_64 Msys
+GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0
+gcc.exe (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0
+0f473c99d8b6c59f02fde70fa1dcfa9a07f2fe20c3c7459bc3616b460e0a3818 *C:/Users/vfn333/Documents/GitHub/umat-oti-softwarex-manuscript/refreeze/scripts/posix_shim/refreeze_posix_shim.py
+3.11.16 (main, Aug 25 2026, 13:59:19) [MSC v.1944 64 bit (AMD64)]
+numpy 2.4.6

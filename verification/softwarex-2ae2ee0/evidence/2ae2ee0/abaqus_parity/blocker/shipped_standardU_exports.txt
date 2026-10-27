@@ -1,0 +1,131 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35229.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\SIMULIA\EstProducts\2024\win_b64\code\bin\standardU.dll
+
+File Type: DLL
+
+  Section contains the following exports for standardU.dll
+
+    00000000 characteristics
+    64D6DF97 time date stamp Fri Aug 11 20:25:43 2023
+        0.00 version
+           1 ordinal base
+         102 number of functions
+         102 number of names
+
+    ordinal hint RVA      name
+
+          1    0 0001DBE0 ?SMAStsStdU_finalize@@YAXAEAH@Z
+          2    1 0001DBF0 ?SMAStsStdU_initialize@@YAXAEAH@Z
+          3    2 0001DC20 ?SMAStsUsubs_finalize@@YAXAEAH@Z
+          4    3 0001DC70 ?SMAStsUsubs_initialize@@YAXAEAH@Z
+          5    4 0001DCD0 ?SMAStsUsubs_specific_finalize@@YAXAEAH@Z
+          6    5 0001DCE0 ?SMAStsUsubs_specific_initialize@@YAXAEAH@Z
+          7    6 0001DED0 DASSAULT_SYSTEMES_CAA2_INTERNAL_SMAStsUsubs_USL
+          8    7 0001DD00 DllMain
+          9    8 0001DDF0 SMAStsUsubs_finalizeC
+         10    9 0001DE60 SMAStsUsubs_initializeC
+         11    A 0001DC10 _forceCRTManifestCUR
+         12    B 00001000 contactperm
+         13    C 000014A0 creep
+         14    D 000019C0 dflow
+         15    E 00001E10 dflux
+         16    F 00002280 disp
+         17   10 000026C0 dload
+         18   11 00002B20 film
+         19   12 00002FB0 flow
+         20   13 00003410 fric
+         21   14 000039F0 fric_coef
+         22   15 00003E90 gapcon
+         23   16 00004320 gapelectr
+         24   17 00004790 hardini
+         25   18 00004BF0 hetval
+         26   19 00005030 inter_react_bv
+         27   1A 00005580 mpc
+         28   1B 00005A60 orient
+         29   1C 00006010 rsurfu
+         30   1D 00006480 sdvini
+         31   1E 000068C0 sigini
+         32   1F 00006D70 stdu_callallutils
+         33   20 00006DC0 uactivationsetup
+         34   21 000071B0 uamp
+         35   22 00007680 uanisohyper_inv
+         36   23 00007BA0 uanisohyper_strain
+         37   24 000080C0 ucohesiveoffset
+         38   25 000086B0 ucomputeerefhysteresis
+         39   26 00008B10 ucomputeporoevolelectrolyte
+         40   27 00008F40 uconcentrationtensor
+         41   28 000093F0 ucorr
+         42   29 00009850 ucosimulation
+         43   2A 00009C60 ucoupledconstresp
+         44   2B 0000A3D0 ucrack
+         45   2C 0000AAC0 ucreepnetwork
+         46   2D 0000AF90 ucure
+         47   2E 0000B4F0 udamagemf
+         48   2F 0000BA80 udecurr
+         49   30 0000BF50 udecurrent
+         50   31 0000C3A0 udempotential
+         51   32 0000C7F0 udmgini
+         52   33 0000CE10 udsecurrent
+         53   34 0000D260 ueigenstrain
+         54   35 0000D810 uel
+         55   36 0000DDD0 uelemdresp
+         56   37 0000E380 uelmat
+         57   38 0000E950 uepactivationfacet
+         58   39 0000EED0 uepactivationsetup
+         59   3A 0000F300 uepactivationvol
+         60   3B 0000F820 uexpan
+         61   3C 0000FDD0 uexternaldb
+         62   3D 00010200 ufield
+         63   3E 00010660 ufluid
+         64   3F 00010B20 ufluidconnectorloss
+         65   40 00011030 ufluidconnectorvalve
+         66   41 00011530 ufluidleakoff
+         67   42 00011A40 ufluidpipefriction
+         68   43 00011F50 ugens
+         69   44 00012510 uhard
+         70   45 00012A00 uhypel
+         71   46 00012E70 uhyper
+         72   47 00013330 uhyper_stretch
+         73   48 00013850 uinter
+         74   49 00013EA0 uintfluxgen
+         75   4A 000144B0 umasfl
+         76   4B 000148E0 umat
+         77   4C 000152F0 umat_sst
+         78   4D 00015990 umatht
+         79   4E 00015ED0 umdflux
+         80   4F 00016470 umdfluxsetup
+         81   50 000168A0 umeshmotion
+         82   51 00016D40 umixmodefatigue
+         83   52 00017280 umotion
+         84   53 000176B0 umullins
+         85   54 00017B80 umultiphysicsload
+         86   55 00018170 uporep
+         87   56 00018560 upress
+         88   57 00018990 upsd
+         89   58 00018DB0 urdfil
+         90   59 000191D0 usdfld
+         91   5A 000196F0 usettling
+         92   5B 00019C80 usuperelashardmod
+         93   5C 0001A260 usuperelasplastmod
+         94   5D 0001A910 utemp
+         95   5E 0001AD40 utracload
+         96   5F 0001B1A0 utrs
+         97   60 0001B5F0 utrsnetwork
+         98   61 0001BAC0 uvarm
+         99   62 0001BFA0 uwave
+        100   63 0001C4D0 uxfemcrack
+        101   64 0001CAF0 uxfemnonlocalweight
+        102   65 0001CF80 voidri
+
+  Summary
+
+       17000 .data
+        1000 .pdata
+        6000 .rdata
+        1000 .reloc
+        1000 .rsrc
+       1E000 .text
+        7000 .trace

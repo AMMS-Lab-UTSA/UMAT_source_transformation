@@ -1,0 +1,23 @@
+Analysis initiated from SIMULIA established products
+Abaqus JOB r1_ext_orig
+Abaqus 2024
+Abaqus License Manager checked out the following licenses:
+Abaqus/Standard checked out 5 tokens from Flexnet server EB137960.utsarr.net.
+<234 out of 314 licenses remain available>.
+Begin Analysis Input File Processor
+10/27/2026 2:11:47 PM
+Run pre.exe
+10/27/2026 2:11:50 PM
+End Analysis Input File Processor
+Begin Abaqus/Standard Analysis
+10/27/2026 2:11:50 PM
+Run standard.exe
+10/27/2026 2:11:50 PM
+Abaqus Error: Abaqus/Standard Analysis exited with an error - Please see the 
+message file for possible error messages if the file exists.
+Begin SIM Wrap-up
+10/27/2026 2:11:52 PM
+Run SMASimUtility.exe
+10/27/2026 2:11:52 PM
+End SIM Wrap-up
+Abaqus/Analysis exited with errors

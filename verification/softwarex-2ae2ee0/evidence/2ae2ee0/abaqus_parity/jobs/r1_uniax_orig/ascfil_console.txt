@@ -1,0 +1,5 @@
+Abaqus JOB r1_uniax_orig
+BEGIN RESULTS FILE TRANSLATION
+Run C:\SIMULIA\EstProducts\2024\win_b64\code\bin\ascfil.exe
+END RESULTS FILE TRANSLATION
+Abaqus JOB r1_uniax_orig COMPLETED

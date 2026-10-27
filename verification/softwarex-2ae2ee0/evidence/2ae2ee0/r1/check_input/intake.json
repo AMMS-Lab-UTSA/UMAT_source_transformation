@@ -1,0 +1,326 @@
+{
+  "counts": {
+    "DEFAULT": 2,
+    "FOUND": 9,
+    "INFERRED": 5,
+    "MISSING": 2
+  },
+  "facts": {
+    "deck_found": false,
+    "element": "C3D8",
+    "entry_is_umat": true,
+    "family": "three-dimensional continuum",
+    "kinematics": "small strain",
+    "nstatv": 1,
+    "ntens": 6,
+    "props_count": 6,
+    "props_values_agree_with_pipeline": null,
+    "props_values_differ": null,
+    "props_values_found": false,
+    "props_values_pipeline_refuses": null
+  },
+  "inputs": {
+    "deck": "",
+    "repository": "input",
+    "umat": "umat_j2_voce.f",
+    "umat_sha256": "06902c554f58121ce40c7ab2bbb7ce9b0a1969356656d38ca41d976f9e51149e"
+  },
+  "items": [
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat_j2_voce.f",
+          "line": 38,
+          "text": "SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,"
+        }
+      ],
+      "key": "routine",
+      "label": "Material routine",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "UMAT at line 38",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "deck",
+      "label": "Deck that feeds this routine",
+      "needs_user": false,
+      "note": "no deck with a *USER MATERIAL block was found next to the file",
+      "status": "MISSING",
+      "value": "none found",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat_j2_voce.f",
+          "line": 75,
+          "text": "DO I = 4, 6"
+        }
+      ],
+      "key": "ntens",
+      "label": "Stress components (NTENS)",
+      "needs_user": false,
+      "note": "read from what the routine does with its stress tensor",
+      "status": "INFERRED",
+      "value": 6,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat_j2_voce.f",
+          "line": 75,
+          "text": "DO I = 4, 6"
+        }
+      ],
+      "key": "element",
+      "label": "Element / formulation",
+      "needs_user": false,
+      "note": "",
+      "status": "INFERRED",
+      "value": "C3D8 (three-dimensional continuum)",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "kinematics",
+      "label": "Geometric nonlinearity (NLGEOM)",
+      "needs_user": false,
+      "note": "the routine never reads DFGRD0/DFGRD1; no deck says otherwise",
+      "status": "INFERRED",
+      "value": "no: small strain",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat_j2_voce.f",
+          "line": 68,
+          "text": "EPN = STATEV(1)"
+        }
+      ],
+      "key": "nstatv",
+      "label": "State variables (NSTATV / *DEPVAR)",
+      "needs_user": false,
+      "note": "the highest STATEV the routine names",
+      "status": "INFERRED",
+      "value": 1,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat_j2_voce.f",
+          "line": 62,
+          "text": "BSAT = PROPS(6)"
+        }
+      ],
+      "key": "props_count",
+      "label": "Constants (PROPS count)",
+      "needs_user": false,
+      "note": "the highest PROPS the routine names (all of them, by literal subscript)",
+      "status": "INFERRED",
+      "value": 6,
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [
+        {
+          "file": "umat_j2_voce.f",
+          "line": 57,
+          "text": "YMOD = PROPS(1)"
+        },
+        {
+          "file": "umat_j2_voce.f",
+          "line": 58,
+          "text": "PNU = PROPS(2)"
+        },
+        {
+          "file": "umat_j2_voce.f",
+          "line": 59,
+          "text": "SIGY0 = PROPS(3)"
+        },
+        {
+          "file": "umat_j2_voce.f",
+          "line": 60,
+          "text": "HLIN = PROPS(4)"
+        }
+      ],
+      "key": "props_names",
+      "label": "Constants (names)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": {
+        "PROPS(1)": "YMOD",
+        "PROPS(2)": "PNU",
+        "PROPS(3)": "SIGY0",
+        "PROPS(4)": "HLIN",
+        "PROPS(5)": "QSAT",
+        "PROPS(6)": "BSAT"
+      },
+      "whose": ""
+    },
+    {
+      "ask": "I could not find the numbers this material needs: the values of its 6 constants: YMOD, PNU, SIGY0, HLIN, QSAT, BSAT (read from the material definition), in the order the routine reads them.",
+      "default": "The run cannot go on, and the constants are never guessed or filled in for you. Put an Abaqus input file with a *USER MATERIAL block next to the UMAT, or type the values into a material file and pass it with --material-config FILE (if the input file lives elsewhere, use --material-discovery-root FOLDER).",
+      "evidence": [],
+      "key": "props_values",
+      "label": "Constant values",
+      "needs_user": true,
+      "note": "",
+      "status": "MISSING",
+      "value": null,
+      "whose": "you"
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "loading",
+      "label": "Loading",
+      "needs_user": false,
+      "note": "chosen by the program, not by you; zero initial stress and state",
+      "status": "DEFAULT",
+      "value": "a generated path that makes the material do something, in unit time increments",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "temperature",
+      "label": "Reads temperature (TEMP/DTEMP)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "coordinates",
+      "label": "Reads position (COORDS)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "element_number",
+      "label": "Reads element number (NOEL)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "fields",
+      "label": "Reads field variables (PREDEF/DPRED)",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "no",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "helpers",
+      "label": "Helper routines it calls",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "includes",
+      "label": "Files it INCLUDEs",
+      "needs_user": false,
+      "note": "ABA_PARAM.INC is supplied by the solver",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "modules",
+      "label": "Modules it USEs",
+      "needs_user": false,
+      "note": "",
+      "status": "FOUND",
+      "value": "none needed",
+      "whose": ""
+    },
+    {
+      "ask": "",
+      "default": "",
+      "evidence": [],
+      "key": "quantity",
+      "label": "What to differentiate",
+      "needs_user": false,
+      "note": "constants that are switches or flags are not worth differentiating; say so if one is",
+      "status": "DEFAULT",
+      "value": "stress and tangent with respect to all 6 constant(s) the routine reads",
+      "whose": ""
+    }
+  ],
+  "material_config": {
+    "check_path": null,
+    "kinematics": "small_strain",
+    "nstatev": 1,
+    "ntens": 6,
+    "props_values": null
+  },
+  "needs_user": [
+    "props_values"
+  ],
+  "pipeline_inputs": {
+    "deck": null,
+    "dependency_roots": [],
+    "material_config_complete": false,
+    "material_config_missing": [
+      "props_values",
+      "check_path (the pipeline generates one when it reads a deck)"
+    ],
+    "material_config_needed": true,
+    "umat": "umat_j2_voce.f"
+  },
+  "schema": "umat-oti/intake/1"
+}

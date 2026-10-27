@@ -1,0 +1,1903 @@
+{
+  "exit_code": 0,
+  "stages": {
+    "material_settings": {
+      "status": "succeeded",
+      "automatic": false,
+      "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check_input\\material_check.json"
+    },
+    "dependencies": {
+      "status": "succeeded",
+      "closure": {
+        "entry": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\input\\umat_j2_voce.f",
+        "roots": [
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\input"
+        ],
+        "entry_routine": "UMAT",
+        "report": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery\\dependency_report.json",
+        "bundle_manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery\\dependency_bundle.json",
+        "multi_file": false,
+        "abaqus_runtime_calls": [],
+        "external_library_calls": {},
+        "includes": [
+          "ABA_PARAM.INC"
+        ],
+        "excluded_path_fragments": [
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery/",
+          "/.git/",
+          "/.venv/",
+          "/__pycache__/",
+          "/out/",
+          "/build/",
+          "/umat_oti_workspace/"
+        ],
+        "external_definitions": [],
+        "resolved_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery\\umat_j2_voce_resolved.f"
+      }
+    },
+    "parameters": {
+      "status": "succeeded",
+      "selection": "all_props_slots",
+      "parameters": [
+        {
+          "name": "YMOD",
+          "props_index": 1,
+          "value": 200000.0
+        },
+        {
+          "name": "PNU",
+          "props_index": 2,
+          "value": 0.3
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3,
+          "value": 250.0
+        },
+        {
+          "name": "HLIN",
+          "props_index": 4,
+          "value": 1000.0
+        },
+        {
+          "name": "QSAT",
+          "props_index": 5,
+          "value": 150.0
+        },
+        {
+          "name": "BSAT",
+          "props_index": 6,
+          "value": 20.0
+        }
+      ],
+      "notice": "PROPS slots may include discrete flags; explicitly select only continuous parameters"
+    },
+    "jacobian": {
+      "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\jacobian_contract.json",
+      "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian",
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\discovery\\umat_j2_voce_resolved.f",
+      "anchor_status": "ready_with_json_contract",
+      "completion_issues": [],
+      "ntens": 6,
+      "order": 1,
+      "derivative_requests": [
+        {
+          "id": "material_tangent",
+          "kind": "material_tangent",
+          "target": "DDSDDE",
+          "seed": [
+            "DSTRAN"
+          ],
+          "response": "STRESS",
+          "order": 1,
+          "output_layout": "jacobian",
+          "source_contract": "expanded",
+          "output_shape": [
+            6,
+            6
+          ],
+          "description": "Standard Abaqus consistent tangent."
+        }
+      ],
+      "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\dependency_bundle.json",
+      "gradient_aliases": null,
+      "transform_success": true,
+      "blockers": [],
+      "warnings": [],
+      "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\transform_report.json",
+      "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\umat_j2_voce_resolved_oti.f",
+      "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\umat_j2_voce_resolved_oti_combined.f90",
+      "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\derivative_manifest.json",
+      "compilation": {
+        "status": "compiled",
+        "command": [
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\compile_hint.sh"
+        ],
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "artifacts": {
+        "abaqus_umat": {
+          "abi": "standard_real_umat",
+          "drop_in_abaqus_user_subroutine": true,
+          "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\jacobian\\umat_j2_voce_resolved_oti_combined.f90"
+        },
+        "parameter_sensitivity_driver": null,
+        "combined_sensitivities": null
+      },
+      "semantic_checks": {
+        "no_oti_argument_reaches_an_untransformed_call": true,
+        "no_real_argument_reaches_an_oti_helper_dummy": true,
+        "dstran_initialization_before_seed": true,
+        "dstran_initialization_before_stress_use": true,
+        "stress_path_consumes_the_seed": true,
+        "dstran_seed_before_stress_update": true,
+        "dstran_seed_before_transformed_stress_update": true,
+        "stress_oti_update_before_real_stress_extraction": true,
+        "ddsdde_output_present": true,
+        "real_stress_extraction_before_ddsdde_extraction": true,
+        "stress_oti_update_before_ddsdde_extraction": true,
+        "ddsdde_extraction_after_selected_stress_regions": true,
+        "ddsdde_extraction_after_final_selected_stress_update": true,
+        "old_ddsdde_assignments_disabled": true,
+        "no_ddsdde_read_after_disabled_assignment": true,
+        "state_shadow_carries_the_state": true,
+        "no_extraction_in_tangent_helper_region": true,
+        "extractions_run_on_every_path": true,
+        "no_live_ddsdde_write_after_extraction": true,
+        "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+        "fixed_form_line_lengths_ok": true,
+        "integer_literals_normalized_in_oti_expressions": true,
+        "no_identifier_split_by_insignificant_blanks": true,
+        "promoted_dfgrd_variables_initialized_before_use": true,
+        "finite_strain_path_uses_oti_versions": true
+      },
+      "status_category": "succeeded"
+    },
+    "sensitivities": {
+      "schema": "umat_oti_collaborator_package_v1",
+      "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\model\\contract_v2.json",
+      "model": "model",
+      "parameters": [
+        {
+          "name": "YMOD",
+          "props_index": 1
+        },
+        {
+          "name": "PNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "HLIN",
+          "props_index": 4
+        },
+        {
+          "name": "QSAT",
+          "props_index": 5
+        },
+        {
+          "name": "BSAT",
+          "props_index": 6
+        }
+      ],
+      "props_values": [
+        200000.0,
+        0.3,
+        250.0,
+        1000.0,
+        150.0,
+        20.0
+      ],
+      "dimensions": {
+        "ntens": 6,
+        "nprops": 6,
+        "nstatev": 1
+      },
+      "history": {
+        "path_dependent": true
+      },
+      "verification_requested": true,
+      "check_path": {
+        "description": "uniaxial strain out to +0.02, back to -0.02, unloaded to 0 (40 increments), written by umat-oti check --peak",
+        "increments": [
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "require_j2_branches": false,
+      "build": {
+        "command": [
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\refreeze\\venv\\2ae2ee0\\Scripts\\python.exe",
+          "-m",
+          "umat_oti.provider",
+          "build",
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\model\\contract_v2.json",
+          "--out",
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\build",
+          "--regular-object",
+          "REAL_UMAT.obj"
+        ],
+        "exit_code": 0,
+        "log": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\logs\\provider_build.log",
+        "outputs": {
+          "object": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\build\\umat_umat_j2_voce_oti.obj",
+          "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\build\\umat_umat_j2_voce_oti.json",
+          "build_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\build\\build-bn9hxwb6",
+          "regular_object": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\build\\REAL_UMAT.obj"
+        }
+      },
+      "verification": {
+        "command": [
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\refreeze\\venv\\2ae2ee0\\Scripts\\python.exe",
+          "-m",
+          "umat_oti.validation.parameter_sensitivity_provider",
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\model\\contract_v2.json",
+          "--out",
+          "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\verification",
+          "--elastic"
+        ],
+        "exit_code": 0,
+        "log": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\logs\\provider_verification.log",
+        "report": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\verification\\verification.json",
+        "passed": true,
+        "result": {
+          "passed": true,
+          "verdict": "verified",
+          "reference": "separately compiled ORIGINAL UMAT; centred finite differences over a step ladder",
+          "reference_entry_statements": [],
+          "reference_lapack": {
+            "kind": "twins",
+            "description": "no LAPACK library found: the transform's real twins of the supplied routines (reference-LAPACK semantics, not LAPACK)",
+            "link_flags": [],
+            "libraries": []
+          },
+          "reads_before_assignment": {
+            "routine": "UMAT",
+            "decided": true,
+            "findings": [],
+            "rule": "forward data flow over the routine's executable statements: a scalar is reported when some path reaches a read without assigning it, an array when no path to the read assigns any element of it; a bare actual argument of a CALL counts as assigned by the callee",
+            "initialised_in_generated_code": [],
+            "warnings": []
+          },
+          "provider": {
+            "object": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\verification\\umat_umat_j2_voce_oti.obj",
+            "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\verification\\umat_umat_j2_voce_oti.json",
+            "build_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\verification\\build-3icxj3ml"
+          },
+          "source_hash": "e696a70dca0b3e1e",
+          "object_sha256_full": "2d0128ad9a0ee46957ff6ba94adf359cf2a173bf42f9092a3caa505f99b502d1",
+          "props": [
+            200000.0,
+            0.3,
+            250.0,
+            1000.0,
+            150.0,
+            20.0
+          ],
+          "path": [
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "path_source": "uniaxial strain out to +0.02, back to -0.02, unloaded to 0 (40 increments), written by umat-oti check --peak",
+          "increments": 40,
+          "branches": [],
+          "criterion": {
+            "relative_tolerance": 2e-06,
+            "parameter_steps": "relative to the parameter's value: 0.01, 0.00316, 0.001, 0.000316, 0.0001, 3.16e-05, 1e-05, 3.16e-06, 1e-06, 3.16e-07, 1e-07",
+            "strain_steps": "relative to the increment's largest strain component: 0.01, 0.00316, 0.001, 0.000316, 0.0001, 3.16e-05, 1e-05, 3.16e-06, 1e-06, 3.16e-07, 1e-07",
+            "reference_value": "reference_resolution.converged_value: centre of the flattest three-step window, or its Richardson extrapolation where tighter",
+            "reference_uncertainty": "max(flattest-window spread, Richardson residual, distance of the next finer step from the estimate, eps*|response|/(2h) at the step used)",
+            "within_reference": "gap <= uncertainty, or the flattest window's values straddle the value",
+            "verdicts": "agrees | consistent_with_zero | reference_unresolved | disagrees; only 'agrees' counts as verified",
+            "branch_rule": "no branch rule"
+          },
+          "primal_stress_max_abs": 2.2737367544323206e-12,
+          "primal_tolerance": {
+            "rtol": 1e-12,
+            "stress_atol": 3.575125512175703e-09,
+            "state_atol": 4.5966968075680004e-14,
+            "rule": "atol = rtol x the largest magnitude of the array over the run, at least 1e-10 (stress) / 1e-14 (state)",
+            "not_detected": "a primal mismatch smaller than atol, in any entry, however small the entry itself is: about 4,500 to 9,000 units in the last place of the array's largest value"
+          },
+          "primal_state_max_abs": 1.3877787807814457e-17,
+          "carry_reset_stress_derivative_difference": 16669.219984817944,
+          "state_growth": 0.04596696807568001,
+          "arrays": {
+            "DSIGMA_DP": {
+              "columns": 6,
+              "agreeing_columns": 6,
+              "unresolved_columns": 0,
+              "disagreeing_columns": 0,
+              "agrees": 720,
+              "consistent_with_zero": 720,
+              "reference_unresolved": 0,
+              "disagrees": 0,
+              "worst_relative_error_agreeing": 2.0964399640675998e-10
+            },
+            "DSTATEV_DP": {
+              "columns": 6,
+              "agreeing_columns": 6,
+              "unresolved_columns": 0,
+              "disagreeing_columns": 0,
+              "agrees": 240,
+              "consistent_with_zero": 0,
+              "reference_unresolved": 0,
+              "disagrees": 0,
+              "worst_relative_error_agreeing": 7.278756915143898e-10
+            },
+            "DSIGMA_DP (MARCH)": {
+              "columns": 6,
+              "agreeing_columns": 6,
+              "unresolved_columns": 0,
+              "disagreeing_columns": 0,
+              "agrees": 720,
+              "consistent_with_zero": 720,
+              "reference_unresolved": 0,
+              "disagrees": 0,
+              "worst_relative_error_agreeing": 2.0964399640675998e-10
+            },
+            "DDSDDE": {
+              "columns": 6,
+              "agreeing_columns": 6,
+              "unresolved_columns": 0,
+              "disagreeing_columns": 0,
+              "agrees": 480,
+              "consistent_with_zero": 960,
+              "reference_unresolved": 0,
+              "disagrees": 0,
+              "worst_relative_error_agreeing": 1.3714506013221043e-11
+            },
+            "DDSDDE (MARCH)": {
+              "columns": 6,
+              "agreeing_columns": 6,
+              "unresolved_columns": 0,
+              "disagreeing_columns": 0,
+              "agrees": 480,
+              "consistent_with_zero": 960,
+              "reference_unresolved": 0,
+              "disagrees": 0,
+              "worst_relative_error_agreeing": 1.3714506013221043e-11
+            }
+          },
+          "columns": [
+            {
+              "array": "DSIGMA_DP",
+              "column": "YMOD",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.1875914104875273e-10,
+              "largest_entry": 0.01669985980263332,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSTATEV_DP",
+              "column": "YMOD",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 0,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 7.278756915143898e-10,
+              "largest_entry": 3.58760611131171e-08,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP (MARCH)",
+              "column": "YMOD",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.1875914104875273e-10,
+              "largest_entry": 0.01669985980263332,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP",
+              "column": "PNU",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 2.0964399640675998e-10,
+              "largest_entry": 16669.219984817944,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSTATEV_DP",
+              "column": "PNU",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 0,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 6.668771222600835e-11,
+              "largest_entry": 0.005519394017402638,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP (MARCH)",
+              "column": "PNU",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 2.0964399640675998e-10,
+              "largest_entry": 16669.219984817944,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP",
+              "column": "SIGY0",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.4877392970843928e-10,
+              "largest_entry": 0.6571073666120496,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSTATEV_DP",
+              "column": "SIGY0",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 0,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 2.2892230925653077e-11,
+              "largest_entry": 2.1069832552352225e-05,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP (MARCH)",
+              "column": "SIGY0",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.4877392970843928e-10,
+              "largest_entry": 0.6571073666120496,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP",
+              "column": "HLIN",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.9219589885606304e-10,
+              "largest_entry": 0.029763242478032918,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSTATEV_DP",
+              "column": "HLIN",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 0,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 8.067963047782073e-11,
+              "largest_entry": 6.019559883097248e-07,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP (MARCH)",
+              "column": "HLIN",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.9219589885606304e-10,
+              "largest_entry": 0.029763242478032918,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP",
+              "column": "QSAT",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 5.323475956278045e-11,
+              "largest_entry": 0.38806512544392446,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSTATEV_DP",
+              "column": "QSAT",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 0,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 2.3155641633004198e-11,
+              "largest_entry": 8.705320641504195e-06,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP (MARCH)",
+              "column": "QSAT",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 5.323475956278045e-11,
+              "largest_entry": 0.38806512544392446,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP",
+              "column": "BSAT",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.646228977803354e-10,
+              "largest_entry": 1.7659028711350473,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSTATEV_DP",
+              "column": "BSAT",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 0,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 5.0217566042058605e-11,
+              "largest_entry": 4.58799980039074e-05,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DSIGMA_DP (MARCH)",
+              "column": "BSAT",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.646228977803354e-10,
+              "largest_entry": 1.7659028711350473,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE",
+              "column": "dDSTRAN(1)",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 3.4936027632828064e-12,
+              "largest_entry": 269230.76923076925,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE (MARCH)",
+              "column": "dDSTRAN(1)",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 3.4936027632828064e-12,
+              "largest_entry": 269230.76923076925,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE",
+              "column": "dDSTRAN(2)",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 7.012151614672141e-12,
+              "largest_entry": 269230.76923076925,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE (MARCH)",
+              "column": "dDSTRAN(2)",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 7.012151614672141e-12,
+              "largest_entry": 269230.76923076925,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE",
+              "column": "dDSTRAN(3)",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.3714506013221043e-11,
+              "largest_entry": 269230.76923076925,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE (MARCH)",
+              "column": "dDSTRAN(3)",
+              "verdict": "agrees",
+              "reason": "120 entries agree",
+              "counts": {
+                "agrees": 120,
+                "consistent_with_zero": 120,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 1.3714506013221043e-11,
+              "largest_entry": 269230.76923076925,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE",
+              "column": "dDSTRAN(4)",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 200,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 8.698894419708771e-16,
+              "largest_entry": 76923.07692307692,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE (MARCH)",
+              "column": "dDSTRAN(4)",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 200,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 8.698894419708771e-16,
+              "largest_entry": 76923.07692307692,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE",
+              "column": "dDSTRAN(5)",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 200,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 8.698894419708771e-16,
+              "largest_entry": 76923.07692307692,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE (MARCH)",
+              "column": "dDSTRAN(5)",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 200,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 8.698894419708771e-16,
+              "largest_entry": 76923.07692307692,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE",
+              "column": "dDSTRAN(6)",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 200,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 8.698894419708771e-16,
+              "largest_entry": 76923.07692307692,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            },
+            {
+              "array": "DDSDDE (MARCH)",
+              "column": "dDSTRAN(6)",
+              "verdict": "agrees",
+              "reason": "40 entries agree",
+              "counts": {
+                "agrees": 40,
+                "consistent_with_zero": 200,
+                "reference_unresolved": 0,
+                "disagrees": 0
+              },
+              "worst_relative_error_agreeing": 8.698894419708771e-16,
+              "largest_entry": 76923.07692307692,
+              "admissible_relative_steps": [
+                0.01,
+                0.0031622776601683794,
+                0.001,
+                0.00031622776601683794,
+                0.0001,
+                3.1622776601683795e-05,
+                1e-05,
+                3.162277660168379e-06,
+                1e-06,
+                3.162277660168379e-07,
+                1e-07
+              ]
+            }
+          ],
+          "unresolved_columns": [],
+          "comparisons": {
+            "eval_primal": 280,
+            "march_final_primal": 6,
+            "verified_entries": 2640,
+            "consistent_with_zero": 3360,
+            "reference_unresolved": 0,
+            "disagreeing": 0
+          },
+          "entries_csv": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\verification\\verification_entries.csv",
+          "clean_install_verified": false
+        }
+      },
+      "tie": {
+        "objects_byte_identical": true,
+        "max_abs_difference": {
+          "stress": 0.0,
+          "statev": 0.0,
+          "ddsdde": 0.0,
+          "dsigma_dp": 0.0,
+          "dstatev_dp": 0.0,
+          "march_stress": 0.0,
+          "march_dsigma_dp": 0.0,
+          "march_ddsdde": 0.0
+        },
+        "identical_outputs": true,
+        "generated_sources_identical": true,
+        "generated_sources": {
+          "abaqus_stubs.f90": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "master_parameters.f90": "2baddb13f26a7b01e40692a31866bbbd84db97139e52016ca73058bfd4911781",
+          "oti_intrinsics.f90": "cb39c339f04e4bcbafa6c6aa0475d84422e80be5803d283ba3ce0eb057923fa6",
+          "otim12n1.f90": "6d47e2cfbe2f080f1acbca87f3797c88ec9852b3939fb2960835704ae0b59637",
+          "provider_wrappers.f90": "ba89d0eba80b977f19a8c6364f954dc995931ede9659dc189a3a4eed536b1a60",
+          "ps_driver.f90": "e672f13f5171c28f9ce3a8312b44beb3b5dc145f96b32c6b52c43310f51962ea",
+          "real_utils.f90": "20ad619211d89d527f2b7368f16e415a8253e12eca1649164d842a74a34bb93b",
+          "umat_oti_lifted.f90": "bfe451ee060977d24013477e1b4745c5a3feb3e55408bd904f621289cc8d9616"
+        }
+      },
+      "exit_code": 0,
+      "canonical": {
+        "object": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\build\\umat_umat_j2_voce_oti.obj",
+        "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\build\\umat_umat_j2_voce_oti.json"
+      },
+      "regular_object": {
+        "file": "REAL_UMAT.obj",
+        "sha256_full": "4744e3f04f47b67dadba57aff0bc6b7424c24b26308146a1e7f53a63ee07387c",
+        "role": "ORIGINAL UMAT compiled unchanged; the same object is bundled in the OTI provider",
+        "source_sha256_full": "e696a70dca0b3e1e5e9ce55fbf8d0a1cbd62fa4bd984951b48e92dce772af1fa",
+        "compiled_source_sha256_full": "e696a70dca0b3e1e5e9ce55fbf8d0a1cbd62fa4bd984951b48e92dce772af1fa",
+        "compile_command": [
+          "gfortran.EXE",
+          "-O1",
+          "-fPIC",
+          "-std=legacy",
+          "-ffree-line-length-none",
+          "-fcheck=bounds",
+          "-ffile-prefix-map=<build>=.",
+          "-ffixed-form",
+          "-ffixed-line-length-none",
+          "-I",
+          ".",
+          "-c",
+          "original/umat_j2_voce_resolved.f"
+        ],
+        "toolchain": "provider",
+        "compiler": null
+      },
+      "shared": {
+        "REAL_UMAT.obj": {
+          "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\collaborator\\REAL_UMAT.obj",
+          "sha256": "4744e3f04f47b67dadba57aff0bc6b7424c24b26308146a1e7f53a63ee07387c"
+        },
+        "OTI_UMAT.obj": {
+          "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\collaborator\\OTI_UMAT.obj",
+          "sha256": "2d0128ad9a0ee46957ff6ba94adf359cf2a173bf42f9092a3caa505f99b502d1"
+        },
+        "Mapping.json": {
+          "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\collaborator\\Mapping.json",
+          "sha256": "b4661d5ff22058a35e728a18c35c7358f5c1ea156257e21c39217dcfa911cdab"
+        },
+        "transform_report.txt": {
+          "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check\\sensitivities\\collaborator\\transform_report.txt",
+          "sha256": "11c30f8f41dcba368594bfaaadc3cd330c136456079eb2f8a71206cf472e073f"
+        }
+      }
+    }
+  },
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\check"
+}

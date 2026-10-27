@@ -1,0 +1,5 @@
+Abaqus JOB modelA_shear_orig
+BEGIN RESULTS FILE TRANSLATION
+Run C:\SIMULIA\EstProducts\2024\win_b64\code\bin\ascfil.exe
+END RESULTS FILE TRANSLATION
+Abaqus JOB modelA_shear_orig COMPLETED

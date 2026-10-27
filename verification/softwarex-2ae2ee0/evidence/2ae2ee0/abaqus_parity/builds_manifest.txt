@@ -1,0 +1,28 @@
+# Build provenance per job (Ada). Each job's abaqus_v6.env sets usub_lib_dir to build/<model>_<build>; Abaqus run without user=.
+# sha256 of the libraries and sources used for the archived runs (binaries themselves not archived; rebuild with scripts/build_usublib.py).
+739e16b8a2b31a87e51aa2d43adc6b2100daa6a219efcedda7b90d811fd42ecc  build/modelA_orig/user.for
+92e8096aac55ec974c9c75198a70ae94f8cd888adebc1e4d2d5c459075656b2a  build/modelA_orig/standardU.dll
+c7ffbed759351ff4b51603e95ccc7922efc6045f36bae24875e9cc70d5964105  build/modelA_orig/abss_abqstub.dll
+27140673a3384a56fb9b2009f16e10e82ed8fcc1c95ad2f41fee052e8aefe8c4  build/modelA_orig/standardU.def
+c5c64e4507cc5a56a3e3bc83a9988883dcd237204721551daf62b8abc80373ef  build/modelA_orig/abss_thunks.asm
+04a1b4a445a25a7751d32c27978817834d3fac60b3c84a5ac8683bb5b45c2ebf  build/modelA_orig/abss_resolver.c
+0c81cc2f4a6d55bfd0e68c2d33c3fe87984cfb64c8b0d2dc1563c408af99c71a  build/modelA_oti/user.for
+7e43222210755aa7c5e53c0ac77835103dfd4a5005932157bd8d5ec0a224758f  build/modelA_oti/standardU.dll
+c7ffbed759351ff4b51603e95ccc7922efc6045f36bae24875e9cc70d5964105  build/modelA_oti/abss_abqstub.dll
+27140673a3384a56fb9b2009f16e10e82ed8fcc1c95ad2f41fee052e8aefe8c4  build/modelA_oti/standardU.def
+c5c64e4507cc5a56a3e3bc83a9988883dcd237204721551daf62b8abc80373ef  build/modelA_oti/abss_thunks.asm
+04a1b4a445a25a7751d32c27978817834d3fac60b3c84a5ac8683bb5b45c2ebf  build/modelA_oti/abss_resolver.c
+3fc977b279eef66237eb2ab1ab8741c10fdea1df6f9f31677f2f143daeec0ee4  build/r1_orig/user.for
+0e71bd092d926b9c0ad7f3e6891df286005cc80a2b18c895087c68a586695b91  build/r1_orig/standardU.dll
+c7ffbed759351ff4b51603e95ccc7922efc6045f36bae24875e9cc70d5964105  build/r1_orig/abss_abqstub.dll
+27140673a3384a56fb9b2009f16e10e82ed8fcc1c95ad2f41fee052e8aefe8c4  build/r1_orig/standardU.def
+c5c64e4507cc5a56a3e3bc83a9988883dcd237204721551daf62b8abc80373ef  build/r1_orig/abss_thunks.asm
+04a1b4a445a25a7751d32c27978817834d3fac60b3c84a5ac8683bb5b45c2ebf  build/r1_orig/abss_resolver.c
+c53eca2f431320e2618e9c8fef7a07d0a28f3a0aca98bb9ebe862c832bc2b12c  build/r1_oti/user.for
+9ba187ee4b6d791ccca25072d5b3fbc4a6b400b01f118d6fa84ec7de7e63317e  build/r1_oti/standardU.dll
+c7ffbed759351ff4b51603e95ccc7922efc6045f36bae24875e9cc70d5964105  build/r1_oti/abss_abqstub.dll
+27140673a3384a56fb9b2009f16e10e82ed8fcc1c95ad2f41fee052e8aefe8c4  build/r1_oti/standardU.def
+c5c64e4507cc5a56a3e3bc83a9988883dcd237204721551daf62b8abc80373ef  build/r1_oti/abss_thunks.asm
+04a1b4a445a25a7751d32c27978817834d3fac60b3c84a5ac8683bb5b45c2ebf  build/r1_oti/abss_resolver.c
+# jobs -> build: <model>_<case>_<build> used build/<model>_<build> (all 16 runs, 2026-10-27 19:18-19:28 UTC; see run_all_transcript.txt)
+# shipped stub: c7ffbed759351ff4b51603e95ccc7922efc6045f36bae24875e9cc70d5964105  C:/SIMULIA/EstProducts/2024/win_b64/code/bin/standardU.dll

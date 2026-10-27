@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\57eaeff\tools\run_tangent_round.py", line 91, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\57eaeff\tools\run_tangent_round.py", line 53, in main
+    evidence = run_actual_j2_higher_order_evidence(args.config, args.work_dir)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\57eaeff\src\umat_oti\validation\actual_umat_higher_order.py", line 206, in run_actual_j2_higher_order_evidence
+    "artifacts": [
+                 ^
+  File "C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\57eaeff\src\umat_oti\validation\actual_umat_higher_order.py", line 207, in <listcomp>
+    {"path": str(path), "sha256": _sha256(path)} for path in generated_paths
+                                  ^^^^^^^^^^^^^
+  File "C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\57eaeff\src\umat_oti\validation\actual_umat_higher_order.py", line 675, in _sha256
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+                          ^^^^^^^^^^^^^^^^^
+  File "C:\Users\vfn333\AppData\Roaming\uv\python\cpython-3.11.16-windows-x86_64-none\Lib\pathlib.py", line 1050, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\vfn333\AppData\Roaming\uv\python\cpython-3.11.16-windows-x86_64-none\Lib\pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\57eaeff\\rounds\\tangent\\work\\actual_umat_higher_order_driver'

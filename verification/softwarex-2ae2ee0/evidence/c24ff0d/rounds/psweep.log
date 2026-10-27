@@ -1,0 +1,21 @@
+full round: writing to C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\c24ff0d\rounds\psweep\results, leaving the published round untouched
+wrote C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\c24ff0d\rounds\psweep\results\table6_parameter_sensitivity.csv
+wrote C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\c24ff0d\rounds\psweep\results\table6_comparison_rows.csv
+{
+  "attempted": 20,
+  "contract_complete": 20,
+  "transformed": 20,
+  "compiled_oti": 20,
+  "executed_oti": 20,
+  "executed_original": 20,
+  "primal_parity": 20,
+  "reference_resolved": 20,
+  "derivatives_verified": 18,
+  "parameter_directions_declared": 84,
+  "parameter_directions_verified": 76,
+  "comparison_rows_total": 14540,
+  "comparison_rows_agreeing": 14507
+}
+
+failure taxonomy:
+  derivatives_verified:unresolved: 2 -> m6_fcc, sweep_drucker_prager

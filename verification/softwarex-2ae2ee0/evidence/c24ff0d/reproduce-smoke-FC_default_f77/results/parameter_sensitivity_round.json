@@ -1,0 +1,63 @@
+{
+  "failure_taxonomy": {
+    "executed_oti:failed": [
+      "m3_j2"
+    ]
+  },
+  "funnel": {
+    "attempted": 1,
+    "comparison_rows_agreeing": 0,
+    "comparison_rows_total": 0,
+    "compiled_oti": 1,
+    "contract_complete": 1,
+    "derivatives_verified": 0,
+    "executed_original": 0,
+    "executed_oti": 0,
+    "parameter_directions_declared": 4,
+    "parameter_directions_verified": 0,
+    "primal_parity": 0,
+    "reference_resolved": 0,
+    "transformed": 1
+  },
+  "models": [
+    {
+      "furthest_stage": "compile",
+      "model": "m3_j2",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "H"
+      ],
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\m3_j2.json",
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "reason": "OTI driver build failed: /usr/bin/sh: line 1: f77: command not found\nmake: *** [Makefile:8: master_parameters.o] Error 127\n",
+          "status": "failed"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 13.907,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP"
+      ]
+    }
+  ],
+  "policy": "Counts are a funnel, not a single number. 'compiled' is not 'executed' and neither is 'verified'. Models that fail stay in the denominator.",
+  "schema": "umat-oti-parameter-sensitivity-round/2"
+}

@@ -1,0 +1,9 @@
+commit 2ae2ee07547ae86c5c4c9bb9fe123b1245c13dbc
+2026-10-15 17:32:45 -0500 santiagarcia Record the audit entry and the fingerprints for c1ddcac
+remote https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
+MINGW64_NT-10.0-26200 RR714387IP01 3.6.10-5a1665c8.x86_64 2026-09-28 10:40 UTC x86_64 Msys
+GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0
+gcc.exe (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0
+40bdca1313d2db91aa8c30e2a288b1d751835fad5f9c8c33bcc1b0768adab055 *C:/Users/vfn333/Documents/GitHub/umat-oti-softwarex-manuscript/refreeze/scripts/posix_shim/refreeze_posix_shim.py
+3.11.16 (main, Aug 25 2026, 13:59:19) [MSC v.1944 64 bit (AMD64)]
+numpy 2.4.6

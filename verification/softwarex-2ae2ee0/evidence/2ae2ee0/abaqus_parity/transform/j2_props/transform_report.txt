@@ -1,0 +1,60 @@
+============================================================================
+  UMAT to OTI/HYPAD TRANSFORMATION REPORT  --  UMAT
+============================================================================
+
+Source file       : C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\abaqus_parity\transform\j2_props\dependencies\j2_props.f
+Transformation    : SUCCESS
+Anchor completion : ready_with_json_contract
+Blockers/Warnings : none
+
+-- OTI configuration -------------------------------------------------------
+ntens = 6   order = 1   type = ONUMM6N1   module = otim6n1
+OTI directions required: 6
+
+-- Variable roles ----------------------------------------------------------
+Seeded          :   1   DSTRAN
+Promoted to OTI :  11   DEV_TRIAL, DGAMMA, EQPLAS_N, PHI, PTRIAL, Q_TRIAL, SCALE, SIGMA_Y, STATEV, STRESS, STRESS_TRIAL
+Kept constant   :  23   COORDS, DPRED, DROT, DTEMP, DTIME, E, ELAM, EMU, H, ONE, ONE_THIRD, PREDEF ...
+Kept real       :  26   CELENT, CMNAME, DDSDDE, DDSDDT, DFGRD0, DFGRD1, DRPLDE, DRPLDT, I, J, KINC, KSPT ...
+
+-- Main tangent (DDSDDE) ---------------------------------------------------
+Contract : DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)
+seed = DSTRAN   output = STRESS   target = DDSDDE
+Old tangent blocks replaced: 1  (lines 100-112)
+Stress-update regions transformed: 5
+
+-- Semantic checks (25/25 passed) ----------------------------------------
+    [PASS] ddsdde_extraction_after_final_selected_stress_update
+    [PASS] ddsdde_extraction_after_selected_stress_regions
+    [PASS] ddsdde_output_present
+    [PASS] dstran_initialization_before_seed
+    [PASS] dstran_initialization_before_stress_use
+    [PASS] dstran_seed_before_stress_update
+    [PASS] dstran_seed_before_transformed_stress_update
+    [PASS] extractions_run_on_every_path
+    [PASS] finite_strain_path_uses_oti_versions
+    [PASS] fixed_form_line_lengths_ok
+    [PASS] integer_literals_normalized_in_oti_expressions
+    [PASS] no_ddsdde_read_after_disabled_assignment
+    [PASS] no_extraction_in_tangent_helper_region
+    [PASS] no_identifier_split_by_insignificant_blanks
+    [PASS] no_live_ddsdde_write_after_extraction
+    [PASS] no_oti_argument_reaches_an_untransformed_call
+    [PASS] no_real_argument_reaches_an_oti_helper_dummy
+    [PASS] no_seed_read_into_a_real_copy_of_a_shadowed_name
+    [PASS] old_ddsdde_assignments_disabled
+    [PASS] promoted_dfgrd_variables_initialized_before_use
+    [PASS] real_stress_extraction_before_ddsdde_extraction
+    [PASS] state_shadow_carries_the_state
+    [PASS] stress_oti_update_before_ddsdde_extraction
+    [PASS] stress_oti_update_before_real_stress_extraction
+    [PASS] stress_path_consumes_the_seed
+
+-- Generated files ---------------------------------------------------------
+    master_parameters.f90
+    real_utils.f90
+    otim6n1.f90
+    compile_order.txt
+    compile_hint.sh
+    j2_props_oti.f
+

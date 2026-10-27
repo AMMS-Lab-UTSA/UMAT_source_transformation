@@ -1,0 +1,78 @@
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\j2_props_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\j2_props_oti_combined.f90",
+  "compilation": {
+    "status": "not_requested"
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\src\\j2_props.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\j2_props\\j2_props_oti.f",
+  "warnings": []
+}

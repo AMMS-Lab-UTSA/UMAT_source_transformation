@@ -1,0 +1,730 @@
+$ gfortran -O1 -std=legacy -ffixed-form -I. -c umat.f -o umat.o
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o umat.o -o r1_drv.exe
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\jacobian\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\jacobian\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\jacobian\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\jacobian\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\check\jacobian\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k1\umat_j2_voce_k1.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k1\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\umat_j2_voce_k1_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\umat_j2_voce_k1_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\umat_j2_voce_k1.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k1\\oti\\umat_j2_voce_k1_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k1\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k1\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k1\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k1\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k1\oti\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k2\umat_j2_voce_k2.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k2\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\umat_j2_voce_k2_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\umat_j2_voce_k2_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\umat_j2_voce_k2.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k2\\oti\\umat_j2_voce_k2_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k2\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k2\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k2\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k2\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k2\oti\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k3\umat_j2_voce_k3.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k3\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\umat_j2_voce_k3_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\umat_j2_voce_k3_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\umat_j2_voce_k3.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k3\\oti\\umat_j2_voce_k3_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k3\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k3\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k3\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k3\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k3\oti\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k4\umat_j2_voce_k4.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k4\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\umat_j2_voce_k4_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\umat_j2_voce_k4_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\umat_j2_voce_k4.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k4\\oti\\umat_j2_voce_k4_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k4\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k4\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k4\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k4\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k4\oti\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k5\umat_j2_voce_k5.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k5\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\umat_j2_voce_k5_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\umat_j2_voce_k5_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\umat_j2_voce_k5.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k5\\oti\\umat_j2_voce_k5_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k5\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k5\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k5\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k5\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k5\oti\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k6\umat_j2_voce_k6.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k6\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\umat_j2_voce_k6_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\umat_j2_voce_k6_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\umat_j2_voce_k6.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k6\\oti\\umat_j2_voce_k6_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k6\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k6\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k6\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k6\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k6\oti\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k8\umat_j2_voce_k8.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k8\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\umat_j2_voce_k8_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\umat_j2_voce_k8_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\umat_j2_voce_k8.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k8\\oti\\umat_j2_voce_k8_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k8\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k8\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k8\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k8\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k8\oti\transformed_umat.o -o r1_drv.exe
+exit 0
+$ C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\venv\2ae2ee0\Scripts\python.exe C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\wt\2ae2ee0\umat-oti jacobian C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k12\umat_j2_voce_k12.f --ntens 6 --out C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k12\oti --compile
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\umat_j2_voce_k12_oti_combined.f90"
+    },
+    "combined_sensitivities": null,
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\umat_j2_voce_k12_oti_combined.f90",
+  "compilation": {
+    "command": [
+      "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "completion_issues": [],
+  "config": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\jacobian_contract.json",
+  "contract": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\jacobian_contract.json",
+  "dependency_bundle": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\dependency_bundle.json",
+  "derivative_requests": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "gradient_aliases": null,
+  "manifest": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti",
+  "report_path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "extractions_run_on_every_path": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_live_ddsdde_write_after_extraction": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "no_real_argument_reaches_an_oti_helper_dummy": true,
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "state_shadow_carries_the_state": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\umat_j2_voce_k12.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\r1\\verify\\newton_k12\\oti\\umat_j2_voce_k12_oti.f",
+  "warnings": []
+}
+exit 0
+$ gfortran -O1 -c C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\refreeze\scripts\r1\r1_driver.f90 -o drv.o
+exit 0
+$ gfortran -O1 drv.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k12\oti\master_parameters.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k12\oti\real_utils.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k12\oti\otim6n1.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k12\oti\oti_intrinsics.o C:\Users\vfn333\Documents\GitHub\umat-oti-softwarex-manuscript\evidence\2ae2ee0\r1\verify\newton_k12\oti\transformed_umat.o -o r1_drv.exe
+exit 0

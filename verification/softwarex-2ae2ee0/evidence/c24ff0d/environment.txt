@@ -1,0 +1,9 @@
+commit c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca
+2026-08-26 13:40:47 -0500 santiagarcia Rebuild the interface as a guided workflow, and split the figures by question
+remote https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
+MINGW64_NT-10.0-26200 RR714387IP01 3.6.10-5a1665c8.x86_64 2026-09-28 10:40 UTC x86_64 Msys
+GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0
+gcc.exe (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0
+0f473c99d8b6c59f02fde70fa1dcfa9a07f2fe20c3c7459bc3616b460e0a3818 *C:/Users/vfn333/Documents/GitHub/umat-oti-softwarex-manuscript/refreeze/scripts/posix_shim/refreeze_posix_shim.py
+3.11.16 (main, Aug 25 2026, 13:59:19) [MSC v.1944 64 bit (AMD64)]
+numpy 2.4.6

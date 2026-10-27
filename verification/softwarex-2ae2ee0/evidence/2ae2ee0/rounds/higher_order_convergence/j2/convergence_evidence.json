@@ -1,0 +1,325 @@
+{
+  "artifact_sha256": {
+    "convergence_evidence.json": "d8fbf290ca1e902715c3faec1381f63e0156d9260916cb90fe78417fb264f492",
+    "convergence_rows.csv": "a24e16735b2ddf3e05f91593f51df39ddf977e737c697a9bdd9b6ec1e0260027",
+    "convergence_sweep.csv": "0dac5a07175a3dbd55214f64af73b3a46bc1e6578c3a6b63f4ba32e804eefdf9"
+  },
+  "artifacts": {
+    "rows_csv": "C:/Users/vfn333/Documents/GitHub/umat-oti-softwarex-manuscript/evidence/2ae2ee0/rounds/higher_order_convergence/j2/convergence_rows.csv",
+    "sweep_csv": "C:/Users/vfn333/Documents/GitHub/umat-oti-softwarex-manuscript/evidence/2ae2ee0/rounds/higher_order_convergence/j2/convergence_sweep.csv"
+  },
+  "classification_policy": {
+    "agreement_relative_floor": 1e-06,
+    "agreement_uncertainty_multiple": 4.0,
+    "cancellation_relative_spread": 0.1,
+    "classifications": [
+      "resolved",
+      "expected_zero_independently_supported",
+      "empirically_zero_over_stencil",
+      "cancellation_limited",
+      "reference_unresolved"
+    ],
+    "note": "A row is never passed for being below a large absolute tolerance. Only resolved rows agreeing with their plateau, and zero rows with independent support, count as verification evidence.",
+    "plateau_min_points": 3,
+    "resolved_relative_spread": 0.001,
+    "supporting": [
+      "expected_zero_independently_supported",
+      "resolved"
+    ],
+    "zero_normalized_threshold": 1e-09
+  },
+  "model": "controlled_j2_actual_umat",
+  "normalization": {
+    "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+    "normalized_units": "dimensionless",
+    "strain_scale": 0.001,
+    "strain_scale_meaning": "characteristic strain-increment magnitude of the three J2 load steps",
+    "strain_units": "dimensionless",
+    "stress_scale": 250.0,
+    "stress_scale_meaning": "initial yield stress SIGY0 of the controlled J2 model",
+    "stress_units": "MPa"
+  },
+  "reference": {
+    "method": "independent tensor-product finite differences of validation.j2_reference.integrate_increment evaluated in mpmath at 80 decimal digits",
+    "precision": "mpmath, 80 decimal digits",
+    "published_step": 2e-05,
+    "stencil": "9-point centred per active strain component",
+    "step_factors": [
+      16.0,
+      8.0,
+      4.0,
+      2.0,
+      1.0,
+      0.5,
+      0.25,
+      0.125,
+      0.0625
+    ],
+    "steps": [
+      0.00032,
+      0.00016,
+      8e-05,
+      4e-05,
+      2e-05,
+      1e-05,
+      5e-06,
+      2.5e-06,
+      1.25e-06
+    ],
+    "zero_support": "structural stencil invariance, exact local affineness, and an independent recomputation at 200 decimal digits with step 2.000e-08"
+  },
+  "schema": "umat-oti-higher-order-convergence/1",
+  "source": {
+    "path": "UMATs/UMATs/generic_ps/j2_props.f",
+    "sha256": "4362e759c4642cb2f74e20c50b86a9472b1e80d6a7fef663bf8faa3dfa8de1c8"
+  },
+  "summary": {
+    "classification_counts": {
+      "cancellation_limited": 0,
+      "empirically_zero_over_stencil": 0,
+      "expected_zero_independently_supported": 474,
+      "reference_unresolved": 0,
+      "resolved": 66
+    },
+    "classification_counts_by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 160,
+        "reference_unresolved": 0,
+        "resolved": 20
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 160,
+        "reference_unresolved": 0,
+        "resolved": 20
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 154,
+        "reference_unresolved": 0,
+        "resolved": 26
+      }
+    },
+    "max_relative_error_on_resolved_rows": 2.95639158022812e-11,
+    "rows": 540,
+    "rows_empirically_zero_only": 0,
+    "rows_supporting_verification": 540,
+    "rows_with_reference_but_disagreeing": 0,
+    "rows_without_usable_reference": 0,
+    "steps_rejected_for_branch_crossing": 1332,
+    "verification_condition": "every row supports verification (resolved and agreeing, or zero with strong independent support); no row is cancellation-limited, unresolved, or empirically-zero-only; no row disagrees with a reference that resolved it",
+    "verified": true
+  },
+  "summary_views": {
+    "by_branch": {
+      "elastic": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 288,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "plastic": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 186,
+        "reference_unresolved": 0,
+        "resolved": 66
+      }
+    },
+    "by_direction_pattern": {
+      "mixed": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 216,
+        "reference_unresolved": 0,
+        "resolved": 54
+      },
+      "repeated": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 258,
+        "reference_unresolved": 0,
+        "resolved": 12
+      }
+    },
+    "by_increment": {
+      "1": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "10": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 29,
+        "reference_unresolved": 0,
+        "resolved": 7
+      },
+      "11": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 29,
+        "reference_unresolved": 0,
+        "resolved": 7
+      },
+      "12": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 29,
+        "reference_unresolved": 0,
+        "resolved": 7
+      },
+      "13": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 12,
+        "reference_unresolved": 0,
+        "resolved": 24
+      },
+      "14": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "15": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "2": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "5": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "6": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "7": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 29,
+        "reference_unresolved": 0,
+        "resolved": 7
+      },
+      "8": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 29,
+        "reference_unresolved": 0,
+        "resolved": 7
+      },
+      "9": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 29,
+        "reference_unresolved": 0,
+        "resolved": 7
+      }
+    },
+    "by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 160,
+        "reference_unresolved": 0,
+        "resolved": 20
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 160,
+        "reference_unresolved": 0,
+        "resolved": 20
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 154,
+        "reference_unresolved": 0,
+        "resolved": 26
+      }
+    },
+    "by_stress_component": {
+      "1": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 78,
+        "reference_unresolved": 0,
+        "resolved": 12
+      },
+      "2": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 66,
+        "reference_unresolved": 0,
+        "resolved": 24
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 66,
+        "reference_unresolved": 0,
+        "resolved": 24
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 84,
+        "reference_unresolved": 0,
+        "resolved": 6
+      },
+      "5": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 90,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "6": {
+        "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
+        "expected_zero_independently_supported": 90,
+        "reference_unresolved": 0,
+        "resolved": 0
+      }
+    }
+  }
+}

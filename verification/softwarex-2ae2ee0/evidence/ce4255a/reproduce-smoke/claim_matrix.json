@@ -1,0 +1,17 @@
+{
+  "claims": {
+    "INSTALL": [
+      {
+        "status": "succeeded",
+        "step": "import_package"
+      }
+    ],
+    "TABLE-6": [
+      {
+        "status": "succeeded",
+        "step": "material_point_smoke"
+      }
+    ]
+  },
+  "profile": "smoke"
+}

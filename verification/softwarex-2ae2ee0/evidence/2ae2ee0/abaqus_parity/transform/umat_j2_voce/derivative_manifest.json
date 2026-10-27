@@ -1,0 +1,116 @@
+{
+  "binary32_stores": {
+    "binary32_rule": "author",
+    "present": false,
+    "rounded_operations": 0,
+    "rule": "B-W (umat_oti.transform.binary32.round_binary32_stores): after every store to the variable's OTI value its REAL PART is rounded to binary32 (X%R = REAL(REAL(X%R, 4), 8)); its derivative parts stay double and the rounding is differentiated as the identity. Operations whose operands are all binary32 are wrapped in OTI_R4(...), which does the same to one result.",
+    "schema": "umat-oti/binary32-stores/1",
+    "statement": "No binary32 value is rounded on the derivative path: every sensitivity is of the author's own double-precision arithmetic.",
+    "stores": []
+  },
+  "compiler": {
+    "name": "C:/Users/vfn333/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin/gfortran.EXE",
+    "version": "GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0"
+  },
+  "convention": {
+    "coefficient_vs_derivative": "recovered_derivative = OTI_coefficient * product_of_factorials(direction_multiplicities)",
+    "recovery_factors": {
+      "material_tangent": 1
+    }
+  },
+  "derivatives": [
+    {
+      "description": "Standard Abaqus consistent tangent.",
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "output_shape": [
+        6,
+        6
+      ],
+      "recovery_factor": 1,
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "expanded",
+      "target": "DDSDDE"
+    }
+  ],
+  "dimensions": {
+    "nprops": 0,
+    "nstatv": 0,
+    "ntens": 6,
+    "ntens_inference": {
+      "confidence": "configured",
+      "source": "compact JSON otis.ntens",
+      "warning": ""
+    }
+  },
+  "direction_order": {
+    "convention": "canonical_graded_lex",
+    "direction_count": 6,
+    "reference": "umat_oti.oti.oti_directions"
+  },
+  "execution": {
+    "compilation": {
+      "status": "not_requested"
+    },
+    "status": "generated_not_compiled"
+  },
+  "generated_at": "2026-10-27T19:02:48+00:00",
+  "generated_sources": [
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\master_parameters.f90",
+      "sha256": "2baddb13f26a7b01e40692a31866bbbd84db97139e52016ca73058bfd4911781"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\real_utils.f90",
+      "sha256": "20ad619211d89d527f2b7368f16e415a8253e12eca1649164d842a74a34bb93b"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\otim6n1.f90",
+      "sha256": "98268e2016cd8003d881e13115a9767fda2a463e860fe089d7ffa457ac307a3b"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\compile_order.txt",
+      "sha256": "88cfb5dfa018535660e2e3a4a58efdc1aeaea730108dc06ee655459b679afc70"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\compile_hint.sh",
+      "sha256": "754ed989153e13afe613833e620aac492132b1e16be87b1fd9ade668ef1d7a82"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\umat_j2_voce_oti.f",
+      "sha256": "667671f58651dca14ca03a44f16507cb9a528270c777621e9f458eac664ff29a"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\transform_report.json",
+      "sha256": "a3db289cc8355b57f9e51dbb1b40a40619b13cb9963ca8872d9b8a49cf8c3cfe"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\umat_j2_voce_oti_combined.f90",
+      "sha256": "25a174e39ebd5e1a575e6cabe2bc7fb4f88c29b5fc9fe960004929a8c8e75203"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\dependency_bundle.json",
+      "sha256": "e88a51b4931f1832736c2b960ad97748c2f382ab9f450bf0b3fa5d9644be268d"
+    },
+    {
+      "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\transform\\umat_j2_voce\\dependencies\\umat_j2_voce.f",
+      "sha256": "e696a70dca0b3e1e5e9ce55fbf8d0a1cbd62fa4bd984951b48e92dce772af1fa"
+    }
+  ],
+  "parameters": [],
+  "schema": "umat-oti-derivative-manifest/1",
+  "source": {
+    "entry_routine": "UMAT",
+    "git_commit": "a48ec828a7c2c2f775dac51fd2c43679a5f1dea2",
+    "path": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\src\\umat_j2_voce.f",
+    "sha256": "06902c554f58121ce40c7ab2bbb7ce9b0a1969356656d38ca41d976f9e51149e"
+  },
+  "state_variables": [],
+  "umat_oti_version": "1.1.0",
+  "warnings": []
+}

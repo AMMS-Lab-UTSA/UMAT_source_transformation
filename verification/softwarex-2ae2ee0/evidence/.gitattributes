@@ -1,0 +1,2 @@
+# Checksum lists must keep LF so `sha256sum -c` works after checkout on Windows.
+SHA256SUMS text eol=lf

@@ -1,0 +1,54 @@
+{
+  "failure_taxonomy": {
+    "transform:transform_failed": [
+      "m3_j2"
+    ]
+  },
+  "funnel": {
+    "attempted": 1,
+    "comparison_rows_agreeing": 0,
+    "comparison_rows_total": 0,
+    "compiled_oti": 0,
+    "contract_complete": 1,
+    "derivatives_verified": 0,
+    "executed_original": 0,
+    "executed_oti": 0,
+    "parameter_directions_declared": 4,
+    "parameter_directions_verified": 0,
+    "primal_parity": 0,
+    "reference_resolved": 0,
+    "transformed": 0
+  },
+  "models": [
+    {
+      "furthest_stage": "contract",
+      "model": "m3_j2",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "H"
+      ],
+      "stages": {
+        "contract": {
+          "path": "parameter_sensitivity\\contracts\\m3_j2.json",
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 1,
+          "reason": "transformation failed (transform_failed)",
+          "seconds": 12.675,
+          "status": "failed",
+          "status_category": "transform_failed",
+          "warnings": 1
+        }
+      },
+      "targets": [
+        "DSIGMA_DP"
+      ]
+    }
+  ],
+  "policy": "Counts are a funnel, not a single number. 'compiled' is not 'executed' and neither is 'verified'. Models that fail stay in the denominator.",
+  "schema": "umat-oti-parameter-sensitivity-round/2"
+}

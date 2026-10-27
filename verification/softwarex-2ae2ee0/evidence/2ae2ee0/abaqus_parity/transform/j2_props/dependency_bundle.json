@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "original": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\src\\j2_props.f",
+      "bundled": "dependencies/j2_props.f",
+      "original_sha256": "4362e759c4642cb2f74e20c50b86a9472b1e80d6a7fef663bf8faa3dfa8de1c8",
+      "bundled_sha256": "222153db1eb1c4636a149d3a18a0f2838897a7792924822e2db3d3ed8ac8c541"
+    }
+  ],
+  "missing_includes": [],
+  "runtime_includes": [
+    {
+      "source": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\evidence\\2ae2ee0\\abaqus_parity\\src\\j2_props.f",
+      "include": "ABA_PARAM.INC"
+    }
+  ],
+  "source_includes_complete": true,
+  "runtime_calls": [],
+  "external_library_calls": {},
+  "include_base": ".",
+  "compile_sources": "compile_order.txt",
+  "note": "Dependency sources are staged for provenance/reuse; do not compile them again alongside the resolved UMAT."
+}

@@ -1,0 +1,4 @@
+model,parameter_directions_declared,parameters,contract_generated,transformed,compiled,executed_oti,executed_original,primal_parity,reference_resolved,numerically_verified,parameter_directions_verified,comparison_rows,worst_relative_error,elastic_increments,inelastic_increments,furthest_stage,failure_reason
+m3_j2,4,E|nu|SIGY0|H,True,True,True,False,False,False,False,False,0,0,,,,compile,"executed_oti: OTI driver build failed: /usr/bin/sh: line 1: f77: command not found
+make: *** [Makefile:8: master_parameters.o] Error 127
+"

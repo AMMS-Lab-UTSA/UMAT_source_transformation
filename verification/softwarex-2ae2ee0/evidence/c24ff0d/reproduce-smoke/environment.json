@@ -1,0 +1,69 @@
+{
+  "captured_at": "2026-10-27T17:34:45.428133+00:00",
+  "machine": "AMD64",
+  "package_version": "1.1.0",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.16",
+  "python_executable": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\refreeze\\venv\\c24ff0d\\Scripts\\python.exe",
+  "python_implementation": "CPython",
+  "repository": {
+    "branch": "HEAD",
+    "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+    "describe": "c24ff0d-dirty",
+    "dirty_paths": [
+      "M parameter_sensitivity/contracts/m3_j2.json"
+    ],
+    "url": "https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git",
+    "worktree_dirty": true
+  },
+  "repository_root": "C:\\Users\\vfn333\\Documents\\GitHub\\umat-oti-softwarex-manuscript\\refreeze\\wt\\c24ff0d",
+  "running_from_source_checkout": true,
+  "toolchain": {
+    "abaqus": {
+      "available": false,
+      "executable": null,
+      "name": "abaqus",
+      "probe_command": null,
+      "probe_returncode": null,
+      "reason": "abaqus is not on PATH",
+      "resolved_from": null,
+      "version": null
+    },
+    "gfortran": {
+      "available": true,
+      "executable": "C:/Users/vfn333/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin/gfortran.EXE",
+      "name": "gfortran",
+      "probe_command": [
+        "C:/Users/vfn333/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin/gfortran.EXE",
+        "--version"
+      ],
+      "probe_returncode": 0,
+      "resolved_from": "C:\\Users\\vfn333\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\\mingw64\\bin\\gfortran.exe",
+      "version": "GNU Fortran (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r4) 16.1.0"
+    },
+    "git": {
+      "available": true,
+      "executable": "C:/Program Files/Git/ucrt64/bin/git.EXE",
+      "name": "git",
+      "probe_command": [
+        "C:/Program Files/Git/ucrt64/bin/git.EXE",
+        "--version"
+      ],
+      "probe_returncode": 0,
+      "resolved_from": "C:\\Program Files\\Git\\ucrt64\\bin\\git.exe",
+      "version": "git version 2.56.0.windows.2"
+    },
+    "make": {
+      "available": true,
+      "executable": "C:/Users/vfn333/toolchains/w64devkit/bin/make.EXE",
+      "name": "make",
+      "probe_command": [
+        "C:/Users/vfn333/toolchains/w64devkit/bin/make.EXE",
+        "--version"
+      ],
+      "probe_returncode": 0,
+      "resolved_from": "C:\\Users\\vfn333\\toolchains\\w64devkit\\bin\\make.exe",
+      "version": "GNU Make 4.4.1"
+    }
+  }
+}
