@@ -82,3 +82,13 @@ UMATs/UMATs/ICP/plasticity_imp/
 UMATs/UMATs/ICP/spin/
 UMATs/UMATs/ICP/visco/
 UMATs/UMATs/ICP/index.html
+# Derived copies of that book code produced by evidence runs.
+paper_results/arc_*/paired_batch/validation/code_exp/original_umat_with_ddsdde_sdv.f
+paper_results/arc_*/paired_batch/validation/code_imp/original_umat_with_ddsdde_sdv.f
+paper_results/arc_*/paired_batch/validation/elastic/original_umat_with_ddsdde_sdv.f
+paper_results/arc_*/paired_batch/validation/spin_elastic/original_umat_with_ddsdde_sdv.f
+paper_results/arc_*/paired_batch/validation/spin_elas_def/original_umat_with_ddsdde_sdv.f
+paper_results/arc_*/paired_batch/validation/visco_beam/original_umat_with_ddsdde_sdv.f
+paper_results/arc_*/paired_batch/validation/visco_imp/original_umat_with_ddsdde_sdv.f
+paper_results/actual_umat_higher_order/code_imp/code_imp_oti.f
+paper_results/actual_umat_higher_order/code_imp/code_imp_oti_combined.f90

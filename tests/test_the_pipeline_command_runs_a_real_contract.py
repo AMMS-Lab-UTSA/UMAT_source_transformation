@@ -33,6 +33,8 @@ pytestmark = [
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = REPO_ROOT / "examples" / "code_imp_actual_higher_order.json"
+#: CONTRACT names Dunne & Petrinic book code that is no longer shipped.
+_CODE_IMP_F = REPO_ROOT / "UMATs/UMATs/ICP/plasticity_imp/code_imp.f"
 
 EXECUTED = (
     "source_acquisition", "source_inventory", "license_classification",
@@ -48,6 +50,7 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+@pytest.mark.skipif(not _CODE_IMP_F.is_file(), reason="code_imp.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 def test_a_compiled_run_of_a_shipped_contract_is_recorded_stage_by_stage(tmp_path, capsys):
     work = tmp_path / "run"
     code = main(["--config", str(CONTRACT), "--work-dir", str(work), "--compile", "--json"])
