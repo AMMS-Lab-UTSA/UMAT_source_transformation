@@ -26,20 +26,33 @@ Status of the copies (2026-10-27):
   files (cases code_exp, code_imp, elastic, spin_elastic, spin_elas_def,
   visco_beam, visco_imp) and the transformed `code_imp_oti.f` and
   `code_imp_oti_combined.f90` in `paper_results/actual_umat_higher_order/code_imp/`.
-- Source excerpts embedded in `paper_results/arc_791506/table2_abaqus_paired.json`
-  (the seven book-code rows) and in
-  `paper_results/actual_umat_higher_order/code_imp/transform_report.json` were
-  replaced with a "source excerpt removed" marker. Their numerical results are
-  unchanged. Hashes of these files recorded elsewhere (for example in
+- Source excerpts embedded in two non-frozen evidence files were replaced with
+  a "source excerpt removed" marker. Their numerical results are unchanged.
+  - `paper_results/arc_791506/table2_abaqus_paired.json`: 37 strings in the
+    seven book-code rows (tangent-line records, and `OTIS-SKIP:` comment copies
+    of the bypassed `DDSDDE` assignments).
+  - `paper_results/actual_umat_higher_order/code_imp/transform_report.json`:
+    89 strings (region previews, statement texts, and joined continuation-line
+    statements).
+
+  Hashes of these files recorded elsewhere (for example in
   `derivative_manifest.json` and `docs/evidence/recovery_evidence_inventory.json`)
   describe the earlier bytes.
-- **Still present:** the five frozen publication snapshots
-  `paper_results/frozen/*/evidence/arc_791506/table2_abaqus_paired.json` each
-  contain the same short excerpts (14 distinct source lines, mainly the
-  `DDSDDE` assignment lines of the book-code rows). They were left unchanged
-  because each snapshot is fixed by its `SHA256SUMS`/`MANIFEST.json` and checked
-  byte-for-byte by `tests/test_frozen_evidence_integrity.py`. Editing them means
-  re-freezing a publication snapshot, which is the maintainers' decision.
+- **Still present, and nowhere else in the current tree:** the five frozen
+  publication snapshots, each holding the same 37 excerpt strings that were
+  redacted above from the non-frozen `table2_abaqus_paired.json`:
+  - `paper_results/frozen/umat-064583d71b90_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
+  - `paper_results/frozen/umat-2692f4724d2d_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
+  - `paper_results/frozen/umat-2a19bdd07be3_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
+  - `paper_results/frozen/umat-700ceceeb7ad_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
+  - `paper_results/frozen/umat-7520c4c94553_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
+
+  Per snapshot, the strings are: code_exp 2, code_imp 11, elastic 4,
+  spin_elas_def 7, spin_elastic 5, visco_beam 4 and visco_imp 4. They were left
+  unchanged because each snapshot is fixed by its `SHA256SUMS`/`MANIFEST.json`
+  and checked byte-for-byte by `tests/test_frozen_evidence_integrity.py`.
+  Editing them means re-freezing a publication snapshot, which is the
+  maintainers' decision.
 
 ## Using the examples that need them
 
