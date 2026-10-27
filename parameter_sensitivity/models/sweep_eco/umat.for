@@ -1,3 +1,31 @@
+C  ---------------------------------------------------------------------
+C  Adapted from UMATS/UMAT_ECO.for in ABAQUS-US by Juan Gomez,
+C  Universidad EAFIT (https://github.com/jgomezc1/ABAQUS-US).
+C  The original is distributed under the MIT License; its notice is
+C  kept below as that licence requires. See THIRD_PARTY_NOTICES.md 2a.
+C
+C  Copyright (c) [2015] [Juan Gomez]
+C
+C  Permission is hereby granted, free of charge, to any person obtaining
+C  a copy of this software and associated documentation files (the
+C  "Software"), to deal in the Software without restriction, including
+C  without limitation the rights to use, copy, modify, merge, publish,
+C  distribute, sublicense, and/or sell copies of the Software, and to
+C  permit persons to whom the Software is furnished to do so, subject to
+C  the following conditions:
+C
+C  The above copyright notice and this permission notice shall be
+C  included in all copies or substantial portions of the Software.
+C
+C  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+C  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+C  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+C  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+C  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+C  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+C  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+C  SOFTWARE.
+C  ---------------------------------------------------------------------
       SUBROUTINE UMAT(STRESS, STATEV, DDSDDE, SSE, SPD, SCD, RPL,
      1 DDSDDT, DRPLDE, DRPLDT, STRAN, DSTRAN, TIME, DTIME, TEMP, DTEMP,
      2 PREDEF, DPRED, CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, NPROPS,

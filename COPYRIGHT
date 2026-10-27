@@ -39,8 +39,9 @@ OTIlib / pyoti (Order Truncated Imaginary numbers library)
   Source:  https://github.com/mauriaristi/otilib
   License: GNU General Public License v3.0
   Vendored files:
-    vendor/_otilib_upstream/src/python/pyoti/python/base_derivs_fortran.f90
-    vendor/_otilib_upstream/src/python/pyoti/python/core_functions.f90
+    src/umat_oti/oti/support/pyoti_templates/base_derivs_fortran.f90
+    src/umat_oti/oti/support/pyoti_templates/core_functions.f90
+  (upstream path: src/python/pyoti/python/; see PROVENANCE.md there)
 
   These Fortran template files are used to generate the OTI support modules
   that back the transformed UMATs. They remain the copyright of their
