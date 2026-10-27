@@ -29,8 +29,11 @@ Upstream reference:
 - Author: Mauricio Aristizabal (UTSA; HYPAD group, https://ceid.utsa.edu/HYPAD/)
 - URL: https://github.com/mauriaristi/otilib
 - Upstream license: **GPL-3.0** (see `src/umat_oti/oti/support/pyoti_templates/LICENSE`)
-- Version vendored: from the upstream `master` branch; a specific commit SHA
-  was not recorded at the time of vendoring.
+- Version vendored: from the upstream `master` branch; the commit was not
+  recorded at the time of vendoring. Both files are byte-identical to upstream
+  commit `de3f7fa2b1ba667dff054ad5ba1f6f41f4ba8b54` (and to every upstream
+  commit from `9f81983` to at least `214c71d`); see `PROVENANCE.md` in the
+  same directory.
 
 > **LICENSE COMPATIBILITY — RESOLVED.**
 > OTIlib is licensed under **GPL-3.0**, a copyleft license. Because this project
