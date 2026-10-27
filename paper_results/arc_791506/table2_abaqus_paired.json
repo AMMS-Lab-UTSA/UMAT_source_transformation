@@ -12728,7 +12728,7 @@
           "original_ddsdde_assignments": [
             {
               "line": 213,
-              "source": "DDSDDE(I,J) = DDS(I,J) - DYPROD(I,J)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "oti_seeding_lines": [
@@ -13607,31 +13607,31 @@
           "original_ddsdde_assignments": [
             {
               "line": 75,
-              "source": "DDSDDE(K2,K1) = ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 77,
-              "source": "DDSDDE(K1,K1) = EG2 + ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 80,
-              "source": "DDSDDE(4,4) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 201,
-              "source": "DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 206,
-              "source": "DDSDDE(K,4) = TWO*EG*Q*XNV(K)*XNV(4)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 207,
-              "source": "DDSDDE(4,K) = DDSDDE(K,4)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 209,
-              "source": "DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "oti_seeding_lines": [
@@ -14163,11 +14163,11 @@
           "original_ddsdde_assignments": [
             {
               "line": 84,
-              "source": "DDSDDE(I,J) = DDS(I,J)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 87,
-              "source": "DDSDDE(4,4) = DDS(4,4)"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "oti_seeding_lines": [
@@ -15509,31 +15509,31 @@
           "original_ddsdde_assignments": [
             {
               "line": 59,
-              "source": "DDSDDE(I,J) = 0.0"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 65,
-              "source": "DDSDDE(I,J) = 0.0"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 106,
-              "source": "DDSDDE(K2,K1) = ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 108,
-              "source": "DDSDDE(K1,K1) = EG2 + ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 111,
-              "source": "DDSDDE(4,4) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 113,
-              "source": "DDSDDE(5,5) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 114,
-              "source": "DDSDDE(6,6) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "oti_seeding_lines": [
@@ -16336,23 +16336,23 @@
           "original_ddsdde_assignments": [
             {
               "line": 55,
-              "source": "DDSDDE(K2,K1) = ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 57,
-              "source": "DDSDDE(K1,K1) = EG2 + ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 60,
-              "source": "DDSDDE(4,4) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 62,
-              "source": "DDSDDE(5,5) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 63,
-              "source": "DDSDDE(6,6) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "oti_seeding_lines": [
@@ -17302,19 +17302,19 @@
           "original_ddsdde_assignments": [
             {
               "line": 67,
-              "source": "DDSDDE(I,J) = 0."
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 73,
-              "source": "DDSDDE(K2,K1) = ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 75,
-              "source": "DDSDDE(K1,K1) = EG2 + ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 78,
-              "source": "DDSDDE(4,4) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "oti_seeding_lines": [
@@ -18176,19 +18176,19 @@
           "original_ddsdde_assignments": [
             {
               "line": 67,
-              "source": "DDSDDE(I,J) = 0."
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 73,
-              "source": "DDSDDE(K2,K1) = ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 75,
-              "source": "DDSDDE(K1,K1) = EG2 + ELAM"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             },
             {
               "line": 78,
-              "source": "DDSDDE(4,4) = EG"
+              "source": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
             }
           ],
           "oti_seeding_lines": [

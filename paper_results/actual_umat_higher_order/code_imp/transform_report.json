@@ -11,7 +11,7 @@
       "line_numbers": [
         86
       ],
-      "text": "IF(I .EQ. J) THEN",
+      "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "tokens": [
         "I",
         "J"
@@ -23,7 +23,7 @@
       "line_numbers": [
         141
       ],
-      "text": "IF (ZY.GT.0.) THEN",
+      "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "tokens": [
         "ZY"
       ]
@@ -34,7 +34,7 @@
       "line_numbers": [
         151
       ],
-      "text": "IF(DABS(RES).LT.TOLER) GOTO 10",
+      "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "tokens": [
         "RES",
         "TOLER"
@@ -46,7 +46,7 @@
       "line_numbers": [
         262
       ],
-      "text": "IF(X .LE. 0.0) GO TO 20",
+      "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "tokens": [
         "X"
       ]
@@ -57,7 +57,7 @@
       "line_numbers": [
         321
       ],
-      "text": "IF(I .EQ. J) THEN",
+      "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "tokens": [
         "I",
         "J"
@@ -69,7 +69,7 @@
       "line_numbers": [
         329
       ],
-      "text": "IF(I .EQ. J) THEN",
+      "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "tokens": [
         "I",
         "J"
@@ -263,7 +263,7 @@
     {
       "classification": "DDSDDE output replacement, replace with GETIM extraction",
       "end_line": 209,
-      "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "assignment to DDSDDE old tangent/Jacobian output",
       "region_id": "TANGENT-022",
       "role": "ddsdde_output_replace",
@@ -319,7 +319,7 @@
           "line_numbers": [
             126
           ],
-          "text": "XNDIR(I,J) = DSTR(I,J)/PJ",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DSTR",
             "I",
@@ -333,7 +333,7 @@
           "line_numbers": [
             133
           ],
-          "text": "XNV(K) = XNDIR(K,K)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "K",
             "XNDIR",
@@ -345,7 +345,7 @@
           "line_numbers": [
             135
           ],
-          "text": "XNV(4) = XNDIR(1,2)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "XNDIR",
             "XNV"
@@ -377,7 +377,7 @@
           "line_numbers": [
             206
           ],
-          "text": "DDSDDE(K,4) = TWO*EG*Q*XNV(K)*XNV(4)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DDSDDE",
             "EG",
@@ -392,7 +392,7 @@
           "line_numbers": [
             209
           ],
-          "text": "DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DDSDDE",
             "EG",
@@ -412,7 +412,7 @@
           "line_numbers": [
             147
           ],
-          "text": "DO KNEWT=1,10",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DO",
             "KNEWT"
@@ -449,7 +449,7 @@
           "line_numbers": [
             159
           ],
-          "text": "DPSTRN(I,J) = (THREE/TWO)*dp*DSTR(I,J)/PJ",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DP",
             "DPSTRN",
@@ -466,7 +466,7 @@
           "line_numbers": [
             166
           ],
-          "text": "DPSTRAN(K) = DPSTRN(K,K)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DPSTRAN",
             "DPSTRN",
@@ -478,7 +478,7 @@
           "line_numbers": [
             168
           ],
-          "text": "DPSTRAN(4) = 2*DPSTRN(1,2)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DPSTRAN",
             "DPSTRN"
@@ -489,7 +489,7 @@
           "line_numbers": [
             173
           ],
-          "text": "DESTRAN(K)=DSTRAN(K)-DPSTRAN(K)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DESTRAN",
             "DPSTRAN",
@@ -504,7 +504,7 @@
           "line_numbers": [
             148
           ],
-          "text": "RES = PJ-3.*EG*dp-r-SIGY0",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DP",
             "EG",
@@ -519,7 +519,7 @@
           "line_numbers": [
             149
           ],
-          "text": "dp = dp + RES/(3.*EG+h)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DP",
             "EG",
@@ -532,7 +532,7 @@
           "line_numbers": [
             151
           ],
-          "text": "IF(DABS(RES).LT.TOLER) GOTO 10",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "GOTO",
             "RES",
@@ -547,7 +547,7 @@
           "line_numbers": [
             46
           ],
-          "text": "SIGY0 = 240.",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "SIGY0"
           ]
@@ -557,7 +557,7 @@
           "line_numbers": [
             139
           ],
-          "text": "ZY = PJ - r - SIGY0",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "PJ",
             "R",
@@ -570,7 +570,7 @@
           "line_numbers": [
             141
           ],
-          "text": "IF (ZY.GT.0.) THEN",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "ZY"
           ]
@@ -580,7 +580,7 @@
           "line_numbers": [
             148
           ],
-          "text": "RES = PJ-3.*EG*dp-r-SIGY0",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DP",
             "EG",
@@ -686,7 +686,7 @@
     {
       "classification": "Shared setup, keep real before transformed path",
       "end_line": 47,
-      "preview": "      E = 210000.0\n      XNUE = 0.3\n      SIGY0 = 240.\n      h = 1206.0",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "E provides setup used before stress/tangent handling; XNUE provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; H provides setup used before stress/tangent handling",
       "region_id": "SHARED-SETUP-001",
       "role": "keep_real",
@@ -701,7 +701,7 @@
     {
       "classification": "Shared setup, keep real before transformed path",
       "end_line": 80,
-      "preview": "      EBULK3 = E/(ONE-TWO*XNUE)\n      XK = EBULK3/THREE\n      EG2 = E/(ONE+XNUE)\n      EG = EG2/TWO\n...\n      END DO\nC\n        DDSDDE(4,4) = EG",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "EBULK3 provides setup used before stress/tangent handling; XK provides setup used before stress/tangent handling; EG2 provides setup used before stress/tangent handling; EG provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling; DDSDDE setup is consumed by a stress-path helper before final tangent replacement",
       "region_id": "SHARED-SETUP-004",
       "role": "keep_real",
@@ -724,7 +724,7 @@
     {
       "classification": "Shared setup, keep real before transformed path",
       "end_line": 89,
-      "preview": "          XIDEN(I,J)=1.0D0\n        ELSE\n          XIDEN(I,J)=0.0D0",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "XIDEN provides setup used before stress/tangent handling",
       "region_id": "SHARED-SETUP-005",
       "role": "keep_real",
@@ -736,7 +736,7 @@
     {
       "classification": "Shared setup, keep real before transformed path",
       "end_line": 198,
-      "preview": "      XR = (PJ-3.*EG*dp)/PJ\n      Q = (ONE/(ONE+3.*EG/h)-XR)*THREE/TWO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "XR provides setup used before stress/tangent handling; Q provides setup used before stress/tangent handling",
       "region_id": "SHARED-SETUP-021",
       "role": "keep_real",
@@ -762,13 +762,13 @@
         "line_numbers": [
           60
         ],
-        "text": "p = STATEV(1)"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       },
       {
         "line_numbers": [
           61
         ],
-        "text": "r = STATEV(2)"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       }
     ],
     "write_count": 2,
@@ -777,13 +777,13 @@
         "line_numbers": [
           191
         ],
-        "text": "STATEV(1) = p"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       },
       {
         "line_numbers": [
           192
         ],
-        "text": "STATEV(2) = r"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       }
     ]
   },
@@ -846,7 +846,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 54,
-      "preview": "      DO J=1,N\n      STR(I,J)=0.0\n      END DO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "STR is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-002",
       "role": "transform_with_oti",
@@ -858,7 +858,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 61,
-      "preview": "      p = STATEV(1)\n      r = STATEV(2)",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "P is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-003",
       "role": "transform_with_oti",
@@ -872,7 +872,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 178,
-      "preview": "      r = STATEV(2)\nC\nC\nC    SET UP ELASTICITY MATRIX\n...\nC     DETERMINE STRESS INCREMENT\nC\n       CALL KMLT1(DDSDDE,DESTRAN,DSTRESS,NTENS)",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "DSTRESS is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-018",
       "role": "transform_with_oti",
@@ -971,7 +971,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 97,
-      "preview": "      DO K=1,4\n      STRESSOLD(K) = STRESS(K)\n      END DO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "STRESSOLD is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-006",
       "role": "transform_with_oti",
@@ -985,7 +985,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 104,
-      "preview": "      CALL KMLT1(DDSDDE,DSTRAN,DSTRESS,NTENS)\n      DO K=1,NTENS\n      STRESS(K) = STRESS(K) + DSTRESS(K)\n      END DO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "DSTRESS is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-007",
       "role": "transform_with_oti",
@@ -1003,7 +1003,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 112,
-      "preview": "      DO K = 1,3\n      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "STR is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-008",
       "role": "transform_with_oti",
@@ -1017,7 +1017,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 116,
-      "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\nC\nC     CALCULATE DEVIATORIC TRIAL STRESS\nC\n      CALL KDEVIA(STR,XIDEN,DSTR)",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "DSTR is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-009",
       "role": "transform_with_oti",
@@ -1037,7 +1037,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 120,
-      "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\n...\nC     CALCULATE EFFECTIVE TRIAL STRESS\nC\n      CALL KEFFP(DSTR,PJ)",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "PJ is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-010",
       "role": "transform_with_oti",
@@ -1060,7 +1060,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 139,
-      "preview": "      ZY = PJ - r - SIGY0",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "ZY is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-013",
       "role": "transform_with_oti",
@@ -1075,7 +1075,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 152,
-      "preview": "      r0 = r\n      dp = 0.\n      DO KNEWT=1,10\n      RES = PJ-3.*EG*dp-r-SIGY0\n      dp = dp + RES/(3.*EG+h)\n      r = r0 + h*dp\n      IF(DABS(RES).LT.TOLER) GOTO 10\n      END DO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "R0 is on the DSTRAN to STRESS propagation path; DP is on the DSTRAN to STRESS propagation path; RES is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-014",
       "role": "transform_with_oti",
@@ -1098,7 +1098,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 160,
-      "preview": "       DO J = 1,3\n       DPSTRN(I,J) = (THREE/TWO)*dp*DSTR(I,J)/PJ\n       END DO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "DPSTRN is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-015",
       "role": "transform_with_oti",
@@ -1117,7 +1117,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 168,
-      "preview": "      DO K=1,3\n      DPSTRAN(K) = DPSTRN(K,K)\n      END DO\n      DPSTRAN(4) = 2*DPSTRN(1,2)",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "DPSTRAN is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-016",
       "role": "transform_with_oti",
@@ -1131,7 +1131,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 174,
-      "preview": "      DO K=1,4\n      DESTRAN(K)=DSTRAN(K)-DPSTRAN(K)\n      END DO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "DESTRAN is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-017",
       "role": "transform_with_oti",
@@ -1146,7 +1146,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 187,
-      "preview": "       DO K = 1,NTENS\n       STRESS(K) = STRESSOLD(K) + DSTRESS(K)\n       END DO\nC\n       p = p + dp",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "STRESS is on the DSTRAN to STRESS propagation path; P is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-019",
       "role": "transform_with_oti",
@@ -1164,7 +1164,7 @@
     {
       "classification": "Main stress update, transform with OTIS",
       "end_line": 192,
-      "preview": "       STATEV(1) = p\n       STATEV(2) = r",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "STATEV is on the DSTRAN to STRESS propagation path",
       "region_id": "STRESS-020",
       "role": "transform_with_oti",
@@ -1181,7 +1181,7 @@
     {
       "classification": "Tangent helper skip only",
       "end_line": 127,
-      "preview": "      DO J=1,3\n      XNDIR(I,J) = DSTR(I,J)/PJ\n      END DO",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "XNDIR feeds only the old DDSDDE/tangent block",
       "region_id": "TANGENT-011",
       "role": "tangent_helper_skip_only",
@@ -1197,7 +1197,7 @@
     {
       "classification": "Tangent helper skip only",
       "end_line": 135,
-      "preview": "      DO K=1,3\n      XNV(K) = XNDIR(K,K)\n      END DO\n      XNV(4) = XNDIR(1,2)",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "XNV feeds only the old DDSDDE/tangent block",
       "region_id": "TANGENT-012",
       "role": "tangent_helper_skip_only",
@@ -1213,7 +1213,7 @@
     {
       "classification": "DDSDDE output replacement, replace with GETIM extraction",
       "end_line": 209,
-      "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+      "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
       "reason": "assignment to DDSDDE old tangent/Jacobian output",
       "region_id": "TANGENT-022",
       "role": "ddsdde_output_replace",
@@ -1243,7 +1243,7 @@
         "region_id": "BRANCH-001",
         "role": "preserve_branch_condition",
         "start_line": 86,
-        "text": "IF(I .EQ. J) THEN",
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "tokens": [
           "I",
           "J"
@@ -1256,7 +1256,7 @@
         "region_id": "BRANCH-002",
         "role": "preserve_branch_condition",
         "start_line": 141,
-        "text": "IF (ZY.GT.0.) THEN",
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "tokens": [
           "ZY"
         ]
@@ -1268,7 +1268,7 @@
         "region_id": "BRANCH-003",
         "role": "normalize_condition_real_parts",
         "start_line": 151,
-        "text": "IF(DABS(RES).LT.TOLER) GOTO 10",
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "tokens": [
           "RES",
           "TOLER"
@@ -1342,7 +1342,7 @@
         {
           "classification": "Tangent helper skip only",
           "end_line": 127,
-          "preview": "      DO J=1,3\n      XNDIR(I,J) = DSTR(I,J)/PJ\n      END DO",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "XNDIR feeds only the old DDSDDE/tangent block",
           "region_id": "TANGENT-011",
           "role": "tangent_helper_skip_only",
@@ -1358,7 +1358,7 @@
         {
           "classification": "Tangent helper skip only",
           "end_line": 135,
-          "preview": "      DO K=1,3\n      XNV(K) = XNDIR(K,K)\n      END DO\n      XNV(4) = XNDIR(1,2)",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "XNV feeds only the old DDSDDE/tangent block",
           "region_id": "TANGENT-012",
           "role": "tangent_helper_skip_only",
@@ -1373,7 +1373,7 @@
       "output_region": {
         "classification": "DDSDDE output replacement, replace with GETIM extraction",
         "end_line": 209,
-        "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "assignment to DDSDDE old tangent/Jacobian output",
         "region_id": "TANGENT-022",
         "role": "ddsdde_output_replace",
@@ -1397,7 +1397,7 @@
         {
           "classification": "DDSDDE output replacement, replace with GETIM extraction",
           "end_line": 209,
-          "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "assignment to DDSDDE old tangent/Jacobian output",
           "region_id": "TANGENT-022",
           "role": "ddsdde_output_replace",
@@ -1438,7 +1438,7 @@
       {
         "classification": "Shared setup, keep real before transformed path",
         "end_line": 47,
-        "preview": "      E = 210000.0\n      XNUE = 0.3\n      SIGY0 = 240.\n      h = 1206.0",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "E provides setup used before stress/tangent handling; XNUE provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; H provides setup used before stress/tangent handling",
         "region_id": "SHARED-SETUP-001",
         "role": "keep_real",
@@ -1453,7 +1453,7 @@
       {
         "classification": "Shared setup, keep real before transformed path",
         "end_line": 80,
-        "preview": "      EBULK3 = E/(ONE-TWO*XNUE)\n      XK = EBULK3/THREE\n      EG2 = E/(ONE+XNUE)\n      EG = EG2/TWO\n...\n      END DO\nC\n        DDSDDE(4,4) = EG",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "EBULK3 provides setup used before stress/tangent handling; XK provides setup used before stress/tangent handling; EG2 provides setup used before stress/tangent handling; EG provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling; DDSDDE setup is consumed by a stress-path helper before final tangent replacement",
         "region_id": "SHARED-SETUP-004",
         "role": "keep_real",
@@ -1476,7 +1476,7 @@
       {
         "classification": "Shared setup, keep real before transformed path",
         "end_line": 89,
-        "preview": "          XIDEN(I,J)=1.0D0\n        ELSE\n          XIDEN(I,J)=0.0D0",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "XIDEN provides setup used before stress/tangent handling",
         "region_id": "SHARED-SETUP-005",
         "role": "keep_real",
@@ -1488,7 +1488,7 @@
       {
         "classification": "Shared setup, keep real before transformed path",
         "end_line": 198,
-        "preview": "      XR = (PJ-3.*EG*dp)/PJ\n      Q = (ONE/(ONE+3.*EG/h)-XR)*THREE/TWO",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "XR provides setup used before stress/tangent handling; Q provides setup used before stress/tangent handling",
         "region_id": "SHARED-SETUP-021",
         "role": "keep_real",
@@ -1509,41 +1509,41 @@
     "statev_read_regions": [
       {
         "end_line": 60,
-        "preview": "      p = STATEV(1)",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "Detected STATEV read in selected UMAT.",
         "region_id": "STATEV-READS-001",
         "role": "read_statev_shadow_or_real",
         "start_line": 60,
-        "text": "p = STATEV(1)"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       },
       {
         "end_line": 61,
-        "preview": "      r = STATEV(2)",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "Detected STATEV read in selected UMAT.",
         "region_id": "STATEV-READS-002",
         "role": "read_statev_shadow_or_real",
         "start_line": 61,
-        "text": "r = STATEV(2)"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       }
     ],
     "statev_write_regions": [
       {
         "end_line": 191,
-        "preview": "       STATEV(1) = p",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "Detected STATEV write in selected UMAT.",
         "region_id": "STATEV-WRITES-001",
         "role": "promote_statev",
         "start_line": 191,
-        "text": "STATEV(1) = p"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       },
       {
         "end_line": 192,
-        "preview": "       STATEV(2) = r",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "Detected STATEV write in selected UMAT.",
         "region_id": "STATEV-WRITES-002",
         "role": "promote_statev",
         "start_line": 192,
-        "text": "STATEV(2) = r"
+        "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]"
       }
     ],
     "status": "ready_with_json_contract",
@@ -1553,7 +1553,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 54,
-          "preview": "      DO J=1,N\n      STR(I,J)=0.0\n      END DO",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "STR is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-002",
           "role": "transform_with_oti",
@@ -1565,7 +1565,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 61,
-          "preview": "      p = STATEV(1)\n      r = STATEV(2)",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "P is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-003",
           "role": "transform_with_oti",
@@ -1579,7 +1579,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 178,
-          "preview": "      r = STATEV(2)\nC\nC\nC    SET UP ELASTICITY MATRIX\n...\nC     DETERMINE STRESS INCREMENT\nC\n       CALL KMLT1(DDSDDE,DESTRAN,DSTRESS,NTENS)",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "DSTRESS is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-018",
           "role": "transform_with_oti",
@@ -1678,7 +1678,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 97,
-          "preview": "      DO K=1,4\n      STRESSOLD(K) = STRESS(K)\n      END DO",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "STRESSOLD is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-006",
           "role": "transform_with_oti",
@@ -1692,7 +1692,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 104,
-          "preview": "      CALL KMLT1(DDSDDE,DSTRAN,DSTRESS,NTENS)\n      DO K=1,NTENS\n      STRESS(K) = STRESS(K) + DSTRESS(K)\n      END DO",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "DSTRESS is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-007",
           "role": "transform_with_oti",
@@ -1710,7 +1710,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 112,
-          "preview": "      DO K = 1,3\n      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "STR is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-008",
           "role": "transform_with_oti",
@@ -1724,7 +1724,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 116,
-          "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\nC\nC     CALCULATE DEVIATORIC TRIAL STRESS\nC\n      CALL KDEVIA(STR,XIDEN,DSTR)",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "DSTR is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-009",
           "role": "transform_with_oti",
@@ -1744,7 +1744,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 120,
-          "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\n...\nC     CALCULATE EFFECTIVE TRIAL STRESS\nC\n      CALL KEFFP(DSTR,PJ)",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "PJ is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-010",
           "role": "transform_with_oti",
@@ -1767,7 +1767,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 139,
-          "preview": "      ZY = PJ - r - SIGY0",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "ZY is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-013",
           "role": "transform_with_oti",
@@ -1782,7 +1782,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 152,
-          "preview": "      r0 = r\n      dp = 0.\n      DO KNEWT=1,10\n      RES = PJ-3.*EG*dp-r-SIGY0\n      dp = dp + RES/(3.*EG+h)\n      r = r0 + h*dp\n      IF(DABS(RES).LT.TOLER) GOTO 10\n      END DO",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "R0 is on the DSTRAN to STRESS propagation path; DP is on the DSTRAN to STRESS propagation path; RES is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-014",
           "role": "transform_with_oti",
@@ -1805,7 +1805,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 160,
-          "preview": "       DO J = 1,3\n       DPSTRN(I,J) = (THREE/TWO)*dp*DSTR(I,J)/PJ\n       END DO",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "DPSTRN is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-015",
           "role": "transform_with_oti",
@@ -1824,7 +1824,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 168,
-          "preview": "      DO K=1,3\n      DPSTRAN(K) = DPSTRN(K,K)\n      END DO\n      DPSTRAN(4) = 2*DPSTRN(1,2)",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "DPSTRAN is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-016",
           "role": "transform_with_oti",
@@ -1838,7 +1838,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 174,
-          "preview": "      DO K=1,4\n      DESTRAN(K)=DSTRAN(K)-DPSTRAN(K)\n      END DO",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "DESTRAN is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-017",
           "role": "transform_with_oti",
@@ -1853,7 +1853,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 187,
-          "preview": "       DO K = 1,NTENS\n       STRESS(K) = STRESSOLD(K) + DSTRESS(K)\n       END DO\nC\n       p = p + dp",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "STRESS is on the DSTRAN to STRESS propagation path; P is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-019",
           "role": "transform_with_oti",
@@ -1871,7 +1871,7 @@
         {
           "classification": "Main stress update, transform with OTIS",
           "end_line": 192,
-          "preview": "       STATEV(1) = p\n       STATEV(2) = r",
+          "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "reason": "STATEV is on the DSTRAN to STRESS propagation path",
           "region_id": "STRESS-020",
           "role": "transform_with_oti",
@@ -1888,7 +1888,7 @@
       {
         "classification": "Tangent helper skip only",
         "end_line": 127,
-        "preview": "      DO J=1,3\n      XNDIR(I,J) = DSTR(I,J)/PJ\n      END DO",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "XNDIR feeds only the old DDSDDE/tangent block",
         "region_id": "TANGENT-011",
         "role": "tangent_helper_skip_only",
@@ -1904,7 +1904,7 @@
       {
         "classification": "Tangent helper skip only",
         "end_line": 135,
-        "preview": "      DO K=1,3\n      XNV(K) = XNDIR(K,K)\n      END DO\n      XNV(4) = XNDIR(1,2)",
+        "preview": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
         "reason": "XNV feeds only the old DDSDDE/tangent block",
         "region_id": "TANGENT-012",
         "role": "tangent_helper_skip_only",

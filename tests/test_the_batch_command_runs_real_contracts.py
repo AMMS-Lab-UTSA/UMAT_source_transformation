@@ -16,6 +16,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = REPO_ROOT / "examples"
 CONTRACTS = {
@@ -35,6 +37,12 @@ def _copy_contract(name: str, into: Path) -> None:
     (into / f"{name}.json").write_text(json.dumps(contract, indent=2), encoding="utf-8")
 
 
+#: Both contracts name Dunne & Petrinic book code that is no longer shipped.
+_BOOK_CODE = (REPO_ROOT / "UMATs/UMATs/ICP/elasticity/elastic.f", REPO_ROOT / "UMATs/UMATs/ICP/plasticity_imp/code_imp.f")
+
+
+@pytest.mark.skipif(not all(p.is_file() for p in _BOOK_CODE),
+                    reason="elastic.f / code_imp.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 def test_the_batch_command_transforms_each_contract_and_writes_both_reports(tmp_path):
     config_dir = tmp_path / "contracts"
     config_dir.mkdir()

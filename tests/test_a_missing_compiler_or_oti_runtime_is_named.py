@@ -31,6 +31,10 @@ from umat_oti.validation.job_builder import build_validation_workspace
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ELASTIC_CONTRACT = REPO_ROOT / "examples" / "elastic_minimal.json"
+#: ELASTIC_CONTRACT names Dunne & Petrinic book code that is no longer shipped.
+needs_elastic_f = pytest.mark.skipif(
+    not (REPO_ROOT / "UMATs/UMATs/ICP/elasticity/elastic.f").is_file(),
+    reason="elastic.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 M5_UMAT = REPO_ROOT / "parameter_sensitivity" / "models" / "m5_cpflow" / "umat.for"
 
 
@@ -88,6 +92,7 @@ def _validation_run_whose_compile_line_cannot_find_ifort(tmp_path, monkeypatch, 
     return result, report
 
 
+@needs_elastic_f
 def test_the_validation_runner_names_ifort_when_the_compile_line_cannot_find_it(
         tmp_path, monkeypatch):
     """``validation.abaqus_runner`` turns bash's 'ifort: command not found'
@@ -102,6 +107,7 @@ def test_the_validation_runner_names_ifort_when_the_compile_line_cannot_find_it(
     assert report["original_run_status"]["message"] == result.message
 
 
+@needs_elastic_f
 def test_the_validation_runner_names_ifort_in_dash_wording_too(tmp_path, monkeypatch):
     """dash, ``/bin/sh`` on Ubuntu, says 'ifort: not found'; the message is the same."""
     result, report = _validation_run_whose_compile_line_cannot_find_ifort(

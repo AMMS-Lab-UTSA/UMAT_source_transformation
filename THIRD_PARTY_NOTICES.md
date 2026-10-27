@@ -121,12 +121,14 @@ website"; `index.html` was that appendix page. They are **not** the UMAT-OTI
 authors' work, and neither the files nor the page state a licence, so they
 are not covered by this project's GPL-3.0 grant.
 
-As this section required before any publication or release, the directories
-and `index.html` were **removed on 2026-10-27**. Users who want to run the
-examples, configurations and studies that still name these files must obtain
-the code from the publisher and place it at the old paths; see
-`UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md`. The files remain in this
-repository's git history (added in the initial import, `938b821`).
+The directories and `index.html` were **removed from the current tree on
+2026-10-27**, together with derived copies under `paper_results/`. They had
+already been distributed (git history from `938b821`, tag `v1.0.0`, the 1.1.0
+release), and short excerpts remain in the five frozen publication snapshots;
+`UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md` lists exactly what was removed and
+what remains. Users who want to run the examples, configurations and studies
+that still name these files must obtain the code from the publisher and place
+it at the old paths.
 
 ### 2c. The authors' own UMATs
 
