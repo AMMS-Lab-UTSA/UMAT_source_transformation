@@ -112,17 +112,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### 2b. `UMATs/UMATs/ICP/{elasticity,plasticity_exp,plasticity_imp,spin,visco}/` and `ICP/index.html` — book companion code (licence not stated)
+### 2b. `UMATs/UMATs/ICP/{elasticity,plasticity_exp,plasticity_imp,spin,visco}/` and `ICP/index.html` — book companion code (licence not stated) — **removed**
 
-These files are the companion code of F. Dunne and N. Petrinic,
+These files were the companion code of F. Dunne and N. Petrinic,
 *Introduction to Computational Plasticity*, Oxford University Press, 2005
 (ISBN 0 19 856826 6), Appendix B, "Fortran coding available via the OUP
-website"; `index.html` is that appendix page. They are **not** the UMAT-OTI
-authors' work, and neither the files nor the page state a licence. They are
-not covered by this project's GPL-3.0 grant. **Before any publication or
-release, the maintainers must confirm redistribution rights with the authors
-or Oxford University Press, or remove these directories and have users
-download the code from the publisher.**
+website"; `index.html` was that appendix page. They are **not** the UMAT-OTI
+authors' work, and neither the files nor the page state a licence, so they
+are not covered by this project's GPL-3.0 grant.
+
+As this section required before any publication or release, the directories
+and `index.html` were **removed on 2026-10-27**. Users who want to run the
+examples, configurations and studies that still name these files must obtain
+the code from the publisher and place it at the old paths; see
+`UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md`. The files remain in this
+repository's git history (added in the initial import, `938b821`).
 
 ### 2c. The authors' own UMATs
 

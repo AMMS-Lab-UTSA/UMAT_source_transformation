@@ -72,3 +72,13 @@ out/
 
 # Local virtualenv
 .venv/
+
+# Dunne & Petrinic book code (no redistribution licence; removed 2026-10-27).
+# Users who download it from the publisher place it here; never commit it.
+# See UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md.
+UMATs/UMATs/ICP/elasticity/
+UMATs/UMATs/ICP/plasticity_exp/
+UMATs/UMATs/ICP/plasticity_imp/
+UMATs/UMATs/ICP/spin/
+UMATs/UMATs/ICP/visco/
+UMATs/UMATs/ICP/index.html

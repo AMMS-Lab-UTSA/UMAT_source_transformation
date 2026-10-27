@@ -19,6 +19,10 @@ from umat_oti.services.transformation import TransformationOptions, run_transfor
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = REPO_ROOT / "examples" / "code_imp_actual_higher_order.json"
+#: CONTRACT names Dunne & Petrinic book code that is no longer shipped.
+_CODE_IMP_F = REPO_ROOT / "UMATs/UMATs/ICP/plasticity_imp/code_imp.f"
+needs_code_imp_f = pytest.mark.skipif(
+    not _CODE_IMP_F.is_file(), reason="code_imp.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 
 #: Front ends and the symbol each must reach the service through.
 DELEGATED_FRONT_ENDS = {
@@ -88,6 +92,7 @@ def test_the_core_never_reaches_through_a_cli():
 
 
 @pytest.mark.slow
+@needs_code_imp_f
 def test_the_wrapper_and_the_service_produce_identical_artifacts(tmp_path):
     """The deprecated wrapper must be a delegation, not a second implementation."""
     from umat_oti import cli_json
@@ -109,6 +114,7 @@ def test_the_wrapper_and_the_service_produce_identical_artifacts(tmp_path):
 
 
 @pytest.mark.slow
+@needs_code_imp_f
 def test_the_pipeline_normalizes_identically_to_the_service(tmp_path):
     from umat_oti.pipeline.stages import canonical_engine
 

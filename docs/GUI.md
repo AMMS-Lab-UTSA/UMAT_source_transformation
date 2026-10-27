@@ -119,7 +119,9 @@ Add `--compile` to `umat-oti jacobian` to compile the generated Fortran with
   and unloading increments), at E=200000, nu=0.3, SIGY0=250, H=2000. Primal
   stress differed by at most 3.6e-15 (stress scale 684). Scaled tangent errors
   were 3.25e-8, 3.25e-10 and 2.95e-11 at strain steps 1e-6, 1e-7 and 1e-8.
-- **Elastic example** (`UMATs/UMATs/ICP/elasticity/elastic.f`, NTENS 4). The
+- **Elastic example** (`UMATs/UMATs/ICP/elasticity/elastic.f`, NTENS 4; Dunne &
+  Petrinic book code, no longer shipped: download it first, see
+  `UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md`). The
   screen shows "83-87 replaced; extraction after line 87". The transformed
   `elastic_oti.f` is byte-identical to what the hand-written
   `examples/elastic_minimal.json` produces. The tangent's scaled errors against
