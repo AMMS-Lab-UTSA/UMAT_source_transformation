@@ -61,6 +61,8 @@ def test_actual_transformed_j2_orders_two_to_four_match_independent_reference(tm
 
 
 @pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran is required")
+@pytest.mark.skipif(not (REPO_ROOT / "UMATs/UMATs/ICP/plasticity_imp/code_imp.f").is_file(),
+                    reason="code_imp.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 def test_actual_transformed_code_imp_orders_two_to_four_match_original_umat_fd(tmp_path: Path):
     evidence = run_code_imp_higher_order_evidence(
         REPO_ROOT / "examples" / "code_imp_actual_higher_order.json",
