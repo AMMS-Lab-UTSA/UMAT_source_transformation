@@ -38,6 +38,19 @@ from umat_oti.core.derivative_request import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BENCHMARKS = REPO_ROOT / "benchmarks"
+#: Dunne & Petrinic book code, no longer shipped (see
+#: UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md). Seven benchmark contracts name it.
+_DUNNE_PETRINIC_DIRS = ("elasticity", "plasticity_exp", "plasticity_imp", "spin", "visco")
+
+
+def _names_removed_book_code(config_path: Path) -> bool:
+    """True if the contract names a Dunne & Petrinic source that is not present."""
+    source = json.loads(config_path.read_text(encoding="utf-8")).get("source")
+    if not isinstance(source, str):
+        return False
+    parts = Path(source).parts
+    in_book_dirs = "ICP" in parts and any(d in parts for d in _DUNNE_PETRINIC_DIRS)
+    return in_book_dirs and not (config_path.parent / source).is_file()
 
 
 def _load_config(path: Path) -> dict:
@@ -407,6 +420,8 @@ def test_every_benchmark_contract_normalizes_to_material_tangent(config_path: Pa
     """
     if config_path.name.endswith("_report.json"):
         pytest.skip("report artefact, not a contract")
+    if _names_removed_book_code(config_path):
+        pytest.skip("names Dunne & Petrinic book code, which is not redistributed")
     config = _load_config(config_path)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
@@ -425,12 +440,14 @@ def test_every_benchmark_contract_normalizes_to_material_tangent(config_path: Pa
 def test_benchmark_batch_normalized_count_matches_19_files():
     contracts = [p for p in BENCHMARKS.glob("*.json") if not p.name.endswith("_report.json")]
     assert len(contracts) == 19
+    available = [p for p in contracts if not _names_removed_book_code(p)]
     total_requests = 0
-    for path in contracts:
+    for path in available:
         config = _load_config(path)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             total_requests += len(load_project_derivative_requests(config))
     # Every contract has at least a material-tangent request; some also
-    # carry legacy constitutive-jacobian entries, so the total >= 19.
-    assert total_requests >= 19
+    # carry legacy constitutive-jacobian entries, so the total >= the number of
+    # contracts whose source is present (19 when the book code is downloaded).
+    assert total_requests >= len(available)

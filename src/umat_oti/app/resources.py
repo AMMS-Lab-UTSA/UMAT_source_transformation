@@ -5,9 +5,13 @@ import os
 from pathlib import Path
 
 
+# The demo contract names UMATs/UMATs/ICP/elasticity/elastic.f (Dunne & Petrinic).
+# That file has no redistribution licence and is no longer shipped: users who
+# want the demo download it from the publisher (UMATs/UMATs/ICP/
+# DUNNE_PETRINIC_REMOVED.md). It is therefore not a required demo input, so a
+# checkout without it is still recognised as the repository root.
 DEMO_INPUTS = (
     "examples/elastic_minimal.json",
-    "UMATs/UMATs/ICP/elasticity/elastic.f",
 )
 
 
