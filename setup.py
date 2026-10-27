@@ -1,4 +1,4 @@
-"""Stage the two public demo inputs without duplicating their source originals."""
+"""Stage the public demo inputs without duplicating their source originals."""
 
 from pathlib import Path
 
@@ -6,9 +6,11 @@ from setuptools import setup
 from setuptools.command.build_py import build_py
 
 
+# The demo contract's Fortran source (Dunne & Petrinic, elastic.f) has no
+# redistribution licence and is no longer shipped; see
+# UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md.
 DEMO_INPUTS = (
     "examples/elastic_minimal.json",
-    "UMATs/UMATs/ICP/elasticity/elastic.f",
 )
 
 

@@ -19,7 +19,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 #: Read by umat_oti.oti.module_generator at run time.
 REQUIRED_PACKAGE_DATA = (
     "umat_oti/app/demo_inputs/examples/elastic_minimal.json",
-    "umat_oti/app/demo_inputs/UMATs/UMATs/ICP/elasticity/elastic.f",
     "umat_oti/oti/support/fmod_writer.py",
     "umat_oti/oti/support/master_parameters.f90",
     "umat_oti/oti/support/real_utils.f90",
@@ -98,12 +97,22 @@ def test_built_wheel_contains_the_runtime_support_files(tmp_path):
     assert wheels, f"no wheel was produced: {proc.stdout[-400:]}"
     with zipfile.ZipFile(wheels[0]) as archive:
         names = set(archive.namelist())
-        for relative in ("examples/elastic_minimal.json", "UMATs/UMATs/ICP/elasticity/elastic.f"):
+        for relative in ("examples/elastic_minimal.json",):
             assert archive.read("umat_oti/app/demo_inputs/" + relative) == (REPO_ROOT / relative).read_bytes()
+        # The Dunne & Petrinic demo source has no redistribution licence.
+        assert not any(name.endswith("/elastic.f") for name in names), "the wheel ships elastic.f"
     missing = [name for name in REQUIRED_PACKAGE_DATA if name not in names]
     assert not missing, f"the wheel omits runtime data files: {missing}"
 
 
+#: The demo contract's Fortran source: Dunne & Petrinic book code, no longer
+#: shipped (UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md). Present only if a user
+#: downloaded it from the publisher.
+DEMO_SOURCE = REPO_ROOT / "UMATs" / "UMATs" / "ICP" / "elasticity" / "elastic.f"
+
+
+@pytest.mark.skipif(not DEMO_SOURCE.is_file(),
+                    reason="elastic.f (Dunne & Petrinic) is not redistributed; download it to run")
 def test_demo_resources_preserve_relative_source_and_compile(tmp_path, monkeypatch):
     from umat_oti.app import resources
     from umat_oti.services.transformation import TransformationOptions, run_transformation
@@ -117,6 +126,11 @@ def test_demo_resources_preserve_relative_source_and_compile(tmp_path, monkeypat
     monkeypatch.chdir(tmp_path)
     contract = resources.demo_contract(tmp_path / "workspace")
     assert contract.read_bytes() == (REPO_ROOT / resources.DEMO_INPUTS[0]).read_bytes()
+    # The source is not bundled; a user who downloaded it places it where the
+    # contract's relative "source" path points.
+    supplied = tmp_path / "workspace/demo_inputs/UMATs/UMATs/ICP/elasticity/elastic.f"
+    supplied.parent.mkdir(parents=True, exist_ok=True)
+    supplied.write_bytes(DEMO_SOURCE.read_bytes())
     summary, code = run_transformation(contract, tmp_path / "generated", TransformationOptions(compile_generated=True))
     assert code == 0, summary
     assert summary["transform_success"] is True

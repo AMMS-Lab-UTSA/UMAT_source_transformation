@@ -19,11 +19,15 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 from umat_oti.services.transformation import run_transformation
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VPDCL = REPO_ROOT / "UMATs" / "UMATs" / "ICP" / "UMAT_VPDCL.for"
 ELASTIC_CONTRACT = REPO_ROOT / "examples" / "elastic_minimal.json"
+#: ELASTIC_CONTRACT names Dunne & Petrinic book code that is no longer shipped.
+_ELASTIC_F = REPO_ROOT / "UMATs/UMATs/ICP/elasticity/elastic.f"
 
 #: The hand-coded consistent tangent's DDSDDE assignments, lines 259-268.
 HAND_CODED_TANGENT = (
@@ -99,6 +103,7 @@ def test_the_file_qualified_form_is_the_same_range(tmp_path):
             == Path(bare["transformed_source"]).read_text())
 
 
+@pytest.mark.skipif(not _ELASTIC_F.is_file(), reason="elastic.f (Dunne & Petrinic) is not redistributed; see UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md")
 def test_the_shipped_elastic_contract_replaces_exactly_its_range(tmp_path):
     """``examples/elastic_minimal.json`` carries ``replace: ["83-87"]``."""
     contract = json.loads(ELASTIC_CONTRACT.read_text(encoding="utf-8"))
