@@ -297,7 +297,7 @@
             32,
             33
           ],
-          "text": "DIMENSION XIDEN(M,N),XNV(4),DPSTRAN(4), STRESSOLD(4), DESTRAN(4), DSTRESS(4), XNDIR(M,N), STR(M,N),DSTR(M,N), DPSTRN(M,N)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DESTRAN",
             "DIMENSION",
@@ -357,7 +357,7 @@
             201,
             202
           ],
-          "text": "DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J) + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DDSDDE",
             "EG",
@@ -427,7 +427,7 @@
             32,
             33
           ],
-          "text": "DIMENSION XIDEN(M,N),XNV(4),DPSTRAN(4), STRESSOLD(4), DESTRAN(4), DSTRESS(4), XNDIR(M,N), STR(M,N),DSTR(M,N), DPSTRN(M,N)",
+          "text": "[Dunne & Petrinic source excerpt removed: no redistribution licence]",
           "tokens": [
             "DESTRAN",
             "DIMENSION",
