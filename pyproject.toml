@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "umat-oti"
-version = "1.1.0"
+version = "1.2.0"
 description = "Deterministic order-truncated imaginary (OTI) derivative generation for Abaqus UMAT Fortran source (material tangent, internal Jacobians, higher-order, and parameter sensitivities)."
 readme = "README.md"
 requires-python = ">=3.10"
