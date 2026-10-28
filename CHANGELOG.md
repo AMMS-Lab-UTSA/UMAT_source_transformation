@@ -18,11 +18,10 @@ plain words:
   gradient as a push-forward), the handling of LAPACK/BLAS routines and of
   locals read before assignment, the Abaqus trial options, and the fixes
   listed below.
-- **The built-in sensitivity check works again.** Before this release, main's
-  parameter-sensitivity sweep over the 20 curated models verified 0 of the 20
-  (11 of 84 parameter directions; five models failed to transform). With the
-  parameter-carrier fix it verifies 19 of 20 (83 of 84 directions), the same
-  result as the September runs.
+- **The built-in sensitivity check works again.** Before the verified line was
+  merged, main (57eaeff, 2026-09-25) verified 0 of the 20 curated models in the
+  parameter-sensitivity sweep (11 of 84 directions; five failed to transform).
+  The verified code verifies 19 of 20 (83 of 84), as the 2026-09-09 runs did.
 - **Licensing fixes.** The Dunne & Petrinic book companion code, which has no
   stated licence, is removed together with the copies derived from it, and
   the source excerpts embedded in result files are redacted, except in five
@@ -277,6 +276,8 @@ work was in progress.
   deliberately not supplied: they solve an eigenproblem whose derivative is
   not the derivative of the algebra once eigenvalues coincide, so those
   sources keep their refusal until that case is handled deliberately.
+  (Superseded on 2026-10-02: lifted SPRINC, SPRIND and SINV are now supplied on
+  the main path; the parameter-sensitivity path still refuses them.)
 
 ### Fixed
 - The software metadata claimed platforms that are not tested. `codemeta.json`
