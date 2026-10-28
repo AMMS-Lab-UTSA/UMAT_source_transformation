@@ -1,0 +1,46 @@
+{
+ "figure": "figure4_higher_order",
+ "manuscript_location": "tex/sections/03-example.tex, Figure fig:higher (V11 Figure 4)",
+ "umat_oti_commit": "2ae2ee07547ae86c5c4c9bb9fe123b1245c13dbc",
+ "data": [
+  {
+   "path": "evidence/2ae2ee0/rounds/higher_order_convergence/j2/convergence_rows.csv",
+   "sha256": "a24e16735b2ddf3e05f91593f51df39ddf977e737c697a9bdd9b6ec1e0260027"
+  }
+ ],
+ "data_producer": "python -m umat_oti.validation.higher_order_convergence_study --model j2 (run in refreeze/wt/2ae2ee0; Windows 11, local regeneration; convergence_rows.csv byte-identical to 8e12548)",
+ "script": {
+  "path": "evidence/2ae2ee0/figures/fig4_higher_order.py",
+  "sha256": "460385ca4f4e16092b87429a6c6d740063a30d14ec36e55858b9c4e7b24abe48"
+ },
+ "outputs": {
+  "figure4_higher_order.pdf": "e30842bf808a4c9077c1ac51bf5ddf5164b4916c2a45c8fe98d61ac47c8ffe69",
+  "figure4_higher_order.png": "0a167c6b4f87fcdd08ad058d759969536e2e7cca6b13c5a2b010aa1a292368c1"
+ },
+ "conditions": {
+  "model": "Model A, j2_props.f (provenance: content clean, responsible author open, Q-64)",
+  "row_filter": "branch == plastic and reference_classification == resolved",
+  "normalisation": "D_hat_n = (d^n sigma/d eps^n) eps_s^n / sigma_s, sigma_s = 250 MPa, eps_s = 1e-3 (convergence_evidence.json 'normalization')",
+  "reference": "80-digit nine-point tensor-product finite difference (mpmath), plateau over nine step factors, base step 2e-5",
+  "directions": "DSTRAN components; '1|2' = d2/(d eps1 d eps2), etc."
+ },
+ "numbers_consistent_with_text": {
+  "resolved_per_order": {
+   "2": 20,
+   "3": 20,
+   "4": 26
+  },
+  "max_relative_difference_per_order": {
+   "2": 5.118644132302072e-14,
+   "3": 2.95639158022812e-11,
+   "4": 2.5631583145620677e-11
+  },
+  "ledger": "L22 / Table 4 (20/20/26; 5.119e-14, 2.956e-11, 2.563e-11)"
+ },
+ "environment": {
+  "python": "3.14.6",
+  "matplotlib": "3.11.0",
+  "platform": "Windows-11-10.0.26200-SP0"
+ },
+ "generated_at": "2026-10-27T21:58:20+00:00"
+}

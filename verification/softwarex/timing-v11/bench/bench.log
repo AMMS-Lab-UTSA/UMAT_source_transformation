@@ -1,0 +1,292 @@
+environment
+  cpu: Intel(R) Xeon(R) Processor @ 2.80GHz
+  logical_cpus: 2
+  memory_GiB: 7.8
+  os: Linux-6.18.44-fc-v24-x86_64-with-glibc2.39
+  python: 3.11.15
+  fortran_compiler: GNU Fortran (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+  compile_flags: -O1 -std=legacy
+  abaqus: not installed on this machine
+  repo_commit: 8e12548076ae657c66b7b99a457eebd1eedf38c1
+
+OTI runtime module generation and compilation
+  N=   4 K=1  coeffs=      5  lines=   4027  gen=   0.03s  compile=n/a
+  N=   6 K=1  coeffs=      7  lines=   4221  gen=   0.03s  compile=n/a
+  N=  10 K=1  coeffs=     11  lines=   4609  gen=   0.03s  compile=n/a
+  N=  20 K=1  coeffs=     21  lines=   5579  gen=   0.03s  compile=n/a
+  N=  30 K=1  coeffs=     31  lines=   6549  gen=   0.03s  compile=n/a
+  N=  35 K=1  coeffs=     36  lines=   7034  gen=   0.04s  compile=n/a
+  N=   6 K=2  coeffs=     28  lines=   6840  gen=   0.06s  compile=n/a
+  N=   6 K=3  coeffs=     84  lines=  15112  gen=   0.14s  compile=n/a
+  N=   6 K=4  coeffs=    210  lines=  39436  gen=   0.37s  compile=n/a
+  N=  12 K=2  coeffs=     91  lines=  14274  gen=   0.09s  compile=n/a
+  N=  36 K=1  REFUSED: OTILIB module generation unavailable: list index out of range
+
+transformation and compilation of the J2 example
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "/tmp/tmpg3uupxw_/run/j2_props_oti_combined.f90"
+    },
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "/tmp/tmpg3uupxw_/run/j2_props_oti_combined.f90",
+  "compilation": {
+    "status": "not_requested"
+  },
+  "completion_issues": [],
+  "config": "/home/claude/repo/examples/j2_actual_higher_order.json",
+  "derivative_requests": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "XNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "manifest": "/tmp/tmpg3uupxw_/run/derivative_manifest.json",
+  "ntens": 6,
+  "order": 4,
+  "out_dir": "/tmp/tmpg3uupxw_/run",
+  "report_path": "/tmp/tmpg3uupxw_/run/transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "/home/claude/repo/UMATs/UMATs/generic_ps/j2_props.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "/tmp/tmpg3uupxw_/run/j2_props_oti.f",
+  "warnings": []
+}
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "/tmp/tmpg3uupxw_/run/j2_props_oti_combined.f90"
+    },
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "/tmp/tmpg3uupxw_/run/j2_props_oti_combined.f90",
+  "compilation": {
+    "status": "not_requested"
+  },
+  "completion_issues": [],
+  "config": "/home/claude/repo/examples/j2_actual_higher_order.json",
+  "derivative_requests": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "XNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "manifest": "/tmp/tmpg3uupxw_/run/derivative_manifest.json",
+  "ntens": 6,
+  "order": 4,
+  "out_dir": "/tmp/tmpg3uupxw_/run",
+  "report_path": "/tmp/tmpg3uupxw_/run/transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "/home/claude/repo/UMATs/UMATs/generic_ps/j2_props.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "/tmp/tmpg3uupxw_/run/j2_props_oti.f",
+  "warnings": []
+}
+  transform j2_order4: median 0.50 s; compile n/a
+
+per-evaluation material-point cost
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "/tmp/umat_oti_bench_ftoh40kh/gen/j2_props_oti_combined.f90"
+    },
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "/tmp/umat_oti_bench_ftoh40kh/gen/j2_props_oti_combined.f90",
+  "compilation": {
+    "status": "not_requested"
+  },
+  "completion_issues": [],
+  "config": "/home/claude/repo/examples/j2_actual_higher_order.json",
+  "derivative_requests": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "XNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "manifest": "/tmp/umat_oti_bench_ftoh40kh/gen/derivative_manifest.json",
+  "ntens": 6,
+  "order": 4,
+  "out_dir": "/tmp/umat_oti_bench_ftoh40kh/gen",
+  "report_path": "/tmp/umat_oti_bench_ftoh40kh/gen/transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "/home/claude/repo/UMATs/UMATs/generic_ps/j2_props.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "/tmp/umat_oti_bench_ftoh40kh/gen/j2_props_oti.f",
+  "warnings": []
+}

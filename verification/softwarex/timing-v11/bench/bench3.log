@@ -1,0 +1,11 @@
+N=  4 K=1 coeff=    5 lines=  4027 gen= 0.503s comp={'compile_s': 2.4, 'object_KiB': 141.4}
+N=  6 K=1 coeff=    7 lines=  4221 gen= 0.028s comp={'compile_s': 2.84, 'object_KiB': 175.7}
+N= 10 K=1 coeff=   11 lines=  4609 gen= 0.031s comp={'compile_s': 3.83, 'object_KiB': 231.0}
+N= 20 K=1 coeff=   21 lines=  5579 gen= 0.031s comp={'compile_s': 7.27, 'object_KiB': 380.9}
+N= 35 K=1 coeff=   36 lines=  7034 gen= 0.036s comp={'compile_s': 13.14, 'object_KiB': 596.2}
+N=  6 K=2 coeff=   28 lines=  6840 gen= 0.098s comp={'compile_s': 13.69, 'object_KiB': 606.5}
+N=  6 K=3 coeff=   84 lines= 15112 gen= 0.184s comp={'compile_s': 111.54, 'object_KiB': 2240.3}
+N=  6 K=4 coeff=  210 lines= 39436 gen= 0.432s comp={'not_completed': 'gfortran 13.3.0 did not finish within 1200 s on this machine (2 vCPU, 7.8 GiB)'}
+N= 12 K=2 coeff=   91 lines= 14274 gen= 0.102s comp={'compile_s': 73.07, 'object_KiB': 1852.8}
+36 1 REFUSED OTILIB module generation unavailable: list index out of range
+wrote bench/bench3.json
