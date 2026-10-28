@@ -1,2 +1,5 @@
+# Evidence files are stored byte for byte, so that each archive's SHA256SUMS
+# verifies after checkout on any platform.
+* -text
 # Checksum lists must keep LF so `sha256sum -c` works after checkout on Windows.
 SHA256SUMS text eol=lf
