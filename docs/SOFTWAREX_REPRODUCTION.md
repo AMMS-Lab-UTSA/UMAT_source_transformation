@@ -4,6 +4,13 @@ This document is for a reviewer who has the repository and wants to check what
 it claims. It says what runs without a licence and what does not, what each
 command produces, and how pass and fail are decided.
 
+It maps the SoftwareX article on UMAT-OTI, which describes version 1.2.0
+(tag `v1.2.0`). Section 6 gives one row per table and figure of that article.
+Its verification evidence and scripts are in
+[`verification/softwarex/`](../verification/softwarex/README.md). Rows that
+belonged to an earlier draft (V11) are kept, marked as historical, because the
+archived evidence they point to is still in the repository.
+
 ## 1. What the software does
 
 UMAT-OTI rewrites Abaqus UMAT Fortran so that derivatives are computed by
@@ -32,8 +39,12 @@ in its own repository and is versioned independently; see section 13,
 
 ## 3. What requires Abaqus
 
-Only the paired Abaqus validation behind Table 2, and the Abaqus stage of the
-corpus verification ([CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md)).
+Only the Abaqus runs: the primal-parity check of the current article (one
+C3D8 element, both article models, original against transformed build;
+harness and results in `verification/softwarex/evidence/2ae2ee0/abaqus_parity/`),
+the archived paired run of the earlier draft (V11 Table 2, below), and the
+Abaqus stage of the corpus verification
+([CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md)).
 Everything else -- the source transformation, compilation, material-point
 execution, primal parity, and every numerical verification against finite
 differences -- runs with Python and `gfortran` alone.
@@ -41,14 +52,15 @@ differences -- runs with Python and `gfortran` alone.
 A reviewer without Abaqus can therefore check the central claim of the paper:
 that the transformation produces derivatives agreeing with an independent
 reference. What they cannot check locally is that the transformed subroutine
-behaves identically *inside Abaqus*, which is what Table 2 reports.
+behaves identically *inside Abaqus*.
 
-The archived evidence for that run is in the repository and readable without a
-licence: `paper_results/arc_791506/table2_abaqus_paired.json`, recording the
+The earlier draft's paired run (historical; the current article does not use
+it, because its sources are withheld from the article) is archived in the
+repository and readable without a licence: `paper_results/arc_791506/table2_abaqus_paired.json`, recording the
 Slurm job id, hostname, compiler version, originating commit, and SHA-256 of
 every input and output.
 
-**What Table 2 does and does not show.** Every one of the nineteen archived
+**What that archived run (V11 Table 2) does and does not show.** Every one of the nineteen archived
 decks drives its model with a *probe* property vector -- unit constants, apart
 from a 0.3 Poisson ratio in `UMAT_PCL` and `UMAT_PCLK`. The comparison is sound,
 because the original and transformed builds receive identical inputs, but it
@@ -99,7 +111,9 @@ non-zero if they disagree. Read `reproduce/smoke/reproduction_summary.md`.
 make reproduce-paper          # or: python -m umat_oti.reproduce --profile paper
 ```
 
-That regenerates every artefact the paper shows, in dependency order: the
+This profile belongs to the earlier draft (V11): it also processes models that
+the current article does not use. For the current article, use the rows of the
+next subsection. The profile regenerates, in dependency order: the
 parameter-sensitivity round, the internal-Jacobian round, the tangent round,
 the identity registry, the generality matrix, the four data figures, the four
 interface screenshots, the eight tables, the evidence summary, the manuscript,
@@ -121,18 +135,42 @@ reads the outcome word back off the page into the provenance record, reports
 the point size each figure's text will print at, and checks that nothing
 overflows horizontally at 1366x768 or 1440x900.
 
-### One result at a time
+### One result at a time: the SoftwareX article (version 1.2.0)
 
 Every row is one command and one artefact. Commands run from the repository root
-with the virtual environment active.
+with the virtual environment active, except the `verification/softwarex/`
+scripts, which run from that folder (see its README). `VS` stands for
+`verification/softwarex`; archived results are under `VS/evidence/2ae2ee0/`.
+
+| Article item | Command | Archived result | Tier |
+|---|---|---|---|
+| Table 1 — code metadata | version: `pyproject.toml`, `CITATION.cff`, `codemeta.json`, `src/umat_oti/__init__.py` (1.2.0; checked by `python tools/build_traceability_matrix.py`, requirement `META-VERSION`); licence: `LICENSE.txt`, `THIRD_PARTY_NOTICES.md` | — | A |
+| Table 2 — derivative products (seed, response, order, where written) | `umat-oti-config --config examples/j2_actual_higher_order.json --out umat_oti_workspace/j2` (Model A, order four); `umat-oti jacobian SRC --ntens 6` (tangent only) | `VS/evidence/2ae2ee0/rounds/tangent/` | A |
+| Table 3 — supported scope and status | rows are backed by the Model A rounds, the R1 checks and the Abaqus parity check below | `VS/evidence/2ae2ee0/` | A, C |
+| Figure 2 and the Model A tangent results | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2`, then `python -I figures/fig2_tangent.py .` in `VS` | `VS/evidence/2ae2ee0/rounds/tangent/results/table2_ddsdde_illustrative.csv` | A |
+| Table 4 and Figure 3 — Model A higher orders | `python -m umat_oti.validation.higher_order_convergence_study --model j2 --out paper_results/higher_order_convergence/j2`; `python tools/build_table4_from_convergence.py --models j2 --out reproduce/table4`; then `python -I figures/fig3_higher_order.py .` in `VS` | `VS/evidence/2ae2ee0/rounds/higher_order_convergence/j2/` | A |
+| Model R1 — transform and built-in check | `umat-oti check VS/evidence/replacement-models/j2_voce_newton/umat_j2_voce.f --props "YMOD=200000 PNU=0.3 SIGY0=250 HLIN=1000 QSAT=150 BSAT=20" --peak 0.02 --out <dir>` | `VS/evidence/2ae2ee0/r1/check/` | A |
+| Model R1 — tangent, truncated Newton, internal Jacobian, sensitivities | `python refreeze/scripts/r1/r1_verify.py --commit <name>` in `VS` (with `r1_driver.f90`) | `VS/evidence/2ae2ee0/r1/` (`NOTES.md`, `r1_report.json`) | A |
+| Abaqus primal parity (both models, one C3D8) | `VS/evidence/2ae2ee0/abaqus_parity/scripts/`: `make_inputs.py`, `build_usublib.py <build>`, `run_all.sh`, `compare.py` | `VS/evidence/2ae2ee0/abaqus_parity/` | C |
+| Test-suite run at the verified freeze (before the licensing changes) | `python -m pytest -q -m "not abaqus and not arc and not network"` | `VS/evidence/2ae2ee0/pytest-summary.txt` | A |
+| Performance supplement | `VS/timing-v11/src/bench2.py` etc. (development code of 2026-09-09; see its README) | `VS/timing-v11/bench/` | A |
+
+Figure 1 is a schematic and has no data.
+
+### Earlier draft (V11), historical
+
+These rows reproduce the tables of an earlier draft of the article: the
+archived ARC/ICP paired run, the J2 sensitivity table and the 20-model sweep.
+The current article does not use them, because they rely on sources withheld
+from it. They are kept so that the archived evidence stays reproducible.
 
 | Result | Command | Artefact | Tier |
 |---|---|---|---|
-| Table 2 — Abaqus paired | `sbatch scripts/run_abaqus_arc.sbatch` (ARC), archived at `paper_results/arc_791506/table2_abaqus_paired.json` | `paper_results/arc_791506/` | C |
-| Table 3 — internal Jacobians | `python tools/run_internal_jacobian_round.py` | `paper_results/internal_jacobians/table3_internal_jacobians.csv` | A |
-| Table 4 — higher orders | `python tools/build_table4_from_convergence.py` | `paper_results/higher_order_convergence/table4_reference_quality_summary.json` | A |
-| Table 5 — J2 sensitivities | `python tools/validate_table5.py` | `paper_results/parameter_sensitivity/` | A |
-| Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
+| V11 Table 2 — Abaqus paired | `sbatch scripts/run_abaqus_arc.sbatch` (ARC), archived at `paper_results/arc_791506/table2_abaqus_paired.json` | `paper_results/arc_791506/` | C |
+| V11 Table 3 — internal Jacobians | `python tools/run_internal_jacobian_round.py` | `paper_results/internal_jacobians/table3_internal_jacobians.csv` | A |
+| V11 Table 4 — higher orders | `python tools/build_table4_from_convergence.py` | `paper_results/higher_order_convergence/table4_reference_quality_summary.json` | A |
+| V11 Table 5 — J2 sensitivities | `python tools/validate_table5.py` | `paper_results/parameter_sensitivity/` | A |
+| V11 Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
 | Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
 | Paired Abaqus round (local) | `python tools/run_abaqus_paired_round.py --work-dir reproduce/abaqus_paired --results-dir paper_results/abaqus_paired` | `paper_results/abaqus_paired/abaqus_paired_round.csv` | C |
 | Source discovery (network) | `python tools/discover_umat_sources.py --out-dir paper_results/discovery --repository-search --known-cache "$UMAT_OTI_DISCOVERY_CACHE"` | `paper_results/discovery/discovered_sources.csv` | B |
@@ -142,7 +180,7 @@ with the virtual environment active.
 | Table previews | `python tools/tables/render_table_previews.py` | `paper_results/tables/previews/` | A |
 | Contact sheets | `python tools/figures/build_contact_sheets.py --out-dir paper_results/figures/contact_sheets` | `paper_results/figures/contact_sheets/` | A |
 | Interface figures | `python tools/figures/capture_gui_screenshots.py` | `paper_results/figures/` | A |
-| Tables 1-8 | `python tools/tables/build_paper_tables.py` | `paper_results/tables/paper_tables.docx` | A |
+| V11 Tables 1-8 | `python tools/tables/build_paper_tables.py` | `paper_results/tables/paper_tables.docx` | A |
 | The manuscript | `python tools/manuscript/build_v5_manuscript.py` | `docs/manuscript/UMAT_OTI_SoftwareX_V5.docx` | A |
 | Generality matrix | `python tools/build_generality_matrix.py` | `paper_results/generality/generality_matrix.csv` | A |
 | Traceability matrix | `python tools/build_traceability_matrix.py` | `docs/PIPELINE_REQUIREMENTS_TRACEABILITY.md` | A |
@@ -356,12 +394,22 @@ Open an issue at
 A derivative that disagrees with the reference is a real finding and we want to
 know about it. Please include the contract and the source that produced it.
 
-## 15. Which commit corresponds to the manuscript
+## 15. Which version corresponds to the manuscript
 
-`CITATION.cff` carries the released version, and each release is tagged. The
-evidence files record the commit that produced them: `run_manifest.json` and
-`environment.json` from any profile, and the `execution_commit_sha` and
-`audit_commit_sha` fields inside the archived ARC evidence.
+The SoftwareX article describes version 1.2.0, tagged `v1.2.0` on the main
+branch. `CITATION.cff` carries the released version and its date.
 
-No DOI has been minted yet. A release and DOI will be minted once the
-evidence stops changing, not before.
+| Version | Tag | Archive |
+|---|---|---|
+| 1.0.0 (2026-07-10) | `v1.0.0` | Zenodo, DOI [10.5281/zenodo.21297173](https://doi.org/10.5281/zenodo.21297173) (concept DOI 10.5281/zenodo.21297172) |
+| 1.1.0 (2026-08-21) | not tagged | — |
+| 1.2.0 (2026-10-28) | `v1.2.0` | no archive DOI yet |
+
+The evidence files record the commit that produced them: `run_manifest.json`
+and `environment.json` from any profile, the `execution_commit_sha` and
+`audit_commit_sha` fields inside the archived ARC evidence, and the commit name
+of each archive folder in `verification/softwarex/evidence/` (the verified
+freeze of 1.2.0 is `evidence/2ae2ee0/`; between that commit and the release
+the package source `src/` changed only in `app/resources.py`, a packaging
+change, and a provenance note; the other changes are the licensing removals
+and documentation listed in `CHANGELOG.md`).

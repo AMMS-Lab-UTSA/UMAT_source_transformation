@@ -1,8 +1,10 @@
 # Replacement model R1: small-strain J2 plasticity with saturation (Voce) hardening and a local Newton solve
 
-**Status: newly written, NOT transformed, NOT verified. No result from this model appears in the
-manuscript.** Verification is a separate task with its own owner (`../../../missing-evidence.md`, task T4,
-R1). Builder: Quill, 2026-10-27. Not reviewed.
+**Status (updated 2026-10-28): transformed and verified (the transformation code of that run is the code of release 1.2.0), and used
+as a worked example in the SoftwareX article.** The verification results, their limits and their review
+status at the time of archiving are in `../../2ae2ee0/r1/` (`NOTES.md`, `r1_report.json`); an independent
+numerical review reproduced the numbers with no blocking finding. The verification scripts are in
+`../../../refreeze/scripts/r1/`. Builder of this model: Quill, 2026-10-27.
 
 ## Why it exists
 The V11 worked examples for parameter/state sensitivities (`m3_j2`, configuration B) and for the
@@ -25,8 +27,8 @@ independently written model with documented provenance that can supply replaceme
 - No existing UMAT file was opened or copied: not the bundled `UMATs/` tree, not the imported sweep
   models, not the acquired corpus and not the Abaqus documentation example. Variable names were chosen
   independently.
-- Not derived from restricted or collaborator material. Licence: none granted yet; Santiago decides. If it
-  is added to the UMAT-OTI repository it falls under that repository's licence.
+- Not derived from restricted or collaborator material. Licence: it is part of the UMAT-OTI repository and
+  is distributed under that repository's licence (GPL-3.0-only, `LICENSE.txt`).
 - The use of generative AI to write this file must be covered by the manuscript's generative-AI
   declaration (Q-43).
 
@@ -34,7 +36,8 @@ independently written model with documented provenance that can supply replaceme
 Compiles without errors with GNU Fortran 16.1.0 (MinGW-w64, Windows): 
 `gfortran -c -std=legacy -O1 -Wall -Wextra -Wline-truncation -I<dir with ABA_PARAM.INC> umat_j2_voce.f`,
 with a stub `ABA_PARAM.INC` containing `IMPLICIT REAL*8(A-H,O-Z)`. Only "unused dummy argument"
-warnings. All lines are at most 72 columns. **The routine has not been executed.**
+warnings. All lines are at most 72 columns. (The routine was executed and verified afterwards; see the
+status note at the top.)
 
 ## Specification (small strain, NLGEOM=NO, NTENS = 6)
 Voigt order 11, 22, 33, 12, 13, 23; DSTRAN carries engineering shear strains γ = 2ε.
@@ -65,5 +68,6 @@ PROPS = (E, ν, σ_y0, H, Q, b); STATEV(1) = ε̄ᵖ (accumulated equivalent pla
 - At qᵗʳ = 0 the elastic branch is always taken (φᵗʳ = −σ_y < 0), so the n̂ division is never reached; the
   OTI derivative at a purely hydrostatic state is nevertheless worth testing (Noether B5, Vera I4).
 
-## Verification task R1 (owner proposed: Ada builds, Gauss and Curie review; Santiago authorises)
-See `../../../missing-evidence.md`, task T4 (R1), for input, output and the completion criterion.
+## Verification
+Done at the 1.2.0 code (archived as `../../2ae2ee0/r1/`). Run it again with
+`refreeze/scripts/r1/r1_verify.py`; see `../../../README.md`.
