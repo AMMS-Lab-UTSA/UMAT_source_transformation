@@ -178,7 +178,7 @@ every required part of it.
 | `META-VERSION` | One version across pyproject, CITATION.cff, codemeta.json and .zenodo.json | UMAT_source_transformation | evidence generation | -- | -- | -- | `implemented` | `verified` |
 
 **`META-VERSION`**
-- measured `versions`: {"CITATION.cff": "1.1.0", "codemeta.json": "1.1.0", "pyproject.toml": "1.1.0", "src/umat_oti/__init__.py": "1.1.0"}
+- measured `versions`: {"CITATION.cff": "1.2.0", "codemeta.json": "1.2.0", "pyproject.toml": "1.2.0", "src/umat_oti/__init__.py": "1.2.0"}
 
 ## Residual Assembler
 

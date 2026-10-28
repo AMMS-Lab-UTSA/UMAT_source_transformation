@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-28
+
+The version described in the SoftwareX article. What changed since 1.1.0, in
+plain words:
+
+- **The verified pipeline is now on main.** The line of work that was checked
+  for the article (the library-routines branch) is merged. It brings the
+  finite-strain tangent definition (directions seeded into the deformation
+  gradient as a push-forward), the handling of LAPACK/BLAS routines and of
+  locals read before assignment, the Abaqus trial options, and the fixes
+  listed below.
+- **The built-in sensitivity check works again.** Before this release, main's
+  parameter-sensitivity sweep over the 20 curated models verified 0 of the 20
+  (11 of 84 parameter directions; five models failed to transform). With the
+  parameter-carrier fix it verifies 19 of 20 (83 of 84 directions), the same
+  result as the September runs.
+- **Licensing fixes.** The Dunne & Petrinic book companion code, which has no
+  stated licence, is removed together with the copies derived from it, and
+  the source excerpts embedded in result files are redacted, except in five
+  frozen evidence snapshots that are checked byte for byte
+  (`THIRD_PARTY_NOTICES.md`, section 2b, lists them). The MIT notice is
+  restored on the three models adapted from Universidad EAFIT's ABAQUS-US,
+  the OTIlib template paths in `COPYRIGHT` are corrected, and the templates'
+  upstream provenance is recorded.
+- **Verification evidence.** `verification/softwarex/` holds the checks run on
+  the verified code and on the earlier commits compared with it: test-suite
+  logs, the tangent, internal-Jacobian, parameter-sensitivity and
+  higher-order rounds, model R1 with its verification scripts, the Abaqus
+  primal-parity check, and the scripts that draw the article's Figures 2
+  and 3. Each archive verifies against its own `SHA256SUMS`.
+
+The detailed entries that follow were collected under [Unreleased] while this
+work was in progress.
+
 ### LAPACK/BLAS routines, reads before assignment, the Abaqus trial
 - **Transform generation not re-frozen.** These changes move the transform
   fingerprint from `c61511ea0ffe58e2` (the value recorded in
