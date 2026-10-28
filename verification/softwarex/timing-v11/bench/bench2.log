@@ -1,0 +1,118 @@
+original: {'compile_s': 2.197, 'reps': 3, 'median_s': 0.0239, 'min_s': 0.0233, 'max_s': 0.0282}
+fd: {'compile_s': 0.119, 'reps': 3, 'median_s': 0.3072, 'min_s': 0.2973, 'max_s': 0.3326}
+{
+  "anchor_status": "ready_with_json_contract",
+  "artifacts": {
+    "abaqus_umat": {
+      "abi": "standard_real_umat",
+      "drop_in_abaqus_user_subroutine": true,
+      "source": "/tmp/umat_oti_bench2_zf2l4qzl/gen1/j2_props_oti_combined.f90"
+    },
+    "parameter_sensitivity_driver": null
+  },
+  "blockers": [],
+  "combined_source": "/tmp/umat_oti_bench2_zf2l4qzl/gen1/j2_props_oti_combined.f90",
+  "compilation": {
+    "status": "not_requested"
+  },
+  "completion_issues": [],
+  "config": "/tmp/umat_oti_bench2_zf2l4qzl/j2_order1.json",
+  "derivative_requests": [
+    {
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "XNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DDSDDE"
+    }
+  ],
+  "manifest": "/tmp/umat_oti_bench2_zf2l4qzl/gen1/derivative_manifest.json",
+  "ntens": 6,
+  "order": 1,
+  "out_dir": "/tmp/umat_oti_bench2_zf2l4qzl/gen1",
+  "report_path": "/tmp/umat_oti_bench2_zf2l4qzl/gen1/transform_report.json",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_ddsdde_read_after_disabled_assignment": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "no_identifier_split_by_insignificant_blanks": true,
+    "no_oti_argument_reaches_an_untransformed_call": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true,
+    "stress_path_consumes_the_seed": true
+  },
+  "source": "/home/claude/repo/UMATs/UMATs/generic_ps/j2_props.f",
+  "status_category": "succeeded",
+  "transform_success": true,
+  "transformed_source": "/tmp/umat_oti_bench2_zf2l4qzl/gen1/j2_props_oti.f",
+  "warnings": []
+}
+oti order 1: {'compile_s': 4.136, 'reps': 3, 'median_s': 0.4187, 'min_s': 0.4131, 'max_s': 0.4348}
+{
+ "umat_calls_per_run_primal": 400000,
+ "umat_calls_per_run_fd": 5200000,
+ "repetitions_of_the_20_increment_path": 20000,
+ "original_real": {
+  "compile_s": 2.197,
+  "reps": 3,
+  "median_s": 0.0239,
+  "min_s": 0.0233,
+  "max_s": 0.0282
+ },
+ "centred_fd_tangent": {
+  "compile_s": 0.119,
+  "reps": 3,
+  "median_s": 0.3072,
+  "min_s": 0.2973,
+  "max_s": 0.3326
+ },
+ "transform_order1_s": 3.804,
+ "oti_order1": {
+  "compile_s": 4.136,
+  "reps": 3,
+  "median_s": 0.4187,
+  "min_s": 0.4131,
+  "max_s": 0.4348
+ }
+}

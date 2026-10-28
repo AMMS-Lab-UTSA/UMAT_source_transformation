@@ -1,0 +1,115 @@
+[
+ {
+  "directions": 4,
+  "order": 1,
+  "stored_coefficients": 5,
+  "module_lines": 4027,
+  "module_KiB": 100.9,
+  "generate_s": 0.503,
+  "compile": {
+   "compile_s": 2.4,
+   "object_KiB": 141.4
+  }
+ },
+ {
+  "directions": 6,
+  "order": 1,
+  "stored_coefficients": 7,
+  "module_lines": 4221,
+  "module_KiB": 106.7,
+  "generate_s": 0.028,
+  "compile": {
+   "compile_s": 2.84,
+   "object_KiB": 175.7
+  }
+ },
+ {
+  "directions": 10,
+  "order": 1,
+  "stored_coefficients": 11,
+  "module_lines": 4609,
+  "module_KiB": 119.6,
+  "generate_s": 0.031,
+  "compile": {
+   "compile_s": 3.83,
+   "object_KiB": 231.0
+  }
+ },
+ {
+  "directions": 20,
+  "order": 1,
+  "stored_coefficients": 21,
+  "module_lines": 5579,
+  "module_KiB": 150.2,
+  "generate_s": 0.031,
+  "compile": {
+   "compile_s": 7.27,
+   "object_KiB": 380.9
+  }
+ },
+ {
+  "directions": 35,
+  "order": 1,
+  "stored_coefficients": 36,
+  "module_lines": 7034,
+  "module_KiB": 198.8,
+  "generate_s": 0.036,
+  "compile": {
+   "compile_s": 13.14,
+   "object_KiB": 596.2
+  }
+ },
+ {
+  "directions": 6,
+  "order": 2,
+  "stored_coefficients": 28,
+  "module_lines": 6840,
+  "module_KiB": 196.3,
+  "generate_s": 0.098,
+  "compile": {
+   "compile_s": 13.69,
+   "object_KiB": 606.5
+  }
+ },
+ {
+  "directions": 6,
+  "order": 3,
+  "stored_coefficients": 84,
+  "module_lines": 15112,
+  "module_KiB": 560.0,
+  "generate_s": 0.184,
+  "compile": {
+   "compile_s": 111.54,
+   "object_KiB": 2240.3
+  }
+ },
+ {
+  "directions": 6,
+  "order": 4,
+  "stored_coefficients": 210,
+  "module_lines": 39436,
+  "module_KiB": 1906.7,
+  "generate_s": 0.432,
+  "compile": {
+   "not_completed": "gfortran 13.3.0 did not finish within 1200 s on this machine (2 vCPU, 7.8 GiB)"
+  }
+ },
+ {
+  "directions": 12,
+  "order": 2,
+  "stored_coefficients": 91,
+  "module_lines": 14274,
+  "module_KiB": 496.9,
+  "generate_s": 0.102,
+  "compile": {
+   "compile_s": 73.07,
+   "object_KiB": 1852.8
+  }
+ },
+ {
+  "directions": 36,
+  "order": 1,
+  "stored_coefficients": 37,
+  "refused": "OTILIB module generation unavailable: list index out of range"
+ }
+]

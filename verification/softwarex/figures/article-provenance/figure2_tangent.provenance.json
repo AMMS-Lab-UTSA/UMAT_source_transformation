@@ -1,0 +1,71 @@
+{
+ "figure": "figure2_tangent",
+ "manuscript_location": "tex/sections/03-example.tex, Figure fig:tangent (build Figure 2; V11 Figure 3)",
+ "umat_oti_commit": "2ae2ee07547ae86c5c4c9bb9fe123b1245c13dbc",
+ "data": [
+  {
+   "path": "evidence/2ae2ee0/rounds/tangent/results/table2_ddsdde_illustrative.csv",
+   "sha256": "7e4edf371b8a384eb05a0aca25d4ed2bf0af9598de96d08c0db980cdff56ba36",
+   "rows": 540
+  }
+ ],
+ "data_producer": "UMAT-OTI tools/run_tangent_round.py via refreeze/scripts/run_rounds.sh 2ae2ee0 (Windows 11, GNU Fortran 16.1.0, local regeneration; not the Linux freeze)",
+ "script": {
+  "path": "tex/figures/fig2_tangent.py",
+  "sha256": "a1a5d1c1817052360bc286905b71247fdfb6e59d7aea96d17a6d876cac027cca"
+ },
+ "outputs": {
+  "figure2_tangent.pdf": "334ab22e0ebb6f47ee2c41f3080d97241365b93ad668688ff592fd9c813d3f36",
+  "figure2_tangent.png": "d32ca5dadf38d524f87f43ed98dffd290cc802614d3806c4decff87c85569f31"
+ },
+ "conditions": {
+  "model": "Model A, UMATs/UMATs/generic_ps/j2_props.f (provenance: content clean, responsible author open, Q-64)",
+  "entries_plotted": [
+   "DDSDDE(1,1)",
+   "DDSDDE(1,2)",
+   "DDSDDE(4,4)"
+  ],
+  "states": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "plastic_states": [
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13
+  ],
+  "unit_conversion": "CSV values in MPa divided by 1000 to GPa",
+  "reference": "analytic_reference column: closed-form consistent tangent (src/umat_oti/validation/j2_reference.py)",
+  "relative_difference": "relative_error column of the CSV, unchanged",
+  "tolerance_line": 1e-09,
+  "zero_floor_drawn_at": 1e-17
+ },
+ "numbers_consistent_with_text": {
+  "resolved_entries_all_540": 186,
+  "worst_relative_difference_all_resolved": 2.1878975679081053e-15,
+  "ledger": "L21 (540/354/186, 2.188e-15)"
+ },
+ "environment": {
+  "python": "3.14.6",
+  "matplotlib": "3.11.0",
+  "platform": "Windows-11-10.0.26200-SP0"
+ },
+ "generated_at": "2026-10-28T16:00:56+00:00"
+}

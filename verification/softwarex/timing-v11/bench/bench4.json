@@ -1,0 +1,26 @@
+[
+ {
+  "directions": 6,
+  "order": 1,
+  "compile_s": 2.85,
+  "peak_child_rss_MiB": 135.7
+ },
+ {
+  "directions": 6,
+  "order": 2,
+  "compile_s": 15.59,
+  "peak_child_rss_MiB": 518.4
+ },
+ {
+  "directions": 6,
+  "order": 3,
+  "compile_s": 122.67,
+  "peak_child_rss_MiB": 924.7
+ },
+ {
+  "directions": 35,
+  "order": 1,
+  "compile_s": 13.48,
+  "peak_child_rss_MiB": 924.7
+ }
+]

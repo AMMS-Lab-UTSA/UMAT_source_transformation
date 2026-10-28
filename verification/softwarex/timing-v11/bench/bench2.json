@@ -1,0 +1,27 @@
+{
+ "umat_calls_per_run_primal": 400000,
+ "umat_calls_per_run_fd": 5200000,
+ "repetitions_of_the_20_increment_path": 20000,
+ "original_real": {
+  "compile_s": 0.109,
+  "reps": 3,
+  "median_s": 0.0263,
+  "min_s": 0.0234,
+  "max_s": 0.035
+ },
+ "centred_fd_tangent": {
+  "compile_s": 0.107,
+  "reps": 3,
+  "median_s": 0.302,
+  "min_s": 0.2995,
+  "max_s": 0.3028
+ },
+ "transform_order1_s": 0.571,
+ "oti_order1": {
+  "compile_s": 4.08,
+  "reps": 3,
+  "median_s": 0.4232,
+  "min_s": 0.4134,
+  "max_s": 0.4284
+ }
+}
