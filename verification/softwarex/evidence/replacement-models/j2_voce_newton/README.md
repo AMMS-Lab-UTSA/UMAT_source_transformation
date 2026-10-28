@@ -1,7 +1,7 @@
 # Replacement model R1: small-strain J2 plasticity with saturation (Voce) hardening and a local Newton solve
 
 **Status (updated 2026-10-28): transformed and verified (the transformation code of that run is the code of release 1.2.0), and used
-as a worked example in the SoftwareX article.** The verification results, their limits and their review
+as a worked example in the SoftwareX article (manuscript).** The verification results, their limits and their review
 status at the time of archiving are in `../../2ae2ee0/r1/` (`NOTES.md`, `r1_report.json`); an independent
 numerical review reproduced the numbers with no blocking finding. The verification scripts are in
 `../../../refreeze/scripts/r1/`. Builder of this model: Quill, 2026-10-27.
