@@ -17,6 +17,85 @@ class OtilibGenerationError(RuntimeError):
     pass
 
 
+class OtilibSizeLimitError(OtilibGenerationError):
+    """The requested module is past a limit the generator enforces before writing.
+
+    Raised before any file is written, so a refused request leaves nothing that
+    could be mistaken for a generated module.
+    """
+
+
+#: Default ceiling on the number of coefficients, ``C(n_d + order, order)``,
+#: of a generated module. The writer emits one named constant per imaginary
+#: direction, each listing every coefficient, so the source grows with the
+#: square of this count before any arithmetic is written: about 7 bytes per
+#: (constant, coefficient) pair, i.e. roughly 0.7 GB of source at 10 000
+#: coefficients. Compile cost grows faster still. A module this large cannot
+#: be compiled in practice, so the request is refused with the numbers rather
+#: than attempted. Pass ``max_coefficients`` (or set
+#: ``UMAT_OTI_MAX_COEFFICIENTS``) to override.
+DEFAULT_MAX_COEFFICIENTS = 10_000
+
+
+def otilib_coefficient_count(ntens: int, order: int) -> int:
+    """Coefficients of an OTI number over ``ntens`` directions truncated at ``order``.
+
+    This is ``C(ntens + order, order)``: the real part plus every multiset of at
+    most ``order`` directions.
+    """
+    return comb(ntens + order, order)
+
+
+def check_otilib_module_size(ntens: int, order: int, *, max_coefficients: int | None = None) -> int:
+    """Refuse a module past a real limit; return its coefficient count otherwise.
+
+    Three limits are checked, the first two absolute and the third a practical
+    default that can be raised:
+
+    * a basis index above :data:`umat_oti.oti.oti_directions.MAX_BASIS_INDEX`
+      cannot be represented by the pyoti-compatible direction helper;
+    * a member name longer than the Fortran limit of 63 characters cannot be
+      compiled (it never binds below that basis limit, but is checked, not
+      assumed);
+    * a coefficient count above ``max_coefficients`` (default
+      :data:`DEFAULT_MAX_COEFFICIENTS`, or the integer in the environment
+      variable ``UMAT_OTI_MAX_COEFFICIENTS``).
+    """
+    from umat_oti.oti import oti_directions as _dirs
+
+    if ntens > _dirs.MAX_BASIS_INDEX:
+        raise OtilibSizeLimitError(
+            f"OTILIB module generation refused: {ntens} directions exceeds the largest "
+            f"representable basis index, {_dirs.MAX_BASIS_INDEX}.")
+    name_length = _dirs.max_member_name_length(ntens, order)
+    if name_length > _dirs.FORTRAN_MAX_NAME_LENGTH:
+        raise OtilibSizeLimitError(
+            f"OTILIB module generation refused: {ntens} directions at order {order} needs "
+            f"member names of {name_length} characters; Fortran allows "
+            f"{_dirs.FORTRAN_MAX_NAME_LENGTH}.")
+    if max_coefficients is None:
+        env_value = os.environ.get("UMAT_OTI_MAX_COEFFICIENTS", "").strip()
+        if env_value:
+            try:
+                max_coefficients = int(env_value)
+            except ValueError:
+                raise OtilibSizeLimitError(
+                    f"UMAT_OTI_MAX_COEFFICIENTS must be an integer, got {env_value!r}.") from None
+        else:
+            max_coefficients = DEFAULT_MAX_COEFFICIENTS
+    count = otilib_coefficient_count(ntens, order)
+    if count > max_coefficients:
+        constants_bytes = 7 * (count - 1) * count
+        raise OtilibSizeLimitError(
+            f"OTILIB module generation refused: {ntens} directions at order {order} gives "
+            f"C({ntens}+{order}, {order}) = {count} coefficients, above the limit of "
+            f"{max_coefficients}. Its direction constants alone would be about "
+            f"{constants_bytes / 1e6:.0f} MB of Fortran source, and compile cost grows "
+            f"faster than that. Reduce the directions or the order, or raise the limit "
+            f"with max_coefficients= or UMAT_OTI_MAX_COEFFICIENTS.")
+    return count
+
+
 @dataclass(frozen=True)
 class OtilibModuleResult:
     module_name: str
@@ -33,11 +112,21 @@ def generate_otilib_module(
     ntens: int,
     order: int = 1,
     support_dir: Path | None = None,
+    max_coefficients: int | None = None,
 ) -> OtilibModuleResult:
+    """Write the OTI module ``otim<ntens>n<order>.f90`` and its two support files.
+
+    ``ntens`` is the number of imaginary directions. There is no fixed ceiling on
+    it: bases above 35 are named by :func:`umat_oti.oti.oti_directions.basis_token`.
+    A request past a real limit is refused before anything is written (see
+    :func:`check_otilib_module_size`; ``max_coefficients`` overrides the default
+    coefficient ceiling).
+    """
     if order < 1:
         raise OtilibGenerationError("OTILIB module generation unavailable: order must be a positive integer.")
     if ntens <= 0:
         raise OtilibGenerationError("OTILIB module generation unavailable: NTENS must be a positive integer.")
+    check_otilib_module_size(ntens, order, max_coefficients=max_coefficients)
 
     support = _find_support_dir(support_dir)
     fmod_writer_path = support / "fmod_writer.py"
@@ -170,6 +259,7 @@ def _run_fmod_writer(
             from umat_oti.oti.oti_directions import basis_token
 
             module.valid_chars = [basis_token(base) for base in range(max(36, ntens + 1))]
+            module.writer.set_type_constants = _set_type_constants_linear
             writer = module.writer(nbases=ntens, order=order, coeff_type="REAL(DP)")
             cwd_before = Path.cwd()
             try:
@@ -183,6 +273,32 @@ def _run_fmod_writer(
                     sys.modules.pop(name, None)
                 else:
                     sys.modules[name] = previous
+
+
+def _set_type_constants_linear(self: Any, level: str = "") -> str:
+    """Replacement for the vendored ``writer.set_type_constants``; same text.
+
+    The vendored method builds the constant block by repeated string
+    concatenation and trims the trailing comma of each constant with
+    ``str_out = str_out[:-1]``, which copies everything written so far, once per
+    direction. The block itself grows with the square of the coefficient count,
+    so that copy made generation cubic in it: most of a 30 s generation at 60
+    directions, order 2. This writes each constant once and joins at the end.
+    The output is byte-for-byte what the vendored method returns (compared over
+    a grid of direction counts and orders in
+    ``tests/test_oti_directions_beyond_35.py``). It is installed on the class
+    loaded for one generation, so the vendored file stays untouched.
+    """
+    parts = [level + self.comment + "Constant imaginary directions." + self.endl]
+    type_definition = "TYPE(" + self.type_name + "), PARAMETER"
+    every_name = [name for ordj in range(1, self.order + 1) for name in self.name_imdir[ordj]]
+    for ordi in range(1, self.order + 1):
+        parts.append(level + self.comment + "Order " + str(ordi) + self.endl)
+        for active_dir in self.name_imdir[ordi]:
+            coefficients = ",".join("1.0_dp" if name == active_dir else "0.0_dp" for name in every_name)
+            parts.append(level + type_definition + " :: " + active_dir + " = "
+                         + self.type_name + "(" + self.zero + "," + coefficients + ")" + self.endl)
+    return "".join(parts)
 
 
 def _install_pyoti_shim(template_dir: Path) -> dict[str, types.ModuleType]:
