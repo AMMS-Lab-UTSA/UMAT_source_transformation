@@ -260,3 +260,17 @@ def test_a_40_direction_module_compiles_and_carries_each_derivative(tmp_path):
     run = subprocess.run([str(exe)], cwd=tmp_path, capture_output=True, text=True, check=False)
     assert run.returncode == 0, run.stdout + run.stderr
     assert "OK" in run.stdout
+
+
+def test_the_name_length_limit_binds_at_high_order_inside_the_coefficient_limit():
+    # 64 coefficients, but a 64-character member name: refused for the name, not the count.
+    with pytest.raises(OtilibSizeLimitError, match="64 characters"):
+        check_otilib_module_size(1, 63)
+    with pytest.raises(OtilibSizeLimitError, match="65 characters"):
+        check_otilib_module_size(36, 16, max_coefficients=10**30)
+    assert check_otilib_module_size(1, 62) == 63
+
+
+def test_a_single_direction_is_named_in_the_singular():
+    with pytest.raises(OtilibSizeLimitError, match=r"refused: 1 direction at order 63"):
+        check_otilib_module_size(1, 63)
