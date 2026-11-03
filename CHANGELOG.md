@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **More than 35 directions, stated and tested.** The 36-symbol alphabet that
+  stopped generation at 36 directions ("list index out of range") was already
+  bypassed in 1.2.0: bases from 36 up are named `_<decimal>_` (`E_36_`,
+  `E1_36_`), while modules of up to 35 directions keep the upstream names.
+  This is now covered by tests at the 35/36 boundary and at 200 and 303
+  directions, and by a compiled 40-direction check that each derivative
+  arrives in the right member.
+- **Generation no longer slows down cubically.** Direction lookup is memoised
+  (it rescanned the enumeration on every call) and the constant block is
+  written once instead of copying the whole block per direction. Order 2 at 60
+  directions now generates in about 2 s instead of 30 s. The generated modules
+  are byte-for-byte unchanged (compared over 76 direction/order pairs, orders
+  1 to 4).
+- **Sizes past a real limit are refused, not attempted.** A module over
+  10 000 coefficients (`C(n_d + order, order)`; for example 140 directions at
+  order 2, or 40 at order 3) is refused before anything is written, with the
+  coefficient count and the source size it would have. `max_coefficients=` or
+  `UMAT_OTI_MAX_COEFFICIENTS` raises or lowers the limit. Basis indices above
+  65535 and member names over 63 characters are refused as well.
+
 ## [1.2.0] - 2026-10-28
 
 The version described in the SoftwareX article. What changed since 1.1.0, in
