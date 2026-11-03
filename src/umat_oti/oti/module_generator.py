@@ -20,8 +20,10 @@ class OtilibGenerationError(RuntimeError):
 class OtilibSizeLimitError(OtilibGenerationError):
     """The requested module is past a limit the generator enforces before writing.
 
-    Raised before any file is written, so a refused request leaves nothing that
-    could be mistaken for a generated module.
+    Raised before :func:`generate_otilib_module` writes anything, so the refused
+    request adds no file that could be mistaken for a generated module. (A caller
+    may already have created the output directory or written other files, and a
+    module left there by an earlier run is not removed.)
     """
 
 
@@ -46,6 +48,10 @@ def otilib_coefficient_count(ntens: int, order: int) -> int:
     return comb(ntens + order, order)
 
 
+def _directions(count: int) -> str:
+    return f"{count} direction" if count == 1 else f"{count} directions"
+
+
 def check_otilib_module_size(ntens: int, order: int, *, max_coefficients: int | None = None) -> int:
     """Refuse a module past a real limit; return its coefficient count otherwise.
 
@@ -55,8 +61,9 @@ def check_otilib_module_size(ntens: int, order: int, *, max_coefficients: int | 
     * a basis index above :data:`umat_oti.oti.oti_directions.MAX_BASIS_INDEX`
       cannot be represented by the pyoti-compatible direction helper;
     * a member name longer than the Fortran limit of 63 characters cannot be
-      compiled (it never binds below that basis limit, but is checked, not
-      assumed);
+      compiled. This binds at high orders well inside the coefficient limit:
+      one direction at order 63 already needs a 64-character name, and 36
+      directions at order 16 need 65 characters;
     * a coefficient count above ``max_coefficients`` (default
       :data:`DEFAULT_MAX_COEFFICIENTS`, or the integer in the environment
       variable ``UMAT_OTI_MAX_COEFFICIENTS``).
@@ -65,12 +72,12 @@ def check_otilib_module_size(ntens: int, order: int, *, max_coefficients: int | 
 
     if ntens > _dirs.MAX_BASIS_INDEX:
         raise OtilibSizeLimitError(
-            f"OTILIB module generation refused: {ntens} directions exceeds the largest "
+            f"OTILIB module generation refused: {_directions(ntens)} exceeds the largest "
             f"representable basis index, {_dirs.MAX_BASIS_INDEX}.")
     name_length = _dirs.max_member_name_length(ntens, order)
     if name_length > _dirs.FORTRAN_MAX_NAME_LENGTH:
         raise OtilibSizeLimitError(
-            f"OTILIB module generation refused: {ntens} directions at order {order} needs "
+            f"OTILIB module generation refused: {_directions(ntens)} at order {order} needs "
             f"member names of {name_length} characters; Fortran allows "
             f"{_dirs.FORTRAN_MAX_NAME_LENGTH}.")
     if max_coefficients is None:
@@ -87,7 +94,7 @@ def check_otilib_module_size(ntens: int, order: int, *, max_coefficients: int | 
     if count > max_coefficients:
         constants_bytes = 7 * (count - 1) * count
         raise OtilibSizeLimitError(
-            f"OTILIB module generation refused: {ntens} directions at order {order} gives "
+            f"OTILIB module generation refused: {_directions(ntens)} at order {order} gives "
             f"C({ntens}+{order}, {order}) = {count} coefficients, above the limit of "
             f"{max_coefficients}. Its direction constants alone would be about "
             f"{constants_bytes / 1e6:.0f} MB of Fortran source, and compile cost grows "
@@ -118,7 +125,7 @@ def generate_otilib_module(
 
     ``ntens`` is the number of imaginary directions. There is no fixed ceiling on
     it: bases above 35 are named by :func:`umat_oti.oti.oti_directions.basis_token`.
-    A request past a real limit is refused before anything is written (see
+    A request past a real limit is refused before this function writes anything (see
     :func:`check_otilib_module_size`; ``max_coefficients`` overrides the default
     coefficient ceiling).
     """
