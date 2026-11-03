@@ -26,7 +26,22 @@ from typing import Iterator, Sequence
 # Must match umat_oti/oti/support/fmod_writer.py `valid_chars` exactly: '0'..'9' then 'A'..'Z'.
 # A basis index b (1-indexed) is rendered as VALID_CHARS[b]; member names are
 # "E" followed by the rendered bases, e.g. E1, E2 (order 1), E11, E12, E22 (order 2).
+# Bases 1..35 use that single-character alphabet (so every module of up to 35
+# directions keeps the names upstream gives it); base 36 and above are written
+# "_<decimal>_" by :func:`basis_token`, so the alphabet does not bound the
+# number of directions.
 VALID_CHARS = [chr(i) for i in range(48, 58)] + [chr(i) for i in range(65, 91)]
+
+#: Largest basis index the generator can represent. The pyoti-compatible helper
+#: in :mod:`umat_oti.oti.module_generator` hands directions to the vendored
+#: writer as ``numpy.uint16`` arrays (the upstream pyoti basis type), so a basis
+#: above 65535 cannot be expressed. Far below this, the coefficient count of the
+#: generated module is the binding limit; see
+#: :data:`umat_oti.oti.module_generator.DEFAULT_MAX_COEFFICIENTS`.
+MAX_BASIS_INDEX = 65535
+
+#: Fortran 2008 limit on the length of a name (Clause 3.2.2).
+FORTRAN_MAX_NAME_LENGTH = 63
 
 
 def ndir_order(nbases: int, order: int) -> int:
@@ -54,24 +69,71 @@ def _gen_dirs(order: int) -> Iterator[tuple[int, ...]]:
         maxbase += 1
 
 
+class _OrderEnumeration:
+    """Memoised prefix of :func:`_gen_dirs` for one order, with its inverse.
+
+    :func:`fulldir` and :func:`dir_index` used to restart the enumeration on
+    every call, which is linear in the index; the module writer calls them once
+    per direction and once per pair of directions in the multiplication table,
+    so generation was quadratic-to-cubic in the direction count. The prefix
+    here is the same enumeration, extended on demand, so every answer is the
+    one the scan would give.
+    """
+
+    __slots__ = ("_source", "directions", "index")
+
+    def __init__(self, order: int) -> None:
+        self.directions: list[tuple[int, ...]] = []
+        self.index: dict[tuple[int, ...], int] = {}
+        self._source = _gen_dirs(order)
+
+    def extend_to(self, count: int) -> None:
+        while len(self.directions) < count:
+            direction = next(self._source)
+            self.index[direction] = len(self.directions)
+            self.directions.append(direction)
+
+
+_ENUMERATIONS: dict[int, _OrderEnumeration] = {}
+
+
+def _enumeration(order: int) -> _OrderEnumeration:
+    enumeration = _ENUMERATIONS.get(order)
+    if enumeration is None:
+        enumeration = _ENUMERATIONS[order] = _OrderEnumeration(order)
+    return enumeration
+
+
 def fulldir(idx: int, order: int) -> tuple[int, ...]:
     """The ``idx``-th (0-based) imaginary direction of the given ``order``."""
-    for i, direction in enumerate(_gen_dirs(order)):
-        if i == idx:
-            return direction
-    raise IndexError(f"direction index {idx} out of range for order {order}")
+    if idx < 0:
+        raise IndexError(f"direction index {idx} out of range for order {order}")
+    if order == 0:
+        if idx == 0:
+            return ()
+        raise IndexError(f"direction index {idx} out of range for order {order}")
+    enumeration = _enumeration(order)
+    enumeration.extend_to(idx + 1)
+    return enumeration.directions[idx]
 
 
 def dir_index(multiset: Sequence[int]) -> int:
     """Inverse of :func:`fulldir`: the within-order index of a multiset of bases."""
     target = tuple(sorted(multiset))
     order = len(target)
-    for i, direction in enumerate(_gen_dirs(order)):
-        if direction == target:
-            return i
-        if direction[-1] > target[-1]:
-            break
-    raise ValueError(f"multiset {multiset} not found in order-{order} enumeration")
+    if order == 0:
+        return 0
+    if target[0] < 1:
+        raise ValueError(f"multiset {multiset} not found in order-{order} enumeration")
+    enumeration = _enumeration(order)
+    # Every multiset whose largest basis is at most target[-1] precedes the
+    # first one with a larger basis, and there are ndir_order(target[-1], order)
+    # of them.
+    enumeration.extend_to(ndir_order(target[-1], order))
+    try:
+        return enumeration.index[target]
+    except KeyError:
+        raise ValueError(f"multiset {multiset} not found in order-{order} enumeration") from None
 
 
 def flat_index(nbases: int, order: int, idx: int) -> int:
@@ -89,8 +151,28 @@ def member_name(multiset: Sequence[int]) -> str:
 
 
 def basis_token(base: int) -> str:
-    """Preserve upstream names and delimit larger basis indices uniquely."""
+    """Preserve upstream names and delimit larger basis indices uniquely.
+
+    Bases 0..35 are the upstream single characters ('0'-'9', 'A'-'Z'), so a
+    module of up to 35 directions is named exactly as upstream names it. Base 36
+    and above become ``_<decimal>_``: a character of the alphabet is never an
+    underscore and a decimal run is closed by one, so a name such as ``E1_36_``
+    reads back to one multiset only, and no larger base can collide with a pair
+    of smaller ones (``E36`` is bases 3 and 6; base 36 is ``E_36_``).
+    """
+    if base < 0:
+        raise ValueError(f"basis index must be nonnegative, got {base}")
     return VALID_CHARS[base] if base < len(VALID_CHARS) else f"_{base}_"
+
+
+def max_member_name_length(nbases: int, order: int) -> int:
+    """Length of the longest member name of a module over ``nbases`` up to ``order``.
+
+    The longest name repeats the token of the largest basis ``order`` times.
+    """
+    if nbases < 1 or order < 1:
+        return 1
+    return 1 + order * len(basis_token(nbases))
 
 
 def deriv_factor(multiset: Sequence[int]) -> int:
