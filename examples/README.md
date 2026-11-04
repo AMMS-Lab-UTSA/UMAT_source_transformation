@@ -66,5 +66,16 @@ Examples 5 and 6 are command-line only. See
 | [j2_actual_higher_order.json](j2_actual_higher_order.json), [code_imp_actual_higher_order.json](code_imp_actual_higher_order.json), [UMAT_PCL_actual_higher_order.json](UMAT_PCL_actual_higher_order.json), [UMAT_PCLK_actual_higher_order.json](UMAT_PCLK_actual_higher_order.json), [visco_imp_actual_higher_order.json](visco_imp_actual_higher_order.json) | Contracts for higher-order derivative studies of real UMATs. `umat-oti-config` and `umat-oti-pipeline` accept them ([docs/CLI_GUIDE.md](../docs/CLI_GUIDE.md)). |
 | [verify_internal_jacobian.py](verify_internal_jacobian.py) | Part A of Example 5. |
 
+### Known issues: UMAT_PCL and UMAT_PCLK
+
+These two contracts are **not clean examples**. On the higher-order study's
+load path the transformed and the original builds of both sources diverge in
+the primal at increment 4, by about 2e-3 relative; the cause is not yet
+understood, so their higher-order results are not evidence (see
+docs/PUBLICATION_RESULTS_RECONCILIATION.md). Until 1.2.1 the UMAT_PCL contract
+also gave NSTATV=9 while the source writes STATEV(10:13) (its back stress);
+it is 13 now, and every higher-order model is checked against the state slots
+its source addresses (tests/test_a_model_spec_gives_its_source_enough_state.py).
+
 To write a contract for your own UMAT, start with
 [new_user_umat_starter/README.md](../new_user_umat_starter/README.md).
