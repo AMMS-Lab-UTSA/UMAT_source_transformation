@@ -124,9 +124,12 @@ are not covered by this project's GPL-3.0 grant.
 The directories and `index.html` were **removed from the current tree on
 2026-10-27**, together with derived copies under `paper_results/`. They had
 already been distributed (git history from `938b821`, tag `v1.0.0`, the 1.1.0
-release). In the current tree, short excerpts (37 strings each) remain only in
-the five frozen publication snapshots
-`paper_results/frozen/*/evidence/arc_791506/table2_abaqus_paired.json`.
+release). In 1.2.1 the last excerpts (37 strings in each of the five frozen
+publication snapshots
+`paper_results/frozen/*/evidence/arc_791506/table2_abaqus_paired.json`) were
+replaced by a removal marker and those snapshots' checksums recomputed, and
+short statement quotes in the higher-order evidence were paraphrased; no book
+code remains in the current tree.
 `UMATs/UMATs/ICP/DUNNE_PETRINIC_REMOVED.md` lists exactly what was removed,
 what was redacted and what remains. Users who want to run the examples, configurations and studies
 that still name these files must obtain the code from the publisher and place

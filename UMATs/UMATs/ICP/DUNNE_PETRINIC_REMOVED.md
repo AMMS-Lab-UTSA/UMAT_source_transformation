@@ -38,21 +38,39 @@ Status of the copies (2026-10-27):
   Hashes of these files recorded elsewhere (for example in
   `derivative_manifest.json` and `docs/evidence/recovery_evidence_inventory.json`)
   describe the earlier bytes.
-- **Still present, and nowhere else in the current tree:** the five frozen
-  publication snapshots, each holding the same 37 excerpt strings that were
-  redacted above from the non-frozen `table2_abaqus_paired.json`:
+- **Frozen publication snapshots redacted in 1.2.1 (2026-11-04).** The five
+  frozen snapshots each held the same 37 excerpt strings that 1.2.0 had
+  already redacted from the non-frozen `table2_abaqus_paired.json`:
   - `paper_results/frozen/umat-064583d71b90_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
   - `paper_results/frozen/umat-2692f4724d2d_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
   - `paper_results/frozen/umat-2a19bdd07be3_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
   - `paper_results/frozen/umat-700ceceeb7ad_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
   - `paper_results/frozen/umat-7520c4c94553_ra-f928acec970a/evidence/arc_791506/table2_abaqus_paired.json`
 
-  Per snapshot, the strings are: code_exp 2, code_imp 11, elastic 4,
-  spin_elas_def 7, spin_elastic 5, visco_beam 4 and visco_imp 4. They were left
-  unchanged because each snapshot is fixed by its `SHA256SUMS`/`MANIFEST.json`
-  and checked byte-for-byte by `tests/test_frozen_evidence_integrity.py`.
-  Editing them means re-freezing a publication snapshot, which is the
-  maintainers' decision.
+  Per snapshot, the strings were: code_exp 2, code_imp 11, elastic 4,
+  spin_elas_def 7, spin_elastic 5, visco_beam 4 and visco_imp 4. Each now
+  carries the same "source excerpt removed" marker; every other byte,
+  including every numerical result, is unchanged. In each snapshot the
+  file's digest and size in `MANIFEST.json` and the two affected lines of
+  `SHA256SUMS` (that file and `MANIFEST.json`) were recomputed, and a
+  `REDACTION_NOTE.md` records the old and new digests
+  (`955ba2be...` to `bb4406b5...`). `tests/test_frozen_evidence_integrity.py`
+  checks the new sums.
+- **Statement quotes in prose, paraphrased in 1.2.1.** Short Fortran
+  statements quoted in the higher-order evidence for code_imp and visco_imp
+  (the elastic-branch update, the Newton-loop exit test, the TOLER test and
+  the two yield-branch IF tests) are now described in words, in
+  `src/umat_oti/validation/actual_umat_higher_order_generic.py`,
+  `examples/{code_imp,visco_imp}_actual_higher_order.json` and
+  `paper_results/higher_order_convergence/{code_imp,visco_imp}/convergence_{evidence.json,rows.csv}`.
+  Line-number citations and the mathematical description of each branch
+  stay; no numbers changed.
+- A scan of every tracked text file in 1.2.1 against the statements of the
+  removed sources (comments dropped, continuation lines joined, whitespace
+  and case ignored, statements that also occur in other Fortran files in the
+  tree excluded) finds no remaining book-code statement. File and routine
+  names (code_exp, code_imp, spin_elas*, visco_beam, visco_imp, uni_visco)
+  still occur as case names, configuration paths and in this notice.
 
 ## Using the examples that need them
 
