@@ -246,7 +246,22 @@ def verify_assets(root: Path = None) -> list:
 CURATED_MIT = {"sweep_real_ECL_TEMP", "sweep_real_PCO", "sweep_eco"}
 
 
+#: in-repo third-party UMATs copied unchanged with their own MIT licence file
+#: (THIRD_PARTY_NOTICES.md 2e)
+CURATED_MIT_UNCHANGED = {
+    "UVC_MatMod": "THIRD_PARTY_NOTICES.md section 2e: unchanged copy of ahartloper/UVC_MatMod "
+                  "Abaqus/UVCplanestress.for at a4b8f6e (MIT, Copyright (c) 2019 Alexander R. "
+                  "Hartloper; LICENSE beside the file)",
+}
+
+
 def curated_licence(name: str) -> dict:
+    if name in CURATED_MIT_UNCHANGED:
+        return {"spdx": "MIT", "scope": "file",
+                "basis": CURATED_MIT_UNCHANGED[name],
+                "redistribution": "permitted",
+                "redistribution_basis": "MIT is GPL-3.0-only-compatible (D-2); the file is "
+                                        "distributed in this repository with its licence file"}
     if name in CURATED_MIT:
         return {"spdx": "MIT", "scope": "file (adaptation)",
                 "basis": "THIRD_PARTY_NOTICES.md section 2a: adaptation of jgomezc1/ABAQUS-US "
@@ -1587,6 +1602,9 @@ def curated_entry(model_dir: Path, family: str, activation: Optional[float]):
     entry = CorpusEntry(
         key="curated-" + model_dir.name, source_id=f"umat-oti/{rel}", original_source=source,
         ntens=int(dims["ntens"]), nstatv=int(dims.get("nstatev") or 0), props=props,
+        # a contract may state the split of NTENS (plane stress: 2 direct, 1 shear);
+        # without it the 3D split applies, as before
+        ndi=int(dims.get("ndi", 3)), nshr=int(dims.get("nshr", 3)),
         kinematics=kin, family=family,
         path_hints={"time_dependent": time_dependent, "activation_amplitude": activation,
                     "source_text": source.read_text(errors="replace")},

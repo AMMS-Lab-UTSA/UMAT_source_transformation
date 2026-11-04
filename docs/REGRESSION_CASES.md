@@ -9,12 +9,17 @@ historical `umat/<id>/` directories are untouched (decision D-7). Design:
 
 ## Listing the cases
 
-`umat/cases/index.json` lists every case (122 at this commit: 4 curated CI
+`umat/cases/index.json` lists every case (120 at this commit: 2 curated CI
 cases, and 118 corpus cases in the offline tier -- one for every source in the
-routine-level D-8 count at pass25), all frozen at pass25: transform
-`c61511ea0ffe58e2`, harness `cfd84cd2fe97e72b`. The superseded pass18 to pass24
+routine-level D-8 count at pass25). The 118 corpus cases are frozen at pass25:
+transform `c61511ea0ffe58e2`, harness `cfd84cd2fe97e72b`; the two CI cases are
+re-frozen at each release (see `CHANGELOG.md` for the fingerprints). In 1.2.1
+the three curated CI cases whose sources have no tracked origin
+(sweep_j2_kinematic, sweep_maxwell_ve, sweep_real_PCO) were removed and
+`umat-oti-curated--uvc-planestress` (UVC_MatMod, MIT; THIRD_PARTY_NOTICES.md
+2e) was added. The superseded pass18 to pass24
 cases are kept in `$UMAT_CASE_ASSETS/history/`, not here. `make case-offline`
-checks all 122 in about 75 s with 12 jobs (496 s with 2 jobs while other work
+checks all of them in about 75 s with 12 jobs (496 s with 2 jobs while other work
 ran, measured 2026-10-08). One line per case:
 
 ```bash
@@ -27,6 +32,7 @@ bristolcompositesinstitute-abaci--umat--b8fa3835 unknown offline
 irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2 unknown offline
 ...
 umat-oti-curated--m3-j2 permitted ci
+umat-oti-curated--uvc-planestress permitted ci
 ```
 
 A case id is `<repository>--<file>--<8 hex of the source key>`; `--only`
@@ -104,7 +110,7 @@ the new case passes its own check (R and P, all canaries rejected). A case is
 current only at the fingerprints it records (D-6): after a transform or harness
 change, re-run `check`, and re-freeze only through a recorded decision.
 
-**Harness fingerprint.** The 122 cases at this commit record the fingerprints
+**Harness fingerprint.** The 118 corpus cases record the fingerprints
 the pass25 run recorded: transform `c61511ea0ffe58e2`, harness
 `cfd84cd2fe97e72b`, the same values as the pass25 registry rows; every case was
 frozen again from pass25 (only the provenance, fingerprints, dates and tree
@@ -141,14 +147,14 @@ the integrity story; `check` alone does not prove a case was not re-baselined.
 
 ## Checking
 
-    make case-ci          # CI tier: the 4 permitted cases, R + P, gfortran (~10 s)
+    make case-ci          # CI tier: the 2 permitted cases, R + P, gfortran (~10 s)
     make case-offline     # every case on this machine (needs the workspace layout)
     PYTHONHASHSEED=0 python tools/corpus_cases.py check --tier offline --replay --only <case_id>
 
 `make case-ci` needs only this repository and `gfortran`. It ends with
 
 ```text
-4/4 cases pass; canaries all rejected; <seconds>s
+2/2 cases pass; canaries all rejected; <seconds>s
 ```
 
 after one `PASS <case_id> (...)` line per case, each followed by three

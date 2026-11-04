@@ -2108,57 +2108,21 @@
    }
   },
   {
-   "case_id": "umat-oti-curated--sweep-j2-kinematic",
+   "case_id": "umat-oti-curated--uvc-planestress",
    "tiers": {
     "ci": true,
     "offline": true
    },
    "redistribution": "permitted",
    "kind": "curated",
-   "transform_fingerprint": "c61511ea0ffe58e2",
-   "harness_fingerprint": "cfd84cd2fe97e72b",
+   "transform_fingerprint": "62afec213058cce5",
+   "harness_fingerprint": "d2835250d9f67d57",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
    "judged_states": 260,
    "digest": {
-    "case_json_sha256": "845f61578439074b02b7d8e04d5063d9de10b97b47b6aaf9699773a6406329f4",
-    "reference_sha256": "3cfa664ab90476584596006a4b4ea94a8e6a9702823009b0c84798ebc33529e4"
-   }
-  },
-  {
-   "case_id": "umat-oti-curated--sweep-maxwell-ve",
-   "tiers": {
-    "ci": true,
-    "offline": true
-   },
-   "redistribution": "permitted",
-   "kind": "curated",
-   "transform_fingerprint": "c61511ea0ffe58e2",
-   "harness_fingerprint": "cfd84cd2fe97e72b",
-   "rule_id": "case-rule/1-df2f107a3c04",
-   "paths": 11,
-   "judged_states": 304,
-   "digest": {
-    "case_json_sha256": "4871bf4858bcfd0587dc848639f78ea28b41ce1984039c79ea4c3510a08c1c06",
-    "reference_sha256": "9bf9f04fca7f808f637d178750c423a0f9b5f18270d1c1679eb579708c1a4f63"
-   }
-  },
-  {
-   "case_id": "umat-oti-curated--sweep-real-pco",
-   "tiers": {
-    "ci": true,
-    "offline": true
-   },
-   "redistribution": "permitted",
-   "kind": "curated",
-   "transform_fingerprint": "c61511ea0ffe58e2",
-   "harness_fingerprint": "cfd84cd2fe97e72b",
-   "rule_id": "case-rule/1-df2f107a3c04",
-   "paths": 9,
-   "judged_states": 260,
-   "digest": {
-    "case_json_sha256": "f45e1ec367e98c416d1af2d5bef4e09db0e3803fc8439b2726b2dd5924ec8dc3",
-    "reference_sha256": "3e1592de5117666944f11d40cfe46c03c10627fb584029b60238a3e3f9956a67"
+    "case_json_sha256": "5c4946cb6b0b57c68177e74571a513b9bc08a7615fbf173071fcf0aaf8a329f4",
+    "reference_sha256": "7792ca06259f802c2a529e0113585abdb5a8eaad4d350703dc23602137a213d2"
    }
   },
   {
