@@ -404,6 +404,7 @@ branch. `CITATION.cff` carries the released version and its date.
 | 1.0.0 (2026-07-10) | `v1.0.0` | Zenodo, DOI [10.5281/zenodo.21297173](https://doi.org/10.5281/zenodo.21297173) (concept DOI 10.5281/zenodo.21297172) |
 | 1.1.0 (2026-08-21) | not tagged | — |
 | 1.2.0 (2026-10-28) | `v1.2.0` | no archive DOI yet |
+| 1.2.1 (2026-11-04) | `v1.2.1` (to be tagged) | no archive DOI yet; changes in `CHANGELOG.md` |
 
 The evidence files record the commit that produced them: `run_manifest.json`
 and `environment.json` from any profile, the `execution_commit_sha` and

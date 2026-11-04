@@ -7,25 +7,111 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **More than 35 directions, stated and tested.** The 36-symbol alphabet that
-  stopped generation at 36 directions ("list index out of range") was already
-  bypassed in 1.2.0: bases from 36 up are named `_<decimal>_` (`E_36_`,
-  `E1_36_`), while modules of up to 35 directions keep the upstream names.
-  This is now covered by tests at the 35/36 boundary and at 200 and 303
-  directions, and by a compiled 40-direction check that each derivative
-  arrives in the right member.
-- **Generation no longer slows down cubically.** Direction lookup is memoised
-  (it rescanned the enumeration on every call) and the constant block is
-  written once instead of copying the whole block per direction. Order 2 at 60
-  directions now generates in about 2 s instead of 30 s. The generated modules
-  are byte-for-byte unchanged (compared over 76 direction/order pairs, orders
-  1 to 4).
-- **Sizes past a real limit are refused, not attempted.** A module over
-  10 000 coefficients (`C(n_d + order, order)`; for example 140 directions at
-  order 2, or 40 at order 3) is refused before anything is written, with the
-  coefficient count and the source size it would have. `max_coefficients=` or
-  `UMAT_OTI_MAX_COEFFICIENTS` raises or lowers the limit. Basis indices above
-  65535 and member names over 63 characters are refused as well.
+## [1.2.1] - 2026-11-04
+
+A maintenance release of 1.2.0. It fixes three defects in the transform, removes
+the last third-party text the project may not redistribute, replaces regression
+cases of unclear provenance, and removes campaign tooling and machine paths. The
+SoftwareX article still describes 1.2.0; nothing here changes a number it
+reports, except where stated below.
+
+### Transform
+
+- **Each program unit's names are its own.** Shape tables read the
+  declarations of internal procedures (after CONTAINS) as the host's, so
+  UVCplanestress's scalars `a` and `b` took matinv3's `A(3,3)` and `B(3,3)`, and
+  its parameter-sensitivity build did not compile. Fixed; a lifted function
+  whose result is an array now gets an explicit INTERFACE at its call (through
+  EXTERNAL alone the build crashed at the first plastic increment).
+- **A failed compile is a failed transform.** When a compile is requested and
+  a compiler is present, its outcome is the semantic check
+  `emitted_code_compiles` and gates `transform_success` (status category
+  `compile_failed`); the report no longer reads SUCCESS for code that does not
+  build.
+- **The combined entry's material-point driver** accepts the current UMAT
+  interface (`JSTEP(4)` as the 36th dummy) as well as the classic one, and links
+  an XIT stub when the build calls XIT.
+- **A local-Jacobian request is reseeded in its own direction only.** The
+  per-pass reseed wrote the iterate as `REAL(X) + E_k`, which cleared its strain
+  directions and left direction k in the state carried between passes. The
+  extracted Jacobian (J_int) of a loop whose carried state depends on the
+  iterate was the derivative of nothing the pass evaluates, and that build's
+  DDSDDE was wrong (up to 20 % on UVCplanestress). The reseed now sets 1 in the
+  iterate and 0 in every name the loop may carry; J_int is dr/d(iterate) at
+  fixed carried state (see `new_user_umat_starter/JSON_REFERENCE.md`). A loop
+  whose end cannot be determined is refused. The internal-Jacobian round
+  (Table 3) is byte-identical.
+- **`source.git_commit` in derivative_manifest.json** is the commit of the
+  repository that tracks the source, and null when the file is untracked,
+  outside a repository, or edited since HEAD (no separate dirty flag;
+  `source.sha256` identifies the bytes). With `dependency_roots` it is taken from
+  the entry file, not from the resolved copy.
+- **More than 35 OTI directions** (two commits by S. Garcia Botero):
+  - **More than 35 directions, stated and tested.** The 36-symbol alphabet that
+    stopped generation at 36 directions ("list index out of range") was already
+    bypassed in 1.2.0: bases from 36 up are named `_<decimal>_` (`E_36_`,
+    `E1_36_`), while modules of up to 35 directions keep the upstream names.
+    This is now covered by tests at the 35/36 boundary and at 200 and 303
+    directions, and by a compiled 40-direction check that each derivative
+    arrives in the right member.
+  - **Generation no longer slows down cubically.** Direction lookup is memoised
+    (it rescanned the enumeration on every call) and the constant block is
+    written once instead of copying the whole block per direction. Order 2 at 60
+    directions now generates in about 2 s instead of 30 s. The generated modules
+    are byte-for-byte unchanged (compared over 76 direction/order pairs, orders
+    1 to 4).
+  - **Sizes past a real limit are refused, not attempted.** A module over
+    10 000 coefficients (`C(n_d + order, order)`; for example 140 directions at
+    order 2, or 40 at order 3) is refused before anything is written, with the
+    coefficient count and the source size it would have. `max_coefficients=` or
+    `UMAT_OTI_MAX_COEFFICIENTS` raises or lowers the limit. Basis indices above
+    65535 and member names over 63 characters are refused as well.
+
+### Licensing and provenance
+
+- **The last Dunne & Petrinic excerpts are removed (AA-13).** The five frozen
+  publication snapshots under `paper_results/frozen/` each held 37 strings quoted
+  from the book code (code_exp 2, code_imp 11, elastic 4, spin_elas_def 7,
+  spin_elastic 5, visco_beam 4, visco_imp 4). Each is replaced by the removal
+  marker already used in 1.2.0; every number is unchanged. In each snapshot the
+  file's digest and size in MANIFEST.json and two lines of SHA256SUMS are
+  recomputed, and REDACTION_NOTE.md says what changed. Short statement quotes
+  in the code_imp and visco_imp higher-order evidence are paraphrased. A scan of
+  the tree against the removed sources finds no book-code statement.
+- **CI regression cases of unclear provenance are replaced (Q-07).** The
+  curated cases from sweep_j2_kinematic, sweep_maxwell_ve and sweep_real_PCO
+  (origin files untracked; PCO adapts the EAFIT ABAQUS-US family) are removed.
+  Added: UVCplanestress (ahartloper/UVC_MatMod at a4b8f6e, unchanged, MIT,
+  Copyright (c) 2019 Alexander R. Hartloper; THIRD_PARTY_NOTICES.md 2e) with the
+  author's deck constants, as the CI case `umat-oti-curated--uvc-planestress`.
+  The CI tier is m3_j2 and UVCplanestress. The smoke profile's m3_j2 has a
+  tracked origin and is unchanged.
+
+### Repository
+
+- Campaign-only tooling (corpus acquisition, registry, manifest and report
+  builders, pass reports, batch-evidence recorder and their tests),
+  agent-process files and internal development records are removed; the files
+  the 1.2.0 reproduction guide cites are kept. Make targets corpus-report,
+  corpus-registry and batch-record go with their tools.
+- The reviewer-designed experiment is called "reviewer" in identifiers and data
+  formats; `umat_oti.corpus_features.legacy_names` still reads the old names.
+- Machine paths and user names are removed from shipped evidence, scripts and
+  comments, except in the checksummed archives (`verification/softwarex/evidence/`,
+  `paper_results/frozen/`), which are byte records.
+- The default test run passes on a clean checkout (three tests failed at 1.2.0).
+
+### Re-frozen at this release
+
+- Transform fingerprint `a007f44506f334be`, harness fingerprint
+  `8568ec22fd181816` (package+tools). `transform_generation.json` records the
+  transform fingerprint and `contract_lock.json` is regenerated; Residual
+  Assembler's copies must be updated in step.
+- The two CI regression cases are frozen again at these fingerprints; their
+  frozen inputs and references are unchanged.
+- The 118 corpus regression cases, the pass25 corpus evidence and the Residual
+  Assembler fixtures stay at `c61511ea0ffe58e2` / `cfd84cd2fe97e72b` and are
+  history until a corpus pass re-freezes them.
 
 ## [1.2.0] - 2026-10-28
 
