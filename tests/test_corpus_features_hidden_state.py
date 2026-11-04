@@ -156,13 +156,13 @@ def test_the_clean_toy_does_not_trip_and_verifies(results):
     records = results["toy_clean"]
     assert all(not r.get("hidden_state_trips") for r in records)
     by = {(r["feature"], r["path"]): r for r in records}
-    for path in ("gauss_small_elastic", "gauss_small_load_unload"):
+    for path in ("minimal_small_elastic", "minimal_small_load_unload"):
         assert by[("ddsdde", path)]["status"] == "verified", by[("ddsdde", path)]["reason"]
         assert by[("primal_stress_state", path)]["status"] == "verified"
         assert by[("stress_param_sens_total", path)]["status"] == "verified"
-    assert by[("ddsdde", "gauss_small_elastic")]["build"] == "store"
-    assert by[("stress_param_sens_local", "gauss_small_elastic")]["build"] == "lifted"
-    eq = by[("stress_param_sens_local", "gauss_small_elastic")]["primal_equivalence_lifted_vs_store"]
+    assert by[("ddsdde", "minimal_small_elastic")]["build"] == "store"
+    assert by[("stress_param_sens_local", "minimal_small_elastic")]["build"] == "lifted"
+    eq = by[("stress_param_sens_local", "minimal_small_elastic")]["primal_equivalence_lifted_vs_store"]
     assert eq["status"] in ("bit-equal", "within")
 
 
@@ -187,7 +187,7 @@ def test_an_undefined_slot_that_never_feeds_stress_is_listed_and_stress_verifies
     assert all(r["undefined_outputs"] == ["STATEV(2)"] for r in records)
     assert all(r["stress_and_ddsdde_fully_defined"] for r in records)
     by = {(r["feature"], r["path"]): r for r in records}
-    for path in ("gauss_small_elastic", "gauss_small_load_unload"):
+    for path in ("minimal_small_elastic", "minimal_small_load_unload"):
         assert by[("ddsdde", path)]["status"] == "verified", by[("ddsdde", path)]["reason"]
         assert by[("primal_stress_state", path)]["status"] == "verified"
         assert by[("stress_param_sens_local", path)]["status"] == "verified"

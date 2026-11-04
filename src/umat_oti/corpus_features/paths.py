@@ -68,8 +68,8 @@ def _small_paths(ndi: int, nshr: int) -> list:
                for _ in range(8)]
     plastic += [Increment(dstran=_truncate([-0.5 * plastic_amp * d for d in direction], ndi, nshr))
                 for _ in range(4)]
-    return [LoadingPath("gauss_small_elastic", "elastic", "small", elastic),
-            LoadingPath("gauss_small_load_unload", "unload_reload", "small", plastic)]
+    return [LoadingPath("minimal_small_elastic", "elastic", "small", elastic),
+            LoadingPath("minimal_small_load_unload", "unload_reload", "small", plastic)]
 
 
 def _finite_paths() -> list:
@@ -84,7 +84,7 @@ def _finite_paths() -> list:
         increments.append(Increment(dfgrd1=((lam, 0.01 * k, 0.0),
                                             (0.0, lam ** -0.5, 0.0),
                                             (0.0, 0.0, lam ** -0.5))))
-    return [LoadingPath("gauss_finite_stretch_shear_unload", "unload_reload", "finite",
+    return [LoadingPath("minimal_finite_stretch_shear_unload", "unload_reload", "finite",
                         increments)]
 
 

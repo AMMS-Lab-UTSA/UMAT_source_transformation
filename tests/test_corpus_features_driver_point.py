@@ -76,7 +76,7 @@ def test_position_dependent_toy_verifies_at_the_recorded_point(tmp_path):
     path = internal_paths({"ndi": 3, "nshr": 3})[:1]
     out = {}
     for label, point in (("zero", None), ("recorded", harness.experiment_driver_point("toy_r", root))):
-        entry = CorpusEntry(key="toy_r", source_id="gauss_toy/growth_over_r", original_source=TOY,
+        entry = CorpusEntry(key="toy_r", source_id="toy/growth_over_r", original_source=TOY,
                             ntens=6, nstatv=1, props=[2.0e5, 0.3, 1.0e-3], store_dir=store)
         if point is not None:
             entry.driver_point = point
