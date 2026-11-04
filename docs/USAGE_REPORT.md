@@ -360,7 +360,7 @@ run on 2026-09-19 from fresh clones (Residual_Assembler `bf3600c`, UMAT-OTI
 
 See
 [final_clean_clone.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/final_clean_clone.md).
-The completion ledger ([COMPLETION_LEDGER.md](COMPLETION_LEDGER.md)) was set
+The project's completion ledger (a development record, not shipped) was set
 from that run alone: 265 of its 274 rows are reproduced from a clean
 installation.
 
@@ -374,5 +374,5 @@ Residual_Assembler's, and the examples check above (its
 ## 11. Status and evidence
 
 Requirement-level status is tracked in
-[COMPLETION_LEDGER.md](COMPLETION_LEDGER.md). Run records are in
-[evidence/](evidence/).
+[PIPELINE_REQUIREMENTS_TRACEABILITY.md](PIPELINE_REQUIREMENTS_TRACEABILITY.md).
+Run records are in [evidence/](evidence/).
