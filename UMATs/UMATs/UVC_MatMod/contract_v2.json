@@ -2,6 +2,7 @@
   "schema": "resasm_umat_transform_v2",
   "source": {"main_file": "UVCplanestress.for"},
   "kinematics": "small_strain",
+  "kinematics_note": "small_strain is intended: the CI case verifies the routine at material-point level (primal and DDSDDE against the original), not the author's structural analysis, whose deck (Shell-Biaxial-UMAT.inp) runs with NLGEOM=YES.",
   "dimensions": {"ntens": 3, "ndi": 2, "nshr": 1, "nprops": 11, "nstatev": 10},
   "parameters": [
     {"name": "E", "props_index": 1},

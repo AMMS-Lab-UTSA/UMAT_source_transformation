@@ -18,3 +18,7 @@ changed. The bytes as originally frozen are in the git history before 1.2.1
 (tag v1.2.0).
 
 Digests of the redacted file: before 955ba2bebbe0612c8555f8ab21548cfcfb725e264487b5f4e3cca48f3ece001c, after bb4406b5ddc28e88f97d2637c5e9af5217636a37949a509c681b41925b225559.
+
+This note itself is not listed in SHA256SUMS or MANIFEST.json: it was added in
+1.2.1 beside the snapshot, and the sums were left covering the snapshot's own
+files only.

@@ -693,7 +693,7 @@ def _tab_load_config() -> None:
                     "additional_extractions": len(c.get("additional_extractions") or []),
                 }
             )
-        st.dataframe(rows, use_container_width=True, hide_index=True)
+        st.dataframe(rows, width="stretch", hide_index=True)
 
     with st.expander("Advanced: edit the derivative requests before transforming"):
         st.caption(
@@ -1224,7 +1224,7 @@ def _render_artifact(art_id: str, incs_o: list[dict], incs_t: list[dict]) -> Non
                 "RMSE": float(np.sqrt(np.mean((arr_o[:, j] - arr_t[:, j]) ** 2))),
             }
         )
-    st.dataframe(rows, use_container_width=True, hide_index=True)
+    st.dataframe(rows, width="stretch", hide_index=True)
 
     # per-component plots in a grid
     n = len(labels)
@@ -1260,7 +1260,7 @@ def _render_artifact(art_id: str, incs_o: list[dict], incs_t: list[dict]) -> Non
                         "abs_err": float(abs_err[i, j]),
                     }
                 )
-        st.dataframe(per_rows, use_container_width=True, hide_index=True)
+        st.dataframe(per_rows, width="stretch", hide_index=True)
 
 
 # ----------------------------------------------------------------------------

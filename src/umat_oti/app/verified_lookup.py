@@ -4,7 +4,7 @@
 verified in a corpus run comes out of ``check`` amber or blue. This module looks the file up by
 content: the SHA-256 of the UMAT and, when a deck is given, of the deck. One byte of difference
 and there is no match. The table it reads (``docs/evidence/verified_digests.json``, built from
-the corpus registry by ``tools/build_verified_digest_table.py``) is small enough to ship.
+the corpus registry by a campaign tool that is in the history at tag v1.2.0) is small enough to ship.
 
 A match is shown as a SEPARATE line. It is green only when the row's state is fully_verified AND
 the verdict page's own rule (:func:`umat_oti.app.verdict_page.verdict_for`, which asks

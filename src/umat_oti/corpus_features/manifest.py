@@ -196,7 +196,7 @@ REFERENCE_TYPES: tuple[str, ...] = ("original", "analytical", "fd")
 
 #: Where a row's material constants came from (D-19, D-21) and whose
 #: experiment ran (D-19a rev 2); "" where no material data exists. The
-#: registry (tools/build_corpus_registry.py) decides them; the manifest
+#: corpus registry decides them (its builder is in the history at tag v1.2.0); the manifest
 #: carries them per row under ``origins``.
 MATERIAL_DATA_ORIGINS: tuple[str, ...] = (
     "author_deck", "author_published_outside_deck", "reviewer_chosen")
@@ -219,7 +219,7 @@ CONSTANT_CONFIDENCES: tuple[str, ...] = (
 _EXTERNAL = "external"
 
 #: Registry terminal states that passed the Abaqus primal gate; the same set
-#: as tools/build_corpus_registry.PRIMAL_GATE_PASSED and count_target PRIMAL_OK.
+#: as the registry builder's PRIMAL_GATE_PASSED (tag v1.2.0) and count_target PRIMAL_OK.
 _PRIMAL_GATE_PASSED = ("fully_verified", "tangent_not_verified",
                        "derivative_truncated")
 

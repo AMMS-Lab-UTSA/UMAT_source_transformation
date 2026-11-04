@@ -27,7 +27,15 @@ reports, except where stated below.
   a compiler is present, its outcome is the semantic check
   `emitted_code_compiles` and gates `transform_success` (status category
   `compile_failed`); the report no longer reads SUCCESS for code that does not
-  build.
+  build. This changes what a corpus pass counts: from pass27 on, a source that
+  only gfortran rejects is `compile_failed` at the transform stage, where
+  pass25 and pass26 counted it as transformed.
+- **Explicit interfaces for lifted procedures.** Every lifted procedure a
+  caller cannot reach through an implicit interface (array, allocatable or
+  pointer result; assumed-shape, optional, allocatable, pointer or VALUE
+  dummy; ELEMENTAL) gets an INTERFACE block at its call; one that another
+  lifted routine calls is refused. A scalar function with an `A(:,:)` dummy
+  used to report SUCCESS and crash.
 - **The combined entry's material-point driver** accepts the current UMAT
   interface (`JSTEP(4)` as the 36th dummy) as well as the classic one, and links
   an XIT stub when the build calls XIT.
@@ -39,8 +47,13 @@ reports, except where stated below.
   DDSDDE was wrong (up to 20 % on UVCplanestress). The reseed now sets 1 in the
   iterate and 0 in every name the loop may carry; J_int is dr/d(iterate) at
   fixed carried state (see `new_user_umat_starter/JSON_REFERENCE.md`). A loop
-  whose end cannot be determined is refused. The internal-Jacobian round
-  (Table 3) is byte-identical.
+  whose end cannot be determined, or that is or holds a named DO construct,
+  is refused. With a vector seed every extra direction of every seeded
+  component is reset on each pass (dR2/dX1 was 16 % off on a two-unknown
+  test). Extraction targets the source declares itself stay real and are not
+  declared twice. State changed out of sight of the loop body (COMMON, module
+  variables, CALL side effects, host association) is a documented limitation.
+  The internal-Jacobian round (Table 3) is byte-identical.
 - **`source.git_commit` in derivative_manifest.json** is the commit of the
   repository that tracks the source, and null when the file is untracked,
   outside a repository, or edited since HEAD (no separate dirty flag;
@@ -67,6 +80,14 @@ reports, except where stated below.
     `UMAT_OTI_MAX_COEFFICIENTS` raises or lowers the limit. Basis indices above
     65535 and member names over 63 characters are refused as well.
 
+- **UMAT_PCL's state size.** Its example contract and higher-order model
+  gave NSTATV=9 while the source writes STATEV(10:13); both say 13, and every
+  higher-order model is checked against the state slots its source addresses.
+  UMAT_PCL and UMAT_PCLK are listed as known issues (primal divergence of
+  about 2e-3 relative at increment 4, cause not yet understood).
+- **streamlit >= 1.61.** The GUI uses `width=` on buttons and data frames,
+  which older versions reject (the floor said 1.30).
+
 ### Licensing and provenance
 
 - **The last Dunne & Petrinic excerpts are removed (AA-13).** The five frozen
@@ -75,7 +96,8 @@ reports, except where stated below.
   spin_elastic 5, visco_beam 4, visco_imp 4). Each is replaced by the removal
   marker already used in 1.2.0; every number is unchanged. In each snapshot the
   file's digest and size in MANIFEST.json and two lines of SHA256SUMS are
-  recomputed, and REDACTION_NOTE.md says what changed. Short statement quotes
+  recomputed, and REDACTION_NOTE.md says what changed (the note itself is
+  outside SHA256SUMS). Short statement quotes
   in the code_imp and visco_imp higher-order evidence are paraphrased. A scan of
   the tree against the removed sources finds no book-code statement.
 - **CI regression cases of unclear provenance are replaced (Q-07).** The
@@ -84,7 +106,9 @@ reports, except where stated below.
   Added: UVCplanestress (ahartloper/UVC_MatMod at a4b8f6e, unchanged, MIT,
   Copyright (c) 2019 Alexander R. Hartloper; THIRD_PARTY_NOTICES.md 2e) with the
   author's deck constants, as the CI case `umat-oti-curated--uvc-planestress`.
-  The CI tier is m3_j2 and UVCplanestress. The smoke profile's m3_j2 has a
+  Its contract says `kinematics: small_strain` on purpose: the case verifies the
+  routine at material-point level, while the author's deck runs with
+  NLGEOM=YES. The CI tier is m3_j2 and UVCplanestress. The smoke profile's m3_j2 has a
   tracked origin and is unchanged.
 
 ### Repository
@@ -100,6 +124,10 @@ reports, except where stated below.
   comments, except in the checksummed archives (`verification/softwarex/evidence/`,
   `paper_results/frozen/`), which are byte records.
 - The default test run passes on a clean checkout (three tests failed at 1.2.0).
+
+- **Correction to the 1.2.0 entry.** Its fingerprint note gives the values
+  at 2ae2ee0 (transform `eaa152dde6047af2`); the code released as 1.2.0
+  computes transform `f9435e60108075f4`, harness `ac24441fcbbddb6b`.
 
 ### Re-frozen at this release
 
@@ -151,7 +179,9 @@ work was in progress.
   fingerprint from `c61511ea0ffe58e2` (the value recorded in
   `src/umat_oti/contract/schemas/transform_generation.json` and in Residual
   Assembler's copy) to `eaa152dde6047af2`, and the harness fingerprint from
-  `cfd84cd2fe97e72b` to `ac24441fcbbddb6b`. The generation file is deliberately left at
+  `cfd84cd2fe97e72b` to `ac24441fcbbddb6b`. (Correction, 1.2.1: those are
+  the values at 2ae2ee0. The code released as 1.2.0 computes transform
+  `f9435e60108075f4`, harness `ac24441fcbbddb6b`.) The generation file is deliberately left at
   `c61511ea0ffe58e2`: its own procedure (`how_to_update`) requires everything
   frozen at the old value -- the pass25 corpus evidence, the 122 frozen
   regression cases and the two Residual Assembler fixtures -- to be re-frozen

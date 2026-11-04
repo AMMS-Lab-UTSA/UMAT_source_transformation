@@ -88,7 +88,12 @@ def test_doctor_warns_when_the_installed_command_is_older_than_the_checkout(tmp_
     assert "no `all` or `jacobian` command" in text and "version 0.9.0 is older" in text
     assert "pip install -e" not in text and "umat-oti ..." not in text, "the remedy is its own line"
     remedies = [t for s, t in findings if s == "fix"]
-    assert len(remedies) == 1 and len(remedies[0]) < 220
+    # The remedy names this checkout twice; its length without them must not
+    # depend on where the repository was cloned.
+    from umat_oti.app.front_door import checkout_root
+    checkout = str(checkout_root() or "")
+    assert len(remedies) == 1
+    assert len(remedies[0].replace(checkout, "<checkout>") if checkout else remedies[0]) < 220
     assert "pip install -e" in remedies[0] and "umat-oti ..." in remedies[0]
     assert findings.index(("fix", remedies[0])) == findings.index(("warn", text)) + 1
 
