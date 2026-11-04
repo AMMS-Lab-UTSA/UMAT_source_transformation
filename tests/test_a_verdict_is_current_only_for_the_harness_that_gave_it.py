@@ -10,8 +10,6 @@ own fingerprint, rows record it, and the registry can require it.
 """
 from __future__ import annotations
 
-import importlib.util
-import sys
 from pathlib import Path
 
 import pytest
@@ -22,15 +20,6 @@ from umat_oti.store.transform_store import (
 
 REPO = Path(__file__).resolve().parents[1]
 PACKAGE = REPO / "src" / "umat_oti"
-
-
-def _registry():
-    spec = importlib.util.spec_from_file_location(
-        "build_corpus_registry_under_test", REPO / "tools" / "build_corpus_registry.py")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 def _copy_package(tmp_path: Path) -> Path:

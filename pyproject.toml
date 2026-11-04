@@ -43,7 +43,7 @@ classifiers = [
 dependencies = [
 	"numpy>=1.26",
 	"pandas>=2.0",
-	"streamlit>=1.30",
+	"streamlit>=1.61",
 	"sympy>=1.12",
 ]
 

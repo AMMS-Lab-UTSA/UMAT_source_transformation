@@ -16,5 +16,10 @@ PROPS = 179800, 0.3, 318.5, 100.7, 8, 0, 200, 11608.2, 145.2, 1026.3, 4.7
 (E, nu, sigma_y0, Q_inf, b, D_inf, a, then C_k, gamma_k for two backstresses),
 NTENS = 3, NSTATV = 10.
 
+The contract says `kinematics: small_strain` on purpose. The CI case verifies the
+routine at material-point level (primal and DDSDDE against the original build);
+it does not reproduce the author's structural analysis, whose deck runs with
+NLGEOM=YES.
+
 The file is the source of the CI-tier regression case
 `umat/cases/umat-oti-curated--uvc-planestress/` (THIRD_PARTY_NOTICES.md 2e).

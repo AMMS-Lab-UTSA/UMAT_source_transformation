@@ -8,6 +8,8 @@ tools yourself.
 
 > **1.2.1 note.** The corpus-campaign builders this document cites (`tools/build_corpus_manifest.py`, `tools/build_corpus_registry.py` and the other acquisition and registry tools) are not shipped from 1.2.1 on; they are in the history at tag v1.2.0. The committed outputs under `paper_results/corpus/` are unchanged and remain the record.
 
+> **1.2.1 note on the compile gate.** From 1.2.1 a transform whose emitted code does not compile is a failed transform (`compile_failed`), not a transform with a failed compile. A corpus pass run at 1.2.1 or later (pass27 on) therefore counts a source that only gfortran rejects as `compile_failed` at the transform stage, where pass25 and pass26 counted it as transformed. Compare those stage counts across passes with that in mind.
+
 ## Current result
 
 The whole corpus of 419 acquired sources was re-transformed and re-verified in
