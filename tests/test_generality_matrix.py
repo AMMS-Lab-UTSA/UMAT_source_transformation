@@ -143,4 +143,35 @@ def test_matrix_regenerates_identically_and_leaves_published_evidence_alone(tmp_
     assert MATRIX.read_text(encoding="utf-8") == before, \
         "the published matrix was modified by a test"
     regenerated = (tmp_path / "generality_matrix.csv").read_text(encoding="utf-8")
-    assert regenerated == before
+
+    # The archive predates two changes to the shipped sources, and only those
+    # may show in a regeneration:
+    # * the Dunne & Petrinic book routines are no longer shipped
+    #   (THIRD_PARTY_NOTICES.md 2b), so their rows cannot be regenerated;
+    # * the MIT notice was restored at the top of the three ABAQUS-US
+    #   adaptations (6fc0283a, 28 comment lines), which changes their content
+    #   identity and their line count and nothing else.
+    # Every other row must come back byte for byte, and nothing may appear
+    # that the archive does not hold.
+    import io
+
+    def by_path(text):
+        return {row["source_path"]: row for row in csv.DictReader(io.StringIO(text))}
+
+    archived, again = by_path(before), by_path(regenerated)
+    assert before.splitlines()[0] == regenerated.splitlines()[0]
+    assert set(again) <= set(archived)
+    book = ("elasticity/", "plasticity_exp/", "plasticity_imp/", "spin/", "visco/")
+    for path in set(archived) - set(again):
+        assert path.startswith("UMATs/UMATs/ICP/") and path.split("ICP/")[1].startswith(book), path
+        assert not (REPO_ROOT / path).is_file(), path
+    notice_restored = {"parameter_sensitivity/models/sweep_eco/umat.for",
+                       "parameter_sensitivity/models/sweep_real_ECL_TEMP/umat.for",
+                       "parameter_sensitivity/models/sweep_real_PCO/umat.for"}
+    for path, row in again.items():
+        expected = dict(archived[path])
+        if path in notice_restored:
+            assert int(row["source_lines"]) == int(expected["source_lines"]) + 28, path
+            expected["source_lines"] = row["source_lines"]
+            expected["canonical_source_id"] = row["canonical_source_id"]
+        assert row == expected, path

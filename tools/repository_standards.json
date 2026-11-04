@@ -86,6 +86,14 @@
     {
       "prefix": "paper_results/frozen/",
       "reason": "a frozen snapshot is a byte-exact copy of evidence files that are already exempt above, and it records a SHA-256 for each one. Rewriting a path inside a snapshot would both falsify the archived record and break the checksums that let a reviewer verify the snapshot from a clean clone. The paths it carries come from the Slurm logs of the original HPC runs, not from anything a reproduction reads as input."
+    },
+    {
+      "prefix": "verification/softwarex/evidence/",
+      "reason": "Byte-for-byte archives of the SoftwareX verification runs, each fixed by its SHA256SUMS; the paths are those of the machines the runs used. Editing them would break the checksums and falsify the record; nothing reads them as input."
+    },
+    {
+      "prefix": "verification/softwarex/timing-v11/",
+      "reason": "Archived timing benchmark of the V11 manuscript, run in a sandbox checkout under a home directory; its README states that the scripts hard-code that path. A record of a run, not an input to any reproduction."
     }
   ]
 }

@@ -81,7 +81,7 @@ therefore also covered by the MIT notice below:
 `parameter_sensitivity/models/sweep_real_ECL_TEMP/umat.for`,
 `parameter_sensitivity/models/sweep_real_PCO/umat.for` and
 `parameter_sensitivity/models/sweep_eco/umat.for`. (Until 1.2.0 the
-regression case `umat/cases/umat-oti-curated--sweep-real-pco/` also carried a
+regression case umat-oti-curated--sweep-real-pco also carried a
 copy of `sweep_real_PCO/umat.for`; that case was removed in 1.2.1.)
 
 MIT is GPL-compatible; the files are distributed as part of the GPL-3.0-only
