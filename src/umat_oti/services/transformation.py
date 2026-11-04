@@ -273,9 +273,31 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
         else:
             manifest["execution"]["compilation"] = compile_result
         manifest_path = write_manifest(manifest, out_dir / "derivative_manifest.json")
+    # A transform whose emitted code does not compile has not succeeded,
+    # whatever its semantic checks say: UVCplanestress's parameter build once
+    # failed to compile while its report read "25/25 passed" and SUCCESS.
+    # When a compile was requested and a compiler was there, its outcome is
+    # one of the checks and gates success; the report files say so too.
+    transform_success = result.success
+    status_category = _classify_outcome(result)
+    if result.success and compile_generated and compile_result.get("status") != "compiler_unavailable":
+        compiled = compile_result.get("status") == "compiled"
+        report = result.report if isinstance(result.report, dict) else {}
+        report.setdefault("semantic_checks", {})["emitted_code_compiles"] = compiled
+        if not compiled:
+            transform_success = False
+            status_category = "compile_failed"
+            report["success"] = False
+            message = ("the emitted code does not compile (" + str(compile_result.get("status"))
+                       + "); see compile_result.stderr in the summary")
+            report.setdefault("blockers", []).append(message)
+            result.blockers.append(message)
+        if result.report_path:
+            from umat_oti.transform.source_transform import _write_report
+            _write_report(Path(result.report_path).parent, report)
     summary.update(
         {
-            "transform_success": result.success,
+            "transform_success": transform_success,
             "blockers": result.blockers,
             "warnings": result.warnings,
             "report_path": str(result.report_path or ""),
@@ -293,7 +315,7 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
                 "combined_sensitivities": combined_interface,
             },
             "semantic_checks": result.report.get("semantic_checks", {}),
-            "status_category": _classify_outcome(result),
+            "status_category": status_category,
         }
     )
     compiled_ok = not compile_generated or compile_result.get("status") == "compiled"
@@ -438,14 +460,38 @@ def _generate_parameter_sensitivity_artifact(
         text = source_path.read_text(encoding="utf-8")
         parsed_routines = parse_subroutines(logical_lines_from_text(text, detect_source_form(source_path, text)))
         routine = next((routine for routine in parsed_routines if routine.name.upper() == selected.upper()), None)
-        if routine is None or [name.upper() for name in routine.args] != expected:
+        # The 36th dummy is KSTEP in the classic interface and JSTEP(4) in the
+        # current one; the driver emitter declares whichever extent the source
+        # gives it, so either name is the standard order.
+        jstep = expected[:35] + ["JSTEP"] + expected[36:]
+        if routine is None or [name.upper() for name in routine.args] not in (expected, jstep):
             return {"status": "not_generated", "reason": "Material-point driver requires the standard UMAT argument order; call the combined entry with the source's own arguments."}
         from umat_oti.corpus.cli import _write_aba_param_stub
 
         _write_aba_param_stub(out_dir.parent)
         out_dir.mkdir(parents=True, exist_ok=True)
         driver_path = out_dir / "ps_driver.f90"
-        driver_path.write_text(_emit_driver(contract, "", "", combined_entry=combined_interface["entry_routine"]), encoding="utf-8")
+        # A standalone build has no Abaqus runtime: XIT, the one utility that
+        # can be stubbed faithfully, is defined beside the driver (as the
+        # separate parameter-sensitivity build does), so a source that calls
+        # it links. A utility that cannot be stubbed is a named refusal.
+        from umat_oti.transform.parameter_sensitivity_transform import (
+            _STUBBABLE_UTILITIES, UnsupportedAbaqusUtilityError, _required_utility_stubs)
+        # Asked of what the build compiles (the transform supplies OTI bodies
+        # of utilities such as ROTSIG), not of the author's text alone.
+        built = out_dir.parent
+        order = built / "compile_order.txt"
+        names = (order.read_text(encoding="utf-8").split() if order.is_file() else [])
+        built_text = "\n".join(
+            (built / name).read_text(encoding="utf-8", errors="replace")
+            for name in names if (built / name).is_file()) or text
+        try:
+            stubs = _required_utility_stubs(built_text)
+        except UnsupportedAbaqusUtilityError as exc:
+            return {"status": "not_generated", "reason": str(exc)}
+        driver_path.write_text(
+            _emit_driver(contract, "", "", combined_entry=combined_interface["entry_routine"])
+            + "".join("\n" + _STUBBABLE_UTILITIES[name] for name in stubs), encoding="utf-8")
         makefile = out_dir / "Makefile"
         makefile.write_text(_combined_driver_makefile(out_dir.parent / "compile_hint.sh"), encoding="utf-8")
         artifact = {

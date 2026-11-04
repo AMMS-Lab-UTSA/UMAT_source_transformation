@@ -424,6 +424,9 @@ def transform_umat_to_oti_from_config(
         # OTI type here, on the unwrapped text whose CALLs are single lines.
         lifted_helper_text = wrap_free_form(_value_actuals_made_hypercomplex(
             lifted_helpers.source, "free", oti_helper_dummies, lifted=True))
+        array_interfaces = _array_valued_function_interfaces(lifted_helpers.source)
+        if array_interfaces:
+            config = {**config, "_otis_array_function_interfaces": array_interfaces}
 
     from umat_oti.transform.binary32 import BINARY32_CONTEXT
     _binary32_typing = _selected_routine_typing(source_text, selected_umat, source_file)
@@ -2560,6 +2563,31 @@ def _variable_shapes(config: dict[str, Any], mappings: dict[str, str], ntens: in
     return shapes
 
 
+def _host_contains_line(parsed: ParsedFortranSource | None, selected_umat: str) -> int:
+    """The line of the selected routine's CONTAINS statement, or 0 when it has none.
+
+    The parser keeps internal procedures inside their host, so the host's
+    declarations and lines include theirs. Everything from this line on
+    belongs to other scoping units: a name declared there is a different
+    entity from the same name in the host.
+    """
+    if parsed is None:
+        return 0
+    span = _selected_routine_span(parsed, selected_umat)
+    if not span:
+        return 0
+    lines = parsed.text.splitlines()
+    return next(
+        (number for number in range(span[0], min(span[1], len(lines)) + 1)
+         if re.match(r"^\s*CONTAINS\s*$", _executable_text(lines[number - 1]), re.IGNORECASE)),
+        0)
+
+
+def _in_internal_procedure(line_numbers, contains_line: int) -> bool:
+    """True when a statement lies after the host's CONTAINS (another scoping unit)."""
+    return bool(contains_line) and bool(line_numbers) and min(line_numbers) > contains_line
+
+
 def _with_the_routines_own_shapes(
     shapes: dict[str, str], parsed: ParsedFortranSource | None, selected_umat: str,
 ) -> dict[str, str]:
@@ -2586,7 +2614,10 @@ def _with_the_routines_own_shapes(
     if routine is None:
         return shapes
     result = dict(shapes)
+    contains_line = _host_contains_line(parsed, selected_umat)
     for declaration in routine.declarations:
+        if _in_internal_procedure(declaration.line_numbers, contains_line):
+            continue
         for entity in declaration.entities:
             if not entity.dimensions or not entity.name.isidentifier():
                 continue
@@ -3843,6 +3874,7 @@ def _transform_source_text(
                         for name, sites in mirrored_allocations.items() if sites},
                     persisting_variables=persisting_variables,
                     dummy_arguments=_selected_routine_dummies(parsed, selected_umat),
+                    function_interfaces=config.get("_otis_array_function_interfaces") or {},
                 )
             )
             if data_constant_shadows:
@@ -4571,6 +4603,59 @@ def _persists(name: str, persisting: set[str] | None) -> bool:
     return "*" in persisting or str(name).upper() in persisting
 
 
+_LIFTED_FUNCTION_RE = re.compile(
+    r"^\s*(?:(?:pure|elemental|recursive)\s+)*function\s+(\w+)\s*\(([^)]*)\)\s*(?:result\s*\(\s*(\w+)\s*\))?\s*$",
+    re.IGNORECASE)
+
+
+def _array_valued_function_interfaces(lifted_source: str) -> dict[str, list[str]]:
+    """Interface bodies for the lifted functions that return an array.
+
+    Keyed by the lifted name (upper case). Each body is the function header,
+    its USE and IMPLICIT statements, the declarations of its dummies and its
+    result (entities of other names dropped), and END FUNCTION. Only an
+    array-valued function needs one; a scalar one keeps its EXTERNAL.
+    """
+    result: dict[str, list[str]] = {}
+    lines = lifted_source.splitlines()
+    index = 0
+    while index < len(lines):
+        match = _LIFTED_FUNCTION_RE.match(lines[index])
+        if not match:
+            index += 1
+            continue
+        name = match.group(1).upper()
+        dummies = {a.strip().upper() for a in match.group(2).split(",") if a.strip()}
+        result_name = (match.group(3) or match.group(1)).upper()
+        wanted = dummies | {result_name}
+        body = [lines[index].strip()]
+        is_array = False
+        index += 1
+        while index < len(lines) and not re.match(r"^\s*end\s*function\b", lines[index], re.IGNORECASE):
+            text = lines[index].strip()
+            index += 1
+            if re.match(r"^(use|implicit)\b", text, re.IGNORECASE):
+                body.append(text)
+                continue
+            if "::" not in text or re.search(r"\bparameter\b", text.split("::")[0], re.IGNORECASE):
+                continue
+            spec, entities = text.split("::", 1)
+            kept = []
+            for item in split_top_level(entities):
+                entity = parse_entity(item)
+                if entity.upper_name in wanted:
+                    kept.append(item.strip())
+                    if entity.upper_name == result_name and entity.dimensions:
+                        is_array = True
+            if kept:
+                body.append(f"{spec.strip()} :: {', '.join(kept)}")
+        body.append(f"END FUNCTION {match.group(1)}")
+        if is_array:
+            result[name] = body
+        index += 1
+    return result
+
+
 def _declaration_lines(
     form: str,
     type_name: str,
@@ -4582,6 +4667,7 @@ def _declaration_lines(
     allocatable_shadow_ranks: dict[str, int] | None = None,
     persisting_variables: set[str] | None = None,
     dummy_arguments: set[str] | None = None,
+    function_interfaces: dict[str, list[str]] | None = None,
 ) -> list[str]:
     lines = [_stmt(form, "INTEGER :: OTI_I, OTI_J, OTI_HI, OTI_HJ, OTI_HK")]
     dummies = {str(name).upper() for name in (dummy_arguments or set())}
@@ -4596,7 +4682,18 @@ def _declaration_lines(
         suffix = f"({shape})" if shape else ""
         lines.append(_stmt(form, f"REAL(8) :: {name}{suffix}"))
     external = {str(name).upper() for name in (external_functions or set())}
+    interfaces = {str(k).upper(): v for k, v in (function_interfaces or {}).items()}
     for name in shadow_variables:
+        # A lifted function whose result is an array needs an explicit
+        # interface at the call: through EXTERNAL alone its result is taken
+        # for a scalar (UVCplanestress: A_MAT_OTI = MATINV3_OTI(A_MAT_OTI)
+        # read one hypercomplex value and crashed). Its interface body is
+        # restated from the lifted function's own header and declarations.
+        if name.upper() in external and f"{name.upper()}_OTI" in interfaces:
+            lines.append(_stmt(form, "INTERFACE"))
+            lines.extend(_stmt(form, text) for text in interfaces[f"{name.upper()}_OTI"])
+            lines.append(_stmt(form, "END INTERFACE"))
+            continue
         # A name the source allocates itself gets an allocatable shadow with
         # the same rank and no extent; the extent arrives at the ALLOCATE
         # written beside the source's own, the only place it is known.
@@ -7876,9 +7973,18 @@ def _shapes_declared_in_selected_routine(
         #: its arrays in a DIMENSION statement rather than on the type
         #: declaration declares them just as much.
         declared_here: set[str] = set()
+        # Internal procedures (after CONTAINS) are other scoping units and are
+        # left out below, both their declarations and their lines:
+        # UVCplanestress's UMAT has scalars a and b, and its internal function
+        # matinv3(A) result(B) declares A(3,3) and B(3,3). Reading those as the
+        # host's gave the host's shadows A_OTI(3,3) and B_OTI(3,3), and the
+        # emitted file failed to compile on EXP(-B_OTI*EP_EQ_OTI).
         interface_lines = _interface_block_line_numbers(routine)
+        contains_line = _host_contains_line(parsed, selected_umat)
         for declaration in routine.declarations:
             if interface_lines.intersection(declaration.line_numbers):
+                continue
+            if _in_internal_procedure(declaration.line_numbers, contains_line):
                 continue
             for entity in declaration.entities:
                 if entity.dimensions:
@@ -7886,6 +7992,8 @@ def _shapes_declared_in_selected_routine(
                     declared_here.add(entity.upper_name)
         for line in routine.lines:
             if interface_lines.intersection(line.line_numbers):
+                continue
+            if _in_internal_procedure(line.line_numbers, contains_line):
                 continue
             match = re.match(r"^\s*dimension\s+(.+)$", line.text, flags=re.IGNORECASE)
             if not match:
@@ -7915,6 +8023,8 @@ def _shapes_declared_in_selected_routine(
         # the type declarations missed arrays named in a DIMENSION statement
         # and cost two sources that were transforming.
         span = _selected_routine_span(parsed, selected_umat)
+        if span and contains_line:
+            span = (span[0], contains_line - 1)
         body = "\n".join(_executable_text(line) for line
                          in parsed.text.splitlines()[span[0] - 1:span[1]]) if span else ""
         if body:
