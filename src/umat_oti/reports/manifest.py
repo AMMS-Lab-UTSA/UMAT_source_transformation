@@ -106,7 +106,7 @@ def build_manifest(
     """
     source_path = Path(source_path)
     generated_at = generated_at or _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
-    git_commit = git_commit or _infer_git_commit(source_path)
+    git_commit = git_commit or source_git_commit(source_path)
 
     request_records = [_request_record(r) for r in requests]
 
@@ -210,30 +210,42 @@ def _recovery_factors_table(request_records: list[dict[str, Any]]) -> dict[str, 
     return {r["id"]: r.get("recovery_factor", 1) for r in request_records}
 
 
-def _infer_git_commit(source_path: Path) -> Optional[str]:
-    if not source_path.is_file():
-        return None
-    if shutil.which("git") is None:
+def source_git_commit(source_path: Path | str) -> Optional[str]:
+    """The commit of the git repository that tracks ``source_path``, or None.
+
+    None when the file does not exist, git is unavailable, the file is not in
+    a git work tree, or the work tree does not track it. The last case matters:
+    a copy staged in an output directory that happens to sit inside some other
+    repository (a gitignored workspace, a resolved closure) would otherwise be
+    stamped with that repository's HEAD, a commit that does not contain it.
+    """
+    source_path = Path(source_path)
+    if not source_path.is_file() or shutil.which("git") is None:
         return None
     try:
+        tracked = subprocess.run(
+            ["git", "-C", str(source_path.parent), "ls-files", "--error-unmatch",
+             "--", source_path.name],
+            check=False, capture_output=True, text=True, timeout=5,
+        )
+        if tracked.returncode != 0:
+            return None
         proc = subprocess.run(
             ["git", "-C", str(source_path.parent), "rev-parse", "HEAD"],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=5,
+            check=False, capture_output=True, text=True, timeout=5,
         )
     except (OSError, subprocess.SubprocessError):
         return None
     if proc.returncode != 0:
         return None
-    sha = proc.stdout.strip()
-    return sha or None
+    return proc.stdout.strip() or None
+
 
 
 __all__ = [
     "MANIFEST_SCHEMA",
     "build_manifest",
     "sha256_of_file",
+    "source_git_commit",
     "write_manifest",
 ]

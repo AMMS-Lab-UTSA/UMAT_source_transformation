@@ -36,7 +36,7 @@ from umat_oti.core.derivative_request import (
 from umat_oti.core.transformation_anchors import (
     anchor_completion_status, merge_completed_anchors_into_config,
 )
-from umat_oti.reports.manifest import build_manifest, write_manifest
+from umat_oti.reports.manifest import build_manifest, source_git_commit, write_manifest
 from umat_oti.fortran.scanner import analyze_fortran_source
 from umat_oti.transform.parameter_sensitivity_transform import (
     GenericPSContract,
@@ -245,6 +245,9 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
         state_variables = _indexed_names(config.get("state_variables"), "statev_index")
         manifest = build_manifest(
             source_path=source_path,
+            # A resolved closure is a file this run wrote; the commit is the
+            # one that holds the entry file the author gave.
+            git_commit=source_git_commit(Path(closure["entry"]) if closure else source_path),
             entry_routine=str(source.get("selected_umat_name") or source.get("detected_umat_name") or "UMAT"),
             ntens=ntens,
             nstatv=int(driver.get("nstatv") or max((index for _, index in state_variables), default=0)),
