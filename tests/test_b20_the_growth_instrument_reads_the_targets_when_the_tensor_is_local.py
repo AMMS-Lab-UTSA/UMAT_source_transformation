@@ -88,27 +88,6 @@ def test_the_instrument_still_returns_never_measured_without_slots_or_when_the_t
     assert sorted(ex.growth_target_slots(unrelated)) == [7]
 
 
-def test_an_inferred_row_cannot_be_counted_fully_verified():
-    """The inferred finding is null, so the gate is null and the ladder cannot reach
-    verified; and the registry refuses a fully_verified row marked inferred."""
-    import build_corpus_registry as reg
-    finding = ex.growth_developed(_records(2.0), {}, total_time=10.0,
-                                  targets=ex.growth_target_slots(LOCAL_G))
-    assert finding.met is None
-    import verify_store_in_abaqus as vs
-    base = dict(material_found=True, support_ok=True, original_completed=True,
-                transformed_completed=True, primal_agrees=True, tangent_verified=True)
-    # the gate value the verification records for this finding is None -> not verified
-    assert vs.classify_stage(vs.StageEvidence(
-        **base, mechanically_informative=None)) == "informativeness_not_established"
-    # control: a MEASURED true still verifies
-    assert vs.classify_stage(vs.StageEvidence(
-        **base, mechanically_informative=True)) == "verified"
-    record = reg.Record(source_id="o__r/u.for", repository="o/r")
-    record.informativeness_evidence = "inferred_not_measured"
-    assert record.terminal_state != "fully_verified"
-
-
 def test_nothing_to_read_is_said_to_be_never_measured():
     finding = ex.growth_developed(_records(2.0), {}, total_time=10.0, targets={})
     assert finding.met is None and "never measured" in finding.reason

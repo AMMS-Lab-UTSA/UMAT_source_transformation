@@ -1,7 +1,7 @@
 """Which of a source's callees, modules and includes are published in its repository.
 
 THE RULE (B17 G3a, written before it was run; the same words are in the commit
-and in corpus_campaign/batches/B17/lovelace/RULE_G3a.md):
+and in the batch B17 campaign records):
 
     A callee that is not in the repository and not an Abaqus utility is
     external; one that is in the repository is resolved.

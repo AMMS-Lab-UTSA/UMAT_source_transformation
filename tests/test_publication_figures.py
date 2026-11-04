@@ -260,28 +260,3 @@ def test_a_figure_regenerates_byte_for_byte(tmp_path: Path):
             f"the {suffix} differs between two runs of the same figure")
 
 
-def test_a_blocker_is_not_classified_by_a_substring_of_a_stage_name():
-    """Blocker causes are matched by pattern, and stage names are prose too.
-
-    ``contract_constructed`` contains the word "construct", so a source held up
-    because no material vector exists for it was filed on the figure under
-    "Unsupported Fortran construct" -- a different, and wrong, explanation of
-    why the pipeline could not verify it.
-    """
-    sys.path.insert(0, str(REPO_ROOT / "tools" / "figures"))
-    from build_acquisition_figures import _classify  # noqa: PLC0415
-
-    contract = ("contract_constructed: the declared dimensions are too small "
-                "for what this source addresses: it needs NTENS >= 0 and, at "
-                "NTENS=6, NSTATV >= 125, but the contract declares NTENS=6 "
-                "and NSTATV=0")
-    assert _classify(contract) == "No established contract"
-
-    fortran = "transformed: unsupported Fortran construct in the entry routine"
-    assert _classify(fortran) == "Unsupported Fortran construct"
-
-    # And every cause must still be reachable by something, so a pattern that
-    # stops matching anything is visible rather than silently inert.
-    from build_acquisition_figures import CAUSES  # noqa: PLC0415
-    assert len({label for label, _, _ in CAUSES}) == len(CAUSES), (
-        "two causes share a label; the figure would merge them")

@@ -16,7 +16,7 @@ For one corpus entry and one loading path this module
    routine (:mod:`.fd`, decision D-4) and writes one record per
    (UMAT, feature, path).
 
-Definitions (see ``corpus_campaign/batches/B1/gauss/DESIGN.md``):
+Definitions (see ``the batch B1 campaign records``):
 
 * local  d(.)_{n+1}/dp at fixed incoming (STRESS_n, STATEV_n, STRAN_n, DSTRAN,
   DFGRD0/1, TIME, energies): one increment.
@@ -67,13 +67,13 @@ WORKSPACE = Path(os.environ.get("UMAT_OTI_WORKSPACE")
 REGISTRY = Path(__file__).resolve().parents[3] / "paper_results/corpus/corpus_registry.json"
 FAMILIES = WORKSPACE / "corpus_run/material_families_checked_E.json"
 PASS16 = WORKSPACE / "corpus_run/pass16/results/store_verification.jsonl"
-#: Reviewer plans (D-19a rev 2 G8/G9): ``<dir>/<registry key>/council_plan.json``
-#: (``experiment.CouncilPlan.as_dict``). Read when the verification record of
+#: Reviewer plans (D-19a rev 2 G8/G9): ``<dir>/<registry key>/reviewer_plan.json``
+#: (``experiment.ReviewerPlan.as_dict``). Read when the verification record of
 #: a key carries no manifest.
-COUNCIL_PLANS = WORKSPACE / "corpus_campaign/council_plans"
-COUNCIL_DRIVER_POINT = ("council plan: a single generated element at the origin; there is "
+REVIEWER_PLANS = WORKSPACE / "corpus_campaign/reviewer_plans"
+REVIEWER_DRIVER_POINT = ("reviewer plan: a single generated element at the origin; there is "
                         "no author mesh, so COORDS = 0 and NOEL = NPT = 1 are the experiment's "
-                        "own (no position-dependent source is planned by the council)")
+                        "own (no position-dependent source is planned by the reviewer)")
 STORE = WORKSPACE / "transform_store"
 #: Work directories of the Abaqus pass whose records are PASS16 (one
 #: ``<key>/original/`` per source); None = ``PASS16``'s ``../../work``.
@@ -323,27 +323,29 @@ def _pass16_record(key: str) -> Optional[dict]:
     return None
 
 
-def _council_manifest(key: str, set_id: str) -> tuple[dict, dict]:
+def _reviewer_manifest(key: str, set_id: str) -> tuple[dict, dict]:
     """``(manifest dict, reviewer plan dict)`` of one set of a reviewer plan."""
-    path = Path(COUNCIL_PLANS) / key / "council_plan.json"
+    from umat_oti.corpus_features.legacy_names import existing_path, upgrade
+
+    path = existing_path(Path(REVIEWER_PLANS) / key / "reviewer_plan.json")
     if not path.is_file():
         return {}, {}
-    council = json.loads(path.read_text())
-    for entry in council.get("sets") or ():
+    reviewer = upgrade(json.loads(path.read_text()))
+    for entry in reviewer.get("sets") or ():
         if not set_id or str(entry.get("set_id")) == set_id:
-            return ((entry.get("plan") or {}).get("experiment") or {}).get("manifest") or {}, council
-    return {}, council
+            return ((entry.get("plan") or {}).get("experiment") or {}).get("manifest") or {}, reviewer
+    return {}, reviewer
 
 
-def _council_driver_point(council: dict) -> dict:
-    placement = council.get("placement") or {}
+def _reviewer_driver_point(reviewer: dict) -> dict:
+    placement = reviewer.get("placement") or {}
     point = placement.get("driver_point")
     if point:
         return {"noel": int(point.get("noel", 1)), "npt": int(point.get("npt", 1)),
                 "coords": [float(c) for c in point["coords"]],
-                "provenance": (f"council plan: the first integration point of the element "
+                "provenance": (f"reviewer plan: the first integration point of the element "
                                f"placed in the documented geometry ({placement.get('where', '')})")}
-    return dict(_ZERO_POINT, provenance=COUNCIL_DRIVER_POINT)
+    return dict(_ZERO_POINT, provenance=REVIEWER_DRIVER_POINT)
 
 
 def static_scan_override_check(entry: "CorpusEntry", build, work: Path, increments: list,
@@ -388,7 +390,7 @@ def resolve_entry(key: str) -> CorpusEntry:
 
     ``key`` may carry a reviewer parameter set, ``<registry key>#<set id>``
     (D-21: each set is its own experiment). Without an Abaqus manifest for
-    the key, the reviewer plan (:data:`COUNCIL_PLANS`) supplies it, and the
+    the key, the reviewer plan (:data:`REVIEWER_PLANS`) supplies it, and the
     entry carries both origins (material data, experiment)."""
     key, _hash, set_id = str(key).partition("#")
     registry = json.loads(REGISTRY.read_text())
@@ -405,34 +407,34 @@ def resolve_entry(key: str) -> CorpusEntry:
     # element/material. experiment.manifest is the fallback only.
     manifest = (verification.get("manifest")
                 or (verification.get("experiment") or {}).get("manifest") or {})
-    council: dict = {}
+    reviewer: dict = {}
     if set_id or not manifest:
-        council_manifest, council = _council_manifest(key, set_id)
-        if council and council.get("refusal_code"):
-            raise LookupError(f"{key}: the council plan is refused "
-                              f"({council['refusal_code']}): {council.get('refusal', '')[:200]}")
-        planned = [str(e.get("set_id")) for e in council.get("sets") or ()]
-        if council and not set_id and len(planned) > 1:
-            raise LookupError(f"{key}: the council plan has {len(planned)} parameter sets "
+        reviewer_manifest, reviewer = _reviewer_manifest(key, set_id)
+        if reviewer and reviewer.get("refusal_code"):
+            raise LookupError(f"{key}: the reviewer plan is refused "
+                              f"({reviewer['refusal_code']}): {reviewer.get('refusal', '')[:200]}")
+        planned = [str(e.get("set_id")) for e in reviewer.get("sets") or ()]
+        if reviewer and not set_id and len(planned) > 1:
+            raise LookupError(f"{key}: the reviewer plan has {len(planned)} parameter sets "
                               f"({', '.join(planned)}); name one, {key}#<set>: each is its "
                               f"own experiment (D-21)")
-        if council_manifest:
-            manifest = council_manifest
+        if reviewer_manifest:
+            manifest = reviewer_manifest
     origins = {}
-    if council:
-        origins = {"material_data_origin": council.get("material_data_origin", ""),
-                   "experiment_origin": council.get("experiment_origin", "council_deck"),
-                   "council_plan": str(Path(COUNCIL_PLANS) / key / "council_plan.json"),
-                   "council_set": set_id or str((council.get("sets") or [{}])[0].get("set_id")),
-                   "council_sets": [str(e.get("set_id")) for e in council.get("sets") or ()],
-                   **({"branch_coverage": council["branch_coverage"]}
-                      if council.get("branch_coverage") else {}),
-                   **({"domain_not_enforced": council["domain_not_enforced"]}
-                      if council.get("domain_not_enforced") else {}),
-                   **({"static_scan_overrides": council["static_scan_overrides"]}
-                      if council.get("static_scan_overrides") else {}),
-                   **({"placement": council["placement"]}
-                      if council.get("placement") else {})}
+    if reviewer:
+        origins = {"material_data_origin": reviewer.get("material_data_origin", ""),
+                   "experiment_origin": reviewer.get("experiment_origin", "reviewer_deck"),
+                   "reviewer_plan": str(Path(REVIEWER_PLANS) / key / "reviewer_plan.json"),
+                   "reviewer_set": set_id or str((reviewer.get("sets") or [{}])[0].get("set_id")),
+                   "reviewer_sets": [str(e.get("set_id")) for e in reviewer.get("sets") or ()],
+                   **({"branch_coverage": reviewer["branch_coverage"]}
+                      if reviewer.get("branch_coverage") else {}),
+                   **({"domain_not_enforced": reviewer["domain_not_enforced"]}
+                      if reviewer.get("domain_not_enforced") else {}),
+                   **({"static_scan_overrides": reviewer["static_scan_overrides"]}
+                      if reviewer.get("static_scan_overrides") else {}),
+                   **({"placement": reviewer["placement"]}
+                      if reviewer.get("placement") else {})}
     elif verification.get("material_data_origin"):
         origins = {"material_data_origin": verification["material_data_origin"],
                    "experiment_origin": verification.get("experiment_origin", "author")}
@@ -462,8 +464,8 @@ def resolve_entry(key: str) -> CorpusEntry:
                         if verification.get("author_deck_periods") is not None
                         else None),
                     "activation_amplitude": record.get("activation_amplitude"),
-                    **({"documented_domain": council["documented_domain"]}
-                       if council.get("documented_domain") else {}),
+                    **({"documented_domain": reviewer["documented_domain"]}
+                       if reviewer.get("documented_domain") else {}),
                     "source_text": (CACHE / record["cache_path"]).read_text(errors="replace")
                     if (CACHE / record["cache_path"]).is_file() else ""},
         provenance={"registry": str(REGISTRY), "manifest": f"{PASS16} key={key}",
@@ -471,7 +473,7 @@ def resolve_entry(key: str) -> CorpusEntry:
                     "initial_state_from_user_subroutine":
                         bool(manifest.get("initial_state_from_user_subroutine")),
                     "terminal_state": record.get("terminal_state"), **origins},
-        driver_point=(_council_driver_point(council) if council
+        driver_point=(_reviewer_driver_point(reviewer) if reviewer
                       else experiment_driver_point(key)))
 
 
@@ -1675,8 +1677,8 @@ def _record(entry: CorpusEntry, feature: str, path, payload: dict, extra: dict) 
     record.update(extra)
     # the three tiers (D-19/D-21): set only off the author-deck tier, so the
     # author-deck records read as before
-    for name in ("material_data_origin", "experiment_origin", "council_set",
-                 "council_sets", "branch_coverage", "domain_not_enforced",
+    for name in ("material_data_origin", "experiment_origin", "reviewer_set",
+                 "reviewer_sets", "branch_coverage", "domain_not_enforced",
                  "static_scan_overrides", "placement"):
         if entry.provenance.get(name):
             record[name] = entry.provenance[name]

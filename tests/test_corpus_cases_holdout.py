@@ -3,7 +3,7 @@
 The review picks >= 5 verified author-deck sources blind; tools/corpus_holdout.py
 takes her list (it never picks). Their author-deck constants become
 harvest-format rows with origin holdout_from_author_deck, go through
-plan_council (on a deckless copy of the repository, so the source takes the
+plan_reviewer (on a deckless copy of the repository, so the source takes the
 reviewer route) and the reviewer deck, and through the same gates as the author
 deck. Pinned here:
 
@@ -104,7 +104,7 @@ def env(tmp_path, monkeypatch):
     pass_file.write_text("".join(json.dumps(v) + "\n" for v in verification))
     (tmp_path / "live_plans").mkdir()
     for name, value in (("REGISTRY", registry), ("PASS16", pass_file), ("CACHE", cache),
-                        ("COUNCIL_PLANS", tmp_path / "live_plans"),
+                        ("REVIEWER_PLANS", tmp_path / "live_plans"),
                         ("STORE", tmp_path / "no_store"), ("FAMILIES", tmp_path / "no.json")):
         monkeypatch.setattr(H, name, value)
     monkeypatch.setattr(ho, "CURRENT_RECORDS", pass_file)
@@ -113,7 +113,7 @@ def env(tmp_path, monkeypatch):
 
 
 def selection(path: Path, keys=KEYS[:5], **over) -> Path:
-    payload = {"template": "strain-driven", "selected_by": "vera", "blind": True,
+    payload = {"template": "strain-driven", "selected_by": "reviewer", "blind": True,
                "date": "2026-10-03", "keys": list(keys), **over}
     path.write_text(json.dumps(payload))
     return path
@@ -170,7 +170,7 @@ def test_the_hold_out_rows_and_plans(env):
             problems, eligible = module.check_row(row, validator)
             assert eligible and problems and all("material_data_origin" in p
                                                  for p in problems)
-        plan = json.loads((prepared["plans"] / row["key"] / "council_plan.json").read_text())
+        plan = json.loads((prepared["plans"] / row["key"] / "reviewer_plan.json").read_text())
         # ... in the deckless copy it cannot, so the source takes the reviewer route
         assert plan["route"] == "no_deck_in_repository" and not plan["refusal"], plan["refusal"]
         manifest = plan["sets"][0]["plan"]["experiment"]["manifest"]
@@ -195,15 +195,15 @@ def _gate(flip: str = ""):
 def test_one_injected_verdict_flip_withdraws_the_template(env):
     prepared = ho.prepare(KEYS[:5], env / "out")
     held = ho.judge("strain-driven", KEYS[:5], prepared["plans"], _gate())
-    assert held["status"] == "held_for_vera_review" and held["disagreements"] == []
+    assert held["status"] == "held_for_review" and held["disagreements"] == []
     flipped = ho.judge("strain-driven", KEYS[:5], prepared["plans"], _gate(flip=KEYS[2]))
     assert flipped["status"] == "withdrawn" and flipped["disagreements"] == [KEYS[2]]
     assert [s["agree"] for s in flipped["sources"]] == [True, True, False, True, True]
 
 
-def test_a_refused_council_plan_is_a_disagreement(env):
+def test_a_refused_reviewer_plan_is_a_disagreement(env):
     prepared = ho.prepare(KEYS[:5], env / "out")
-    path = prepared["plans"] / KEYS[0] / "council_plan.json"
+    path = prepared["plans"] / KEYS[0] / "reviewer_plan.json"
     plan = json.loads(path.read_text())
     path.write_text(json.dumps(dict(plan, refusal="x", refusal_code="needs_nstatv")))
     report = ho.judge("strain-driven", KEYS[:5], prepared["plans"], _gate())
@@ -213,19 +213,19 @@ def test_a_refused_council_plan_is_a_disagreement(env):
 def test_the_command_reports_a_flip_as_withdrawn(env):
     verdicts = env / "verdicts.jsonl"
     lines = [{"key": k, "side": "author", "verdict": "verified"} for k in KEYS[:5]]
-    lines += [{"key": k, "side": "council", "set_id": "author",
+    lines += [{"key": k, "side": "reviewer", "set_id": "author",
                "verdict": "failed" if k == KEYS[4] else "verified"} for k in KEYS[:5]]
     verdicts.write_text("".join(json.dumps(l) + "\n" for l in lines))
     out = env / "run"
     rc = ho.main(["--template", "strain-driven", "--selection",
-                  str(selection(env / "vera.json")), "--out", str(out),
+                  str(selection(env / "reviewer.json")), "--out", str(out),
                   "--gates", str(verdicts)])
     report = json.loads((out / "holdout_report.json").read_text())
     assert rc == 1 and report["status"] == "withdrawn" and report["disagreements"] == [KEYS[4]]
-    assert report["tier"] == "holdout" and report["selection"]["selected_by"] == "vera"
+    assert report["tier"] == "holdout" and report["selection"]["selected_by"] == "reviewer"
     # a verdict nobody produced is not an agreement
     verdicts.write_text("".join(json.dumps(l) + "\n" for l in lines[:5]))
-    assert ho.main(["--template", "strain-driven", "--selection", str(env / "vera.json"),
+    assert ho.main(["--template", "strain-driven", "--selection", str(env / "reviewer.json"),
                     "--out", str(env / "run2"), "--gates", str(verdicts)]) == 2
 
 
@@ -239,8 +239,8 @@ def test_the_routine_gate_runs_both_sides_of_a_toy_and_they_agree(env):
                       ho.routine_gate(env / "work"))
     source = report["sources"][0]
     assert source["author"]["verdict"] == "verified", source
-    assert source["council"]["verdict"] == "verified", source
-    assert report["status"] == "held_for_vera_review"
+    assert source["reviewer"]["verdict"] == "verified", source
+    assert report["status"] == "held_for_review"
 
 
 # ---------------------------------------------------------------------------
@@ -286,17 +286,17 @@ def _reads_source(env):
 
 def test_an_unreviewed_name_scan_hit_leaves_the_run_incomplete(env):
     _reads_source(env)
-    with pytest.raises(ho.SelectionError, match="needs a Vera-accepted reviewed static scan "
+    with pytest.raises(ho.SelectionError, match="needs a review-accepted reviewed static scan "
                                                 "for reads_temp, reads_coords_or_noel"):
         ho.prepare(KEYS[:5], env / "out")
 
 
-def test_the_reviewed_scan_decides_reads_as_for_a_council_row(env):
+def test_the_reviewed_scan_decides_reads_as_for_a_reviewer_row(env):
     _reads_source(env)
     review = env / "reviewed.jsonl"
     rows = [{"source_id": f"o{n}__r/src/umat.f", "reads_temp": False,
              "reads_coords_or_noel": False, "coords_note": "NOEL only in a WRITE",
-             "vera_accepted": True}
+             "review_accepted": True}
             for n in range(5)]
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
@@ -304,13 +304,13 @@ def test_the_reviewed_scan_decides_reads_as_for_a_council_row(env):
     for row in map(json.loads, prepared["rows_file"].read_text().splitlines()):
         assert row["reads_temp"] is False and row["reads_coords_or_noel"] is False
         assert "reviewed static scan (reviewed.jsonl)" in row["notes"]
-        plan = json.loads((prepared["plans"] / row["key"] / "council_plan.json").read_text())
+        plan = json.loads((prepared["plans"] / row["key"] / "reviewer_plan.json").read_text())
         assert not plan["refusal"], plan["refusal"]
     # a reviewed TEMP read is refused exactly as a reviewer row's is
     rows[0]["reads_temp"] = True
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     prepared = ho.prepare(KEYS[:5], env / "out2", reviewed_scans=[review])
-    plan = json.loads((prepared["plans"] / KEYS[0] / "council_plan.json").read_text())
+    plan = json.loads((prepared["plans"] / KEYS[0] / "reviewer_plan.json").read_text())
     assert plan["refusal_code"] == "needs_documented_temperature"
 
 
@@ -320,13 +320,13 @@ def test_an_accepted_override_reaches_the_hold_out_plan(env):
     rows = [{"source_id": f"o{n}__r/src/umat.f", "reads_temp": True,
              "reads_coords_or_noel": False,
              "static_scan_overrides": [{"flag": "reads_temp", "proposed": False,
-                                        "status": "accepted by Vera (D-21a e)",
+                                        "status": "accepted by the reviewer (D-21a e)",
                                         "static_evidence": "TEMP only in a WRITE"}],
-             "vera_accepted": True}
+             "review_accepted": True}
             for n in range(5)]
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
-    plan = json.loads((prepared["plans"] / KEYS[0] / "council_plan.json").read_text())
+    plan = json.loads((prepared["plans"] / KEYS[0] / "reviewer_plan.json").read_text())
     assert not plan["refusal"], plan["refusal"]
     assert plan["static_scan_overrides"][0]["flag"] == "reads_temp"
 
@@ -341,11 +341,11 @@ def test_under_five_sources_a_disagreement_withdraws_and_agreement_accepts_nothi
                        ho.FALSIFICATION_ONLY)
     assert flipped["status"] == "withdrawn" and flipped["disagreements"] == [KEYS[1]]
     verdicts = env / "verdicts.jsonl"
-    lines = [{"key": k, "side": side, "set_id": "author" if side == "council" else "",
-              "verdict": "verified"} for k in KEYS[:3] for side in ("author", "council")]
+    lines = [{"key": k, "side": side, "set_id": "author" if side == "reviewer" else "",
+              "verdict": "verified"} for k in KEYS[:3] for side in ("author", "reviewer")]
     verdicts.write_text("".join(json.dumps(l) + "\n" for l in lines))
     rc = ho.main(["--template", "strain-driven", "--selection",
-                  str(selection(env / "vera3.json", keys=KEYS[:3])), "--out", str(env / "r"),
+                  str(selection(env / "reviewer3.json", keys=KEYS[:3])), "--out", str(env / "r"),
                   "--gates", str(verdicts)])
     report = json.loads((env / "r" / "holdout_report.json").read_text())
     assert rc == 3 and report["status"] == "not_withdrawn_falsification_only"
@@ -353,7 +353,7 @@ def test_under_five_sources_a_disagreement_withdraws_and_agreement_accepts_nothi
 
 def _review_rows(**over):
     return [dict({"source_id": f"o{n}__r/src/umat.f", "reads_temp": False,
-                  "reads_coords_or_noel": False, "vera_accepted": True}, **over)
+                  "reads_coords_or_noel": False, "review_accepted": True}, **over)
             for n in range(5)]
 
 
@@ -361,23 +361,23 @@ def test_a_reviewed_row_vera_has_not_accepted_is_never_used(env):
     _reads_source(env)
     review = env / "reviewed.jsonl"
     rows = _review_rows()
-    rows[2]["vera_accepted"] = False
+    rows[2]["review_accepted"] = False
     rows[2]["registry_key"] = KEYS[2]
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     with pytest.raises(ho.SelectionError) as raised:
         ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
     message = str(raised.value)
-    assert f"reviewed.jsonl row {KEYS[2]} (o2__r/src/umat.f) is not accepted by Vera" in message
+    assert f"reviewed.jsonl row {KEYS[2]} (o2__r/src/umat.f) is not accepted by the reviewer" in message
     assert KEYS[0] not in message                   # the accepted rows are fine
-    # a row with no vera_accepted field is not accepted either
-    del rows[2]["vera_accepted"]
+    # a row with no review_accepted field is not accepted either
+    del rows[2]["review_accepted"]
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
-    with pytest.raises(ho.SelectionError, match="is not accepted by Vera"):
+    with pytest.raises(ho.SelectionError, match="is not accepted by the reviewer"):
         ho.prepare(KEYS[:5], env / "out2", reviewed_scans=[review])
     # even where the name scan alone would have cleared the source
     for n in range(5):
         (env / "cache" / f"o{n}__r/src/umat.f").write_text(SOURCE)
-    with pytest.raises(ho.SelectionError, match="is not accepted by Vera"):
+    with pytest.raises(ho.SelectionError, match="is not accepted by the reviewer"):
         ho.prepare(KEYS[:5], env / "out3", reviewed_scans=[review])
 
 
@@ -412,8 +412,8 @@ def test_a_reviewed_row_of_other_bytes_is_not_used(env):
 # ---------------------------------------------------------------------------
 def _verdicts(env, keys):
     path = env / "verdicts.jsonl"
-    lines = [{"key": k, "side": side, "set_id": "author" if side == "council" else "",
-              "verdict": "verified"} for k in keys for side in ("author", "council")]
+    lines = [{"key": k, "side": side, "set_id": "author" if side == "reviewer" else "",
+              "verdict": "verified"} for k in keys for side in ("author", "reviewer")]
     path.write_text("".join(json.dumps(l) + "\n" for l in lines))
     return path
 
@@ -493,7 +493,7 @@ def test_a_coords_reading_pick_is_placed_in_the_authors_mesh_off_every_zero_plan
     assert row["placement"]["origin"] == "author_published"
     assert row["placement"]["box"] == [[0.0, 0.0, 0.0], [1.0, 0.05, 0.001]]
     assert row["placement"]["avoid"] == {"x": 0.0, "y": 0.0, "z": 0.0}
-    plan = json.loads((prepared["plans"] / KEYS[0] / "council_plan.json").read_text())
+    plan = json.loads((prepared["plans"] / KEYS[0] / "reviewer_plan.json").read_text())
     assert not plan["refusal"], plan["refusal"]
     assert plan["placement"]["driver_point"]["noel"] == 1
     assert plan["placement"]["driver_point"]["npt"] == 1
@@ -522,7 +522,7 @@ def test_the_registry_and_the_records_must_come_from_the_same_pass(env):
 
 def test_a_growth_source_needing_a_total_time_leaves_under_r_h2(env):
     prepared = ho.prepare(KEYS[:5], env / "out")
-    path = prepared["plans"] / KEYS[0] / "council_plan.json"
+    path = prepared["plans"] / KEYS[0] / "reviewer_plan.json"
     assert "growth_needs_total_time" in ho.R_H2_REFUSALS
     plan = json.loads(path.read_text())
     assert not plan["refusal"]

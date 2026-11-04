@@ -5,7 +5,7 @@ stopped a corpus entry, and asserts behaviour: the stored output compiles in
 the job layout (``transform_all.job_layout_compile``), a value computed through
 the new OTI forms is the right value with the right derivative, or a
 refusal names the construct, the place and what to do. The census itself is
-``corpus_campaign/batches/B1/ada/census``.
+``the batch B1 campaign records``.
 """
 from __future__ import annotations
 

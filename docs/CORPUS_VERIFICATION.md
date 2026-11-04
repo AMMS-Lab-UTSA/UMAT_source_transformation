@@ -6,6 +6,8 @@ evidence behind them, and a named reason for every other source. Read it to
 understand what "verified" means for the corpus, or before running the corpus
 tools yourself.
 
+> **1.2.1 note.** The corpus-campaign builders this document cites (`tools/build_corpus_manifest.py`, `tools/build_corpus_registry.py` and the other acquisition and registry tools) are not shipped from 1.2.1 on; they are in the history at tag v1.2.0. The committed outputs under `paper_results/corpus/` are unchanged and remain the record.
+
 ## Current result
 
 The whole corpus of 419 acquired sources was re-transformed and re-verified in
@@ -211,7 +213,7 @@ unaffected (D-17: nothing on the Abaqus verification path imports
 `corpus_features`; rechecked by import). The 113 regression cases remain the
 frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
 against the new code. The script and its output are in
-`corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
+`the batch B7 campaign records_prepush/` (`equivalence.py`, `equivalence.out`).
 
 **Harness `cfd84cd2fe97e72b` -> `ac24441fcbbddb6b` (2026-10-15, not re-run).** The
 offline replays of an original (the D-12 init probe, the routine-level primal,
@@ -261,7 +263,7 @@ FAIL. They are not counted as verified, and the bar was not tuned to them.
 ### Per-family figures (D-11)
 
 Family figures use the code-reviewed classification
-(`corpus_campaign/batches/B3/scout/families_reviewed_B3.json`, column S1), not
+(`the batch B3 campaign records`, column S1), not
 keyword matching. Eligible denominators: growth 134, plasticity 29, damage 15,
 crystal plasticity 12, linear elastic 13, viscoelastic 11, concrete/geo 14,
 other 32. Every growth figure carries this footnote:

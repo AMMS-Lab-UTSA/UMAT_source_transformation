@@ -130,19 +130,6 @@ def test_the_gate_comes_before_the_derivative_work():
                     tangent_verified=False)) == verify.NOT_INFORMATIVE
 
 
-def test_the_new_state_is_ours_and_reaches_the_report_and_the_page():
-    from umat_oti.abaqus.terminal_states import FROM_STAGE, INTERNAL, kind_of
-
-    assert "experiment_not_informative" in INTERNAL
-    assert kind_of(FROM_STAGE["experiment_not_informative"]) == "internal"
-    gloss = (pathlib.Path(__file__).resolve().parents[1]
-             / "src" / "umat_oti" / "app" / "corpus_tab.py").read_text()
-    assert "experiment_not_informative" in gloss
-    report = (pathlib.Path(__file__).resolve().parents[1]
-              / "tools" / "corpus_report.py").read_text()
-    assert "experiment_not_informative" in report
-
-
 def test_the_measurement_reads_the_frozen_run_not_a_probe():
     tool = (pathlib.Path(__file__).resolve().parents[1]
             / "tools" / "verify_store_in_abaqus.py").read_text()

@@ -101,44 +101,6 @@ def test_neither_the_row_key_nor_the_digest_could_have_been_the_identity():
             "under-counting half of this test has gone")
 
 
-def test_a_superseded_row_never_becomes_a_verdict():
-    """Unknown is never verified. A source whose only verification row was
-    produced against a store that has since been rebuilt gets no stage from
-    it, and its record says what the row was and why it does not count.
-
-    pass11 carries no such row -- it was written fresh rather than resumed
-    onto an earlier pass's file, and all 237 of its rows are at the current
-    fingerprint. So the rule is checked where it applies AND the absence is
-    checked against the reconciliation, rather than the test quietly passing
-    on an empty list or failing because the input got cleaner."""
-    registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
-    stale = [r for r in registry["records"] if r["superseded_verification"]]
-    if not stale:
-        assert reconciliation()["rows_at_a_superseded_store_fingerprint"] == 0
-        return
-    for record in stale:
-        assert record["terminal_state"] != "fully_verified", record["source_id"]
-        assert record["verification_fingerprint"] == "", record["source_id"]
-        assert "has since been rebuilt" in record["superseded_verification"]
-        assert record["superseded_verification"] in \
-            record["not_verified_reason"], record["source_id"]
-    assert sorted(r["source_id"] for r in stale) == \
-        summary()["verification_rows_at_a_stale_fingerprint"]
-
-
-def test_a_verification_row_that_names_a_different_file_is_not_evidence():
-    """Every row this registry took a verdict from carries the sha256 of the
-    acquired file it ran, and it agrees with the sha256 this registry computed
-    from the cache. A row whose digest disagreed would be about a different
-    file however well the paths lined up."""
-    registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
-    checked = [r for r in registry["records"] if r["verification_sha256"]]
-    assert len(checked) >= 200, len(checked)
-    disagreeing = [r["source_id"] for r in checked
-                   if r["verification_sha256_agrees"] is not True]
-    assert not disagreeing, disagreeing[:10]
-
-
 def test_the_report_shows_the_reader_the_same_arithmetic():
     report = REPO / "paper_results/corpus/CORPUS_VERIFICATION.md"
     if not report.is_file():

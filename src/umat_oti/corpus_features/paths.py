@@ -44,7 +44,7 @@ class LoadingPath:
     regime: str                             # elastic|plastic|unload_reload|cyclic|relaxation|growth
     kinematics: str                         # small|finite
     increments: list = field(default_factory=list)
-    provenance: str = "gauss internal minimal path (Curie's loading_paths not importable)"
+    provenance: str = "gauss internal minimal path (loading_paths not importable)"
 
 
 def voigt_components(ndi: int, nshr: int) -> list:
@@ -98,20 +98,20 @@ def internal_paths(entry: Mapping) -> list:
 def paths_for(entry: Mapping) -> list:
     """The review's paths when available, the internal minimal ones otherwise."""
     try:
-        from umat_oti.corpus_features import loading_paths as curie   # type: ignore
+        from umat_oti.corpus_features import loading_paths as campaign_paths   # type: ignore
     except Exception:                                                   # noqa: BLE001
         return internal_paths(entry)
     try:
-        paths = list(curie.paths_for(entry))
+        paths = list(campaign_paths.paths_for(entry))
     except Exception as error:                                          # noqa: BLE001
         fallback = internal_paths(entry)
         for path in fallback:
-            path.provenance += f"; curie.paths_for raised {type(error).__name__}: {error}"
+            path.provenance += f"; campaign_paths.paths_for raised {type(error).__name__}: {error}"
         return fallback
     for path in paths:
         if not getattr(path, "provenance", ""):
             try:
-                path.provenance = "curie loading_paths.paths_for"
+                path.provenance = "loading_paths.paths_for"
             except Exception:                                           # noqa: BLE001
                 pass
     return paths

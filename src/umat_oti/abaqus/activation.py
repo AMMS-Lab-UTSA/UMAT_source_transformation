@@ -364,7 +364,7 @@ def statev_is_write_only(source_text: str) -> tuple[bool, str]:
     return True, "every executable STATEV mention is the target of an assignment"
 
 
-def council_informative(activation: Activation, *, family: str,
+def reviewer_informative(activation: Activation, *, family: str,
                         demanded_nstatv: int, finite: bool,
                         statev_write_only_static: bool = False,
                         statev_write_only_dynamic: bool = False) -> dict:

@@ -2,6 +2,8 @@
 
 Every acquired source has a record here, and each one is named by its path inside the acquisition cache -- never by its basename. 186 of the 419 share a basename with at least one other source, and 26 of them are called `bodyforce-growth-2stages.for`. A registry keyed on the basename would hold one row where the corpus holds 26 files.
 
+> **1.2.1 note.** The corpus-campaign builders this document cites (`tools/build_corpus_manifest.py`, `tools/build_corpus_registry.py` and the other acquisition and registry tools) are not shipped from 1.2.1 on; they are in the history at tag v1.2.0. The committed outputs under `paper_results/corpus/` are unchanged and remain the record.
+
 ## Census: the pass23 population and the new sources, kept apart
 
 * **106 of 242 as published (pass23)**.

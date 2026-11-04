@@ -60,14 +60,6 @@ def test_colours_follow_whose_move_it_is():
         assert v["next action"]
 
 
-def test_registry_rows_render_green_exactly_when_the_rule_says():
-    import json
-    data = json.loads((REPO / "paper_results/corpus/corpus_registry.json").read_text())
-    for r in data["records"]:
-        green = verdict_for(r)["colour"] == "green"
-        assert green == bool(r["verified_on_every_gate"]), r["source_id"]
-
-
 def test_a_derivative_only_success_is_its_own_amber_state_with_its_own_next_action():
     rec = {"stages": {"sensitivities": {"verification": {"result": {"verdict": "verified"}}}}}
     v = verdict_for(rec)

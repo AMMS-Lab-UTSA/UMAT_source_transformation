@@ -43,7 +43,7 @@ __all__ = ["STAGES", "StageState", "stage_state", "JobManager", "TrackedJobs",
 # ---------------------------------------------------------------------------
 #: What "Transform and Verify" does, as a user sees it.
 #:
-#: The keys and labels are Agent 5's, from ``umat_oti.jobs.stages.STAGES``,
+#: The keys and labels are the job service's, from ``umat_oti.jobs.stages.STAGES``,
 #: which is the authority. :func:`_load_stages` prefers that module wherever it
 #: is importable; this table is the fallback for an environment where the job
 #: manager is not installed, and it is kept identical on purpose. Two
@@ -104,7 +104,7 @@ _FALLBACK_STAGES: tuple[dict, ...] = (
 
 
 def _load_stages() -> tuple:
-    """Agent 5's stage table where it is installed, this module's where not.
+    """the job service's stage table where it is installed, this module's where not.
 
     The service owns the ladder. Preferring it means a stage added there
     appears here without anybody editing this file, and it means the label a
@@ -195,7 +195,7 @@ def plain_stage(name: str) -> dict:
     """The user-facing step one reported stage name belongs to.
 
     Accepts either of the two things a job manager may report: the stage KEY
-    from :data:`STAGES`, which is what Agent 5's records carry, or one of the
+    from :data:`STAGES`, which is what the job service's records carry, or one of the
     internal rung names underneath it, which is what a process reports while
     it runs. Both resolve to the same row.
 
@@ -228,7 +228,7 @@ def plain_stage(name: str) -> dict:
 # ---------------------------------------------------------------------------
 #: The states a step may be in. ``DID_NOT_RUN`` is a value, never an absence.
 class StageState:
-    """Agent 5's six, plus the two this interface needs on top of them.
+    """the job service's six, plus the two this interface needs on top of them.
 
     ``DID_NOT_RUN``, ``RUNNING``, ``PASSED``, ``FAILED``, ``SKIPPED`` and
     ``REFUSED`` are ``umat_oti.jobs.STAGE_STATES`` under this module's names.
@@ -259,7 +259,7 @@ _STATE_WORDS = {
     "not run": StageState.DID_NOT_RUN,
     "did not run": StageState.DID_NOT_RUN,
     "queued": StageState.DID_NOT_RUN,
-    # Agent 5's two that are neither a pass nor a failure. Given their own
+    # the job service's two that are neither a pass nor a failure. Given their own
     # words because rendering either as "failed" invents a defect: a manifest
     # that refuses an underdetermined model has answered the question.
     "skipped": StageState.SKIPPED,
@@ -539,7 +539,7 @@ class JobView:
                 "lost": self.lost, "failure": self.failure}
 
 
-#: Agent 5's seven job statuses, plus the synonyms other callers use.
+#: the job service's seven job statuses, plus the synonyms other callers use.
 #:
 #: ``killed_externally`` and ``lost`` are kept as themselves rather than
 #: folded into ``failed``. A job whose process is gone and whose exit was

@@ -8,7 +8,7 @@ beside the readme. ``mholla__growth``'s README names
 ``cube_1_C3D8_stretch_xyz_iso_Mandel.inp``, which is not in the repository.
 A misnamed deck is resolved only when exactly one deck can be meant.
 
-pass20 A/B (corpus_campaign/batches/B7/gauss_g1b/): 5 of 279 pairings move,
+pass20 A/B (the batch B7 campaign records): 5 of 279 pairings move,
 all to the deck the documentation states.
 """
 from pathlib import Path

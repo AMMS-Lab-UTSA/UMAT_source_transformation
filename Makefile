@@ -8,9 +8,9 @@ PROFILE_ARGS ?=
 .PHONY: help setup test test-fortran test-offline audit \
         reproduce-smoke reproduce-offline reproduce-paper reproduce-corpus \
         reproduce-abaqus batch batch-transform batch-offline batch-abaqus \
-        batch-status batch-record clean-clone clean \
+        batch-status clean-clone clean \
         umat-promote umat-materialize umat-regress umat-status \
-        corpus-report corpus-registry corpus-fixtures \
+        corpus-fixtures \
         case-ci case-offline
 
 help:
@@ -26,8 +26,6 @@ help:
 	@echo "clean-clone        prove a fresh clone reproduces with nothing local"
 	@echo ""
 	@echo ""
-	@echo "corpus-report      every entry, its gate, and counts that reconcile"
-	@echo "corpus-registry    one record per acquired artefact, and who has to move next"
 	@echo "corpus-fixtures    freeze verified cases for the residual assembler"
 	@echo "umat-status        what the verified collection holds"
 	@echo "umat-promote       copy a batch's verified rows into umat/ (deliberate)"
@@ -41,7 +39,6 @@ help:
 	@echo "batch-offline      fast parity gate over the store (minutes, no Abaqus)"
 	@echo "batch-abaqus       paired Abaqus verification over the store (hours)"
 	@echo "batch              all three in order -- the full chain after a change"
-	@echo "batch-record       write the three reports into paper_results as evidence"
 
 setup:
 	$(PYTHON) -m pip install -e ".[test]"
@@ -94,11 +91,6 @@ batch-abaqus:
 # The offline gate runs before Abaqus on purpose. It costs seconds per source
 # and Abaqus costs minutes, so a source whose two builds already disagree at a
 # material point should be fixed before it is given a licence token.
-# The three reports live wherever the batch ran; this puts the part a reader
-# needs into the tree, scrubbed of machine paths and carrying no source text.
-batch-record:
-	$(PYTHON) tools/record_batch_evidence.py $(BATCH_ARGS)
-
 batch: batch-transform batch-offline batch-abaqus
 
 clean-clone:
@@ -136,32 +128,6 @@ umat-regress:
 	$(PYTHON) tools/verify_store_in_abaqus.py --mode regression \
 	    --baseline umat/baseline.json --jobs 4 $(BATCH_ARGS)
 
-
-# Every acquired entry, the gate it reached, and counts that have to add up.
-# --strict exits non-zero when they do not, when a promoted entry is not
-# fully_verified, or when a fully_verified entry was never promoted.
-TRANSFORM_REPORT ?=
-ABAQUS_REPORT ?=
-
-corpus-report:
-	@test -n "$(TRANSFORM_REPORT)" || { echo "TRANSFORM_REPORT=<run>/transform_batch.json is required"; exit 2; }
-	$(PYTHON) tools/corpus_report.py \
-	    --transform "$(TRANSFORM_REPORT)" \
-	    $(if $(ABAQUS_REPORT),--abaqus "$(ABAQUS_REPORT)",) \
-	    --json paper_results/corpus/corpus_report.json \
-	    --markdown paper_results/corpus/CORPUS_REPORT.md $(BATCH_ARGS)
-
-# One record per acquired artefact, its terminal state, and whether that state
-# is finished (external) or work (ours). The two are counted separately: a
-# completion figure that pooled them would be a claim about the corpus made out
-# of facts about the pipeline.
-ABAQUS_RESULTS ?=
-
-corpus-registry:
-	@test -n "$(TRANSFORM_REPORT)" || { echo "TRANSFORM_REPORT=<run>/transform_batch.json is required"; exit 2; }
-	$(PYTHON) tools/build_corpus_registry.py \
-	    --transform "$(TRANSFORM_REPORT)" \
-	    $(if $(ABAQUS_RESULTS),--abaqus "$(ABAQUS_RESULTS)",) $(BATCH_ARGS)
 
 # The ingredients a verified case produced, in the shape the residual
 # assembler reads. Not the source: most of the corpus is not redistributable.

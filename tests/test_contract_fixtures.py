@@ -88,46 +88,6 @@ def test_retired_collection_and_local_fixtures_cannot_be_current_evidence():
         assert path.name in str(refused.value)
 
 
-def test_retirement_inventory_keeps_all_generations_and_artifact_bytes():
-    import hashlib
-    import sys
-
-    root = Path(__file__).resolve().parents[1]
-    sys.path.insert(0, str(root / "tools"))
-    from inventory_retired_evidence import generations, inventory
-
-    assert generations({"fingerprint": "94a92c01814f107a", "rows": [
-        {"transform_fingerprint": "ff94800b1884bcc0"}, {"value": 0.5}]}) == {
-            "94a92c01814f107a", "ff94800b1884bcc0"}
-    artifacts = inventory(root, ("tests/fixtures/verified/",))
-    paths = sorted((root / "tests/fixtures/verified").glob("*.json"))
-    assert {item["path"] for item in artifacts} == {
-        path.relative_to(root).as_posix() for path in paths}
-    for item in artifacts:
-        data = (root / item["path"]).read_bytes()
-        assert item["sha256"] == hashlib.sha256(data).hexdigest()
-        assert item["bytes"] == len(data)
-        assert item["recorded_fingerprints"] == [json.loads(data)["transform_fingerprint"]]
-
-
-def test_retirement_inventory_records_unreadable_evidence(tmp_path, monkeypatch):
-    import hashlib
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-    from inventory_retired_evidence import inventory
-
-    path = tmp_path / "broken.json"
-    path.write_bytes(b"not JSON")
-    monkeypatch.setattr("inventory_retired_evidence.subprocess.check_output",
-                        lambda command: b"broken.json\0")
-    artifact, = inventory(tmp_path, ("broken",))
-    assert artifact["path"] == "broken.json"
-    assert artifact["sha256"] == hashlib.sha256(b"not JSON").hexdigest()
-    assert artifact["parse_error"]
-    assert artifact["recorded_fingerprints"] == []
-
-
 def test_a_matching_fingerprint_is_the_only_pass():
     assert check_fingerprint(STORE_FINGERPRINT, STORE_FINGERPRINT).is_true()
     stale = check_fingerprint("ff94800b1884bcc0", STORE_FINGERPRINT,

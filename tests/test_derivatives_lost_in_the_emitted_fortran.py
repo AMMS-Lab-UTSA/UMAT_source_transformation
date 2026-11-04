@@ -254,7 +254,7 @@ def test_sign_is_not_refused_by_a_transform_whose_modules_define_it():
               "      GAMMA = SUM(ALPHA_K, DIM=1)\n")
     blockers = _unsupported_intrinsic_blockers(source, roles, regions)
     assert not any("SIGN" in text for text in blockers), blockers
-    # SUM(array) has an OTI form in oti_intrinsics (batch B1, ada), and so does
+    # SUM(array) has an OTI form in oti_intrinsics (batch B1), and so does
     # SUM(array, DIM=d) since B20 (a linear reduction); only a MASK or a
     # positional second argument is still refused, by name and line.
     assert [text for text in blockers if "SUM" in text and "line 3" in text] == [], blockers

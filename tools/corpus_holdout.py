@@ -12,9 +12,9 @@ runner never picks them: it takes her list. For each source it
    merged into the harvest or counted);
 2. lays out a DECKLESS copy of the source's repository (its Fortran files
    only), so the pairing finds no author deck and the source takes the reviewer
-   route (``no_deck_in_repository``), and runs ``plan_council`` through
-   ``tools/make_council_deck.py`` into a hold-out folder -- never into
-   corpus_campaign/council_plans;
+   route (``no_deck_in_repository``), and runs ``plan_reviewer`` through
+   ``tools/make_reviewer_deck.py`` into a hold-out folder -- never into
+   corpus_campaign/reviewer_plans;
 3. runs the SAME gates on the reviewer experiment (every set) and on the
    author-deck experiment, and compares the verdicts.
 
@@ -34,7 +34,7 @@ TEMP and COORDS/NOEL/NPT reads are set to the REVIEWED value, as a reviewer
 row's are (D-21a (e), accepted overrides included): from a reviewed static
 scan (``REVIEWED_SCANS``, ``--reviewed-scan``) where one names the source --
 matched by ``registry_key`` (the current pass's key), ``key`` (the selection's)
-or ``source_id`` -- and ONLY if the review accepted that row (``vera_accepted: true``)
+or ``source_id`` -- and ONLY if the review accepted that row (``review_accepted: true``)
 and its ``source_sha256``, where given, is the cached file's. A matching row
 that is not accepted, or names other bytes, stops the run as incomplete
 (exit 2) naming the row.
@@ -60,14 +60,14 @@ reviewer's choices -- only the hold-out and review validate those choices.
 
 Selection file (written by the review; JSON)::
 
-    {"template": "<template>", "selected_by": "vera", "blind": true,
+    {"template": "<template>", "selected_by": "reviewer", "blind": true,
      "date": "YYYY-MM-DD", "keys": ["<registry key>", ...],
      "chosen": [{"key": ..., "source_id": ...}, ...]}   # 1-4 keys: falsification only
 
 Run::
 
     PYTHONHASHSEED=0 PYTHONPATH=src python tools/corpus_cases.py holdout \\
-        --template <template> --selection <vera_selection.json> \\
+        --template <template> --selection <reviewer_selection.json> \\
         [--out DIR] [--gates routine | --gates <verdicts.jsonl>] \\
         [--verification-records store_verification.jsonl] [--reviewed-scan FILE ...]
 
@@ -92,6 +92,8 @@ from typing import Callable, Optional
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
+
+from umat_oti.corpus_features.legacy_names import existing_path, upgrade  # noqa: E402
 sys.path.insert(0, str(REPO / "tools"))
 
 ORIGIN = "holdout_from_author_deck"
@@ -108,7 +110,7 @@ CURRENT_RECORDS = _WORKSPACE / "corpus_run/pass21/results/store_verification.jso
 #: file, then the reviewed rows of the harvest and the reviewer constants
 REVIEWED_SCANS = (_WORKSPACE / "corpus_campaign/holdout/reviewed_scan.jsonl",
                   _WORKSPACE / "corpus_campaign/material_data/d19_harvest.jsonl",
-                  _WORKSPACE / "corpus_campaign/material_data/d21_council_constants.jsonl")
+                  _WORKSPACE / "corpus_campaign/material_data/d21_reviewer_constants.jsonl")
 REVIEWED_FIELDS = ("reads_temp", "reads_coords_or_noel", "reads_temp_note", "coords_note",
                    "static_scan_overrides", "placement", "undefined_outputs")
 #: reviewer-plan refusals that mean the template refuses an input (D-22 R-H2)
@@ -142,13 +144,13 @@ def load_selection(path: Path, template: str) -> dict:
 
     ``mode`` is ``holdout`` with >= MIN_SOURCES keys and ``falsification_only``
     with 1..MIN_SOURCES-1 (the review's ruling for small templates); none is refused."""
-    selection = json.loads(Path(path).read_text(encoding="utf-8"))
+    selection = upgrade(json.loads(Path(path).read_text(encoding="utf-8")))
     problems = []
     if selection.get("template") != template:
         problems.append(f"the selection is for template {selection.get('template')!r}, "
                         f"not {template!r}")
-    if "vera" not in str(selection.get("selected_by", "")).lower():
-        problems.append("the selection is not Vera's (selected_by)")
+    if "reviewer" not in str(selection.get("selected_by", "")).lower():
+        problems.append("the selection is not the reviewer's (selected_by)")
     if selection.get("blind") is not True:
         problems.append("the selection does not state blind: true")
     keys = [str(k) for k in selection.get("keys") or ()]
@@ -193,7 +195,7 @@ def _records_by_key(path: Path) -> dict:
     with Path(path).open(encoding="utf-8") as handle:
         for line in handle:
             if line.strip():
-                row = json.loads(line)
+                row = upgrade(json.loads(line))
                 if row.get("key"):
                     out[str(row["key"])] = row
     return out
@@ -238,8 +240,8 @@ def author_side(key: str, verification_records: Optional[Path] = None) -> tuple:
     if record.get("terminal_state") != "fully_verified":
         raise NotVerifiedHere(f"{key} is {record.get('terminal_state')}, not a verified "
                               "author-deck source")
-    if (Path(H.COUNCIL_PLANS) / key / "council_plan.json").is_file():
-        raise SelectionError(f"{key} is a council row, not an author-deck source")
+    if existing_path(Path(H.REVIEWER_PLANS) / key / "reviewer_plan.json").is_file():
+        raise SelectionError(f"{key} is a reviewer row, not an author-deck source")
     verification = _records_by_key(records_file).get(key) or {}
     manifest = (verification.get("manifest")
                 or (verification.get("experiment") or {}).get("manifest") or {})
@@ -280,11 +282,11 @@ def load_reviewed(paths=None) -> dict:
         for line in Path(path).read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            row = json.loads(line)
+            row = upgrade(json.loads(line))
             if row.get("reads_temp") is None and row.get("reads_coords_or_noel") is None:
                 continue
             entry = dict({k: row.get(k) for k in REVIEWED_FIELDS}, file=str(path),
-                         vera_accepted=row.get("vera_accepted") is True,
+                         review_accepted=row.get("review_accepted") is True,
                          source_sha256=row.get("source_sha256"),
                          ident=str(row.get("registry_key") or row.get("key")
                                    or row.get("source_id")),
@@ -306,8 +308,8 @@ def reviewed_reads(record: dict, body: str, reviewed: Optional[dict],
     out: dict = {"basis": {}}
     if entry is not None:
         name = f"{Path(entry['file']).name} row {entry['ident']} ({entry.get('source_id')})"
-        why = ("is not accepted by Vera (vera_accepted is not true)"
-               if not entry["vera_accepted"] else
+        why = ("is not accepted by the reviewer (review_accepted is not true)"
+               if not entry["review_accepted"] else
                f"reviewed source_sha256 {str(entry['source_sha256'])[:12]}, not the cached "
                f"file's {str(source_sha256)[:12]}"
                if entry.get("source_sha256") and source_sha256
@@ -408,7 +410,7 @@ def r_h2_leaves(plan: dict) -> str:
     """Why a reviewer plan makes its pick "not a template test" (D-22 R-H2), or ''."""
     code = plan.get("refusal_code")
     if code in R_H2_REFUSALS:
-        return (f"not a template test: the council plan is refused {code} "
+        return (f"not a template test: the reviewer plan is refused {code} "
                 f"({str(plan.get('refusal'))[:200]})")
     return ""
 
@@ -417,11 +419,11 @@ def placement_problems(plan: dict) -> list:
     """D-22 conditions on a placed plan: no zero node coordinate, NOEL/NPT in bounds."""
     placement = plan.get("placement") or {}
     out = []
-    for council_set in plan.get("sets") or ():
-        manifest = ((council_set.get("plan") or {}).get("experiment") or {}).get("manifest") or {}
+    for reviewer_set in plan.get("sets") or ():
+        manifest = ((reviewer_set.get("plan") or {}).get("experiment") or {}).get("manifest") or {}
         for node in manifest.get("node_coordinates") or ():
             if any(float(c) == 0.0 for c in list(node)[1:]):
-                out.append(f"set {council_set.get('set_id')}: node {node[0]} has a zero "
+                out.append(f"set {reviewer_set.get('set_id')}: node {node[0]} has a zero "
                            "coordinate")
     point = placement.get("driver_point") or {}
     if point and (int(point.get("noel", 1)) > NOEL_NPT_BOUNDS[0]
@@ -484,7 +486,7 @@ def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
                 row["placement"] = placement
         unanswered = [f for f in ("reads_temp", "reads_coords_or_noel") if row[f] is None]
         if unanswered:
-            problems.append(f"{key} ({record['source_id']}) needs a Vera-accepted reviewed "
+            problems.append(f"{key} ({record['source_id']}) needs a review-accepted reviewed "
                             f"static scan for {', '.join(unanswered)}: {row['notes']}")
             continue
         rows.append(row)
@@ -495,14 +497,14 @@ def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
     rows_file.parent.mkdir(parents=True, exist_ok=True)
     rows_file.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows),
                          encoding="utf-8")
-    plans = out / "council_plans"
+    plans = out / "reviewer_plans"
     common = ["--rows", rows_file, "--out", plans, "--cache", out / "cache"]
-    rc, printed = cc.run_make_council_deck(common)
-    rc_check, checked = cc.run_make_council_deck(common + ["--check"])
+    rc, printed = cc.run_make_reviewer_deck(common)
+    rc_check, checked = cc.run_make_reviewer_deck(common + ["--check"])
     kept = []
     for row in rows:
-        plan_file = plans / row["key"] / "council_plan.json"
-        plan = json.loads(plan_file.read_text()) if plan_file.is_file() else {}
+        plan_file = existing_path(plans / row["key"] / "reviewer_plan.json")
+        plan = upgrade(json.loads(plan_file.read_text())) if plan_file.is_file() else {}
         why = r_h2_leaves(plan)
         if why:
             left.append({"key": row["key"], "rule": "R-H2", "why": why})
@@ -531,18 +533,18 @@ def routine_gate(work: Path) -> Callable:
     from umat_oti.corpus_features.cells import fold
 
     def gate(key: str, plans: Optional[Path]) -> dict:
-        saved = H.COUNCIL_PLANS
+        saved = H.REVIEWER_PLANS
         if plans is not None:
-            H.COUNCIL_PLANS = Path(plans)
+            H.REVIEWER_PLANS = Path(plans)
         try:
             entry = H.resolve_entry(key)
         finally:
-            H.COUNCIL_PLANS = saved
-        council = bool(entry.provenance.get("council_plan"))
-        if council != (plans is not None):
+            H.REVIEWER_PLANS = saved
+        reviewer = bool(entry.provenance.get("reviewer_plan"))
+        if reviewer != (plans is not None):
             return {"verdict": "not_run", "why": f"{key} resolved to the "
-                    f"{'council' if council else 'author-deck'} experiment"}
-        side = "council" if council else "author"
+                    f"{'reviewer' if reviewer else 'author-deck'} experiment"}
+        side = "reviewer" if reviewer else "author"
         place = Path(work) / side / re.sub(r"[^A-Za-z0-9]+", "_", key)
         if entry.store_dir is None:
             out_dir, meta = cc.regenerate(entry.original_source, entry.source_id,
@@ -565,12 +567,12 @@ def verdicts_gate(path: Path) -> Callable:
     table = {}
     for line in Path(path).read_text(encoding="utf-8").splitlines():
         if line.strip():
-            row = json.loads(line)
+            row = upgrade(json.loads(line))
             table[(str(row["key"]), str(row.get("side")), str(row.get("set_id") or ""))] = row
 
     def gate(key: str, plans: Optional[Path]) -> dict:
         base, _hash, set_id = key.partition("#")
-        row = table.get((base, "council" if plans is not None else "author", set_id))
+        row = table.get((base, "reviewer" if plans is not None else "author", set_id))
         return {"verdict": row["verdict"]} if row else {"verdict": "not_run",
                                                          "why": f"no verdict in {path}"}
     return gate
@@ -584,46 +586,46 @@ def judge(template: str, keys: list, plans: Path, gate: Callable,
     template, agreement only reports it not withdrawn -- it accepts nothing."""
     sources = []
     for key in keys:
-        plan = json.loads((Path(plans) / key / "council_plan.json").read_text())
+        plan = upgrade(json.loads(existing_path(Path(plans) / key / "reviewer_plan.json").read_text()))
         author = gate(key, None)
         if plan.get("refusal") or plan.get("refusal_code"):
-            council = {"verdict": f"refused:{plan.get('refusal_code')}",
+            reviewer = {"verdict": f"refused:{plan.get('refusal_code')}",
                        "why": str(plan.get("refusal"))[:300], "sets": {}}
         else:
             sets = {str(s["set_id"]): gate(f"{key}#{s['set_id']}", Path(plans))
                     for s in plan["sets"]}
             verdicts = [v["verdict"] for v in sets.values()]
-            council = {"sets": sets, "verdict": (
+            reviewer = {"sets": sets, "verdict": (
                 "not_run" if "not_run" in verdicts else
                 VERIFIED if verdicts and all(v == VERIFIED for v in verdicts)
                 else "not_verified")}
-        ran = "not_run" not in (author["verdict"], council["verdict"])
+        ran = "not_run" not in (author["verdict"], reviewer["verdict"])
         sources.append({"key": key, "source_id": plan.get("row_ref", "").partition(":")[2],
                         "route": plan.get("route"),
-                        "author": author, "council": council,
-                        "agree": (author["verdict"] == council["verdict"]) if ran else None})
+                        "author": author, "reviewer": reviewer,
+                        "agree": (author["verdict"] == reviewer["verdict"]) if ran else None})
     disagree = [s["key"] for s in sources if s["agree"] is False]
     not_run = [s["key"] for s in sources if s["agree"] is None]
-    agreed = ("held_for_vera_review" if mode == HOLDOUT
+    agreed = ("held_for_review" if mode == HOLDOUT
               else "not_withdrawn_falsification_only")
     status = ("withdrawn" if disagree else "incomplete" if not_run else agreed)
-    rule = ("R6.3: every council verdict must equal the author-deck verdict; one "
-            "disagreement withdraws the template; agreement only holds it for Vera"
+    rule = ("R6.3: every reviewer verdict must equal the author-deck verdict; one "
+            "disagreement withdraws the template; agreement only holds it for the reviewer"
             if mode == HOLDOUT else
-            f"falsification only ({len(keys)} source(s) < {MIN_SOURCES}; Vera's ruling): one "
+            f"falsification only ({len(keys)} source(s) < {MIN_SOURCES}; the reviewer's ruling): one "
             "disagreement withdraws the template; agreement does not accept it and does not "
             "hold it for acceptance")
     return {"tier": "holdout", "mode": mode, "template": template, "status": status,
             "disagreements": disagree, "not_run": not_run, "sources": sources,
             "rule": rule,
             "q4": "the gates are independent of the inputs' origin; the inputs are not "
-                  "independent of the council's choices"}
+                  "independent of the reviewer's choices"}
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--template", required=True)
-    parser.add_argument("--selection", required=True, type=Path, help="Vera's blind selection")
+    parser.add_argument("--selection", required=True, type=Path, help="the reviewer's blind selection")
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--gates", default="routine",
                         help="'routine' (the routine-level harness) or a verdicts JSONL file")
@@ -656,7 +658,7 @@ def main(argv=None) -> int:
         if prepared["left"] and len(kept) < MIN_SOURCES and pool > MIN_SOURCES:
             raise SelectionError(
                 f"{len(kept)} pick(s) remain of a stratified pool of {pool}: D-22 R-H1 asks "
-                "for a replacement from Vera's seeded order, which this runner never picks "
+                "for a replacement from the reviewer's seeded order, which this runner never picks "
                 "(left: " + "; ".join(f"{x['key']} {x['rule']}" for x in prepared["left"])
                 + ")")
     except SelectionError as error:
@@ -686,9 +688,9 @@ def main(argv=None) -> int:
     cc.write_json(out / "holdout_report.json", json.loads(json.dumps(report, default=str)))
     for s in report["sources"]:
         print(f"{'AGREE   ' if s['agree'] else 'DISAGREE' if s['agree'] is False else 'NOT RUN '}"
-              f" {s['key']} author {s['author']['verdict']} / council {s['council']['verdict']}")
+              f" {s['key']} author {s['author']['verdict']} / reviewer {s['reviewer']['verdict']}")
     print(f"template {args.template}: {report['status'].upper()} -> {out / 'holdout_report.json'}")
-    return {"held_for_vera_review": 0, "withdrawn": 1,
+    return {"held_for_review": 0, "withdrawn": 1,
             "not_withdrawn_falsification_only": 3}.get(report["status"], 2)
 
 

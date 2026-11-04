@@ -6,7 +6,7 @@ file=sec_ud.inp``; ``sec_ud.inp`` writes ``<KBULK>, <C10>, ...``. Only
 ``INPUT=`` was spliced, so the parent published nothing and the section deck
 was refused as unresolved. Abaqus/Standard 2021.HF5 accepts ``FILE=`` and
 substitutes the parent's parameters into the included file (datacheck in
-corpus_campaign/batches/B7/gauss_g1b/include_file_check/). pass20 A/B: the
+the batch B7 campaign records). pass20 A/B: the
 two jpsferreira sources move to cube_umat.inp:UD; nothing else moves.
 """
 from pathlib import Path

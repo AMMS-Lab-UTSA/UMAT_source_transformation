@@ -2,15 +2,12 @@
 import sys
 from pathlib import Path
 
-import pytest
-
 from umat_oti.abaqus.deck import generate_deck
 from umat_oti.abaqus.manifest import VerificationManifest
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "tools"))
 import verify_store_in_abaqus as V  # noqa: E402
-from _workspace import WORKSPACE  # noqa: E402
 
 WITH = "      SUBROUTINE SDVINI(STATEV,COORDS,NSTATV,NCRDS,NOEL,NPT,LAYER,KSPT)\n      END\n"
 
@@ -44,14 +41,5 @@ def test_a_source_without_sdvini_is_left_alone(tmp_path):
     assert not V.honour_author_sdvini(manifest(), tmp_path / "s.for").initial_state_from_user_subroutine
 
 
-CACHE = (WORKSPACE / "discovery_cache")
-CURING = "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_curing.for"
 
 
-@pytest.mark.skipif(not (CACHE / CURING).is_file(), reason="needs the discovery cache")
-def test_worlthen_curing_now_starts_from_the_authors_sdvini_state():
-    rows = V.triage_rows(REPO / "paper_results/discovery/discovery_triage.csv")
-    proposals = V.proposal_entries(REPO / "paper_results/discovery/proposed_corpus_entries.json")
-    plan = V.build_manifest(CURING, rows.get(CURING), proposals.get(CURING), CACHE)
-    assert plan.manifest.initial_state_from_user_subroutine
-    assert "*INITIAL CONDITIONS, TYPE=SOLUTION, USER" in generate_deck(plan.manifest)

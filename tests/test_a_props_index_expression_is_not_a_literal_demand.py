@@ -7,7 +7,7 @@ bare identifier subscript was seen, so the demand read "PROPS(1:7) by
 literal subscript and nothing else" and refused the author's 11-constant
 decks as a different parameterisation. Over the 279 pass20 sources 16
 demands change (exact -> not exact, no count changes) and no pairing moves
-(corpus_campaign/batches/B7/gauss_g1b/demand_ab.out, after_a_expr.json).
+(the batch B7 campaign records, after_a_expr.json).
 """
 import pytest
 

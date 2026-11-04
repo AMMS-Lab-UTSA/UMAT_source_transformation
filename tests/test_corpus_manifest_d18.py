@@ -7,7 +7,7 @@ import pytest
 
 from umat_oti.corpus_features.manifest import merge_d18, merge_feature_results
 
-from test_corpus_manifest_vera_probes import SID, _manifest, _ok, _primal, roots  # noqa: F401
+from test_corpus_manifest_review_probes import SID, _manifest, _ok, _primal, roots  # noqa: F401
 
 LIFTED_NULL = {"kind": "lifted", "fingerprint": None, "sha256": None, "transformer": None}
 

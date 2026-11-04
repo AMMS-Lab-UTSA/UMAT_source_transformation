@@ -65,27 +65,6 @@ def test_a_transform_change_leaves_the_harness_fingerprint_alone(tmp_path):
 
 
 @pytest.mark.unit
-def test_a_row_from_another_harness_is_not_current():
-    registry = _registry()
-    row = {"source": "a/b.f", "fingerprint": "T", "harness_fingerprint": "H-old"}
-    assert registry._row_is_current(row, "T") is True          # not required
-    assert registry._row_is_current(row, "T", "H-old") is True
-    assert registry._row_is_current(row, "T", "H-new") is False
-    legacy = {"source": "a/b.f", "fingerprint": "T"}           # recorded before
-    assert registry._row_is_current(legacy, "T", "H-new") is False
-    assert registry._row_is_current(row, "T-other", "H-old") is False
-
-
-@pytest.mark.unit
-def test_a_current_row_beats_a_later_stale_one_for_the_same_source():
-    registry = _registry()
-    rows = [{"source": "s", "fingerprint": "T", "harness_fingerprint": "H", "stage": "new"},
-            {"source": "s", "fingerprint": "T", "harness_fingerprint": "H0", "stage": "old"}]
-    kept = registry._fingerprint_latest(rows, "T", "H")
-    assert [r["stage"] for r in kept] == ["new"]
-
-
-@pytest.mark.unit
 def test_the_real_package_has_a_harness_fingerprint():
     assert len(harness_fingerprint(PACKAGE)) == 16
 

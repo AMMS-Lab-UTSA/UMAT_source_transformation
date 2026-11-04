@@ -3089,7 +3089,7 @@ def run_precision_control(manifest: VerificationManifest, original: Path,
 # the transformed build returns the OTI tangent instead of the author's
 # DDSDDE, and the converged FE answer depends on the Jacobian -- through the
 # Newton path at default tolerance, and on hybrid elements even at a tight one.
-# Measured (corpus_campaign/batches/B2/curie_g, cc_cug_01..17): From-2D-to-2D-
+# Measured (the batch B2 campaign records, cc_cug_01..17): From-2D-to-2D-
 # Axe.for, C3D8H, residual 2e-13 in both runs, still 3.2e-6 apart; the
 # original with only its DDSDDE given the transformed one's structure
 # reproduces the TRANSFORMED run to 1.6e-12. MinSur1 5.3e-7 -> 3.2e-12,

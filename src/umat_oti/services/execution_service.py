@@ -94,7 +94,7 @@ class AbaqusExecutionService:
     def __init__(self, manager: JobManager, *,
                  queue_root: Optional[Path] = None,
                  repo_root: Path = REPO_ROOT,
-                 filed_by: str = "Agent 5 (backend services)") -> None:
+                 filed_by: str = "backend services") -> None:
         self.manager = manager
         self.queue_root = Path(queue_root) if queue_root else default_queue_root()
         self.repo_root = Path(repo_root)

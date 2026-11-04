@@ -7,6 +7,8 @@ acquired (`row_kind: discovered_not_acquired`, counted apart from the acquired
 rows). `corpus_manifest.csv` is a flat view with one line per row, and
 `corpus_manifest.schema.json` is its JSON Schema (draft 2020-12).
 
+> **1.2.1 note.** The corpus-campaign builders this document cites (`tools/build_corpus_manifest.py`, `tools/build_corpus_registry.py` and the other acquisition and registry tools) are not shipped from 1.2.1 on; they are in the history at tag v1.2.0. The committed outputs under `paper_results/corpus/` are unchanged and remain the record.
+
 ## What a cell needs to count as verified
 
 A `primal_stress_state` cell is `verified` when the pass16 Abaqus gates
@@ -43,7 +45,7 @@ PYTHONPATH=src python tools/build_corpus_manifest.py \
     --current-pass pass25 --later-pass "" \
     --primal-ddsdde-cells ../corpus_campaign/pass25_harness/run/manifest_cells.jsonl \
     --feature-cells ../corpus_campaign/pass25_harness_full/combined_cells.jsonl \
-    --merge-ra ../corpus_campaign/batches/B2/noether/records.jsonl   # ~15 s, offline
+    --merge-ra the batch B2 campaign records   # ~15 s, offline
 PYTHONPATH=src python -m pytest -q tests/test_corpus_manifest_*.py    # 164 passed, ~4 s
 # UMAT_OTI_MANIFEST_DIR=<dir> points the artifact tests at a scratch build
 ```
@@ -95,7 +97,7 @@ What is reproducible:
   records the absolute `roots` and input paths of the build.
 
 One test depends on the layout:
-`tests/test_corpus_manifest_vera_probes.py::test_noethers_b1_records_fold_without_rejection_and_stay_out_of_the_pipeline`
+`tests/test_corpus_manifest_review_probes.py::test_noethers_b1_records_fold_without_rejection_and_stay_out_of_the_pipeline`
 reads the B1 records at the absolute path
 `$UMAT_OTI_WORKSPACE/corpus_campaign/...` and resolves them against
 roots taken from the checkout's parent. In a clone outside the workspace it
@@ -113,7 +115,7 @@ Roots and their overrides:
 | `campaign` | `../corpus_campaign` (batch evidence) | `--campaign`, `UMAT_OTI_CAMPAIGN` |
 | `ra` | `../final-ra` (Residual Assembler) | `--ra-repo`, `UMAT_OTI_RA_REPO` |
 | `umat` (= `repo`) | this checkout | — |
-| reported families (D-11) | `../corpus_campaign/batches/B3/scout/families_reviewed_B3.json` | `--families-reporting` |
+| reported families (D-11) | `the batch B3 campaign records` | `--families-reporting` |
 | fallback / secondary families | `corpus_run/material_families_checked_E.json` | `--families` |
 | earlier registry for `summary.denominators_note` | git revision `f0f0731` | `--earlier-registry-rev` (`''` skips) |
 | output | `paper_results/corpus/manifest/` | `--out-dir` |
@@ -180,7 +182,7 @@ path. Every locator in the published manifest resolves; a test checks this.
   - `umat_oti.corpus.acquire.classify_license_text` classifies the licence file. A GNU licence is identified by the notice at the top of the file, which also decides whether "any later version" is allowed, or else by its own title line. It is never identified by searching the body for a phrase. The GPL-3.0 body names the Affero licence in its section 13, and the LGPL-3.0 body names "version 3 of the GNU General Public License". Because of this, the old whole-text search read every GPL-3.0 file as AGPL-3.0 and every LGPL-3.0 file as GPL-3.0.
   - The licence is repository-scoped. Per-file headers are not read.
 - **model**
-  - `family`: the D-11 reporting family. `family.family` is the fine name (B3 vocabulary), `reporting_family` one of the eight D-11 families (hyperelasticity counts in `other_incl_hyperelasticity`), `classification` is `D-11 S1`, `source` is `B3_code_evidence`, `B3_identity_growth_as_growth` or `E_fallback`. `review` = `agent_reviewed_code_evidence` (B3, or an E row Agent E checked) or `keyword_only`. `human_reviewed` is false for every row. `E` carries Agent E's family (secondary, never used for figures) and, under it, `second_pass` (review 2026-09-30).
+  - `family`: the D-11 reporting family. `family.family` is the fine name (B3 vocabulary), `reporting_family` one of the eight D-11 families (hyperelasticity counts in `other_incl_hyperelasticity`), `classification` is `D-11 S1`, `source` is `B3_code_evidence`, `B3_identity_growth_as_growth` or `E_fallback`. `review` = `reviewed_code_evidence` (B3, or an E row Agent E checked) or `keyword_only`. `human_reviewed` is false for every row. `E` carries Agent E's family (secondary, never used for figures) and, under it, `second_pass` (review 2026-09-30).
   - `entry_point`.
   - `required_files`:
     - `companions`: the full closure from `umat_oti.abaqus.companions.resolve`. In the frozen registry this string is cut at 500 characters (2 rows). The registry builder no longer truncates it, nor `missing_companions` (which was cut at 300).
@@ -290,7 +292,7 @@ Each JSONL line is one cell:
 
 ```json
 {"source_id": "...", "feature": "ddsdde", "status": "verified", "reason": "...",
- "evidence": "campaign:batches/B2/gauss/run/corpus_features.jsonl#key=...&feature=ddsdde",
+ "evidence": "campaign:batches/B2/run/corpus_features.jsonl#key=...&feature=ddsdde",
  "reference": "fd", "max_error": 0.31, "tolerance": 1.0,
  "tolerance_rule_id": "entrywise/1", "rtol": 1e-6, "atol": 1e-12,
  "fd_steps": [1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6],

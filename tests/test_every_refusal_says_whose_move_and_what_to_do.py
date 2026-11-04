@@ -1,7 +1,8 @@
 """Every refusal a command-line user can meet gets a plain sentence and an action.
 
-The corpus registry holds the refusals the pipeline actually produced. For each
-non-verified record the card must come from a SPECIFIC rule or its state's own
+``tests/fixtures/refusal_reasons.json`` holds every distinct refusal the batch
+pipeline actually produced on the public-UMAT corpus (state and reason, without
+the source identities). For each the card must come from a SPECIFIC rule or its state's own
 card, never the default, name whose move it is, and use no expert vocabulary.
 The flags a card tells the user to type must be real.
 """
@@ -21,7 +22,7 @@ from umat_oti.app.refusal_cards import (FLAGS_USED, RULES,        # noqa: E402
 from umat_oti.app.unified_app import jargon_in                    # noqa: E402
 
 pytestmark = pytest.mark.unit
-REGISTRY = REPO / "paper_results" / "corpus" / "corpus_registry.json"
+REFUSALS = REPO / "tests" / "fixtures" / "refusal_reasons.json"
 WHOSE = {"you", "the author of this UMAT", "this program"}
 #: States whose reason text carries the real cause: a specific rule must match.
 NEEDS_RULE = {"transform_refused", "external_dependency_unavailable",
@@ -30,7 +31,7 @@ NEEDS_RULE = {"transform_refused", "external_dependency_unavailable",
 
 
 def _records():
-    data = json.loads(REGISTRY.read_text())
+    data = json.loads(REFUSALS.read_text())
     return [r for r in data["records"] if r["terminal_state"] != "fully_verified"]
 
 
@@ -43,7 +44,7 @@ def test_every_registry_refusal_maps_to_a_non_default_card():
     for r in _records():
         card = card_for(r["terminal_state"], _reason(r))
         if card.rule == "default" or card.whose_move not in WHOSE or not card.next_action:
-            bad.append((r["source_id"], r["terminal_state"], _reason(r)[:80]))
+            bad.append((r["terminal_state"], _reason(r)[:80]))
     assert not bad, bad[:10]
 
 

@@ -1,7 +1,7 @@
 """The B17 G3a rule: a callee that is not in the repository and not an Abaqus
 utility is external; one that is in the repository is resolved.
 
-The rule was written before it was run (corpus_campaign/batches/B17/lovelace/
+The rule was written before it was run (the batch B17 campaign records
 RULE_G3a.md). These tests pin its words, build small repositories on disk, and
 show each way a name can be "in the repository" or not, plus the planted-error
 canary: the same source with one definition removed must flip from resolved to
@@ -153,116 +153,4 @@ def test_blas_and_lapack_are_neither_resolved_nor_external_and_unconfirmed_ptk_n
 
 
 # -- the registry applies it to the states the refusal path does not reach ----------------
-def test_the_registry_moves_a_transformed_but_unrunnable_source_and_leaves_run_states_alone():
-    import build_corpus_registry as reg
-    rows = []
-    for state, companions in (("transform_refused", "call GONE"),
-                              ("unsupported_formulation", "module rVar"),
-                              ("unsupported_formulation", ""),
-                              ("fully_verified", "call GONE"),
-                              ("primal_disagreed", "call GONE")):
-        record = reg.Record(source_id=f"o__r/{state}{len(rows)}.for", repository="o/r")
-        record.terminal_state, record.kind = state, reg.kind_of(state)
-        record.missing_companions = companions
-        rows.append(record)
-    conflicts = reg.apply_dependency_rule(rows)
-    assert [r.terminal_state for r in rows] == [
-        "external_dependency_unavailable", "external_dependency_unavailable",
-        "unsupported_formulation", "fully_verified", "primal_disagreed"]
-    assert all(r.kind == "external" for r in rows[:2])
-    assert conflicts == [rows[4].source_id]
-    assert "not in the repository and not an Abaqus utility" in rows[1].reason
-
-
 # -- B18: the output search follows quoted includes; the cache is not the repository ----
-def test_the_output_search_follows_quoted_includes_the_way_the_callee_rule_does(tmp_path):
-    import build_corpus_registry as reg
-    from umat_oti.corpus.entry_routines import umat_outputs_written
-    main = HEAD + "      INCLUDE 'ABA_PARAM.INC'\n      INCLUDE './x/body.f'\n      END\n"
-    repo(tmp_path, {"umat.for": main,
-                    "x/body.f": "      STRESS(1)=1.D0\n      INCLUDE 'back.f'\n",
-                    "x/back.f": "      DDSDDE(1,1)=2.D0\n      INCLUDE 'body.f'\n"})
-    source = tmp_path / "owner__repo" / "umat.for"
-    own = umat_outputs_written(main, path=source)
-    assert not own.writes_stress and not own.writes_ddsdde
-    found, followed = reg.outputs_following_includes(source, main, own, tmp_path)
-    assert found.writes_stress and found.writes_ddsdde
-    assert followed == ["owner__repo/x/body.f", "owner__repo/x/back.f"]   # the cycle ends
-    assert found.first_write.startswith("[body.f] ")
-    # canary: the include file removed -> nothing is found, as for the main file alone
-    (tmp_path / "owner__repo/x/body.f").unlink()
-    rl._INDEXES.clear()
-    found, followed = reg.outputs_following_includes(source, main, own, tmp_path)
-    assert not found.writes_ddsdde and followed == []
-
-
-def test_a_name_the_upstream_tree_publishes_is_not_missing_because_the_cache_is_partial(tmp_path):
-    import json
-    import build_corpus_registry as reg
-    check = tmp_path / "check.json"
-    check.write_text(json.dumps({"checked": {"o__r/umat.for": {
-        "absent": ["GONE"], "present_upstream_names": {"include core.for": "core.for"}}}}))
-    assert reg.upstream_present_names("o__r/umat.for", check) == frozenset({"include core.for"})
-    assert reg.upstream_absent_calls("o__r/umat.for", check) == frozenset({"GONE"})
-    assert reg.upstream_present_names("o__r/other.for", check) == frozenset()
-
-
-def test_includes_are_matched_by_file_name_and_the_nearest_one_wins(tmp_path):
-    """Two files called body.f in different directories: the includer's own
-    directory wins, then the shallower path. A name match is not a path match
-    (INCLUDE './x/body.f' finds ./y/body.f if x has none), and that ambiguity is
-    documented in docs/CORPUS_VERIFICATION.md."""
-    import build_corpus_registry as reg
-    from umat_oti.corpus.entry_routines import umat_outputs_written
-    main = HEAD + "      INCLUDE 'body.f'\n      END\n"
-    repo(tmp_path, {"a/umat.for": main,
-                    "a/body.f": "      STRESS(1)=1.D0\n",         # beside the includer
-                    "z/deep/er/body.f": "      DDSDDE(1,1)=2.D0\n"})
-    source = tmp_path / "owner__repo" / "a" / "umat.for"
-    found, followed = reg.outputs_following_includes(
-        source, main, umat_outputs_written(main, path=source), tmp_path)
-    assert followed == ["owner__repo/a/body.f"]
-    assert found.writes_stress and not found.writes_ddsdde
-    # no copy beside the includer: the one with the fewest path parts
-    repo(tmp_path, {"b/umat.for": main, "m/body.f": "      DDSDDE(1,1)=2.D0\n"}, name="owner__two")
-    repo(tmp_path, {"m/n/o/body.f": "      STRESS(1)=1.D0\n"}, name="owner__two")
-    rl._INDEXES.clear()
-    source = tmp_path / "owner__two" / "b" / "umat.for"
-    found, followed = reg.outputs_following_includes(
-        source, main, umat_outputs_written(main, path=source), tmp_path)
-    assert followed == ["owner__two/m/body.f"]
-    assert found.writes_ddsdde and not found.writes_stress
-
-
-def test_unconfirmed_absence_keeps_a_source_in_the_population_and_mkl_is_a_library(tmp_path):
-    import json
-    import build_corpus_registry as reg
-    check = tmp_path / "check.json"
-    check.write_text(json.dumps({"checked": {"o__r/u.f": {
-        "absent": ["GONE"], "absent_names_confirmed": ["module stdlib_kinds"]}}}))
-    names = ["call GONE", "call FETCHFAILED", "module stdlib_kinds", "module unconfirmed_mod",
-             "module MKL_RCI", "include mkl_lapack.f90"]
-    assert reg.unpublished_by_the_rule("o__r/u.f", names, check) == ["call GONE", "module stdlib_kinds"]
-    assert reg.unpublished_by_the_rule("o__r/never_checked.f", names, check) == []
-
-
-def test_a_routine_the_repository_defines_and_is_handed_stress_is_searched(tmp_path):
-    """RULE_G3a amendment 4: a dispatcher UMAT that CALLs a repository routine
-    with STRESS/DDSDDE is not a UMAT with no stress update (zenodo umatAba.f)."""
-    import build_corpus_registry as reg
-    from umat_oti.corpus.entry_routines import umat_outputs_written
-    main = HEAD + "      CALL KUSD(STRESS,DDSDDE)\n      CALL ELSEWHERE(STRESS)\n      CALL OTHER(TIME)\n      END\n"
-    repo(tmp_path, {"jobs/umat.f": main,
-                    "lib/k.f": "      SUBROUTINE KUSD(STRESS,DDSDDE)\n      STRESS(1)=1.D0\n      DDSDDE(1,1)=2.D0\n      END\n",
-                    "lib/o.f": "      SUBROUTINE OTHER(T)\n      STRESS(1)=9.D0\n      END\n"})
-    source = tmp_path / "owner__repo" / "jobs" / "umat.f"
-    found, followed = reg.outputs_following_includes(
-        source, main, umat_outputs_written(main, path=source), tmp_path)
-    assert found.writes_stress and found.writes_ddsdde
-    assert followed == ["owner__repo/lib/k.f"]   # OTHER gets no output argument; ELSEWHERE is undefined
-    # canary: the callee removed -> the dispatcher writes nothing
-    (tmp_path / "owner__repo/lib/k.f").unlink()
-    rl._INDEXES.clear()
-    found, followed = reg.outputs_following_includes(
-        source, main, umat_outputs_written(main, path=source), tmp_path)
-    assert not found.writes_stress and followed == []

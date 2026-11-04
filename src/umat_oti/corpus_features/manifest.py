@@ -199,8 +199,8 @@ REFERENCE_TYPES: tuple[str, ...] = ("original", "analytical", "fd")
 #: registry (tools/build_corpus_registry.py) decides them; the manifest
 #: carries them per row under ``origins``.
 MATERIAL_DATA_ORIGINS: tuple[str, ...] = (
-    "author_deck", "author_published_outside_deck", "council_chosen")
-EXPERIMENT_ORIGINS: tuple[str, ...] = ("author", "council")
+    "author_deck", "author_published_outside_deck", "reviewer_chosen")
+EXPERIMENT_ORIGINS: tuple[str, ...] = ("author", "reviewer")
 #: deck_pairing.Pairing.refusal_kind (D-19a rev 2 R0).
 REFUSAL_KINDS: tuple[str, ...] = (
     "no_deck_in_repository", "no_deck_names_this_source",
@@ -208,7 +208,7 @@ REFUSAL_KINDS: tuple[str, ...] = (
 #: The four tiers every verified count is split by (D-21 condition 6).
 TIERS: tuple[str, ...] = (
     "author_deck", "author_published_outside_deck+author_experiment",
-    "author_published_outside_deck+council_experiment", "council_chosen")
+    "author_published_outside_deck+reviewer_experiment", "reviewer_chosen")
 #: Constant confidences, best first: the harvest's (D-19a R5) and the D-21
 #: labels (R-3) on one scale; the worst over a row's constants is recorded.
 CONSTANT_CONFIDENCES: tuple[str, ...] = (
@@ -983,8 +983,8 @@ REPORTING_FAMILIES: tuple[str, ...] = (
 )
 
 FAMILY_CLASSIFICATION = (
-    "D-11 S1: Scout's B3 code-evidence family review "
-    "(corpus_campaign/batches/B3/scout/families_reviewed_B3.json), with the "
+    "D-11 S1: the B3 code-evidence family review "
+    "(the batch B3 campaign records), with the "
     "identity-growth scaffolds (Jeff97, growth tensor fixed to the identity) "
     "counted as growth; rows B3 did not check take E "
     "(corpus_run/material_families_checked_E.json) mapped to the same names")
@@ -1178,8 +1178,8 @@ def build_manifest(inp: ManifestInputs) -> dict:
                          "(material_families_checked_E.json), shown for comparison "
                          "and never used for family figures (CSV family_E)",
             "why": "decision D-11 (2026-10-01): family figures are reported against "
-                   "Scout's B3 code-evidence classification, column S1; the second "
-                   "pass (Vera, 2026-09-30) is carried per row under E as "
+                   "the B3 code-evidence classification, column S1; the second "
+                   "pass (the reviewer, 2026-09-30) is carried per row under E as "
                    "`second_pass`",
             "second_pass": str(inp.families_second_pass or ""),
             "keyword_file_not_used": "corpus_run/material_families.json"},
@@ -1213,14 +1213,14 @@ def origins_of(rec: Mapping) -> dict:
         "material_data_origin": _text("material_data_origin"),
         "experiment_origin": _text("experiment_origin"),
         "material_data_ref": _text("material_data_ref"),
-        "council_deck_ref": _text("council_deck_ref"),
-        "council_fingerprint": _text("council_fingerprint"),
+        "reviewer_deck_ref": _text("reviewer_deck_ref"),
+        "reviewer_fingerprint": _text("reviewer_fingerprint"),
         "refusal_kind": _text("refusal_kind"),
         "harvest_confidence": _text("harvest_confidence"),
         "interpreted_constants": interpreted if isinstance(interpreted, int) else None,
-        "council_sets": [x for x in _text("council_sets").split(";") if x],
-        "vera_accepted_template": _flag("vera_accepted_template"),
-        "vera_accepted_instance": _flag("vera_accepted_instance"),
+        "reviewer_sets": [x for x in _text("reviewer_sets").split(";") if x],
+        "review_accepted_template": _flag("review_accepted_template"),
+        "review_accepted_instance": _flag("review_accepted_instance"),
         "branch_coverage": coverage,
         "domain_not_enforced": _text("domain_not_enforced"),
         "pairing_changed": _flag("pairing_changed"),
@@ -1479,7 +1479,7 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
     if fam:
         e_block = {
             "family": fam.get("family", ""),
-            "review": "agent_reviewed_code_evidence" if fam.get("review") == "checked"
+            "review": "reviewed_code_evidence" if fam.get("review") == "checked"
             else "keyword_only",
             "reviewed_by": "Agent E" if fam.get("review") == "checked" else "",
             "basis": fam.get("basis", ""),
@@ -1493,7 +1493,7 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
     e_block["label"] = "secondary (Agent E); not used for family figures"
     rep = reported_family(rec["source_id"], b3, fam)
     if b3:
-        review, reviewed_by = "agent_reviewed_code_evidence", "Scout (B3)"
+        review, reviewed_by = "reviewed_code_evidence", "code-evidence review (B3)"
         basis = "; ".join(x for x in (b3.get("rule", ""), b3.get("notes", "")) if x)
     else:
         review, reviewed_by, basis = e_block["review"], e_block["reviewed_by"], \
@@ -2733,7 +2733,7 @@ def merge_feature_results(manifest: dict,
 
         {"source_id": "...", "feature": "stress_param_sens_local",
          "status": "verified", "reason": "...",
-         "evidence": "campaign:batches/B2/gauss/run/features.jsonl#key=...",
+         "evidence": "campaign:batches/B2/run/features.jsonl#key=...",
          "reference": "fd", "max_error": 0.03, "tolerance": 1.0,
          "tolerance_rule_id": "entrywise/1", "rtol": 1e-6, "atol": 1e-12,
          "fd_steps": [1e-3, 3e-4, 1e-4, 3e-5, 1e-5],
@@ -2993,7 +2993,7 @@ def _ra_v2_cell(sid: str, feat: str, rs: list, roots: Mapping[str, str],
 
 def ra_records_to_cells(records: str | Path | Iterable[Mapping], *,
                         roots: Mapping[str, str] | None = None,
-                        producer: str = "noether/B1") -> tuple[list[dict], dict]:
+                        producer: str = "B1") -> tuple[list[dict], dict]:
     """Fold RA per-problem records into one cell per (source_id, feature).
 
     The RA records (``ra-corpus-residual/1``) do not meet the merge contract
@@ -3166,13 +3166,13 @@ def manifest_schema() -> dict:
             "material_data_origin": _enum(MATERIAL_DATA_ORIGINS),
             "experiment_origin": _enum(EXPERIMENT_ORIGINS),
             "material_data_ref": {"type": "string"},
-            "council_deck_ref": {"type": "string"},
-            "council_fingerprint": {"type": "string"},
+            "reviewer_deck_ref": {"type": "string"},
+            "reviewer_fingerprint": {"type": "string"},
             "refusal_kind": _enum(REFUSAL_KINDS),
             "harvest_confidence": _enum(CONSTANT_CONFIDENCES),
             "interpreted_constants": {"type": ["integer", "null"], "minimum": 0},
-            "council_sets": {"type": "array", "items": {"type": "string"}},
-            "vera_accepted_template": flag, "vera_accepted_instance": flag,
+            "reviewer_sets": {"type": "array", "items": {"type": "string"}},
+            "review_accepted_template": flag, "review_accepted_instance": flag,
             "branch_coverage": {"type": ["object", "null"]},
             "domain_not_enforced": {"type": "string"},
             "pairing_changed": flag,
@@ -3185,8 +3185,8 @@ def manifest_schema() -> dict:
         # a reviewer row counts only with both of the review's acceptances (R6.5)
         "allOf": [{"if": {"properties": {"counted_in_tier": {"const": True}},
                           "required": ["counted_in_tier"]},
-                   "then": {"properties": {"vera_accepted_template": {"const": True},
-                                           "vera_accepted_instance": {"const": True},
+                   "then": {"properties": {"review_accepted_template": {"const": True},
+                                           "review_accepted_instance": {"const": True},
                                            "pairing_changed": {"enum": [False, None]}}}}],
     }
     row = {
@@ -3221,7 +3221,7 @@ def manifest_schema() -> dict:
                                        "E"],
                           "properties": {
                               "review": {"enum": [
-                                  "agent_reviewed_code_evidence", "keyword_only",
+                                  "reviewed_code_evidence", "keyword_only",
                                   "missing"]},
                               "classification": {"const": "D-11 S1"},
                               "reporting_family": {"enum": [
@@ -3306,14 +3306,14 @@ def flat_rows(manifest: Mapping) -> list[dict]:
             "experiment_origin": o.get("experiment_origin", ""),
             "tier": o.get("tier", ""),
             "material_data_ref": o.get("material_data_ref", ""),
-            "council_deck_ref": o.get("council_deck_ref", ""),
-            "council_fingerprint": o.get("council_fingerprint", ""),
+            "reviewer_deck_ref": o.get("reviewer_deck_ref", ""),
+            "reviewer_fingerprint": o.get("reviewer_fingerprint", ""),
             "refusal_kind": o.get("refusal_kind", ""),
             "harvest_confidence": o.get("harvest_confidence", ""),
             "interpreted_constants": o.get("interpreted_constants"),
-            "council_sets": ";".join(o.get("council_sets") or []),
-            "vera_accepted_template": o.get("vera_accepted_template"),
-            "vera_accepted_instance": o.get("vera_accepted_instance"),
+            "reviewer_sets": ";".join(o.get("reviewer_sets") or []),
+            "review_accepted_template": o.get("review_accepted_template"),
+            "review_accepted_instance": o.get("review_accepted_instance"),
             "branch_coverage": (json.dumps(o["branch_coverage"], sort_keys=True)
                                 if o.get("branch_coverage") else ""),
             "domain_not_enforced": o.get("domain_not_enforced", ""),

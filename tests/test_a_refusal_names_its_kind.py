@@ -10,7 +10,7 @@ and stays the author's experiment.
 Over the 64 pass20 needs_material_data rows the split is 45 / 12 / 6 / 1
 (no_deck_in_repository / no_deck_names_this_source / author_deck_unresolved /
 author_block_rejected), 44 / 12 / 5 / 1 without the two duplicates:
-corpus_campaign/batches/B7/gauss_g1/split_g1.json.
+the batch B7 campaign records
 """
 from pathlib import Path
 

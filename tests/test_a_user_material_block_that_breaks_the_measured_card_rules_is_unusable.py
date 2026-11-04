@@ -1,7 +1,7 @@
 """Three layouts of ``*USER MATERIAL`` data lines are not read as a card deck (B17 G3b).
 
 Measured with Abaqus/Standard 2021 by a UMAT that writes PROPS on its first call
-(corpus_campaign/batches/B8/ada/props_card_probe/measured_results.txt):
+(the batch B8 campaign records):
 
 * two data lines for CONSTANTS=4 (A, B, C): fatal;
 * a blank line between two data lines (M, and I with a comment as well): fatal,

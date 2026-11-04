@@ -1,7 +1,7 @@
 """The routine-level primal gate, on calls recorded from real corpus runs.
 
 Every fixture is a pass16 row replayed offline (corpus_campaign/batches/B2/
-curie_g): each converged call of the original's Abaqus history, re-run in both
+B2): each converged call of the original's Abaqus history, re-run in both
 builds from the recorded arguments.
 """
 import gzip
