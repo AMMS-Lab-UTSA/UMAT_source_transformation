@@ -8,7 +8,9 @@ Two ways it used to say something else:
   copy, so it was null, or, when the output directory sat inside a repository
   (a gitignored workspace), that repository's HEAD.
 * Any file inside a git work tree was stamped with HEAD, tracked or not, so an
-  untracked file got a commit that does not contain it.
+  untracked file got a commit that does not contain it. A tracked file edited
+  since HEAD is likewise recorded as null (no ``dirty`` flag): the commit
+  would not hold the bytes that were transformed.
 """
 from __future__ import annotations
 
@@ -98,6 +100,18 @@ def test_an_untracked_file_inside_a_repository_records_no_commit(repo):
     stray = repo / "entry" / "scratch.for"
     stray.write_text(ENTRY)
     assert source_git_commit(stray) is None
+
+
+def test_a_tracked_source_with_uncommitted_edits_records_no_commit(repo):
+    # HEAD does not hold the bytes that would be transformed, staged or not.
+    source = repo / "entry" / "umat_entry.for"
+    source.write_text(ENTRY.replace("PROPS(1)", "2*PROPS(1)"))
+    assert source_git_commit(source) is None
+    _git(repo, "add", "entry/umat_entry.for")
+    assert source_git_commit(source) is None
+    source.write_text(ENTRY)
+    _git(repo, "add", "entry/umat_entry.for")
+    assert source_git_commit(source) == _git(repo, "rev-parse", "HEAD")
 
 
 def test_a_source_outside_any_repository_records_no_commit(tmp_path):

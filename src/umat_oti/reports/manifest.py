@@ -14,7 +14,7 @@ The manifest is a JSON document with the following schema
       "source": {
          "path": "<file>",
          "sha256": "<hex>",
-         "git_commit": "<sha or null>",
+         "git_commit": "<sha, or null when untracked or edited since HEAD>",
          "entry_routine": "UMAT"
       },
       "dimensions": {"ntens": 6, "nstatv": 1, "nprops": 4},
@@ -214,10 +214,13 @@ def source_git_commit(source_path: Path | str) -> Optional[str]:
     """The commit of the git repository that tracks ``source_path``, or None.
 
     None when the file does not exist, git is unavailable, the file is not in
-    a git work tree, or the work tree does not track it. The last case matters:
-    a copy staged in an output directory that happens to sit inside some other
-    repository (a gitignored workspace, a resolved closure) would otherwise be
-    stamped with that repository's HEAD, a commit that does not contain it.
+    a git work tree, the work tree does not track it, or the file differs from
+    HEAD (uncommitted edits, staged or not). Each of those cases would
+    otherwise be stamped with a HEAD that does not hold the bytes that were
+    transformed: a copy staged in an output directory inside some other
+    repository (a gitignored workspace, a resolved closure), or an author's
+    working copy edited since the last commit. ``source.sha256`` still
+    identifies the bytes in every case.
     """
     source_path = Path(source_path)
     if not source_path.is_file() or shutil.which("git") is None:
@@ -229,6 +232,13 @@ def source_git_commit(source_path: Path | str) -> Optional[str]:
             check=False, capture_output=True, text=True, timeout=5,
         )
         if tracked.returncode != 0:
+            return None
+        unchanged = subprocess.run(
+            ["git", "-C", str(source_path.parent), "diff", "--quiet", "HEAD", "--",
+             source_path.name],
+            check=False, capture_output=True, text=True, timeout=5,
+        )
+        if unchanged.returncode != 0:
             return None
         proc = subprocess.run(
             ["git", "-C", str(source_path.parent), "rev-parse", "HEAD"],
