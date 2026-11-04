@@ -427,6 +427,12 @@ def transform_umat_to_oti_from_config(
         array_interfaces = _array_valued_function_interfaces(lifted_helpers.source)
         if array_interfaces:
             config = {**config, "_otis_array_function_interfaces": array_interfaces}
+        interface_blockers = _lifted_interface_blockers(lifted_helpers.source)
+        if interface_blockers:
+            blockers.extend(interface_blockers)
+            report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
+            report_path = _write_report(output_dir, report)
+            return TransformResult(False, output_dir, report_path=report_path, blockers=blockers, warnings=warnings, report=report)
 
     from umat_oti.transform.binary32 import BINARY32_CONTEXT
     _binary32_typing = _selected_routine_typing(source_text, selected_umat, source_file)
@@ -4627,35 +4633,44 @@ def _persists(name: str, persisting: set[str] | None) -> bool:
     return "*" in persisting or str(name).upper() in persisting
 
 
-_LIFTED_FUNCTION_RE = re.compile(
-    r"^\s*(?:(?:pure|elemental|recursive)\s+)*function\s+(\w+)\s*\(([^)]*)\)\s*(?:result\s*\(\s*(\w+)\s*\))?\s*$",
+_LIFTED_PROCEDURE_RE = re.compile(
+    r"^\s*((?:(?:pure|impure|elemental|recursive)\s+|(?:type|real|integer|logical|complex|double\s+precision)\s*(?:\([^)]*\))?\s+)*)"
+    r"(function|subroutine)\s+(\w+)\s*(?:\(([^)]*)\))?\s*(?:result\s*\(\s*(\w+)\s*\))?\s*$",
     re.IGNORECASE)
 
 
-def _array_valued_function_interfaces(lifted_source: str) -> dict[str, list[str]]:
-    """Interface bodies for the lifted functions that return an array.
+def _lifted_procedures_needing_an_interface(lifted_source: str) -> dict[str, dict[str, Any]]:
+    """The lifted procedures a caller can only reach through an explicit interface.
 
-    Keyed by the lifted name (upper case). Each body is the function header,
-    its USE and IMPLICIT statements, the declarations of its dummies and its
-    result (entities of other names dropped), and END FUNCTION. Only an
-    array-valued function needs one; a scalar one keeps its EXTERNAL.
+    Keyed by the lifted name (upper case): ``kind`` (FUNCTION or SUBROUTINE),
+    ``why``, and ``body`` -- the interface body: the header, its USE and
+    IMPLICIT statements, the declarations of its dummies and result (other
+    entities dropped) and the END statement. A procedure needs one when its
+    result is an array (or allocatable or a pointer), a dummy is assumed-shape,
+    optional, allocatable, a pointer or VALUE, or it is ELEMENTAL. Through an
+    implicit interface such a call compiles and then reads the wrong memory
+    (an assumed-shape A(:,:) receives a bare address and the build crashes).
     """
-    result: dict[str, list[str]] = {}
+    result: dict[str, dict[str, Any]] = {}
     lines = lifted_source.splitlines()
     index = 0
     while index < len(lines):
-        match = _LIFTED_FUNCTION_RE.match(lines[index])
+        match = _LIFTED_PROCEDURE_RE.match(lines[index])
         if not match:
             index += 1
             continue
-        name = match.group(1).upper()
-        dummies = {a.strip().upper() for a in match.group(2).split(",") if a.strip()}
-        result_name = (match.group(3) or match.group(1)).upper()
-        wanted = dummies | {result_name}
+        prefix, kind, raw_name = match.group(1) or "", match.group(2).upper(), match.group(3)
+        name = raw_name.upper()
+        dummies = {a.strip().upper() for a in (match.group(4) or "").split(",") if a.strip()}
+        result_name = (match.group(5) or raw_name).upper() if kind == "FUNCTION" else ""
+        wanted = dummies | ({result_name} if result_name else set())
         body = [lines[index].strip()]
-        is_array = False
+        reasons: list[str] = []
+        if re.search(r"\belemental\b", prefix, re.IGNORECASE):
+            reasons.append("it is ELEMENTAL")
+        end = re.compile(rf"^\s*end\s*{kind.lower()}\b", re.IGNORECASE)
         index += 1
-        while index < len(lines) and not re.match(r"^\s*end\s*function\b", lines[index], re.IGNORECASE):
+        while index < len(lines) and not end.match(lines[index]):
             text = lines[index].strip()
             index += 1
             if re.match(r"^(use|implicit)\b", text, re.IGNORECASE):
@@ -4664,20 +4679,63 @@ def _array_valued_function_interfaces(lifted_source: str) -> dict[str, list[str]
             if "::" not in text or re.search(r"\bparameter\b", text.split("::")[0], re.IGNORECASE):
                 continue
             spec, entities = text.split("::", 1)
+            attributes = spec.lower()
             kept = []
             for item in split_top_level(entities):
                 entity = parse_entity(item)
-                if entity.upper_name in wanted:
-                    kept.append(item.strip())
-                    if entity.upper_name == result_name and entity.dimensions:
-                        is_array = True
+                if entity.upper_name not in wanted:
+                    continue
+                kept.append(item.strip())
+                is_result = entity.upper_name == result_name
+                if is_result and (entity.dimensions or re.search(r"\b(allocatable|pointer)\b", attributes)):
+                    reasons.append(f"its result {entity.name} is an array, allocatable or a pointer")
+                if not is_result:
+                    if any(":" in dimension for dimension in entity.dimensions):
+                        reasons.append(f"its dummy {entity.name} is assumed-shape")
+                    for attribute in ("optional", "allocatable", "pointer", "value"):
+                        if re.search(rf"\b{attribute}\b", attributes):
+                            reasons.append(f"its dummy {entity.name} is {attribute.upper()}")
             if kept:
                 body.append(f"{spec.strip()} :: {', '.join(kept)}")
-        body.append(f"END FUNCTION {match.group(1)}")
-        if is_array:
-            result[name] = body
+        body.append(f"END {kind} {raw_name}")
+        if reasons:
+            result[name] = {"kind": kind, "why": "; ".join(dict.fromkeys(reasons)), "body": body,
+                            "text": "\n".join(lines[index - len(body):index])}
         index += 1
     return result
+
+
+def _array_valued_function_interfaces(lifted_source: str) -> dict[str, list[str]]:
+    """Interface bodies of every lifted procedure that needs one (see above), by lifted name."""
+    return {name: info["body"] for name, info in _lifted_procedures_needing_an_interface(lifted_source).items()}
+
+
+def _lifted_interface_blockers(lifted_source: str) -> list[str]:
+    """Refuse a needing-an-interface procedure that another lifted procedure calls.
+
+    The lifted procedures are external subprograms in one file, so a call from
+    one to another goes through an implicit interface, which such a procedure
+    cannot be reached through.
+    """
+    needing = _lifted_procedures_needing_an_interface(lifted_source)
+    if not needing:
+        return []
+    blockers: list[str] = []
+    procedures = re.split(r"(?im)^\s*end\s*(?:function|subroutine)\b.*$", lifted_source)
+    for name, info in needing.items():
+        pattern = re.compile(rf"(?<![%\w]){re.escape(name)}\s*\(", re.IGNORECASE)
+        for chunk in procedures:
+            header = _LIFTED_PROCEDURE_RE.match(next((l for l in chunk.splitlines() if l.strip()), ""))
+            if header and header.group(3).upper() == name:
+                continue
+            if pattern.search(chunk):
+                blockers.append(
+                    f"The lifted {info['kind'].lower()} {name} needs an explicit interface "
+                    f"({info['why']}), and another lifted routine calls it through an implicit "
+                    f"one, which would compile and then read the wrong memory. Make it a "
+                    f"module procedure in the source, or give it explicit-shape dummies.")
+                break
+    return blockers
 
 
 def _declaration_lines(
@@ -4748,6 +4806,16 @@ def _declaration_lines(
         # unclassifiable.
         if name.upper() in external:
             lines.append(_stmt(form, f"EXTERNAL {name}_OTI"))
+    # Every other lifted procedure that needs an explicit interface (a CALLed
+    # subroutine with an assumed-shape dummy, say) gets one here; an interface
+    # for a procedure the routine does not reference is harmless.
+    emitted = {f"{name.upper()}_OTI" for name in shadow_variables if name.upper() in external}
+    for lifted_name, body in sorted(interfaces.items()):
+        if lifted_name in emitted:
+            continue
+        lines.append(_stmt(form, "INTERFACE"))
+        lines.extend(_stmt(form, text) for text in body)
+        lines.append(_stmt(form, "END INTERFACE"))
     return lines
 
 
