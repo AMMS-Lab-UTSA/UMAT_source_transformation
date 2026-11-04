@@ -26,8 +26,10 @@ CASE_DIRS = sorted(p.parent for p in cc.case_jsons())
 CI_CASES = [d for d in CASE_DIRS if json.loads((d / "case.json").read_text())["tiers"]["ci"]]
 
 
-def test_there_is_a_ci_tier_of_at_least_three_cases():
-    assert len(CI_CASES) >= 3
+def test_there_is_a_ci_tier_of_at_least_two_cases():
+    # 1.2.1 removed three curated cases whose sources have no tracked origin
+    # and added UVCplanestress (MIT): the tier is m3_j2 plus that one.
+    assert len(CI_CASES) >= 2
 
 
 @pytest.mark.parametrize("case_dir", CASE_DIRS, ids=lambda d: d.name[:60])

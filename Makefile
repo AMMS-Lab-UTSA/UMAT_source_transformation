@@ -31,7 +31,7 @@ help:
 	@echo "umat-promote       copy a batch's verified rows into umat/ (deliberate)"
 	@echo "umat-materialize   fetch the sources behind umat/ onto this machine"
 	@echo "umat-regress       re-run every promoted material; non-zero if any fails"
-	@echo "case-ci            regression cases, CI tier: 4 cases, regenerate + replay, gfortran (~10 s)"
+	@echo "case-ci            regression cases, CI tier: 2 cases, regenerate + replay, gfortran (~10 s)"
 	@echo "case-offline       every regression case incl. non-redistributable ones (needs discovery_cache)"
 	@echo ""
 	@echo "batch-status       what the transform store holds, and how much is stale"

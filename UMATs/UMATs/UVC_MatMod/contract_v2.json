@@ -1,0 +1,25 @@
+{
+  "schema": "resasm_umat_transform_v2",
+  "source": {"main_file": "UVCplanestress.for"},
+  "kinematics": "small_strain",
+  "dimensions": {"ntens": 3, "ndi": 2, "nshr": 1, "nprops": 11, "nstatev": 10},
+  "parameters": [
+    {"name": "E", "props_index": 1},
+    {"name": "nu", "props_index": 2},
+    {"name": "sigma_y0", "props_index": 3},
+    {"name": "Q_inf", "props_index": 4},
+    {"name": "b", "props_index": 5},
+    {"name": "D_inf", "props_index": 6},
+    {"name": "a", "props_index": 7},
+    {"name": "C_1", "props_index": 8},
+    {"name": "gamma_1", "props_index": 9},
+    {"name": "C_2", "props_index": 10},
+    {"name": "gamma_2", "props_index": 11}
+  ],
+  "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
+  "history": {"path_dependent": true, "state": ["STATEV(1:10)"]},
+  "validation": {
+    "props_values": [179800.0, 0.3, 318.5, 100.7, 8.0, 0.0, 200.0, 11608.2, 145.2, 1026.3, 4.7],
+    "props_source": "ahartloper/UVC_MatMod Abaqus/testing/Shell-Biaxial-UMAT.inp, *MATERIAL umat (11 constants), *DEPVAR 10"
+  }
+}

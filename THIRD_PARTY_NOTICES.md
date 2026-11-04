@@ -80,10 +80,9 @@ The following files in this repository are adaptations of those UMATs and are
 therefore also covered by the MIT notice below:
 `parameter_sensitivity/models/sweep_real_ECL_TEMP/umat.for`,
 `parameter_sensitivity/models/sweep_real_PCO/umat.for` and
-`parameter_sensitivity/models/sweep_eco/umat.for`. The regression case
-`umat/cases/umat-oti-curated--sweep-real-pco/` carries a byte-identical copy of
-`sweep_real_PCO/umat.for` (`source/umat.for`) and the transform's output from it
-(`transformed/`); both are covered by the same MIT notice.
+`parameter_sensitivity/models/sweep_eco/umat.for`. (Until 1.2.0 the
+regression case `umat/cases/umat-oti-curated--sweep-real-pco/` also carried a
+copy of `sweep_real_PCO/umat.for`; that case was removed in 1.2.1.)
 
 MIT is GPL-compatible; the files are distributed as part of the GPL-3.0-only
 whole with their MIT notice kept:
@@ -138,7 +137,7 @@ it at the old paths.
 ### 2c. The authors' own UMATs
 
 `UMATs/UMATs/generic_ps/` and the other `parameter_sensitivity/models/*/umat.for`
-files (everything not listed in 2a) are the UMAT-OTI authors' own
+files (everything not listed in 2a or 2e) are the UMAT-OTI authors' own
 implementations, distributed under GPL-3.0-only.
 
 ### 2d. Removed files and the public corpus
@@ -154,6 +153,21 @@ contract, results and the SHA-256 of the verified source bytes; the sources
 themselves are fetched by `tools/materialize_umat_sources.py` into the
 git-ignored `umat/*/materialized/` and are never redistributed (see
 `umat/.gitignore`).
+
+### 2e. `UMATs/UMATs/UVC_MatMod/UVCplanestress.for` — UVC_MatMod (MIT)
+
+An unchanged copy of `Abaqus/UVCplanestress.for` from
+https://github.com/ahartloper/UVC_MatMod at commit
+`a4b8f6e27d0c9c4699332d75f68c562ee64932ae` (sha256
+`d25ee404fed5493ea479a3a38c8b0b59a25526dd5703fff9a6d0c99bf447b46e`), the
+updated Voce-Chaboche plane-stress UMAT of Alexander R. Hartloper. Its
+licence is MIT, `Copyright (c) 2019 Alexander R. Hartloper`; the full text is
+`UMATs/UMATs/UVC_MatMod/LICENSE` and the provenance is in `PROVENANCE.md`
+beside it. The CI regression case `umat/cases/umat-oti-curated--uvc-planestress/`
+carries a byte-identical copy (`source/`) and the transform's output from it
+(`transformed/`); both are covered by the same MIT notice. MIT is
+GPL-compatible; the files are distributed as part of the GPL-3.0-only whole
+with their notice kept.
 
 ---
 

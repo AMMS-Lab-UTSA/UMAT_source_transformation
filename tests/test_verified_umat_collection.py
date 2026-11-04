@@ -271,7 +271,7 @@ def _a_permitted_case_file(path):
     is NOT taken from the case's own case.json: a corpus case's source must be
     'permitted' (with a licence file) in the corpus manifest; a curated case's
     source must be a file of this repository with the same bytes, and when that
-    file is a third-party adaptation (THIRD_PARTY_NOTICES.md section 2a) the
+    file is third-party (THIRD_PARTY_NOTICES.md section 2a or 2e) the
     case directory must be named there too. The only other exemption is the
     project's own hidden-state toy canary, by exact path."""
     cases = COLLECTION / "cases"
@@ -296,9 +296,10 @@ def _a_permitted_case_file(path):
         if not original.is_file() or not source.get("sha256") or \
                 hashlib.sha256(original.read_bytes()).hexdigest() != source["sha256"]:
             return False
-        section = _notices_section("2a")
-        if source["path"] in section:                 # third-party (MIT) adaptation
-            return f"umat/cases/{case_dir.name}/" in section
+        for tag in ("2a", "2e"):                      # third-party (MIT) sources
+            section = _notices_section(tag)
+            if source["path"] in section:
+                return f"umat/cases/{case_dir.name}/" in section
         return True                                   # the authors' own work (section 2c)
     return False
 
