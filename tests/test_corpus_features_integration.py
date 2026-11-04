@@ -93,7 +93,7 @@ def test_harness_verifies_local_and_total_parameter_sensitivities(tiny):
     records = run_entry(entry, root / "work", paths=internal_paths(entry.as_mapping()),
                         features=features)
     by = {(r["feature"], r["path"]): r for r in records}
-    for path in ("gauss_small_elastic", "gauss_small_load_unload"):
+    for path in ("minimal_small_elastic", "minimal_small_load_unload"):
         for feature in features[:4]:
             record = by[(feature, path)]
             assert record["status"] == "verified", (feature, path, record.get("reason"),
@@ -103,7 +103,7 @@ def test_harness_verifies_local_and_total_parameter_sensitivities(tiny):
             assert record["derivative_kind"] in ("local", "total")
             assert record["held_fixed"] and record["wrt"] and record["quantity"]
     # STATEV(1) does not feed back into the stress: d sigma / d STATEV_n == 0
-    zero = by[("stress_state_sens_local", "gauss_small_elastic")]
+    zero = by[("stress_state_sens_local", "minimal_small_elastic")]
     assert zero["status"] == "not_attempted" and "structural zero" in zero["reason"]
     # build identity (review B1/E) and locators
     for record in records:
@@ -116,5 +116,5 @@ def test_harness_verifies_local_and_total_parameter_sensitivities(tiny):
         assert ":" in record["evidence_dir"] and not record["evidence_dir"].startswith("/")
         assert record["gates"]["hidden_state_trips"] == []
         assert "hidden_state_trips" not in record
-    cov = by[("stress_param_sens_total", "gauss_small_load_unload")]["coverage"]
+    cov = by[("stress_param_sens_total", "minimal_small_load_unload")]["coverage"]
     assert cov["n_states_judged"] == cov["n_states"] > 0

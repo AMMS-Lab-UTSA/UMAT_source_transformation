@@ -43,7 +43,7 @@ def records(tmp_path_factory):
     source.write_text(STOPPER)
     shutil.copy(source, store / "umat.f")
     (store / "compile_order.txt").write_text("umat.f\n")
-    entry = CorpusEntry(key="toy_stop", source_id="gauss_toy/stop_under_perturbation",
+    entry = CorpusEntry(key="toy_stop", source_id="toy/stop_under_perturbation",
                         original_source=source, ntens=6, nstatv=2, props=[2.0e5, 0.3],
                         store_dir=store)
     return run_entry(entry, root / "work", paths=internal_paths({"ndi": 3, "nshr": 3}),
@@ -56,7 +56,7 @@ def _by(records):
 
 def test_no_trip_and_the_termination_is_recorded(records):
     assert all(not r.get("hidden_state_trips") for r in records), records[0].get("hidden_state_trips")
-    r = _by(records)[("ddsdde", "gauss_small_elastic")]
+    r = _by(records)[("ddsdde", "minimal_small_elastic")]
     stop = r["gates"]["terminated_under_perturbation"]
     assert stop["original"]["increment"] == 5 and "props(2) +h" in stop["original"]["call"]
     # the init variants stop at the same call (otherwise the path is blocked)
@@ -69,7 +69,7 @@ def test_states_before_the_stop_are_judged_the_rest_are_not(records):
     # 5th disclosed), but the PROPS isolation probes could not be applied (the
     # total re-runs were never written): explicit rule -> not verified
     for f in ("ddsdde", "stress_param_sens_local"):
-        r = by[(f, "gauss_small_elastic")]
+        r = by[(f, "minimal_small_elastic")]
         assert r["status_before_gate_notes"] == "verified", r.get("reason_before_gate_notes")
         assert NEEDLE in r["reason_before_gate_notes"]
         assert r["coverage"]["n_states_judged"] == 4
@@ -78,16 +78,16 @@ def test_states_before_the_stop_are_judged_the_rest_are_not(records):
         assert r["reason"].startswith("hidden-state gate not applied on this path: isolation probe")
         assert NEEDLE in r["reason"]
     # the primal is not a derivative: unaffected by the rule
-    assert by[("primal_stress_state", "gauss_small_elastic")]["status"] == "verified"
+    assert by[("primal_stress_state", "minimal_small_elastic")]["status"] == "verified"
     # 12-increment path: 4/12 judged -> coverage rule, reason names the stop
-    r = by[("ddsdde", "gauss_small_load_unload")]
+    r = by[("ddsdde", "minimal_small_load_unload")]
     assert r["status"] == "not_attempted"
     assert r["reason"].startswith(NEEDLE), r["reason"]
     assert r["coverage"]["n_states_judged"] == 4
 
 
 def test_total_columns_need_records_that_were_never_written(records):
-    for path in ("gauss_small_elastic", "gauss_small_load_unload"):
+    for path in ("minimal_small_elastic", "minimal_small_load_unload"):
         r = _by(records)[("stress_param_sens_total", path)]
         assert r["status"] == "not_attempted"
         assert r["reason"].startswith(NEEDLE), r["reason"]

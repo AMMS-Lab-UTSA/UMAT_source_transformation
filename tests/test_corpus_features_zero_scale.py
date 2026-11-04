@@ -145,7 +145,7 @@ def test_props3_zero_dropped_derivative_fails_local_and_total(injected):
         {k: (r["status"], r.get("entries")) for k, r in clean.items()}
     by = {(r["feature"], r["path"]): r for r in injected["drop"]}
     for feature in ("stress_param_sens_local", "stress_param_sens_total"):
-        for path in ("gauss_small_elastic", "gauss_small_load_unload"):
+        for path in ("minimal_small_elastic", "minimal_small_load_unload"):
             r = by[(feature, path)]
             assert r["status"] == "failed", (feature, path, r["status"], r.get("entries"),
                                              r.get("reason"))
