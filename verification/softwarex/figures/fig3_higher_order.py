@@ -1,20 +1,20 @@
 """Figure 3 (Model A resolved second- to fourth-order stress derivatives) from 2ae2ee0 data.
 
-Round-9 derivative (Quill, 2026-10-28) of evidence/2ae2ee0/figures/fig4_higher_order.py (Ada), made in
+Round-9 derivative (manuscript editor, 2026-10-28) of evidence/2ae2ee0/figures/fig4_higher_order.py (builder), made in
 tex/figures/ for the layout pass: LAYOUT ONLY. The figure is drawn at the article's text width
 (390 pt = 5.42 in) so that it is included at 100 % instead of being shrunk to 86 %; font sizes are
 raised (base and axis labels 7.5 pt, tick labels 7.0 pt, panel titles and in-panel derivative labels
 7.0 pt, legend 7.5 pt); the legend uses four columns; output name and folder changed. Data, filters,
 plotted columns and every number are unchanged.
-Round 10 (Quill, 2026-10-28; Vera format round m3, m5), LAYOUT ONLY: in panels (d)-(f) the x-tick
+Round 10 (manuscript editor, 2026-10-28; the reviewer format round m3, m5), LAYOUT ONLY: in panels (d)-(f) the x-tick
 labels are the index pairs 11, 22, 33, 12 (7.0 pt, were sigma_11 ... at 6.5 pt) under the axis label
 "stress component sigma_ij", so that neighbouring labels no longer touch; this docstring now states
 the sizes and legend columns the code uses (it said 3 columns and 7.5 pt titles).
 Run from the workspace root with: python -I tex/figures/fig3_higher_order.py .
 
-Original builder: Ada, 2026-10-27. Run with the Anaconda interpreter in isolated mode:
+Original builder, 2026-10-27. Run with the Anaconda interpreter in isolated mode:
 
-  C:/Users/vfn333/AppData/Local/anaconda3/python.exe -I fig4_higher_order.py WORKSPACE_ROOT
+  C:/Users/<user>/AppData/Local/anaconda3/python.exe -I fig4_higher_order.py WORKSPACE_ROOT
 
 Data: evidence/2ae2ee0/rounds/higher_order_convergence/j2/convergence_rows.csv, written by
 `python -m umat_oti.validation.higher_order_convergence_study --model j2` at
@@ -188,7 +188,7 @@ def main() -> int:
     prov = {
         "figure": NAME,
         "manuscript_location": "tex/sections/03-example.tex, Figure fig:higher (build Figure 3; V11 Figure 4)",
-        "derived_from": "evidence/2ae2ee0/figures/fig4_higher_order.py (Ada); round-9 layout-only change",
+        "derived_from": "evidence/2ae2ee0/figures/fig4_higher_order.py (builder); round-9 layout-only change",
         "umat_oti_commit": COMMIT,
         "data": [{"path": DATA, "sha256": sha256(data_path)}],
         "data_producer": "python -m umat_oti.validation.higher_order_convergence_study --model j2 "

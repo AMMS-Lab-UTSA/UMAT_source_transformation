@@ -3,9 +3,9 @@
 Final pass: `True`
 Status: `passed`
 Abaqus command: `abaqus`
-Original UMAT: `/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_exp/code_exp.f`
-Transformed UMAT: `/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/arc_791506/paired_batch/oti_transform/code_exp/code_exp_oti.f`
-Validation directory: `/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/arc_791506/paired_batch/validation/code_exp`
+Original UMAT: `UMATs/UMATs/ICP/plasticity_exp/code_exp.f`
+Transformed UMAT: `paper_results/arc_791506/paired_batch/oti_transform/code_exp/code_exp_oti.f`
+Validation directory: `paper_results/arc_791506/paired_batch/validation/code_exp`
 
 ## Load Case
 Mode: `single element plastic tension`

@@ -56,7 +56,7 @@ def _coverage(record: Mapping) -> tuple:
     return int(cov.get("n_states") or 0), judged
 
 
-def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2") -> list:
+def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "corpus_features/B2") -> list:
     groups: "OrderedDict[tuple, list]" = OrderedDict()
     # a "not applied" hidden-state gate note never folds into a verified cell
     records = apply_gate_notes([dict(r) for r in records])

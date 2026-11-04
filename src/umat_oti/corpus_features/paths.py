@@ -44,7 +44,7 @@ class LoadingPath:
     regime: str                             # elastic|plastic|unload_reload|cyclic|relaxation|growth
     kinematics: str                         # small|finite
     increments: list = field(default_factory=list)
-    provenance: str = "gauss internal minimal path (loading_paths not importable)"
+    provenance: str = "internal minimal path (loading_paths not importable)"
 
 
 def voigt_components(ndi: int, nshr: int) -> list:

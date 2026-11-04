@@ -1,7 +1,7 @@
 """A minimal routine-level path driver for the mechanics checks, and its tests.
 
 Kept here (a campaign test-support file) rather than in ``src``: the campaign's
-harness is gauss's (``umat_oti.corpus_features``), and this is only the
+harness is ``umat_oti.corpus_features``, and this is only the
 smallest driver that lets the mechanics checks be validated on ORIGINAL corpus
 routines without Abaqus. It reuses the replay driver's build pieces --
 the installation's ``aba_param.inc`` under every casing, the author's PROGRAM

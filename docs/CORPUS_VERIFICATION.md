@@ -91,7 +91,7 @@ Two counts are reported over the eligible denominator:
 Several sources inside the 242 moved to a worse, uncounted state (for example
 Human-face to `original_job_failed`, Alex 20470 and Robot to `primal_disagreed`);
 no source of the 106 or the 112 did. The per-source table is in
-`corpus_campaign/batches/B21/atlas/tables.md` (outside this repository).
+the batch B21 campaign tables (outside this repository).
 
 Per material family (code-reviewed classification, decision D-11; "eligible" is the
 family's share of D2):
@@ -115,7 +115,7 @@ The growth figures include sources whose growth tensor is fixed to the identity
 disagreements in Abaqus; the per-source reasons are in
 [paper_results/corpus/manifest/](../paper_results/corpus/manifest/) and the
 registry. The pass20 -> pass21 change of every source, with its cause, is in
-`corpus_campaign/batches/B10/atlas/` (outside this repository).
+the batch B10 campaign records (outside this repository).
 
 Reproduce the counts: `python3 $UMAT_OTI_WORKSPACE/corpus_campaign/count_target.py
 paper_results/corpus/corpus_registry.json <harness manifest_cells.jsonl>`, or read

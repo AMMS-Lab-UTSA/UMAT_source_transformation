@@ -12,7 +12,7 @@
 #   refreeze/venv/<sha7>      uv virtual environment (Python 3.11)
 #   evidence/<sha7>/          archived logs, freeze, junit, outputs
 set -u
-WS="C:/Users/vfn333/Documents/GitHub/umat-oti-softwarex-manuscript"
+WS="C:/Users/<user>/Documents/GitHub/umat-oti-softwarex-manuscript"
 COMMIT="$1"
 STEPS="${2:-install,smoke,pytest,paper}"
 CLONE="$WS/refreeze/src/ust"

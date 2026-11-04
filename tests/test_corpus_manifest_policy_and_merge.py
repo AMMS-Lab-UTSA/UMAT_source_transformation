@@ -192,7 +192,7 @@ def test_merge_replaces_cells_keeps_history_and_recounts(tmp_path: Path, roots):
     lines = [
         {"source_id": "a/1.f", "feature": "primal_stress_state", **_primal()},
         {"source_id": "a/1.f", "feature": "stress_param_sens_local", **_good(),
-         "producer": "gauss/B2"},
+         "producer": "corpus_features/B2"},
         {"source_id": "b/2.f", "feature": "global_sens", "status": "failed",
          "reason": "residual did not converge", "evidence": "t:other.jsonl",
          "build": {"kind": "store", "fingerprint": "abc"}},
@@ -206,7 +206,7 @@ def test_merge_replaces_cells_keeps_history_and_recounts(tmp_path: Path, roots):
     assert report["unmatched"] == ["zzz"]
     assert len(report["rejected"]) == 1 and report["rejected"][0]["feature"] == "ddsdde"
     cell = m["rows"][0]["features"]["stress_param_sens_local"]
-    assert cell["status"] == "verified" and cell["producer"] == "gauss/B2"
+    assert cell["status"] == "verified" and cell["producer"] == "corpus_features/B2"
     assert cell["history"][0]["status"] == "not_attempted"
     assert m["rows"][0]["features"]["ddsdde"]["status"] == "not_attempted"
     f = m["summary"]["features"]["D1_acquired"]

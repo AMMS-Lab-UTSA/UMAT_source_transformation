@@ -7,7 +7,7 @@
 # Results go to evidence/<sha7>/rounds/<round>/; exit status per step.
 # Usage: run_rounds.sh <commit>
 set -u
-WS="C:/Users/vfn333/Documents/GitHub/umat-oti-softwarex-manuscript"
+WS="C:/Users/<user>/Documents/GitHub/umat-oti-softwarex-manuscript"
 SHA=$(git -C "$WS/refreeze/src/ust" rev-parse "$1^{commit}")
 S7=${SHA:0:7}
 WT="$WS/refreeze/wt/$S7"

@@ -1,7 +1,7 @@
 {
  "figure": "figure3_higher_order",
  "manuscript_location": "tex/sections/03-example.tex, Figure fig:higher (build Figure 3; V11 Figure 4)",
- "derived_from": "evidence/2ae2ee0/figures/fig4_higher_order.py (Ada); round-9 layout-only change",
+ "derived_from": "evidence/2ae2ee0/figures/fig4_higher_order.py (builder); round-9 layout-only change",
  "umat_oti_commit": "2ae2ee07547ae86c5c4c9bb9fe123b1245c13dbc",
  "data": [
   {

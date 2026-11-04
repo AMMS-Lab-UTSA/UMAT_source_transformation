@@ -5,9 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --time=00-01:00:00
-#SBATCH --chdir=/home/vfn333/softwarex_work/UMAT_source_transformation
-#SBATCH --output=/home/vfn333/softwarex_work/UMAT_source_transformation/logs/umat-oti-abaqus-%j.out
-#SBATCH --error=/home/vfn333/softwarex_work/UMAT_source_transformation/logs/umat-oti-abaqus-%j.err
+#SBATCH --output=logs/umat-oti-abaqus-%j.out
+#SBATCH --error=logs/umat-oti-abaqus-%j.err
 
 # ============================================================================
 # ARC Slurm submission script for the UMAT-OTI Abaqus paired validation.
@@ -39,8 +38,10 @@
 
 set -euo pipefail
 
-REPO_ROOT="/home/vfn333/softwarex_work/UMAT_source_transformation"
-VENV="/home/vfn333/softwarex_work/.venv"
+# Submit from the repository root (sbatch starts the job there); set VENV to
+# override the virtual environment, by default the .venv beside the checkout.
+REPO_ROOT="${SLURM_SUBMIT_DIR:-$(pwd)}"
+VENV="${VENV:-${REPO_ROOT}/../.venv}"
 PYTHON="${VENV}/bin/python"
 cd "${REPO_ROOT}"
 

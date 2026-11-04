@@ -59,7 +59,7 @@ from typing import Any
 import numpy as np
 
 # ---------------------------------------------------------------------------
-# the shared interface (agreed with gauss, see corpus_campaign/OWNERSHIP.md)
+# the shared interface between the loading paths and the harness
 # ---------------------------------------------------------------------------
 REGIMES = ("elastic", "plastic", "unload_reload", "cyclic", "relaxation", "growth")
 KINEMATICS = ("small", "finite")

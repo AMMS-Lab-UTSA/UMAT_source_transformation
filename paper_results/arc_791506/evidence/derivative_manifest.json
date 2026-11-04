@@ -172,7 +172,7 @@
   "source": {
     "entry_routine": "UMAT",
     "git_commit": "13e98cafe38c30242a6139cec0bb6c27e477a40a",
-    "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+    "path": "UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
     "sha256": "82defecdce46a577087674977be175b3b9881be8afafaa1d88545c8534563672"
   },
   "state_variables": [

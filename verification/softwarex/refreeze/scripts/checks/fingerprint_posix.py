@@ -1,4 +1,4 @@
-"""Transform fingerprint as Linux computes it, from raw git blobs (Ada; check of Vera B1).
+"""Transform fingerprint as Linux computes it, from raw git blobs (builder; check of the reviewer B1).
 
 Reimplements umat_oti.store.transform_store._package_digest with POSIX relative paths and
 LF blob contents, reading FINGERPRINTED and NOT_TRANSFORM_CODE from the commit itself.
