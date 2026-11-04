@@ -20,8 +20,8 @@
     "sympy>=1.12"
   ],
   "license": "https://spdx.org/licenses/GPL-3.0-only",
-  "version": "1.2.0",
-  "dateModified": "2026-10-28",
+  "version": "1.2.1",
+  "dateModified": "2026-11-04",
   "keywords": [
     "Abaqus",
     "UMAT",

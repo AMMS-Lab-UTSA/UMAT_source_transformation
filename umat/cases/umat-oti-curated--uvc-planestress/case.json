@@ -24,9 +24,9 @@
   "fetch": null
  },
  "fingerprints": {
-  "transform_fingerprint": "62afec213058cce5",
-  "harness_fingerprint": "d2835250d9f67d57",
-  "contract_transform_generation": "c61511ea0ffe58e2"
+  "transform_fingerprint": "a007f44506f334be",
+  "harness_fingerprint": "8568ec22fd181816",
+  "contract_transform_generation": "a007f44506f334be"
  },
  "transform": {
   "settings": {
@@ -681,8 +681,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261104T104402",
-  "seconds": 14.4,
+  "run_id": "20261104T113749",
+  "seconds": 14.5,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -694,10 +694,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "6a5956772cb2b477c914df18495a098afa51f549d9451c762b575299440ea764",
+  "tree_sha256": "f72c70ec20a290cc3dcdc063c9c09a86b81013ac9f3ff4e5dbac3010a9b199f5",
   "location": "corpus_assets",
   "files": 36,
-  "bytes": 875443
+  "bytes": 875511
  },
  "tiers": {
   "ci": true,
@@ -713,12 +713,12 @@
   "routine-level evidence (driver), not Abaqus",
   "loading paths are this pipeline's probes, not the author's example"
  ],
- "date": "2026-11-04T10:44:20",
+ "date": "2026-11-04T11:38:07",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.1,
+    "seconds": 5.3,
     "source_from": "case",
     "compiled_in_job_layout": true,
     "paths": {
@@ -788,7 +788,7 @@
     }
    },
    "replay": {
-    "seconds": 1.9,
+    "seconds": 1.7,
     "units_from": "case",
     "paths": {
      "elastic_uniaxial": {

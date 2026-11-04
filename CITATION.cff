@@ -8,8 +8,8 @@ abstract: >-
   finite-difference derivatives, driven by a compact JSON contract.
 type: software
 license: GPL-3.0-only
-version: 1.2.0
-date-released: "2026-10-28"
+version: 1.2.1
+date-released: "2026-11-04"
 repository-code: "https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation"
 url: "https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation"
 keywords:
