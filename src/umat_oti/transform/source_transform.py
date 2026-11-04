@@ -1563,7 +1563,17 @@ def _local_newton_blockers(
     blockers: list[str] = []
     lines = source_text.splitlines()
     span = (_selected_routine_span(parsed, selected_umat) if parsed is not None else None) or (1, len(lines))
+    form = parsed.form if parsed is not None else "fixed"
     for contract in _parse_extra_jacobian_contracts(config):
+        if contract.get("loop_top_line") and contract.get("seed_variable") \
+                and _jint_loop_body(lines, form, contract) is None:
+            blockers.append(
+                f"Local-Jacobian request {contract.get('id')!r}: the end of the loop at "
+                f"line {contract.get('loop_top_line')} cannot be determined (it is not a "
+                f"DO construct closed by END DO, or its body holds a labelled DO), so "
+                f"the variables carried from one pass to the next cannot be found and "
+                f"the extra seed direction cannot be reset in them. Give the loop's "
+                f"closing line as loop.exit_line.")
         replaced = str(contract.get("replace_variable") or "").upper()
         if not replaced:
             continue
@@ -3833,6 +3843,9 @@ def _transform_source_text(
         config=config,
         ntens=ntens,
         form=form,
+        lines=lines,
+        shadows=shadow_variables,
+        allocatable=list(mirrored_allocations),
     )
     original_line_to_output_index: dict[int, int] = {}
 
@@ -11110,11 +11123,120 @@ def _indexed_name(name: str, indices: list[int]) -> str:
     return f"{name}({joined})"
 
 
-def _extra_jacobian_reseed_lines(form: str, *, seed_var: str, slot_start: int, seed_components: list[list[int]]) -> list[str]:
+_JINT_DO_START = re.compile(r"^\s*(?:\d+\s+)?DO\b(?!\s*\d)", re.IGNORECASE)
+_JINT_LABELED_DO = re.compile(r"^\s*(?:\d+\s+)?DO\s*\d+", re.IGNORECASE)
+_JINT_END_DO = re.compile(r"^\s*(?:\d+\s+)?END\s*DO\b", re.IGNORECASE)
+
+
+def _jint_statement_lines(lines: list[str], form: str, first: int, last: int) -> list[tuple[int, str]]:
+    """(line, statement text) for the statements starting in [first, last], continuations joined."""
+    out: list[tuple[int, str]] = []
+    for number in range(max(first, 1), min(last, len(lines)) + 1):
+        raw = lines[number - 1]
+        if form == "fixed":
+            if raw[:1] in ("C", "c", "*", "!") or not raw.strip():
+                continue
+            if len(raw) > 5 and raw[5] not in (" ", "0") and out:
+                number0, text = out[-1]
+                out[-1] = (number0, text + " " + _executable_text(raw[6:]))
+                continue
+            out.append((number, _executable_text(raw[6:] if len(raw) > 6 else "")))
+        else:
+            text = _executable_text(raw)
+            if out and out[-1][1].rstrip().endswith("&"):
+                number0, previous = out[-1]
+                out[-1] = (number0, previous.rstrip()[:-1] + " " + text.lstrip().lstrip("&"))
+                continue
+            if text.strip():
+                out.append((number, text))
+    return out
+
+
+def _jint_loop_body(lines: list[str], form: str, contract: dict[str, Any]) -> tuple[int, int] | None:
+    """The first and last line of the loop body a local-Jacobian request names, or None.
+
+    The loop is the DO construct starting at ``loop_top_line``, closed by its
+    matching END DO; ``loop_exit_line`` (the closing line) overrides that.
+    None when neither settles where the body ends: a top that is not a DO
+    statement (a GOTO loop) without an exit line, a missing END DO, or a body
+    holding a labelled DO, whose shared CONTINUE makes counting unreliable.
+    """
+    top = int(contract.get("loop_top_line") or 0)
+    if not 0 < top <= len(lines):
+        return None
+    exit_line = int(contract.get("loop_exit_line") or 0)
+    if exit_line:
+        return (top + 1, exit_line - 1) if top < exit_line <= len(lines) else None
+    statements = _jint_statement_lines(lines, form, top, len(lines))
+    if not statements or not _JINT_DO_START.match(statements[0][1]):
+        return None
+    depth = 0
+    for number, text in statements[1:]:
+        if _JINT_LABELED_DO.match(text):
+            return None
+        if _JINT_DO_START.match(text):
+            depth += 1
+        elif _JINT_END_DO.match(text):
+            if depth == 0:
+                return top + 1, number - 1
+            depth -= 1
+    return None
+
+
+def _jint_carried_names(lines: list[str], form: str, body: tuple[int, int],
+                        candidates: set[str]) -> set[str]:
+    """Shadowed names that may carry a value from one pass of the loop to the next.
+
+    Every candidate the body assigns, or passes to a CALL (which may assign
+    it). This over-approximates the names live across the back edge, which is
+    safe: clearing the extra seed direction in a name that is recomputed
+    before it is read changes nothing.
+    """
+    carried: set[str] = set()
+    if not candidates:
+        return carried
+    names = "|".join(re.escape(name) for name in sorted(candidates, key=len, reverse=True))
+    assigned = re.compile(rf"(?<![%\w.])({names})\s*(?:\([^=]*\))?\s*=(?!=)", re.IGNORECASE)
+    called = re.compile(r"\bCALL\s+\w+\s*\((.*)\)", re.IGNORECASE)
+    mention = re.compile(rf"(?<![%\w.])({names})(?![\w])", re.IGNORECASE)
+    for _number, text in _jint_statement_lines(lines, form, body[0], body[1]):
+        carried.update(match.group(1).upper() for match in assigned.finditer(text))
+        call = called.search(text)
+        if call:
+            carried.update(match.group(1).upper() for match in mention.finditer(call.group(1)))
+    return carried
+
+
+def _extra_jacobian_reseed_lines(form: str, *, seed_var: str, slot_start: int,
+                                 seed_components: list[list[int]],
+                                 carried: Sequence[str] = (),
+                                 allocatable: frozenset[str] = frozenset()) -> list[str]:
+    """The per-pass reseed of a local-Jacobian request: its own directions only.
+
+    The iterate gets 1 in each extra seed direction, and every name that may
+    carry a value across the loop's back edge gets 0 in those directions;
+    nothing else is touched. The result is J = dr/d(iterate) at fixed carried
+    state, and the strain directions every variable carries through the loop
+    (which DDSDDE is read from) survive. Writing the iterate as
+    REAL(X) + E_k instead cleared all of its directions on every pass: in a
+    loop whose carried state depends on the iterate (UVCplanestress's ep_eq,
+    updated after the Newton step) J was the derivative of nothing the pass
+    evaluates, and DDSDDE lost the strain sensitivities carried through the
+    loop (a relative error of about 0.1 against the tangent-only build).
+    """
+    from umat_oti.oti.oti_directions import member_name
+
     lines = [_comment_line(form, f"OTIS extra-Jacobian reseed: {seed_var}_OTI directions starting at {slot_start}")]
-    for offset, component in enumerate(seed_components):
+    members = [member_name([slot_start + offset]) for offset in range(len(seed_components))]
+    for name in sorted(set(carried) - {seed_var}):
+        for member in members:
+            statement = f"{name}_OTI%{member} = 0.0D0"
+            if name in allocatable:
+                statement = f"IF (ALLOCATED({name}_OTI)) {statement}"
+            lines.append(_stmt(form, statement))
+    for member, component in zip(members, seed_components):
         target = _indexed_name(f"{seed_var}_OTI", component)
-        lines.append(_stmt(form, f"{target} = REAL({target}) + {_seed_basis_name(slot_start + offset)}"))
+        lines.append(_stmt(form, f"{target}%{member} = 1.0D0"))
     return lines
 
 
@@ -11482,6 +11604,9 @@ def _extra_jacobian_splice_maps(
     config: dict[str, Any],
     ntens: int,
     form: str,
+    lines: Sequence[str] = (),
+    shadows: Sequence[str] = (),
+    allocatable: Sequence[str] = (),
 ) -> tuple[dict[int, list[str]], dict[int, list[str]]]:
     after_inserts: dict[int, list[str]] = {}
     replace_inserts: dict[int, list[str]] = {}
@@ -11500,7 +11625,12 @@ def _extra_jacobian_splice_maps(
         extract_after_line = int(contract.get("extract_after_line") or 0)
         seed_components = [list(component) for component in (contract.get("seed_components") or [])]
         if loop_top and seed_var and seed_components:
-            reseed = _extra_jacobian_reseed_lines(form, seed_var=seed_var, slot_start=slot, seed_components=seed_components)
+            body = _jint_loop_body(list(lines), form, contract) if lines else None
+            carried = (_jint_carried_names(list(lines), form, body, {str(n).upper() for n in shadows})
+                       if body else set())
+            reseed = _extra_jacobian_reseed_lines(
+                form, seed_var=seed_var, slot_start=slot, seed_components=seed_components,
+                carried=sorted(carried), allocatable=frozenset(str(n).upper() for n in allocatable))
             prelude_raw = contract.get("reseed_prelude") or []
             if prelude_raw:
                 reseed.append(_comment_line(form, f"OTIS reseed prelude: propagate seeded {seed_var} before residual"))
