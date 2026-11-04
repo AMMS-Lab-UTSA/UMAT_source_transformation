@@ -184,7 +184,7 @@
     "divergence_within_model_solver_tolerance": true,
     "interpretation": "primal responses agree",
     "model_solver_tolerance": 1e-12,
-    "model_solver_tolerance_citation": "visco_imp.f line 121: IF(ABS(XRES).LT.1.E-12) GOTO 10",
+    "model_solver_tolerance_citation": "visco_imp.f line 121: the local Newton iteration stops once |XRES| < 1e-12",
     "per_increment": [
       {
         "agrees": true,
@@ -321,7 +321,7 @@
         "elastic"
       ],
       "components": "all",
-      "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. visco_imp.f lines 88-92: CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then STRESS(K)=STRESS(K)+DSTRESS(K), with DDSDDE from the constant E=1000, XNUE=0.3 set at lines 42-43. The plastic correction is reached only under IF(FLOW.GT.0.) at line 106.",
+      "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. visco_imp.f lines 88-92: the increment DDSDDE . DSTRAN is added to STRESS, with DDSDDE from the constant E=1000, XNUE=0.3 set at lines 42-43. The plastic correction is reached only when FLOW > 0 (line 106).",
       "kind": "source_affine_branch",
       "seed_directions": "any"
     }

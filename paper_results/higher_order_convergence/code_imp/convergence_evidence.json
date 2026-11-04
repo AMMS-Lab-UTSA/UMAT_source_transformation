@@ -180,7 +180,7 @@
     "divergence_within_model_solver_tolerance": true,
     "interpretation": "the transformed and original builds stop at different points, by an amount of the same order as the model's own local Newton tolerance. The two builds are not solving to the same state, which bounds what any verification of this model can resolve. That is a property of the model: it is not evidence that the transformation is wrong, and it is not evidence that it is right",
     "model_solver_tolerance": 1e-05,
-    "model_solver_tolerance_citation": "code_imp.f line 29: TOLER=1.D-5, tested as IF(DABS(RES).LT.TOLER) at line 151. RES has stress units, so two builds may stop up to ~1e-5 MPa apart on the same increment.",
+    "model_solver_tolerance_citation": "code_imp.f line 29: tolerance 1e-5 on |RES|, tested at line 151. RES has stress units, so two builds may stop up to ~1e-5 MPa apart on the same increment.",
     "per_increment": [
       {
         "agrees": true,
@@ -318,7 +318,7 @@
         "elastic"
       ],
       "components": "all",
-      "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. code_imp.f lines 66-104: DDSDDE is built from E=210000 and XNUE=0.3 (lines 44-45), CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then STRESS(K)=STRESS(K)+DSTRESS(K); the plastic correction is reached only under IF(ZY.GT.0.) at line 141.",
+      "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. code_imp.f lines 66-104: DDSDDE is built from E=210000 and XNUE=0.3 (lines 44-45), the increment DDSDDE . DSTRAN is added to STRESS; the plastic correction is reached only when ZY > 0 (line 141).",
       "kind": "source_affine_branch",
       "seed_directions": "any"
     },

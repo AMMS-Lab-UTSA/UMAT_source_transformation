@@ -303,7 +303,7 @@ MODELS: dict[str, ModelSpec] = {
         fixed_form=False,
         local_solver_tolerance=1.0e-12,
         local_solver_tolerance_citation=(
-            "visco_imp.f line 121: IF(ABS(XRES).LT.1.E-12) GOTO 10"
+            "visco_imp.f line 121: the local Newton iteration stops once |XRES| < 1e-12"
         ),
         branch_margin_statev_index=3,
         branch_margin_meaning=(
@@ -315,10 +315,10 @@ MODELS: dict[str, ModelSpec] = {
                 kind="source_affine_branch",
                 branches=("elastic",),
                 detail=_ELASTIC_AFFINE + (
-                    "visco_imp.f lines 88-92: CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then "
-                    "STRESS(K)=STRESS(K)+DSTRESS(K), with DDSDDE from the constant "
+                    "visco_imp.f lines 88-92: the increment DDSDDE . DSTRAN is added to "
+                    "STRESS, with DDSDDE from the constant "
                     "E=1000, XNUE=0.3 set at lines 42-43. The plastic correction is "
-                    "reached only under IF(FLOW.GT.0.) at line 106."
+                    "reached only when FLOW > 0 (line 106)."
                 ),
             ),
         ),
@@ -340,7 +340,7 @@ MODELS: dict[str, ModelSpec] = {
         base_step=4.0e-5,
         local_solver_tolerance=1.0e-5,
         local_solver_tolerance_citation=(
-            "code_imp.f line 29: TOLER=1.D-5, tested as IF(DABS(RES).LT.TOLER) at "
+            "code_imp.f line 29: tolerance 1e-5 on |RES|, tested at "
             "line 151. RES has stress units, so two builds may stop up to ~1e-5 MPa "
             "apart on the same increment."
         ),
@@ -350,9 +350,9 @@ MODELS: dict[str, ModelSpec] = {
                 branches=("elastic",),
                 detail=_ELASTIC_AFFINE + (
                     "code_imp.f lines 66-104: DDSDDE is built from E=210000 and "
-                    "XNUE=0.3 (lines 44-45), CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then "
-                    "STRESS(K)=STRESS(K)+DSTRESS(K); the plastic correction is "
-                    "reached only under IF(ZY.GT.0.) at line 141."
+                    "XNUE=0.3 (lines 44-45), the increment DDSDDE . DSTRAN is added to "
+                    "STRESS; the plastic correction is "
+                    "reached only when ZY > 0 (line 141)."
                 ),
             ),
             SourceZeroProof(
