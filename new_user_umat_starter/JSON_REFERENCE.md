@@ -194,6 +194,30 @@ Supported compact fields:
 - `post_loop_restore`
 - `debug_dump`
 
+What the extracted Jacobian means (1.2.1). On every pass of the loop the
+transform gives the iterate (`seed`) the value 1 in its extra seed direction
+and sets that direction to 0 in every variable the loop body may carry to the
+next pass (each variable it assigns or passes to a CALL); no other direction
+is touched. The extracted value is therefore J = dr/d(iterate) **at fixed
+carried state**: the residual's derivative with respect to the iterate, with
+every variable carried from the previous pass held at its value. Strain
+derivatives carried through the loop are kept, so `DDSDDE` is the same with or
+without the request.
+
+- That is the Newton Jacobian only when the residual depends on the iterate
+  alone. A loop that updates other state from the iterate (for example an
+  accumulated plastic strain computed after the Newton step and read by the
+  next residual) has a different "coupled" derivative, and an author's
+  hand-coded Jacobian may follow a third convention (for example one that
+  freezes an auxiliary such as a stress norm). To differentiate through such
+  a carried variable, declare it in the contract as a seed of its own (a
+  second iterate); the request does not infer it.
+- The loop must be a DO construct closed by END DO, so that its body can be
+  read; otherwise give its closing line as `loop.exit_line`. A loop whose body
+  holds a labelled DO, or a GOTO loop without `exit_line`, is refused with a
+  message, because the variables carried across its back edge cannot be
+  determined.
+
 `helper_surfaces`
 
 - Optional mappings that tell the loader how helper-local outputs map back to
