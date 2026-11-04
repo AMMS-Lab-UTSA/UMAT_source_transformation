@@ -408,7 +408,7 @@ def read_constants(deck_text: str, material_name: str, constants: int) -> dict:
     """The constants a deck WRITES, slot by slot, by the rules Abaqus applies.
 
     Measured on Abaqus/Standard 2021.HF5 with a UMAT that prints PROPS
-    (corpus_campaign/batches/B8/ada/props_card_probe): each data line is one
+    (the batch B8 campaign records): each data line is one
     card of eight values; a line with fewer is zero-filled to eight BY THE
     SOLVER (a trailing comma does not continue the line: ``1.,2.,3.,4.,`` then
     ``5.,6.`` gives PROPS 1-4, zeros, then 5 and 6 at slots 9 and 10); a ``**``

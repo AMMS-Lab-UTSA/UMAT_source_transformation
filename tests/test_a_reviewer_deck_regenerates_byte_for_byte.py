@@ -1,4 +1,4 @@
-"""tools/make_council_deck.py (G9, D-19a rev 2 R6.1).
+"""tools/make_reviewer_deck.py (G9, D-19a rev 2 R6.1).
 
 --check regenerates every reviewer plan and deck and compares them byte for
 byte with what is on disk: it passes on fresh output and fails after a
@@ -41,19 +41,19 @@ def _row(e=210000.0):
             {"index": 1, "name": "E", "value": value, "basis": "b", "confidence": "class-typical"},
             {"index": 2, "name": "nu", "value": 0.3, "basis": "b", "confidence": "class-typical"}]}
     return {"source_id": "o__r/src/umat.f", "harvest_key": "k1", "nstatv": 1,
-            "experiment_origin": "council_deck", "reads_temp": False,
+            "experiment_origin": "reviewer_deck", "reads_temp": False,
             "reads_coords_or_noel": False, "initial_statev": None,
             "formulation": {"statement": "3D", "element": "C3D8", "evidence": ["umat.f:9"],
-                            "origin": "council_choice"},
+                            "origin": "reviewer_choice"},
             "sets": [one("A", e), one("B", 70000.0)]}
 
 
 @pytest.fixture()
 def tool(monkeypatch):
     monkeypatch.syspath_prepend(str(REPO / "tools"))
-    sys.modules.pop("make_council_deck", None)
-    import make_council_deck
-    return make_council_deck
+    sys.modules.pop("make_reviewer_deck", None)
+    import make_reviewer_deck
+    return make_reviewer_deck
 
 
 def _setup(tmp_path, row):
@@ -70,28 +70,28 @@ def test_check_passes_on_fresh_output_and_fails_after_any_change(tool, tmp_path,
     common = ["--rows", str(rows), "--out", str(out), "--cache", str(cache)]
     assert tool.main(common) == 0
     written = sorted(p.name for p in (out / "k1").iterdir())
-    assert written == ["council_A.inp", "council_B.inp", "council_plan.json"]
-    plan = json.loads((out / "k1" / "council_plan.json").read_text())
-    assert plan["council_fingerprint"] and plan["row_sha256"] and plan["tool_sha256"]
-    assert str(cache) not in (out / "k1" / "council_plan.json").read_text()
+    assert written == ["reviewer_A.inp", "reviewer_B.inp", "reviewer_plan.json"]
+    plan = json.loads((out / "k1" / "reviewer_plan.json").read_text())
+    assert plan["reviewer_fingerprint"] and plan["row_sha256"] and plan["tool_sha256"]
+    assert str(cache) not in (out / "k1" / "reviewer_plan.json").read_text()
     assert tool.main(common + ["--check"]) == 0
 
     # a one-byte change to the row (210000.0 -> 210001.0)
     rows.write_text(json.dumps(_row(210001.0)) + "\n")
     assert tool.main(common + ["--check"]) == 1
-    assert "k1/council_plan.json" in capsys.readouterr().out
+    assert "k1/reviewer_plan.json" in capsys.readouterr().out
     rows.write_text(json.dumps(_row()) + "\n")
     assert tool.main(common + ["--check"]) == 0
 
     # a one-byte change to a written deck, and a missing file
-    deck = out / "k1" / "council_B.inp"
+    deck = out / "k1" / "reviewer_B.inp"
     deck.write_text(deck.read_text().replace("70000.", "70001.", 1))
     assert tool.main(common + ["--check"]) == 1
     deck.unlink()
     assert tool.main(common + ["--check"]) == 1
 
 
-def test_an_eligible_harvest_row_wins_over_a_council_row(tool, tmp_path):
+def test_an_eligible_harvest_row_wins_over_a_reviewer_row(tool, tmp_path):
     cache, rows, out = _setup(tmp_path, _row())
     harvest = tmp_path / "harvest.jsonl"
     harvest.write_text(json.dumps({
@@ -103,7 +103,7 @@ def test_an_eligible_harvest_row_wins_over_a_council_row(tool, tmp_path):
     for order in ([rows, harvest], [harvest, rows]):
         args = sum((["--rows", str(p)] for p in order), [])
         assert tool.main(args + ["--out", str(out), "--cache", str(cache)]) == 0
-        plan = json.loads((out / "k1" / "council_plan.json").read_text())
+        plan = json.loads((out / "k1" / "reviewer_plan.json").read_text())
         assert plan["material_data_origin"] == "author_published_outside_deck"
         assert [s["set_id"] for s in plan["sets"]] == ["author"]
         assert sorted(r.split(" ")[0] for r in plan["rows_read"]) == ["harvest.jsonl",
@@ -114,8 +114,8 @@ def test_an_eligible_harvest_row_wins_over_a_council_row(tool, tmp_path):
     for order in ([rows, harvest], [harvest, rows]):
         args = sum((["--rows", str(p)] for p in order), [])
         assert tool.main(args + ["--out", str(out), "--cache", str(cache)]) == 0
-        plan = json.loads((out / "k1" / "council_plan.json").read_text())
-        assert plan["material_data_origin"] == "council_chosen"
+        plan = json.loads((out / "k1" / "reviewer_plan.json").read_text())
+        assert plan["material_data_origin"] == "reviewer_chosen"
 
 
 def test_check_reports_an_orphan_folder(tool, tmp_path, capsys):

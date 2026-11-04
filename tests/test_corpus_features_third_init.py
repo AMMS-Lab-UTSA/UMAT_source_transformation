@@ -6,7 +6,7 @@ zero vs snan alone misses an uninitialised value used through a NaN guard
 bit-identical across the pair and the cells verified. The third build (+inf
 reals, +77777 integers, logicals flipped vs the zero build) separates them, on
 the harness side AND on the Abaqus-side init check; the clean toy is unchanged.
-Toys: corpus_campaign/batches/B2/vera/toys (copied to fixtures).
+Toys: corpus_campaign/batches/B2/reviewer/toys (copied to fixtures).
 """
 import shutil
 from pathlib import Path
@@ -45,7 +45,7 @@ def harness_results(tmp_path_factory):
         store.mkdir(parents=True)
         shutil.copy(TOYS / f"{name}.f", store / "umat.f")
         (store / "compile_order.txt").write_text("umat.f\n")
-        entry = CorpusEntry(key=name, source_id=f"vera_toy/{name}",
+        entry = CorpusEntry(key=name, source_id=f"review_toy/{name}",
                             original_source=TOYS / f"{name}.f", ntens=6, nstatv=2,
                             props=[2.0e5, 0.3], store_dir=store)
         path = internal_paths({"ndi": 3, "nshr": 3})[:1]

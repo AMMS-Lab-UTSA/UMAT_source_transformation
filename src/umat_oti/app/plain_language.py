@@ -530,7 +530,7 @@ def owner_phrase(whose: str) -> str:
 # ---------------------------------------------------------------------------
 @lru_cache(maxsize=1)
 def _verification_service():
-    """Agent 5's VerificationService where it is installed, else ``None``.
+    """the job service's VerificationService where it is installed, else ``None``.
 
     Cached. A failed import is not free -- Python re-walks every entry on the
     path each time -- and this is consulted once per entry per screen, which

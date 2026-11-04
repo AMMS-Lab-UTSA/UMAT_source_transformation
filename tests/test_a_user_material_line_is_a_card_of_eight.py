@@ -2,7 +2,7 @@
 
 Abaqus fills a short data line with zeros, and a block that stops short of
 CONSTANTS= with zeros too. Measured with Abaqus/Standard 2021.HF5 and a UMAT
-writing PROPS on its first call (corpus_campaign/batches/B7/gauss_g1c/
+writing PROPS on its first call (the batch B7 campaign records
 abaqus_props_probe/): harshaa765__UMATFile/Input_file.inp (crystal
 plasticity, 19 short lines between ``**`` comments, CONSTANTS=160) and
 davidmorin V_UMAT/example_UMAT.inp (CONSTANTS=24, last line ``100.0, 1.0``)

@@ -1,6 +1,6 @@
 """A minimal routine-level path driver for the mechanics checks, and its tests.
 
-Kept here (curie's test/support file) rather than in ``src``: the campaign's
+Kept here (a campaign test-support file) rather than in ``src``: the campaign's
 harness is gauss's (``umat_oti.corpus_features``), and this is only the
 smallest driver that lets the mechanics checks be validated on ORIGINAL corpus
 routines without Abaqus. It reuses the replay driver's build pieces --

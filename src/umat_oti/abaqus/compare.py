@@ -98,7 +98,7 @@ EPS = 2.220446049250313e-16
 #: measure of order one) -- for the near-incompressible growth laws literally
 #: K*(J-1), which cancels -- so two correct evaluations of it differing in
 #: operation order differ by a few eps*max|DDSDDE|, however small the stress.
-#: MEASURED on the 77 eligible growth rows of pass16 (curie_g B2, replay of
+#: MEASURED on the 77 eligible growth rows of pass16 (B2, replay of
 #: every converged call, identical arguments): once the transform's precision
 #: changes are applied to the original, transformed-vs-original stress
 #: differences are <= 10 ulpK on every row whose constructs were fully

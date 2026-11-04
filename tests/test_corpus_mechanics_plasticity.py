@@ -5,7 +5,7 @@ Every check is shown to PASS on a model that has the property and to FAIL on
 one that lacks it (a mutant), with closed-form 1D materials driven along the
 real ``reverse_yield`` / ``cyclic`` / ``unload_reload`` paths. The corpus
 validation on original UMATs is in
-corpus_campaign/batches/B2/curie/plasticity/ (results.json).
+the batch B2 campaign records (results.json).
 """
 
 from __future__ import annotations

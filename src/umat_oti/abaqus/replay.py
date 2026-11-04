@@ -1520,7 +1520,7 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
 # build returns a different DDSDDE (the OTI tangent instead of the author's),
 # and the converged FE solution depends on it -- through the Newton path at
 # default tolerances, and, on hybrid elements, even at a tight tolerance.
-# Measured on From-2D-to-2D-Axe.for (C3D8H, corpus_campaign/batches/B2/curie_g,
+# Measured on From-2D-to-2D-Axe.for (C3D8H, the batch B2 campaign records,
 # jobs cc_cug_02/03/06/08): with residuals driven to 2e-13 the two builds still
 # differed by 3.2e-6; scaling the author's DDSDDE by 1+1e-6 moved the answer by
 # 1.2e-12; giving the author's DDSDDE the transformed one's structure (the

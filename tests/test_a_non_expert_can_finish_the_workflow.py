@@ -877,10 +877,10 @@ def test_a_report_export_is_reproducible_as_json(run, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# the boundary with the job manager Agent 5 published
+# the boundary with the job manager the job service published
 # ---------------------------------------------------------------------------
 def test_the_ladder_is_the_one_the_job_manager_publishes():
-    """Nine steps, Agent 5's keys and labels, in Agent 5's order.
+    """Nine steps, the job service's keys and labels, in the job service's order.
 
     One vocabulary or the progress panel and the job record disagree about
     which step a run is on. Where ``umat_oti.jobs.stages`` is installed it is
@@ -898,7 +898,7 @@ def test_the_ladder_is_the_one_the_job_manager_publishes():
 def test_a_stage_reported_by_its_key_is_recognised():
     """The job record reports keys, not internal rung names.
 
-    A real defect, caught by driving the boundary with the shape Agent 5's
+    A real defect, caught by driving the boundary with the shape the job service's
     records actually carry: :func:`plain_stage` resolved internal names only,
     so every step of every real job came back untranslated while the nine
     known steps all read "not established" beside them. A progress panel that
@@ -922,7 +922,7 @@ def test_a_stage_reported_by_its_key_is_recognised():
 
 
 def test_a_refusal_and_a_skip_are_not_reported_as_failures():
-    """Agent 5's six stage states, each kept as itself.
+    """the job service's six stage states, each kept as itself.
 
     A manifest that refuses an underdetermined model has ANSWERED the
     question. Rendering that as "failed" invents a defect in a model that does
@@ -949,7 +949,7 @@ def test_a_refusal_and_a_skip_are_not_reported_as_failures():
 
 
 def test_a_job_that_was_lost_is_not_called_a_failure_or_a_success():
-    """Agent 5 reports ``lost`` for a job whose exit was never read.
+    """the job service reports ``lost`` for a job whose exit was never read.
 
     Nobody knows what it did. Calling it failed and calling it succeeded are
     the same fabrication in opposite directions.
@@ -965,7 +965,7 @@ def test_a_job_that_was_lost_is_not_called_a_failure_or_a_success():
 
 def test_the_interface_asks_the_verification_service_rather_than_deciding(
         monkeypatch):
-    """Where Agent 5's service is installed, it decides and this does not.
+    """Where the job service's service is installed, it decides and this does not.
 
     The architecture rule: the interface calls the services and does not carry
     its own copy of a verification rule. The fallback below is the same six

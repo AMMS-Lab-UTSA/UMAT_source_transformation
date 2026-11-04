@@ -385,7 +385,7 @@ class DeckMaterial:
     #: numbers to a file nobody committed.
     unresolved_includes: tuple[str, ...] = ()
     #: The measured Abaqus card rules this block's data lines break (Abaqus/
-    #: Standard 2021, corpus_campaign/batches/B8/ada/props_card_probe/
+    #: Standard 2021, the batch B8 campaign records
     #: measured_results.txt): a data line of more than eight values, a blank
     #: line between data lines, and more data lines than CONSTANTS needs. A
     #: block that breaks any of them is not read as a card deck at all: it is
@@ -546,7 +546,7 @@ def published_placeholder_values(repository: Path, names: Sequence[str],
 #: ``*INCLUDE, FILE=``: not the keyword reference's ``INPUT=``, and
 #: Abaqus/Standard 2021.HF5 splices it all the same, substituting the parent's
 #: ``*PARAMETER`` values into the included file -- measured with a datacheck
-#: (corpus_campaign/batches/B7/gauss_g1b/include_file_check/: the .pes shows
+#: (the batch B7 campaign records the .pes shows
 #: ``<EMOD>`` read as the parent's 1000.0). jpsferreira__UMAT-ABAQUS's
 #: ``cube_umat.inp`` includes ``sec_ud.inp`` this way and holds the constants.
 _INCLUDE_FILE = re.compile(r"^\s*\*INCLUDE\b[^\n]*?\bFILE\s*=\s*([^\s,]+)",
@@ -863,7 +863,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
             # NPROPS = 160 with c11, c12, c44 in PROPS(1:3) and the next line
             # at PROPS(9); davidmorin's ``100.0, 1.0`` last line gives
             # PROPS(17:18) and zeros to 24 (corpus_campaign/batches/B7/
-            # gauss_g1c/abaqus_props_probe/). Read packed, both lost their
+            # batch B7 campaign records). Read packed, both lost their
             # constants to the wrong slots.
             # A line still holding a placeholder is not a card Abaqus could
             # read; it is left as read (the block is not usable anyway).

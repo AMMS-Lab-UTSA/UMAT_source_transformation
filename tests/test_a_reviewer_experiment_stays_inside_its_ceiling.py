@@ -34,7 +34,7 @@ def test_capped_never_exceeds_the_ceiling_or_CEILING():
 
 
 @pytest.mark.parametrize("ceiling", [0.02, 0.2])
-def test_a_mocked_search_never_runs_above_the_council_ceiling(ceiling):
+def test_a_mocked_search_never_runs_above_the_reviewer_ceiling(ceiling):
     tried: list = []
     result = search_amplitude(_linear(tried), ceiling=ceiling)
     assert max(tried) <= ceiling

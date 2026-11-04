@@ -71,7 +71,7 @@ class Fixture:
 
 @lru_cache(maxsize=1)
 def _eligibility_service():
-    """Agent 5's ResidualAssemblyService where it is installed, else ``None``.
+    """the job service's ResidualAssemblyService where it is installed, else ``None``.
 
     Cached for the same reason the verification service is: a failed import
     repeated once per entry is the difference between a screen that draws and

@@ -2,9 +2,9 @@
 """Write, or check, the reviewer-designed experiments of D-19a rev 2 (G9).
 
 For every row of a harvest file or a D-21 reviewer-constants file (JSON
-lines), :func:`umat_oti.abaqus.experiment.plan_council` designs the
-experiment; this writes ``<out>/<key>/council_plan.json`` and one
-``council_<set>.inp`` per parameter set (``abaqus.deck.generate_deck``).
+lines), :func:`umat_oti.abaqus.experiment.plan_reviewer` designs the
+experiment; this writes ``<out>/<key>/reviewer_plan.json`` and one
+``reviewer_<set>.inp`` per parameter set (``abaqus.deck.generate_deck``).
 reviewer.inp is an OUTPUT only: nothing reads it back.
 
 ``--check`` regenerates everything in memory and compares it byte for byte
@@ -12,11 +12,11 @@ with what is on disk (R6.1): any difference -- a changed row, a changed
 generator, a hand edit -- names the row and exits 1, and that row is
 suspended until it is regenerated through a recorded decision.
 
-Each plan records ``council_fingerprint``: the sha256 of this tool, of the
+Each plan records ``reviewer_fingerprint``: the sha256 of this tool, of the
 harness code that designs and writes the experiment (the harness
 fingerprint covers abaqus/ and corpus_features/) and of the row itself.
 
-    python tools/make_council_deck.py --rows ROWS.jsonl [--rows MORE.jsonl] [--key K ...]
+    python tools/make_reviewer_deck.py --rows ROWS.jsonl [--rows MORE.jsonl] [--key K ...]
            [--out DIR] [--check]
 """
 from __future__ import annotations
@@ -30,12 +30,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from umat_oti.abaqus.deck import generate_deck                    # noqa: E402
-from umat_oti.abaqus.experiment import plan_council               # noqa: E402
+from umat_oti.abaqus.experiment import plan_reviewer               # noqa: E402
 from umat_oti.store.transform_store import harness_fingerprint    # noqa: E402
+from umat_oti.corpus_features.legacy_names import upgrade          # noqa: E402
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 CACHE = WORKSPACE / "discovery_cache"
-OUT = WORKSPACE / "corpus_campaign" / "council_plans"
+OUT = WORKSPACE / "corpus_campaign" / "reviewer_plans"
 CACHE_TOKEN = "$DISCOVERY_CACHE"
 
 
@@ -47,12 +48,12 @@ def _canonical(value) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def council_fingerprint(row: dict) -> dict:
+def reviewer_fingerprint(row: dict) -> dict:
     tool = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     row_sha = hashlib.sha256(_canonical(row)).hexdigest()
     harness = harness_fingerprint()
     combined = hashlib.sha256(f"{tool}:{harness}:{row_sha}".encode()).hexdigest()[:16]
-    return {"council_fingerprint": combined, "tool_sha256": tool,
+    return {"reviewer_fingerprint": combined, "tool_sha256": tool,
             "harness_fingerprint": harness, "row_sha256": row_sha}
 
 
@@ -73,16 +74,16 @@ def render(row: dict, cache: Path = CACHE, rows_read: tuple = ()) -> dict:
     """``{relative path: text}`` of everything one row produces."""
     source = cache / row["source_id"]
     repository = cache / str(row["source_id"]).split("/")[0]
-    plan = plan_council(source, repository, row)
+    plan = plan_reviewer(source, repository, row)
     record = plan.as_dict()
-    record.update(council_fingerprint(row))
+    record.update(reviewer_fingerprint(row))
     record["row_key"] = row_key(row)
     record["rows_read"] = list(rows_read)
-    files = {"council_plan.json": (_portable(json.dumps(record, indent=1, sort_keys=True,
+    files = {"reviewer_plan.json": (_portable(json.dumps(record, indent=1, sort_keys=True,
                                                         default=str), cache) + "\n").encode()}
     if plan.found:
         for set_id, set_plan in plan.sets:
-            files[f"council_{set_id}.inp"] = _portable(generate_deck(set_plan.manifest),
+            files[f"reviewer_{set_id}.inp"] = _portable(generate_deck(set_plan.manifest),
                                                        cache).encode()
     return files
 
@@ -105,7 +106,7 @@ def main(argv=None) -> int:
         for line in data.decode("utf-8").splitlines():
             if not line.strip():
                 continue
-            row = json.loads(line)
+            row = upgrade(json.loads(line))
             held = by_key.get(row_key(row))
             if held is None or _rank(row) < _rank(held):
                 by_key[row_key(row)] = row
@@ -127,12 +128,12 @@ def main(argv=None) -> int:
                     differs.append(f"{key}/{name}")
             continue
         folder.mkdir(parents=True, exist_ok=True)
-        for stale in folder.glob("council_*.inp"):
+        for stale in folder.glob("reviewer_*.inp"):
             if stale.name not in files:
                 stale.unlink()
         for name, data in files.items():
             (folder / name).write_bytes(data)
-        plan = json.loads(files["council_plan.json"])
+        plan = json.loads(files["reviewer_plan.json"])
         print(f"{key} {row['source_id']}: "
               + ("ready, " + ", ".join(s["set_id"] for s in plan["sets"])
                  if not plan["refusal"] else f"{plan['refusal_code']}: {plan['refusal'][:120]}"))
@@ -148,7 +149,7 @@ def main(argv=None) -> int:
             print(f"{len(differs)} file(s) differ from a fresh regeneration -- those rows are "
                   "suspended (R6.1):\n  " + "\n  ".join(differs))
             return 1
-        print(f"{len(rows)} row(s): every council plan and deck regenerates byte for byte")
+        print(f"{len(rows)} row(s): every reviewer plan and deck regenerates byte for byte")
     return 0
 
 

@@ -6,10 +6,10 @@ primal_stress_state, ddsdde, internal_jacobian, stress_param_sens_local,
 state_param_sens_local, stress_param_sens_total, state_param_sens_total,
 stress_state_sens_local, state_state_sens_local. Definitions and the verdict
 rule are in ``umat_oti.corpus_features.harness`` and
-``corpus_campaign/batches/B1/gauss/DESIGN.md``.
+``the batch B1 campaign records``.
 
     PYTHONPATH=src python tools/run_corpus_features.py --key c7bf17b21519e33da0b7bbb1 \\
-        --out $UMAT_OTI_WORKSPACE/corpus_campaign/batches/B1/gauss/evidence
+        --out OUT_DIR
     PYTHONPATH=src python tools/run_corpus_features.py --fully-verified --limit 5 ...
 
 Each run REPLACES ``<out>/corpus_features.jsonl`` and ``manifest_cells.jsonl``
@@ -56,10 +56,10 @@ def main(argv=None) -> int:
     parser.add_argument("--registry", type=Path, default=None,
                         help="corpus registry that maps keys to sources (default: the "
                              "committed paper_results/corpus/corpus_registry.json)")
-    parser.add_argument("--council-plans", type=Path, default=None,
-                        help="the council plans folder (<key>/council_plan.json) a "
-                             "council key <registry key>#<set> is resolved from (default: "
-                             "the harness's corpus_campaign/council_plans); give the folder "
+    parser.add_argument("--reviewer-plans", type=Path, default=None,
+                        help="the reviewer plans folder (<key>/reviewer_plan.json) a "
+                             "reviewer key <registry key>#<set> is resolved from (default: "
+                             "the harness's corpus_campaign/reviewer_plans); give the folder "
                              "written at the harness fingerprint being run")
     parser.add_argument("--supply-utilities", action="store_true",
                         help="OPT-IN workaround: append abaqus_utility_definitions (ROTSIG, ...) "
@@ -79,8 +79,8 @@ def main(argv=None) -> int:
         _harness.PASS16 = args.verification_records.resolve()
     if args.registry is not None:
         _harness.REGISTRY = args.registry.resolve()
-    if args.council_plans is not None:
-        _harness.COUNCIL_PLANS = args.council_plans.resolve()
+    if args.reviewer_plans is not None:
+        _harness.REVIEWER_PLANS = args.reviewer_plans.resolve()
 
     keys = list(args.key)
     if args.fully_verified:

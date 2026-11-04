@@ -7,7 +7,7 @@ HAD run -- and whose arguments diverged before the routine, which is a fact
 about the experiment and not about the conversion -- were reported as runs that
 never happened, filed in this project's own column.
 
-Agent 6 found it by rendering the real pass11 file. Two wrongs from one silent
+A review found it by rendering the real pass11 file. Two wrongs from one silent
 default: the wrong event and the wrong owner.
 
 So there is no default. An unknown stage raises and says what to do about it,

@@ -601,7 +601,7 @@ UNRESOLVED_BINARY32 = "unresolved_binary32"
 #: model, which is the stricter one, and labelled
 B32_SCOPE_UNPROVEN = "b32 scope unproven"
 B32_RULE = (
-    "B32 (Vera B10). SCOPE, per derivative entry (output x input x state), decided from the "
+    "B32 (the reviewer B10). SCOPE, per derivative entry (output x input x state), decided from the "
     "original's two builds only, before any value under test is read: (1) static -- the "
     "output depends on a binary32 store of the transform's map and that store depends on "
     "the input; (2) dynamic -- the central FD of the ORIGINAL and the FD of its double "

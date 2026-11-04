@@ -11,7 +11,7 @@ beside them, and only a match with it is cited as the author's deck.
 G0 is label-only (review D-19a rev 2): the numbers keep flowing to time_max,
 the shortening and the clock exactly as before. The A/B over the 176 pass20
 records that resolve (121 routine-level among them) is in
-corpus_campaign/batches/B7/gauss_g0/ (0 numeric differences).
+the batch B7 campaign records (0 numeric differences).
 """
 
 from __future__ import annotations

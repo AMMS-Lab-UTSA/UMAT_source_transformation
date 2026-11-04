@@ -395,7 +395,7 @@ def test_the_resolution_ladder_respects_the_ceiling():
 
     tool = (Path(__file__).resolve().parents[1] / "tools"
             / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
-    # the reviewer ceiling (D-19a G4) goes through the package's capped(),
+    # The reviewer ceiling (D-19a G4) goes through the package's capped(),
     # which is min(amplitude, CEILING) for an author deck
     assert "wanted = capped(amplitude * factor, ceiling)" in tool
     assert "would pass " in tool and "the ceiling of" in tool

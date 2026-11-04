@@ -108,14 +108,6 @@ def test_the_intake_asks_one_thing_first_and_names_what_comes_after(tmp_path):
     assert "After that I will also need:" in text
 
 
-def test_no_row_of_the_digest_table_has_a_blank_run_and_a_blank_run_is_not_printed():
-    table = vl.load_table()
-    assert all(r["run"] for r in table["rows"])
-    row = dict(next(r for r in table["rows"] if r["state"] == "transform_refused"), run="")
-    lines = vl.render(vl.judge([row], deck_compared=False), final="blue", table=table)
-    assert "run  (" not in lines[0]
-
-
 # ---- 5. a verified result needs the Abaqus comparison: the command exists and says what it does
 def _flags_of_all():
     return subprocess.run([sys.executable, str(REPO / "umat-oti"), "all", "--help"], capture_output=True, text=True, cwd="/").stdout

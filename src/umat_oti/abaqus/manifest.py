@@ -248,9 +248,9 @@ class VerificationManifest:
     primal_tolerance: float = 1e-10
     notes: str = ""
     status: str = "ready"
-    #: Where each value of a COUNCIL-designed manifest came from (D-19a rev 2
+    #: Where each value of a REVIEWER-designed manifest came from (D-19a rev 2
     #: R2): ``(field, origin, provenance)`` with origin one of
-    #: author_published | source | council_default | council_choice. Empty for
+    #: author_published | source | reviewer_default | reviewer_choice. Empty for
     #: a manifest read from an author's deck, and then not serialised, so
     #: those manifests read exactly as before.
     origins: tuple[tuple[str, str, str], ...] = ()

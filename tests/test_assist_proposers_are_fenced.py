@@ -397,9 +397,9 @@ def test_a_proposal_never_carries_a_number_into_the_record(source: Path):
 
 
 def test_the_published_rounds_do_not_import_the_assist_package():
-    """The corpus round and the sensitivity sweep must not be able to run a model."""
+    """The sensitivity sweep must not be able to run a model."""
     root = Path(__file__).resolve().parents[1]
-    for tool in ("run_corpus_round.py", "run_parameter_sensitivity_sweep.py"):
+    for tool in ("run_parameter_sensitivity_sweep.py",):
         path = root / "tools" / tool
         if not path.is_file():
             pytest.skip(f"{tool} is not in this tree")

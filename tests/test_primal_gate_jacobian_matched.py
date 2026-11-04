@@ -1,6 +1,6 @@
 """Part (b) of the primal gate: the original's response under the transformed
 build's Jacobian, against the transformed run. Fixtures are real Abaqus runs
-(pass16 and corpus_campaign/batches/B2/curie_g cc_cug_11, 12, 17)."""
+(pass16 and the batch B2 campaign records cc_cug_11, 12, 17)."""
 import gzip
 import json
 import shutil

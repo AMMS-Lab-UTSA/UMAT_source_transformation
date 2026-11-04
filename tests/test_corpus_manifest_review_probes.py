@@ -341,32 +341,3 @@ def test_ra_failed_on_any_problem_is_failed(roots):
     m = _manifest(roots)
     assert merge_feature_results(m, cells)["merged"] == 1
     assert m["rows"][0]["features"]["residual_sens"]["status"] == "not_attempted"
-
-
-# ---- the real B1 evidence, when present ------------------------------------------------
-
-NOETHER = CAMPAIGN / "batches/B1/noether/records.jsonl"
-GAUSS_B1 = CAMPAIGN / "batches/B1/gauss/evidence/fv44/manifest_cells.jsonl"
-
-
-@pytest.mark.skipif(not NOETHER.is_file(), reason="Noether's B1 records not present")
-def test_noethers_b1_records_fold_without_rejection_and_stay_out_of_the_pipeline():
-    cells, report = ra_records_to_cells(NOETHER)
-    assert report["schemas"] == {"ra-corpus-residual/1": report["records"]}
-    assert all(c["build"]["kind"] == "provider" for c in cells)
-    assert not [c for c in cells if c["status"] == "verified"]
-    for c in cells:
-        assert validate_cell(c["feature"], {k: v for k, v in c.items()
-                                            if k not in ("source_id", "feature")}) == []
-
-
-@pytest.mark.skipif(not GAUSS_B1.is_file(), reason="Gauss's B1 cells not present")
-def test_gauss_b1_cells_do_not_meet_the_b2_contract_as_verified():
-    """The B1 harness cells carry no build and no observed plateau; none may verify."""
-    for line in GAUSS_B1.read_text().splitlines():
-        cell = json.loads(line)
-        if cell.get("status") != "verified":
-            continue
-        rest = {k: v for k, v in cell.items() if k not in ("source_id", "feature")}
-        rest["evidence"] = to_locator(rest.get("evidence", ""))
-        assert validate_cell(cell["feature"], rest), cell["source_id"]

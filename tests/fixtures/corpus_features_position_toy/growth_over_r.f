@@ -3,7 +3,7 @@
      2 STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,
      3 NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,
      4 CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
-C     Toy position-dependent growth law (Gauss, pass18 COORDS fix):
+C     Toy position-dependent growth law (pass18 COORDS fix):
 C     isotropic growth strain rate G = PROPS(3)*(1+NPT/10)/r, r = |COORDS(1:2)|,
 C     as in the Jeff97 circular-plate laws. Non-finite at COORDS = 0.
       INCLUDE 'ABA_PARAM.INC'

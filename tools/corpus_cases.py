@@ -16,7 +16,7 @@ transform and of the harness that produced the evidence. See
     python tools/corpus_cases.py fetch <id>          # source of a non-redistributable case
     python tools/corpus_cases.py verify-assets       # re-hash every CAS object a case lists
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <key>#<set>   # a reviewer set (A-1)
-    PYTHONHASHSEED=0 python tools/corpus_cases.py holdout --template T --selection VERA.json
+    PYTHONHASHSEED=0 python tools/corpus_cases.py holdout --template T --selection REVIEWER.json
 
 Checks (numbers only; generated Fortran is never text-diffed):
 
@@ -261,7 +261,7 @@ def curated_licence(name: str) -> dict:
 
 
 def corpus_licence(source_id: str) -> dict:
-    """The corpus manifest's licence determination (scout), applied under D-2."""
+    """The corpus manifest's licence determination, applied under D-2."""
     if MANIFEST.is_file():
         for row in json.loads(MANIFEST.read_text())["rows"]:
             if row.get("source_id") == source_id:
@@ -785,17 +785,17 @@ def consistency_failures(case_dir: Path, case: dict, ref: dict, row,
     case.json's experiment (paths, judged-state counts and increments), and
     both against the index row (digests, path and judged-state totals). A
     reviewer case is also checked against its registry row and its frozen
-    reviewer plan (origins, refs, fingerprint: :func:`council_consistency_failures`)."""
+    reviewer plan (origins, refs, fingerprint: :func:`reviewer_consistency_failures`)."""
     out = []
-    if case.get("council"):
-        key = case["council"].get("registry_key")
-        out += council_consistency_failures(
+    if case.get("reviewer"):
+        key = case["reviewer"].get("registry_key")
+        out += reviewer_consistency_failures(
             case, registry_row(key) if registry is _FROM_REGISTRY else registry,
-            frozen_council_plan(case_dir, case))
-        if row is not None and row.get("council") != index_council(case):
-            out.append({"kind": "council_mismatch",
-                        "detail": f"index.json council {row.get('council')} != case.json "
-                                  f"{index_council(case)}"})
+            frozen_reviewer_plan(case_dir, case))
+        if row is not None and row.get("reviewer") != index_reviewer(case):
+            out.append({"kind": "reviewer_mismatch",
+                        "detail": f"index.json reviewer {row.get('reviewer')} != case.json "
+                                  f"{index_reviewer(case)}"})
     exp = {p["name"]: p for p in case["experiment"]["paths"]}
     refp = {p.get("name"): p for p in ref.get("paths", [])}
     for name in sorted(set(exp) - set(refp)):
@@ -833,14 +833,14 @@ def consistency_failures(case_dir: Path, case: dict, ref: dict, row,
     return out
 
 
-def index_council(case: dict) -> Optional[dict]:
+def index_reviewer(case: dict) -> Optional[dict]:
     """The reviewer identity a reviewer case's index row repeats (None otherwise)."""
-    block = case.get("council")
+    block = case.get("reviewer")
     if not block:
         return None
-    return {k: block.get(k) for k in ("registry_key", "council_set", "council_sets",
+    return {k: block.get(k) for k in ("registry_key", "reviewer_set", "reviewer_sets",
                                       "material_data_origin", "experiment_origin",
-                                      "council_fingerprint")}
+                                      "reviewer_fingerprint")}
 
 
 def index_rows() -> list:
@@ -861,8 +861,8 @@ def index_rows() -> list:
                "paths": len(c["experiment"]["paths"]),
                "judged_states": sum(p["judged_states"] for p in c["experiment"]["paths"]),
                "digest": case_digest(case_json.parent)}
-        if c.get("council"):
-            row["council"] = index_council(c)
+        if c.get("reviewer"):
+            row["reviewer"] = index_reviewer(c)
         rows.append(row)
     return rows
 
@@ -921,26 +921,26 @@ def preserved_units(case_dir: Path, case: dict, work: Path) -> tuple:
 # its PROPS, driver configs, ORIGINAL history and FD reference differ, so one
 # case per set keeps every frozen reference attributable to one manifest and a
 # failure attributable to one set. What ties the sets together is the SOURCE
-# verdict (:func:`council_source_verdicts`): a reviewer source passes only when
-# the case of every set its plan lists (``council_sets``) is present and
+# verdict (:func:`reviewer_source_verdicts`): a reviewer source passes only when
+# the case of every set its plan lists (``reviewer_sets``) is present and
 # passes; a missing set is a failure, never a skip.
 #
-# Every reviewer case stores in the CAS (corpus_assets): council_plan.json, every
-# council_<set>.inp of the plan, the rows files the plan was written from, the
+# Every reviewer case stores in the CAS (corpus_assets): reviewer_plan.json, every
+# reviewer_<set>.inp of the plan, the rows files the plan was written from, the
 # row(s) of this key read from them (harvest and/or D-21) and the
 # re-derivation output (rederive_harvest.py) of the harvest row(s). The check
-# runs ``tools/make_council_deck.py --check`` over those frozen rows and files.
+# runs ``tools/make_reviewer_deck.py --check`` over those frozen rows and files.
 
-#: the rows make_council_deck reads by default (relative to the workspace)
-COUNCIL_ROWS = ("corpus_campaign/material_data/d19_harvest.jsonl",
-                "corpus_campaign/material_data/d21_council_constants.jsonl")
+#: the rows make_reviewer_deck reads by default (relative to the workspace)
+REVIEWER_ROWS = ("corpus_campaign/material_data/d19_harvest.jsonl",
+                "corpus_campaign/material_data/d21_reviewer_constants.jsonl")
 REDERIVE = "corpus_campaign/material_data/rederive_harvest.py"
 #: D-1: the abuganza tree carries no licence file -- not_permitted, whatever a
 #: manifest says. No case of it goes into a pushed tree.
 NOT_PERMITTED_REPOSITORIES = ("abuganza__",)
 #: the fields a reviewer case must agree on with its registry row (S2 Record)
-COUNCIL_REGISTRY_FIELDS = ("material_data_origin", "experiment_origin", "material_data_ref",
-                           "council_deck_ref", "council_fingerprint", "council_sets")
+REVIEWER_REGISTRY_FIELDS = ("material_data_origin", "experiment_origin", "material_data_ref",
+                           "reviewer_deck_ref", "reviewer_fingerprint", "reviewer_sets")
 
 
 def split_key(key: str) -> tuple:
@@ -949,20 +949,20 @@ def split_key(key: str) -> tuple:
 
 
 def row_sha256(row: dict) -> str:
-    """The same canonical digest make_council_deck.council_fingerprint takes."""
+    """The same canonical digest make_reviewer_deck.reviewer_fingerprint takes."""
     return sha256_bytes(json.dumps(row, sort_keys=True, separators=(",", ":")).encode("utf-8"))
 
 
-def council_refs(key: str, rows_file: str, plans_dir: str) -> dict:
+def reviewer_refs(key: str, rows_file: str, plans_dir: str) -> dict:
     """The two references, in the registry's form (S2,
     build_corpus_registry.apply_origins): ``material_data_ref`` =
     ``<rows file>#key=<key>`` (the harvest or D-21 file the plan's row is
-    in), ``council_deck_ref`` = ``<plans dir>/<key>/council_plan.json``. The
+    in), ``reviewer_deck_ref`` = ``<plans dir>/<key>/reviewer_plan.json``. The
     registry names files relative to its repository; a ref is compared by the
     tail that identifies it (:func:`_ref_tail`). The bytes behind both refs
-    are pinned by the case's file digests and by council_fingerprint."""
+    are pinned by the case's file digests and by reviewer_fingerprint."""
     return {"material_data_ref": f"{rows_file}#key={key}",
-            "council_deck_ref": f"{plans_dir}/{key}/council_plan.json"}
+            "reviewer_deck_ref": f"{plans_dir}/{key}/reviewer_plan.json"}
 
 
 def _ref_tail(field: str, ref) -> Optional[tuple]:
@@ -978,16 +978,16 @@ def _ref_tail(field: str, ref) -> Optional[tuple]:
 
 def experiment_origin_of(value) -> str:
     """``author`` or ``reviewer``, as the registry writes it (S2), from what a
-    plan or a row wrote (a plan says ``council_deck``)."""
+    plan or a row wrote (a plan says ``reviewer_deck``)."""
     text = str(value or "")
-    if text in ("council", "council_deck"):
-        return "council"
-    if text in ("author", "author_deck", "author_deck_with_council_parameters"):
+    if text in ("reviewer", "reviewer_deck"):
+        return "reviewer"
+    if text in ("author", "author_deck", "author_deck_with_reviewer_parameters"):
         return "author"
     return text
 
 
-def council_restriction(licence: dict, source_id: str, rows: list) -> str:
+def reviewer_restriction(licence: dict, source_id: str, rows: list) -> str:
     """Why no case of this reviewer source may exist in the (pushed) case tree, or ''."""
     if licence.get("redistribution") == "not_permitted":
         return f"D-2: the source is not_permitted ({licence.get('redistribution_basis', '')[:160]})"
@@ -1007,18 +1007,18 @@ def _load_by_path(name: str, path: Path):
     return module
 
 
-def make_council_deck_tool():
-    """tools/make_council_deck.py, loaded once."""
-    if "make_council_deck" not in sys.modules:
-        _load_by_path("make_council_deck", REPO / "tools" / "make_council_deck.py")
-    import make_council_deck
-    return make_council_deck
+def make_reviewer_deck_tool():
+    """tools/make_reviewer_deck.py, loaded once."""
+    if "make_reviewer_deck" not in sys.modules:
+        _load_by_path("make_reviewer_deck", REPO / "tools" / "make_reviewer_deck.py")
+    import make_reviewer_deck
+    return make_reviewer_deck
 
 
-def run_make_council_deck(argv: list) -> tuple:
-    """``(exit status, printed output)`` of make_council_deck.main(argv)."""
+def run_make_reviewer_deck(argv: list) -> tuple:
+    """``(exit status, printed output)`` of make_reviewer_deck.main(argv)."""
     import contextlib
-    tool = make_council_deck_tool()
+    tool = make_reviewer_deck_tool()
     buffer = io.StringIO()
     with contextlib.redirect_stdout(buffer):
         rc = tool.main([str(a) for a in argv])
@@ -1040,7 +1040,7 @@ def rederive_rows(rows: list, rederive: Path) -> dict:
     for row in rows:
         if row.get("sets") is not None:
             out.append({"row_sha256": row_sha256(row), "kind": "d21",
-                        "applies": False, "why": "D-21 council-chosen row: no raw+rule; "
+                        "applies": False, "why": "D-21 reviewer-chosen row: no raw+rule; "
                         "frozen by sha256 (D-21c)"})
             continue
         problems, eligible = module.check_row(row, validator)
@@ -1050,7 +1050,7 @@ def rederive_rows(rows: list, rederive: Path) -> dict:
     return {"tool": REDERIVE, "tool_sha256": sha256_file(rederive), "rows": out}
 
 
-def council_freeze_block(key: str, set_id: str, plans_dir: Path, rows_files: list,
+def reviewer_freeze_block(key: str, set_id: str, plans_dir: Path, rows_files: list,
                          workspace: Path, cache: Path) -> tuple:
     """``(reviewer block for case.json, [(published path, local file, role)],
     problems)``. Problems make the freeze stop: the plan must regenerate byte for
@@ -1058,12 +1058,12 @@ def council_freeze_block(key: str, set_id: str, plans_dir: Path, rows_files: lis
     and a harvest row the plan used must re-derive."""
     problems = []
     folder = Path(plans_dir) / key
-    plan_path = folder / "council_plan.json"
+    plan_path = folder / "reviewer_plan.json"
     if not plan_path.is_file():
-        return None, [], [f"no council plan at {plan_path}"]
+        return None, [], [f"no reviewer plan at {plan_path}"]
     plan = json.loads(plan_path.read_text())
     if plan.get("refusal_code") or plan.get("refusal"):
-        problems.append(f"the council plan is refused ({plan.get('refusal_code')})")
+        problems.append(f"the reviewer plan is refused ({plan.get('refusal_code')})")
     sets = [str(s.get("set_id")) for s in plan.get("sets") or ()]
     if set_id not in sets:
         problems.append(f"set {set_id!r} is not in the plan's sets {sets}")
@@ -1074,11 +1074,11 @@ def council_freeze_block(key: str, set_id: str, plans_dir: Path, rows_files: lis
     if sorted(read) != sorted(plan.get("rows_read") or []):
         problems.append(f"the plan was written from {plan.get('rows_read')}, not from the rows "
                         f"given ({sorted(read)})")
-    rc, printed = run_make_council_deck(
+    rc, printed = run_make_reviewer_deck(
         sum((["--rows", p] for p in read.values()), [])
         + ["--key", key, "--out", plans_dir, "--cache", cache, "--check"])
     if rc != 0:
-        problems.append(f"make_council_deck --check fails for {key}: {printed.strip()[-400:]}")
+        problems.append(f"make_reviewer_deck --check fails for {key}: {printed.strip()[-400:]}")
     rows = []
     for rows_file in read.values():
         for line in rows_file.read_text(encoding="utf-8").splitlines():
@@ -1095,7 +1095,7 @@ def council_freeze_block(key: str, set_id: str, plans_dir: Path, rows_files: lis
             rel = rows_file.resolve().relative_to(Path(workspace).resolve()).as_posix()
         except ValueError:
             rel = None
-        files.append((f"council/rows_files/{rows_file.name}", rows_file, "council rows file"))
+        files.append((f"reviewer/rows_files/{rows_file.name}", rows_file, "reviewer rows file"))
         row_entries_file = [r for f, r in rows if f == rows_file]
         for n, row in enumerate(row_entries_file):
             kind = "d21" if row.get("sets") is not None else "harvest"
@@ -1103,46 +1103,46 @@ def council_freeze_block(key: str, set_id: str, plans_dir: Path, rows_files: lis
                                 "file_sha256": sha256_file(rows_file), "kind": kind,
                                 "row_sha256": row_sha256(row),
                                 "used": row_sha256(row) == plan.get("row_sha256"),
-                                "path": f"council/rows/{kind}_{n}.json"})
+                                "path": f"reviewer/rows/{kind}_{n}.json"})
     block_rows = [r for _f, r in rows]
-    work = Path(tempfile.mkdtemp(prefix="council_freeze_"))
+    work = Path(tempfile.mkdtemp(prefix="reviewer_freeze_"))
     for entry, row in zip(row_entries, block_rows):
         target = work / entry["path"]
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(row, indent=1, sort_keys=True) + "\n", encoding="utf-8")
-        files.append((entry["path"], target, f"council row ({entry['kind']}"
+        files.append((entry["path"], target, f"reviewer row ({entry['kind']}"
                       + (", used by the plan)" if entry["used"] else ", read)")))
     rederive = rederive_rows(block_rows, Path(workspace) / REDERIVE)
     for entry, result in zip(row_entries, rederive["rows"]):
         if entry["used"] and result["applies"] and (result["problems"] or not result["eligible"]):
             problems.append(f"the harvest row the plan used does not re-derive: "
                             f"{result['problems'][:3]}")
-    (work / "council").mkdir(parents=True, exist_ok=True)
-    (work / "council" / "rederive.json").write_text(json.dumps(rederive, indent=1) + "\n",
+    (work / "reviewer").mkdir(parents=True, exist_ok=True)
+    (work / "reviewer" / "rederive.json").write_text(json.dumps(rederive, indent=1) + "\n",
                                                       encoding="utf-8")
-    files.append(("council/rederive.json", work / "council" / "rederive.json",
+    files.append(("reviewer/rederive.json", work / "reviewer" / "rederive.json",
                   "re-derivation output (rederive_harvest.check_row)"))
     for item in sorted(folder.iterdir()):
         if item.is_file():
-            files.append((f"council/plan/{item.name}", item, "council plan" if
-                          item.name == "council_plan.json" else "council deck (output only)"))
+            files.append((f"reviewer/plan/{item.name}", item, "reviewer plan" if
+                          item.name == "reviewer_plan.json" else "reviewer deck (output only)"))
     used_entry = next((e for e in row_entries if e["used"]), None)
-    refs = council_refs(key, (used_entry["workspace_path"] or used_entry["file"])
+    refs = reviewer_refs(key, (used_entry["workspace_path"] or used_entry["file"])
                         if used_entry else "",
                         _workspace_relative(Path(plans_dir), workspace))
-    block = {"registry_key": key, "council_set": set_id, "council_sets": sets,
+    block = {"registry_key": key, "reviewer_set": set_id, "reviewer_sets": sets,
              "material_data_origin": plan.get("material_data_origin"),
              "experiment_origin": plan.get("experiment_origin"),
              **refs,
-             "council_fingerprint": plan.get("council_fingerprint"),
+             "reviewer_fingerprint": plan.get("reviewer_fingerprint"),
              "branch_coverage": plan.get("branch_coverage"),
              "route": plan.get("route"), "row_ref": plan.get("row_ref"),
              "row_sha256": plan.get("row_sha256"), "tool_sha256": plan.get("tool_sha256"),
              "plan_harness_fingerprint": plan.get("harness_fingerprint"),
              "rows_read": plan.get("rows_read"), "rows": row_entries,
              "source_verdict": "the source counts only when the case of EVERY set in "
-                               "council_sets is present and passes (D-21.3)",
-             "check": "tools/make_council_deck.py --check over the frozen rows files and "
+                               "reviewer_sets is present and passes (D-21.3)",
+             "check": "tools/make_reviewer_deck.py --check over the frozen rows files and "
                       "plan folder (R6.1), the re-derivation re-run, and the live rows, plan "
                       "and registry row compared with this block"}
     return block, files, problems
@@ -1165,66 +1165,66 @@ def registry_row(key: str) -> Optional[dict]:
 
 
 def _registry_agrees(field: str, registry_value, case_value) -> bool:
-    if field in ("material_data_ref", "council_deck_ref"):
+    if field in ("material_data_ref", "reviewer_deck_ref"):
         tail = _ref_tail(field, case_value)
         return tail is not None and _ref_tail(field, registry_value) == tail
     if field == "experiment_origin":
         return bool(case_value) and \
             experiment_origin_of(registry_value) == experiment_origin_of(case_value)
-    if field == "council_sets":
+    if field == "reviewer_sets":
         return registry_value == ";".join(case_value or ())
     return bool(case_value) and registry_value == case_value
 
 
-def council_consistency_failures(case: dict, registry: Optional[dict],
+def reviewer_consistency_failures(case: dict, registry: Optional[dict],
                                  plan: Optional[dict]) -> list:
     """Origins, refs and fingerprint of a reviewer case against its registry
-    row and against the frozen council_plan.json. Any mismatch -- or a missing
+    row and against the frozen reviewer_plan.json. Any mismatch -- or a missing
     registry row or field -- fails: a reviewer case counts on nothing unchecked."""
-    block = case.get("council") or {}
+    block = case.get("reviewer") or {}
     out = []
-    key, set_id = block.get("registry_key"), block.get("council_set")
+    key, set_id = block.get("registry_key"), block.get("reviewer_set")
     if registry is None:
-        out.append({"kind": "council_mismatch", "detail": f"no registry row for {key}"})
+        out.append({"kind": "reviewer_mismatch", "detail": f"no registry row for {key}"})
     else:
-        for field in COUNCIL_REGISTRY_FIELDS:
+        for field in REVIEWER_REGISTRY_FIELDS:
             if not registry.get(field):
-                out.append({"kind": "council_mismatch", "field": field,
+                out.append({"kind": "reviewer_mismatch", "field": field,
                             "detail": f"the registry row of {key} carries no {field}"})
             elif not _registry_agrees(field, registry[field], block.get(field)):
-                out.append({"kind": "council_mismatch", "field": field,
+                out.append({"kind": "reviewer_mismatch", "field": field,
                             "detail": f"case {block.get(field)!r} != registry "
                                       f"{registry[field]!r}"})
     if plan is None:
-        out.append({"kind": "council_mismatch", "detail": "the frozen council_plan.json is "
+        out.append({"kind": "reviewer_mismatch", "detail": "the frozen reviewer_plan.json is "
                                                           "not available"})
     else:
-        for field in ("material_data_origin", "experiment_origin", "council_fingerprint",
+        for field in ("material_data_origin", "experiment_origin", "reviewer_fingerprint",
                       "branch_coverage", "row_sha256"):
             if plan.get(field) != block.get(field):
-                out.append({"kind": "council_mismatch", "field": field,
+                out.append({"kind": "reviewer_mismatch", "field": field,
                             "detail": f"case {block.get(field)!r} != frozen plan "
                                       f"{plan.get(field)!r}"})
         sets = [str(s.get("set_id")) for s in plan.get("sets") or ()]
-        if sets != block.get("council_sets") or set_id not in sets:
-            out.append({"kind": "council_mismatch", "field": "council_sets",
-                        "detail": f"case {set_id}/{block.get('council_sets')} != plan {sets}"})
+        if sets != block.get("reviewer_sets") or set_id not in sets:
+            out.append({"kind": "reviewer_mismatch", "field": "reviewer_sets",
+                        "detail": f"case {set_id}/{block.get('reviewer_sets')} != plan {sets}"})
     provenance = (case.get("experiment") or {}).get("material_provenance") or {}
-    for field in ("material_data_origin", "experiment_origin", "council_set"):
+    for field in ("material_data_origin", "experiment_origin", "reviewer_set"):
         if provenance.get(field) != block.get(field):
-            out.append({"kind": "council_mismatch", "field": field,
-                        "detail": f"experiment provenance {provenance.get(field)!r} != council "
+            out.append({"kind": "reviewer_mismatch", "field": field,
+                        "detail": f"experiment provenance {provenance.get(field)!r} != reviewer "
                                   f"block {block.get(field)!r}"})
     return out
 
 
-def _council_file(case_dir: Path, case: dict, path: str, cas_root: Path = None,
+def _reviewer_file(case_dir: Path, case: dict, path: str, cas_root: Path = None,
                   workspace: Path = None) -> Optional[Path]:
     """A frozen reviewer file, verified by sha256: the case's copy when the case
     holds one (a changed copy is never replaced by an intact one from elsewhere),
     else the CAS, else (rows files only) the live workspace file when its bytes
     still match."""
-    item = next((f for f in case["council"]["files"] if f["path"] == path), None)
+    item = next((f for f in case["reviewer"]["files"] if f["path"] == path), None)
     if item is None:
         return None
     if item.get("in_case"):
@@ -1239,36 +1239,36 @@ def _council_file(case_dir: Path, case: dict, path: str, cas_root: Path = None,
     return None
 
 
-def frozen_council_plan(case_dir: Path, case: dict, cas_root: Path = None) -> Optional[dict]:
-    path = _council_file(case_dir, case, "council/plan/council_plan.json", cas_root)
+def frozen_reviewer_plan(case_dir: Path, case: dict, cas_root: Path = None) -> Optional[dict]:
+    path = _reviewer_file(case_dir, case, "reviewer/plan/reviewer_plan.json", cas_root)
     return json.loads(path.read_text()) if path is not None else None
 
 
-def check_council(case_dir: Path, case: dict, work: Path, *, cas_root: Path = None,
+def check_reviewer(case_dir: Path, case: dict, work: Path, *, cas_root: Path = None,
                   workspace: Path = None, plans_dir: Path = None) -> list:
     """The reviewer part of a case check:
 
     * every frozen reviewer file is present and intact (case, CAS);
-    * ``make_council_deck --check`` regenerates the frozen plan and every deck
+    * ``make_reviewer_deck --check`` regenerates the frozen plan and every deck
       byte for byte from the frozen rows files (a changed generator, harness,
       row or deck fails: R6.1);
     * the re-derivation, re-run on the frozen rows, gives the frozen output;
     * the LIVE rows of this key and the LIVE plan agree with the frozen ones
       (a harvest row edited since the freeze fails here)."""
     from umat_oti.corpus_features import harness as H
-    block = case["council"]
+    block = case["reviewer"]
     workspace = Path(workspace or WORKSPACE)
-    plans_dir = Path(plans_dir or H.COUNCIL_PLANS)
+    plans_dir = Path(plans_dir or H.REVIEWER_PLANS)
     key = block["registry_key"]
     out = []
-    root = Path(work) / "council_check"
+    root = Path(work) / "reviewer_check"
     if root.exists():
         shutil.rmtree(root)
     got = {}
     for item in block["files"]:
-        path = _council_file(case_dir, case, item["path"], cas_root, workspace)
+        path = _reviewer_file(case_dir, case, item["path"], cas_root, workspace)
         if path is None:
-            out.append({"kind": "case_corrupted" if item.get("in_case") else "council_assets",
+            out.append({"kind": "case_corrupted" if item.get("in_case") else "reviewer_assets",
                         "detail": f"{item['path']} unavailable or changed (frozen sha256 "
                                   f"{item['sha256'][:12]})"})
             continue
@@ -1281,12 +1281,12 @@ def check_council(case_dir: Path, case: dict, work: Path, *, cas_root: Path = No
     rows_dir.mkdir(parents=True)
     rows_files = []
     for rel, path in got.items():
-        if rel.startswith("council/plan/"):
+        if rel.startswith("reviewer/plan/"):
             shutil.copyfile(path, plan_dir / Path(rel).name)
-        elif rel.startswith("council/rows_files/"):
+        elif rel.startswith("reviewer/rows_files/"):
             shutil.copyfile(path, rows_dir / Path(rel).name)
             rows_files.append(rows_dir / Path(rel).name)
-    # the source, where make_council_deck looks for it (<cache>/<source_id>)
+    # the source, where make_reviewer_deck looks for it (<cache>/<source_id>)
     src = case["source"]
     cache = DISCOVERY_CACHE
     if not ((cache / src["source_id"]).is_file()
@@ -1297,17 +1297,17 @@ def check_council(case_dir: Path, case: dict, work: Path, *, cas_root: Path = No
         cache = root / "cache"
         (cache / src["source_id"]).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, cache / src["source_id"])
-    rc, printed = run_make_council_deck(
+    rc, printed = run_make_reviewer_deck(
         sum((["--rows", p] for p in sorted(rows_files)), [])
         + ["--key", key, "--out", root / "plans", "--cache", cache, "--check"])
     if rc != 0:
-        out.append({"kind": "council_deck_differs",
-                    "detail": "make_council_deck --check: " + printed.strip()[-600:]})
+        out.append({"kind": "reviewer_deck_differs",
+                    "detail": "make_reviewer_deck --check: " + printed.strip()[-600:]})
     rows = [json.loads(got[e["path"]].read_text()) for e in block["rows"]]
     for entry, row in zip(block["rows"], rows):
         if row_sha256(row) != entry["row_sha256"]:
             out.append({"kind": "case_corrupted", "detail": f"{entry['path']} row_sha256 differs"})
-    frozen = json.loads(got["council/rederive.json"].read_text())
+    frozen = json.loads(got["reviewer/rederive.json"].read_text())
     rederive = workspace / REDERIVE
     if rederive.is_file():
         again = rederive_rows(rows, rederive)
@@ -1325,43 +1325,43 @@ def check_council(case_dir: Path, case: dict, work: Path, *, cas_root: Path = No
         now = [r for r in now if str(r.get("harvest_key") or r.get("key") or "") == key
                and ("d21" if r.get("sets") is not None else "harvest") == entry["kind"]]
         if entry["row_sha256"] not in {row_sha256(r) for r in now}:
-            out.append({"kind": "council_row_changed",
+            out.append({"kind": "reviewer_row_changed",
                         "detail": f"the live {entry['kind']} row of {key} in {entry['file']} "
                                   f"is not the frozen one (row_sha256 {entry['row_sha256'][:12]})"
                                   ": the case is suspended until re-frozen through a decision"})
-    live_plan = plans_dir / key / "council_plan.json"
+    live_plan = plans_dir / key / "reviewer_plan.json"
     if live_plan.is_file():
         now = json.loads(live_plan.read_text())
-        for field in ("council_fingerprint", "material_data_origin", "experiment_origin",
+        for field in ("reviewer_fingerprint", "material_data_origin", "experiment_origin",
                       "row_sha256"):
             if now.get(field) != block.get(field):
-                out.append({"kind": "council_plan_changed", "field": field,
+                out.append({"kind": "reviewer_plan_changed", "field": field,
                             "detail": f"live plan {now.get(field)!r} != frozen "
                                       f"{block.get(field)!r}"})
-        name = f"council_{block['council_set']}.inp"
+        name = f"reviewer_{block['reviewer_set']}.inp"
         frozen_deck = next((f["sha256"] for f in block["files"]
-                            if f["path"] == f"council/plan/{name}"), None)
+                            if f["path"] == f"reviewer/plan/{name}"), None)
         deck = plans_dir / key / name
         if not deck.is_file() or sha256_file(deck) != frozen_deck:
-            out.append({"kind": "council_plan_changed", "field": name,
+            out.append({"kind": "reviewer_plan_changed", "field": name,
                         "detail": f"the live {name} is not the frozen deck"})
     return out
 
 
-def council_source_verdicts(results: list, cases: list, complete_selection: bool = True) -> dict:
+def reviewer_source_verdicts(results: list, cases: list, complete_selection: bool = True) -> dict:
     """Per reviewer SOURCE: verified only when the case of every set its plan
     lists is checked and passes. ``cases``: [(case_dir, case)] that were checked."""
     by_id = {r["case_id"]: r for r in results}
     groups: dict = {}
     for _d, case in cases:
-        block = case.get("council")
+        block = case.get("reviewer")
         if not block:
             continue
         g = groups.setdefault(block["registry_key"], {"source_id": case["source"]["source_id"],
-                                                      "sets_required": list(block["council_sets"]),
+                                                      "sets_required": list(block["reviewer_sets"]),
                                                       "sets": {}})
         result = by_id.get(case["case_id"])
-        g["sets"][block["council_set"]] = bool(result and result.get("ok"))
+        g["sets"][block["reviewer_set"]] = bool(result and result.get("ok"))
     for g in groups.values():
         missing = [s for s in g["sets_required"] if s not in g["sets"]]
         failed = [s for s, ok in g["sets"].items() if not ok]
@@ -1381,7 +1381,7 @@ _FROM_INDEX = object()
 
 def check_case(case_dir: Path, case: dict, modes: tuple, work: Path, *,
                current_rule: str, with_original: bool = True, row=_FROM_INDEX,
-               registry=_FROM_REGISTRY, council_roots: Optional[dict] = None) -> dict:
+               registry=_FROM_REGISTRY, reviewer_roots: Optional[dict] = None) -> dict:
     started = time.time()
     result = {"case_id": case["case_id"], "modes": {}, "failures": [], "canaries": []}
     if case["tolerance_rule_id"] != current_rule:
@@ -1394,8 +1394,8 @@ def check_case(case_dir: Path, case: dict, modes: tuple, work: Path, *,
     ref = read_gz_json(case_dir / case["reference"]["file"])
     result["failures"] += consistency_failures(
         case_dir, case, ref, index_row(case_dir) if row is _FROM_INDEX else row, registry)
-    if case.get("council"):
-        result["failures"] += check_council(case_dir, case, work, **(council_roots or {}))
+    if case.get("reviewer"):
+        result["failures"] += check_reviewer(case_dir, case, work, **(reviewer_roots or {}))
     frozen_errors = {p["name"]: p["frozen_error"] for p in ref["paths"]}
     configs = {p["name"]: (case_dir / p["config"]).read_text() for p in case["experiment"]["paths"]}
     for p in case["experiment"]["paths"]:
@@ -1521,9 +1521,9 @@ def cmd_check(args) -> int:
     else:
         results = [_check_one(j) for j in jobs]
     tier_canaries = [hidden_state_canary(root / "_canary")]
-    sources = council_source_verdicts(results, cases, complete_selection=not args.only)
+    sources = reviewer_source_verdicts(results, cases, complete_selection=not args.only)
     failed = [r for r in results if not r["ok"]]
-    failed += [{"case_id": f"council source {k}", "ok": False} for k, g in sources.items()
+    failed += [{"case_id": f"reviewer source {k}", "ok": False} for k, g in sources.items()
                if g["counts_as_failure"]]
     tier_failures = [c for c in tier_canaries if not c["rejected"]]
     for r in results:
@@ -1538,13 +1538,13 @@ def cmd_check(args) -> int:
     for c in tier_canaries:
         print(f"tier canary {'rejected' if c['rejected'] else 'NOT REJECTED'}: {c['canary']} {c}")
     for k, g in sorted(sources.items()):
-        print(f"council source {k} ({g['source_id']}): {g['verdict'].upper()} -- sets "
+        print(f"reviewer source {k} ({g['source_id']}): {g['verdict'].upper()} -- sets "
               f"{g['sets_required']}, failed {g['failed_sets']}, not checked {g['missing_sets']}")
     report = {"schema": SCHEMA + "/check-report", "tier": args.tier, "modes": list(modes),
               "rule_id": rule, "fingerprints": fingerprints(), "toolchain": toolchain(),
               "date": datetime.datetime.now().isoformat(timespec="seconds"),
               "seconds": round(time.time() - started, 1), "results": results,
-              "tier_canaries": tier_canaries, "council_sources": sources,
+              "tier_canaries": tier_canaries, "reviewer_sources": sources,
               "ok": not failed and not tier_failures}
     if args.report:
         write_json(Path(args.report), json.loads(json.dumps(report, default=str)))
@@ -1668,37 +1668,37 @@ def _freeze(args) -> int:
         identity = {"kind": kind, "source_id": source_id, "repository": "this repository",
                     "path": rel, "commit": None, "url": None, "raw_url": None}
         case_id = args.id or "umat-oti-curated--" + model.name.replace("_", "-").lower()
-    council = None
-    if args.key and entry.provenance.get("council_plan"):
+    reviewer = None
+    if args.key and entry.provenance.get("reviewer_plan"):
         base_key = split_key(args.key)[0]
-        set_id = str(entry.provenance.get("council_set") or "")
+        set_id = str(entry.provenance.get("reviewer_set") or "")
         rows_files = [Path(p).resolve() for p in
-                      (args.council_rows or [WORKSPACE / r for r in COUNCIL_ROWS])]
+                      (args.reviewer_rows or [WORKSPACE / r for r in REVIEWER_ROWS])]
         rows_of_key = [json.loads(line) for f in rows_files
                        for line in f.read_text(encoding="utf-8").splitlines() if line.strip()]
         rows_of_key = [r for r in rows_of_key
                        if str(r.get("harvest_key") or r.get("key") or "") == base_key]
-        why = council_restriction(licence, source_id, rows_of_key + [registry])
+        why = reviewer_restriction(licence, source_id, rows_of_key + [registry])
         if why:
             print(f"refused: no case of {source_id} may go into the case tree ({why}); "
                   f"verify it locally only")
             return 3
         if args.tier == "ci":
-            print("refused: a council case needs its rows files from corpus_assets: offline tier")
+            print("refused: a reviewer case needs its rows files from corpus_assets: offline tier")
             return 3
-        block, council_files, problems = council_freeze_block(
-            base_key, set_id, Path(H.COUNCIL_PLANS), rows_files, WORKSPACE, H.CACHE)
+        block, reviewer_files, problems = reviewer_freeze_block(
+            base_key, set_id, Path(H.REVIEWER_PLANS), rows_files, WORKSPACE, H.CACHE)
         if not problems:
-            plan_now = json.loads((Path(H.COUNCIL_PLANS) / base_key / "council_plan.json")
+            plan_now = json.loads((Path(H.REVIEWER_PLANS) / base_key / "reviewer_plan.json")
                                   .read_text())
-            problems = [f"{p['kind']}: {p['detail']}" for p in council_consistency_failures(
-                {"council": block, "experiment": {"material_provenance": entry.provenance}},
+            problems = [f"{p['kind']}: {p['detail']}" for p in reviewer_consistency_failures(
+                {"reviewer": block, "experiment": {"material_provenance": entry.provenance}},
                 registry, plan_now)]
         if problems:
             print("refused: " + "; ".join(problems)[:1500])
             return 3
-        council = (block, council_files)
-        case_id = args.id or (material_id(source_id) + "--council-"
+        reviewer = (block, reviewer_files)
+        case_id = args.id or (material_id(source_id) + "--reviewer-"
                               + re.sub(r"[^A-Za-z0-9]+", "-", set_id).strip("-").lower())
     sha = sha256_file(source_path)
     if args.tier == "ci" and licence["redistribution"] != "permitted":
@@ -1868,16 +1868,16 @@ def _freeze(args) -> int:
                           "bytes": (work_root / extra).stat().st_size, "role": "harness records"})
     cas_files.append({"path": "harness/builds.json", "sha256": cas_put(harness_dir / "builds.json"),
                       "bytes": (harness_dir / "builds.json").stat().st_size, "role": "harness builds"})
-    if council is not None:
-        # the reviewer experiment (A-1): CAS always; in the case only when the
+    if reviewer is not None:
+        # The reviewer experiment (A-1): CAS always; in the case only when the
         # source is redistributable, and the rows files (every row of the
         # campaign) never
-        block, council_files = council
+        block, reviewer_files = reviewer
         items = []
-        for rel, local, role in council_files:
+        for rel, local, role in reviewer_files:
             item = {"path": rel, "sha256": cas_put(local), "bytes": Path(local).stat().st_size,
                     "role": role, "in_case": False}
-            if rel.startswith("council/rows_files/"):
+            if rel.startswith("reviewer/rows_files/"):
                 item["workspace_path"] = next(e["workspace_path"] for e in block["rows"]
                                               if e["file"] == Path(rel).name)
             elif licence["redistribution"] == "permitted":
@@ -1939,22 +1939,22 @@ def _freeze(args) -> int:
             "freeze": " ".join(["PYTHONHASHSEED=0 python tools/corpus_cases.py freeze"]
                                + ([f"--key {args.key}"]
                                   + [f"--{k.replace('_', '-')} {v}" for k, v in pointed.items()]
-                                  + [f"--council-rows {p}" for p in args.council_rows or ()]
+                                  + [f"--reviewer-rows {p}" for p in args.reviewer_rows or ()]
                                   if args.key else
                                   [f"--model {Path(args.model).as_posix()} --family '{args.family}'"
                                    + (f" --activation {args.activation}" if args.activation else "")])
                                + [f"--tier {args.tier}"])},
         "undefined_in_original": undefined,
-        **({"council": council[0]} if council is not None else {}),
+        **({"reviewer": reviewer[0]} if reviewer is not None else {}),
         "limitations": ["routine-level evidence (driver), not Abaqus",
                         "loading paths are this pipeline's probes, not the author's example"]
                        + ([f"undefined_in_original (D-12, a SOURCE defect): {undefined}; those "
                            "slots are never compared"] if undefined else [])
-                       + ([f"council-designed experiment (D-19/D-21), parameter set "
-                           f"{council[0]['council_set']} of {council[0]['council_sets']}: the "
+                       + ([f"reviewer-designed experiment (D-19/D-21), parameter set "
+                           f"{reviewer[0]['reviewer_set']} of {reviewer[0]['reviewer_sets']}: the "
                            "source counts only when every set's case passes, and only with "
-                           "Vera's acceptance of template and instance (R6.5)"]
-                          if council is not None else [])
+                           "the reviewer's acceptance of template and instance (R6.5)"]
+                          if reviewer is not None else [])
                        + ([] if in_case else ["source not redistributable (D-2): CI cannot run R or "
                                               "P for this case; offline tier only"]),
         "date": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -1965,7 +1965,7 @@ def _freeze(args) -> int:
                         current_rule=rule,
                         row={"digest": case_digest(case_dir), "paths": len(ref_paths),
                              "judged_states": sum(len(p["judged"]) for p in ref_paths),
-                             **({"council": index_council(case)} if council is not None
+                             **({"reviewer": index_reviewer(case)} if reviewer is not None
                                 else {})})
     case["freeze_check"] = {"ok": result["ok"], "modes": result.get("modes"),
                             "canaries": [{"canary": c["canary"], "rejected": c["rejected"]}
@@ -2029,8 +2029,8 @@ def main(argv=None) -> int:
     f.add_argument("--verification-records", type=Path, default=None,
                    help="(--key) store_verification.jsonl whose rows supply the key's experiment "
                         "(as tools/run_corpus_features.py --verification-records)")
-    f.add_argument("--council-rows", type=Path, action="append", default=None,
-                   help="(--key K#SET of a council source) the rows files the council plan was "
+    f.add_argument("--reviewer-rows", type=Path, action="append", default=None,
+                   help="(--key K#SET of a reviewer source) the rows files the reviewer plan was "
                         "written from (default: the D-19 harvest and the D-21 constants)")
     f.add_argument("--registry", type=Path, default=None,
                    help="(--key) corpus registry that maps keys to sources (default: the committed "
@@ -2051,7 +2051,7 @@ def main(argv=None) -> int:
     fe.add_argument("--allow-network", action="store_true")
     sub.add_parser("verify-assets", help="re-hash every CAS object the cases list")
     sub.add_parser("index", help="rebuild umat/cases/index.json")
-    sub.add_parser("holdout", help="tier holdout: a template's blind hold-out on Vera's "
+    sub.add_parser("holdout", help="tier holdout: a template's blind hold-out on the reviewer's "
                                    "selection (tools/corpus_holdout.py --help)")
     args = parser.parse_args(argv)
     if args.command == "freeze":

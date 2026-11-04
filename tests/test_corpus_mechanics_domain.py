@@ -4,7 +4,7 @@
 growth stretch G11 by an IF / ELSE IF chain on total time with no ELSE. After
 TIME(2)+DTIME = 2.2 G11 is an uninitialised local: built with zero-initialised
 locals the routine returns G11 = 0 and NaN stress, with SNaN-initialised
-locals NaN -- measured in corpus_campaign/batches/B2b/curie/bodyforce/. The
+locals NaN -- measured in the batch B2b campaign records The
 B1 ``growth_held_stretch`` path ended at 1.1 x the period (2.42) and so
 asked the original an undefined question.
 """

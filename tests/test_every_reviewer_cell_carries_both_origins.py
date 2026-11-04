@@ -19,12 +19,12 @@ pytestmark = pytest.mark.unit
 SOURCE = "      SUBROUTINE UMAT(STRESS)\n      STRESS(1) = PROPS(1)\n      END\n"
 
 
-def _council_plan(set_ids=("A", "B")):
+def _reviewer_plan(set_ids=("A", "B")):
     def manifest(props):
         return {"ntens": 6, "ndi": 3, "nshr": 3, "nstatv": 1, "props": props,
                 "kinematics": "small strain", "name": "MATERIAL",
                 "loading": [{"period": 1.0}, {"period": 1.0}]}
-    return {"material_data_origin": "council_chosen", "experiment_origin": "council_deck",
+    return {"material_data_origin": "reviewer_chosen", "experiment_origin": "reviewer_deck",
             "documented_domain": {"strain_max": {"value": 0.004, "where": "x", "quote": "q"}},
             "sets": [{"set_id": s, "plan": {"experiment": {"manifest": manifest([float(i + 1)])}}}
                      for i, s in enumerate(set_ids)]}
@@ -45,10 +45,10 @@ def workspace(tmp_path, monkeypatch):
                                                                "props": [5.0]}}) + "\n")
     plans = tmp_path / "plans"
     (plans / "c1").mkdir(parents=True)
-    (plans / "c1" / "council_plan.json").write_text(json.dumps(_council_plan()))
+    (plans / "c1" / "reviewer_plan.json").write_text(json.dumps(_reviewer_plan()))
     for name, value in (("REGISTRY", registry), ("PASS16", records), ("CACHE", cache),
                         ("STORE", tmp_path / "store"), ("FAMILIES", tmp_path / "f.json"),
-                        ("EXPERIMENT_WORK", tmp_path / "work"), ("COUNCIL_PLANS", plans)):
+                        ("EXPERIMENT_WORK", tmp_path / "work"), ("REVIEWER_PLANS", plans)):
         monkeypatch.setattr(H, name, value)
     return tmp_path
 
@@ -59,54 +59,54 @@ def _path():
                            provenance="", increments=[1, 2])
 
 
-def test_each_council_set_is_its_own_entry_with_both_origins(workspace):
+def test_each_reviewer_set_is_its_own_entry_with_both_origins(workspace):
     a, b = H.resolve_entry("c1#A"), H.resolve_entry("c1#B")
     assert (a.key, b.key) == ("c1#A", "c1#B") and (a.props, b.props) == ([1.0], [2.0])
     for entry in (a, b):
-        assert entry.provenance["material_data_origin"] == "council_chosen"
-        assert entry.provenance["experiment_origin"] == "council_deck"
-        assert entry.driver_point["provenance"].startswith("council plan")
+        assert entry.provenance["material_data_origin"] == "reviewer_chosen"
+        assert entry.provenance["experiment_origin"] == "reviewer_deck"
+        assert entry.driver_point["provenance"].startswith("reviewer plan")
         assert entry.path_hints["documented_domain"]["strain_max"]["value"] == 0.004
     # a bare key is refused for a multi-set plan (review G C6)
     with pytest.raises(LookupError, match="name one"):
         H.resolve_entry("c1")
 
 
-def test_a_refused_council_plan_is_not_resolved(workspace):
-    plan = dict(_council_plan(), refusal_code="needs_documented_geometry",
+def test_a_refused_reviewer_plan_is_not_resolved(workspace):
+    plan = dict(_reviewer_plan(), refusal_code="needs_documented_geometry",
                 refusal="reads COORDS")
-    (workspace / "plans" / "c1" / "council_plan.json").write_text(json.dumps(plan))
+    (workspace / "plans" / "c1" / "reviewer_plan.json").write_text(json.dumps(plan))
     with pytest.raises(LookupError, match="needs_documented_geometry"):
         H.resolve_entry("c1#A")
 
 
 def test_sets_are_separate_cells_and_count_only_together(workspace):
-    from umat_oti.corpus_features.cells import combine_council_sets
+    from umat_oti.corpus_features.cells import combine_reviewer_sets
     records = []
     for set_id, status in (("A", "verified"), ("B", "verified")):
         entry = H.resolve_entry(f"c1#{set_id}")
         records.append(H._record(entry, "ddsdde", _path(), {"status": status}, {}))
     cells = fold(records, evidence="x")
-    assert sorted(c["council_set"] for c in cells) == ["A", "B"]
-    (combined,) = combine_council_sets(cells)
-    assert combined["status"] == "verified" and combined["council_sets"] == ["A", "B"]
+    assert sorted(c["reviewer_set"] for c in cells) == ["A", "B"]
+    (combined,) = combine_reviewer_sets(cells)
+    assert combined["status"] == "verified" and combined["reviewer_sets"] == ["A", "B"]
     cells[1]["status"] = "not_attempted"
-    assert combine_council_sets(cells)[0]["status"] == "not_attempted"
+    assert combine_reviewer_sets(cells)[0]["status"] == "not_attempted"
     cells[1]["status"] = "failed"
-    assert combine_council_sets(cells)[0]["status"] == "failed"
-    assert combine_council_sets(cells[:1])[0]["status"] == "not_attempted"   # B missing
+    assert combine_reviewer_sets(cells)[0]["status"] == "failed"
+    assert combine_reviewer_sets(cells[:1])[0]["status"] == "not_attempted"   # B missing
 
 
-def test_every_council_cell_carries_both_origins(workspace):
+def test_every_reviewer_cell_carries_both_origins(workspace):
     entry = H.resolve_entry("c1#B")
     records = [H._record(entry, f, _path(), {"status": "verified"}, {})
                for f in ("primal_stress_state", "ddsdde")]
     for r in records:
-        assert r["material_data_origin"] == "council_chosen"
-        assert r["experiment_origin"] == "council_deck" and r["council_set"] == "B"
+        assert r["material_data_origin"] == "reviewer_chosen"
+        assert r["experiment_origin"] == "reviewer_deck" and r["reviewer_set"] == "B"
     for cell in fold(records, evidence="x"):
-        assert cell["material_data_origin"] == "council_chosen"
-        assert cell["experiment_origin"] == "council_deck"
+        assert cell["material_data_origin"] == "reviewer_chosen"
+        assert cell["experiment_origin"] == "reviewer_deck"
 
 
 def test_an_author_deck_entry_carries_no_origin_fields(workspace):
@@ -131,10 +131,10 @@ def test_the_abaqus_pass_records_a_harvest_completed_origin(monkeypatch):
 
 
 def test_a_branch_coverage_reaches_every_cell(workspace):
-    plan = _council_plan()
+    plan = _reviewer_plan()
     plan["branch_coverage"] = {"exercised": "NTENS=6", "not_exercised": ["NTENS == 4"],
                                "statement": "verified on the 3D branch (NTENS=6); ..."}
-    (workspace / "plans" / "c1" / "council_plan.json").write_text(json.dumps(plan))
+    (workspace / "plans" / "c1" / "reviewer_plan.json").write_text(json.dumps(plan))
     entry = H.resolve_entry("c1#A")
     records = [H._record(entry, f, _path(), {"status": "verified"}, {})
                for f in ("primal_stress_state", "ddsdde")]

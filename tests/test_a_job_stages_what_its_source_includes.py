@@ -1,4 +1,4 @@
-"""Abaqus job staging (pass21 findings, Gauss).
+"""Abaqus job staging (pass21 findings).
 
 - An INCLUDE that names a file beside the author's source (davidmorin
   V_UMAT: ``INCLUDE './UMAT_MODEL.f'``) is staged where the compiler looks.

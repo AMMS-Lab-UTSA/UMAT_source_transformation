@@ -64,7 +64,7 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
         if record.get("feature") in MANIFEST_FEATURES:
             # a D-21 parameter set is its own experiment: never merged with
             # another set's records (review G C6)
-            groups.setdefault((record["source_id"], record.get("council_set") or "",
+            groups.setdefault((record["source_id"], record.get("reviewer_set") or "",
                                record["feature"]), []).append(record)
     cells = []
     for (source_id, _set, feature), recs in groups.items():
@@ -88,8 +88,8 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
         cell["stress_and_ddsdde_fully_defined"] = bool(first.get("stress_and_ddsdde_fully_defined", True))
         if first.get("driver_point"):
             cell["driver_point"] = first["driver_point"]
-        for name in ("material_data_origin", "experiment_origin", "council_set",
-                     "council_sets", "branch_coverage", "domain_not_enforced"):
+        for name in ("material_data_origin", "experiment_origin", "reviewer_set",
+                     "reviewer_sets", "branch_coverage", "domain_not_enforced"):
             if first.get(name):
                 cell[name] = first[name]
         outside = [r["path"] for r in recs if r.get("outside_model_domain")]
@@ -195,25 +195,25 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
     return cells
 
 
-def combine_council_sets(cells: Iterable[Mapping]) -> list:
+def combine_reviewer_sets(cells: Iterable[Mapping]) -> list:
     """One source-level cell per (source, feature) from its per-set cells (D-21:
     a source counts only if EVERY planned parameter set passes).
 
-    verified iff every planned set (``council_sets``) has a verified cell;
+    verified iff every planned set (``reviewer_sets``) has a verified cell;
     failed if any set failed; otherwise not_attempted, naming the sets that
     are missing or not verified. Cells without a reviewer set pass through.
     """
     by: "OrderedDict[tuple, list]" = OrderedDict()
     passthrough = []
     for cell in cells:
-        if not cell.get("council_set"):
+        if not cell.get("reviewer_set"):
             passthrough.append(dict(cell))
             continue
         by.setdefault((cell["source_id"], cell["feature"]), []).append(cell)
     out = passthrough
     for (source_id, feature), sets in by.items():
-        planned = sorted(set(sets[0].get("council_sets") or [c["council_set"] for c in sets]))
-        status = {c["council_set"]: c.get("status") for c in sets}
+        planned = sorted(set(sets[0].get("reviewer_sets") or [c["reviewer_set"] for c in sets]))
+        status = {c["reviewer_set"]: c.get("status") for c in sets}
         missing = [s for s in planned if s not in status]
         failed = [s for s in planned if status.get(s) == "failed"]
         unverified = [s for s in planned if status.get(s) not in ("verified", None)]
@@ -221,7 +221,7 @@ def combine_council_sets(cells: Iterable[Mapping]) -> list:
                                                   "experiment_origin", "branch_coverage",
                                                   "domain_not_enforced")
                     if key in sets[0]}
-        combined["council_sets"] = planned
+        combined["reviewer_sets"] = planned
         combined["per_set"] = status
         if failed:
             combined["status"] = "failed"

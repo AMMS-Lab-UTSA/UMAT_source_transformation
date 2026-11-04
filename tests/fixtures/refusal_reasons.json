@@ -1,0 +1,941 @@
+{
+ "_about": "Distinct (terminal_state, reason) pairs the batch pipeline produced on the public-UMAT corpus at pass25, without source identities. Used to check that every refusal a user can meet maps to a specific plain-language card.",
+ "records": [
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 15 assignment(s) and then uses the result: line 432, `output_grad(ig2+(k-1)*n_input+l) = REAL(GRADACTIVOUT_OTI*`, takes the real part of an expression descended from GRADACTIVOUT_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 18 assignment(s) and then uses the result: line 348, `detf = REAL(+DFGRD1_OTI(1,1)*(DFGRD1_OTI(2,2)*DFGRD1_OTI(3,3)-`, takes the real part of an expression descended from DFGRD1_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 2 assignment(s) and then uses the result: line 1016, `NSLPTL=REAL(NINT(REAL(STATEV_OTI(NSTATV))))`, takes the real part of an expression descended from STATEV_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 2 assignment(s) and then uses the result: line 1098, `NSLPTL=REAL(NINT(REAL(STATEV_OTI(NSTATV))))`, takes the real part of an expression descended from STATEV_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 2 assignment(s) and then uses the result: line 1104, `NSLPTL=REAL(NINT(REAL(STATEV_OTI(NSTATV))))`, takes the real part of an expression descended from STATEV_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 2 assignment(s) and then uses the result: line 1159, `NSLPTL=REAL(NINT(REAL(STATEV_OTI(NSTATV))))`, takes the real part of an expression descended from STATEV_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 2 assignment(s) and then uses the result: line 433, `n_out_n = REAL(YIELD_NORMAL_OTI(i) * YIELD_NORMAL_OTI(j))`, takes the real part of an expression descended from YIELD_NORMAL_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 22 assignment(s) and then uses the result: line 688, `sigmamat(1,1) = REAL(SIGMA_OTI(1))`, takes the real part of an expression descended from SIGMA_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "derivative_truncated",
+   "reason": "the converted source drops the derivative at 24 assignment(s) and then uses the result: line 704, `I1bar = REAL(BISO_OTI(1)+BISO_OTI(2)+BISO_OTI(3))`, takes the real part of an expression descended from BISO_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "experiment_not_generated",
+   "reason": "this harness generated no experiment this source will run: original.sta does not say 'THE ANALYSIS HAS COMPLETED SUCCESSFULLY'; original.msg reports 1 analysis error messages; the analysis ran 1 increments where 30 were requested"
+  },
+  {
+   "terminal_state": "experiment_not_generated",
+   "reason": "this harness generated no experiment this source will run: original.sta was not written, so the analysis left no record; original.msg does not report an error count"
+  },
+  {
+   "terminal_state": "experiment_not_generated",
+   "reason": "this harness generated no experiment this source will run: the model produced no numbers at any amplitude from 8e-07 to 1, searched downward from 0.0001 and then upward to the ceiling, and again at the resolution the verification would use; there is no loading here this harness can drive it at"
+  },
+  {
+   "terminal_state": "experiment_not_informative",
+   "reason": "4 of 4 chosen states judged and every entry agrees (entrywise, FD-only plateau >= 3); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: its response is nonlinear but REVERSIBLE, so there is no irreversible branch to cross and no elastic-versus-plastic split to span"
+  },
+  {
+   "terminal_state": "experiment_not_informative",
+   "reason": "4 of 4 chosen states judged and every entry agrees (entrywise, FD-only plateau >= 3); 4 smooth state(s) inside the activated regime (4 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one"
+  },
+  {
+   "terminal_state": "experiment_not_informative",
+   "reason": "4 of 4 chosen states judged and every entry agrees (entrywise, FD-only plateau >= 3); 4 smooth states on a material that never activates, which is the whole of it"
+  },
+  {
+   "terminal_state": "experiment_not_informative",
+   "reason": "the converted source drops the derivative at 14 assignment(s) and then uses the result: line 1286, `C4NEQJ(I,J,K,L) = REAL(C4NEQ(I,J,K,L)/DET_OTI+(IDT2(I,K)*`, takes the real part of an expression descended from DET_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed"
+  },
+  {
+   "terminal_state": "external_dependency_unavailable",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift."
+  },
+  {
+   "terminal_state": "external_dependency_unavailable",
+   "reason": "STRESS_OTI is passed to UMAT_LINEAR, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply UMAT_LINEAR's source with this file (or in dependency_roots) so it can be lifted.; STATEV_OTI is passed to UMAT_LINEAR, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit inte"
+  },
+  {
+   "terminal_state": "external_dependency_unavailable",
+   "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 165, first stress expression at line 199, last stress update at line 296, STRESS extraction at line 307, DDSDDE extraction at line 316). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co"
+  },
+  {
+   "terminal_state": "external_dependency_unavailable",
+   "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract."
+  },
+  {
+   "terminal_state": "external_dependency_unavailable",
+   "reason": "this source opens 2 file(s) it requires and that nothing in its repository publishes: D:\\PLADD\\cylinder\\day1_up\\Temp_water_distrib.txt, D:\\Abaqus_resu\\Effect_radi\\Temp_water_distrib.txt. The data the model runs on is not here, and supplying a table from somewhere else would be inventing it"
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "Helper lifting failed: Helper lifting for ELPLASTDO reached external or undefined callee ASET (called at line 3094). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines ASET beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "Helper lifting failed: Helper lifting for UMAT_MAT3 reached external or undefined callee STIFFNESMATRIX (called at line 255). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines STIFFNESMATRIX beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['DSYEV']. The completed JSON rewrites those calls, so pass-through is unsafe. (DSYEV is first called at line 1541.) DSYEV is a LAPACK routine, linked as a library, so there is no body to lift. What to do: put a Fortran source of it (reference LAPACK) beside the UMAT or in dependency_roots, or replace it with an explicit small solve the transform can lift."
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['FAILURECRITERIONFIBER2D', 'STIFFNESMATRIX2D']. The completed JSON rewrites those calls, so pass-through is unsafe. (FAILURECRITERIONFIBER2D is first called at line 216.) What to do: put the file that defines FAILURECRITERIONFIBER2D, STIFFNESMATRIX2D beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 345, first stress expression at line 351, last stress update at line 354, STRESS extraction at line 357, DDSDDE extraction at line 381). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co"
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 84, first stress expression at line 92, last stress update at line 92, STRESS extraction at line 97, DDSDDE extraction at line 105). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the contra"
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "ValueError: This source defines no SUBROUTINE and no FUNCTION that the Fortran reader could parse, so there is no routine here to transform. Check the source form -- a free-form file named .f or .for is read by column and yields no statements -- or that the file is Fortran at all."
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract."
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "anchors not located: umat_interface_uses_the_authors_own_argument_names -- SUBROUTINE UMAT takes 37 arguments -- the number Abaqus passes a UMAT -- but names them (STRESS_USR (*), STATEV_USR (*), DDSDDE_USR (*), SSE, SPD, SCD, RPL, DDSDDT_USR (*), DRPLDE_USR (*), DRPLDT, STRAN_USR (*), DSTRAN_USR (*), TIME_USR (*), DTIME, TEMP, DTEMP, PREDEF_USR (*), DPRED_USR (*), CMNAME, NDI, NSHR, NTENS, NSTATV, PROPS, PROPS_USR (*), COORDS_USR (*), DROT_USR (*), PNEWDT, CELENT, DFGRD0_USR (*), DFGRD1_USR (*)"
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "the unmodified source does not compile with Abaqus's own compile line: CAEAssistant-Group__Path-dependent-Abaqus-model-for-the-analysis-of-composite-curing/Path_Dependent-Abaqus-Curing-Subroutine.for(37): error #5082: Syntax "
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "the unmodified source does not compile with Abaqus's own compile line: thealanjason__umat_finite_viscoelasticity/report/chapters/VISC_OGDEN_2EL.for(1034): error #6410: This name has not been declared as an array or a function"
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "the unmodified source does not compile with Abaqus's own compile line: thealanjason__umat_finite_viscoelasticity/simulation_input_files/VISC_OGDEN_2EL.for(1033): error #6410: This name has not been declared as an array or a f"
+  },
+  {
+   "terminal_state": "incomplete_or_corrupt_source",
+   "reason": "the unmodified source does not compile with Abaqus's own compile line: thealanjason__umat_finite_viscoelasticity/simulation_input_files/VISC_OGDEN_3EL.for(1483): error #6410: This name has not been declared as an array or a f"
+  },
+  {
+   "terminal_state": "informativeness_not_established",
+   "reason": "NOT A PASS: the mechanically_informative gate was never measured (null) -- the source normalises its clock by TOTALT = 10 (TotalT=10.0); this experiment runs to a total time of 10, which is 100.0% of it (above the 25% search heuristic -- what that fraction MEANS depends on whether TOTALT is a growth normalisation, a relaxation time or a numerical parameter, which this cannot read off a name); the material is active over the run that was verified (state_change, departure_from_linearity, tangent_change); the response sits within the scales this problem supplies: peak stress 1.534e+06 against a largest material constant of 9.065e+05, a ratio of 1.692; the response sits within the scales this problem supplies: peak stress 1.534e+06 against a largest material constant of 9.065e+05, a ratio of 1.692; growth inferred from state targets, not measured: the growth tensor of this source is a local "
+  },
+  {
+   "terminal_state": "informativeness_not_established",
+   "reason": "NOT A PASS: the mechanically_informative gate was never measured (null) -- the source normalises its clock by TOTALT = 10 (TotalT=10.0); this experiment runs to a total time of 10, which is 100.0% of it (above the 25% search heuristic -- what that fraction MEANS depends on whether TOTALT is a growth normalisation, a relaxation time or a numerical parameter, which this cannot read off a name); the material is active over the run that was verified (state_change, departure_from_linearity, tangent_change); the response sits within the scales this problem supplies: peak stress 1.772e+06 against a largest material constant of 9.065e+05, a ratio of 1.954; the response sits within the scales this problem supplies: peak stress 1.772e+06 against a largest material constant of 9.065e+05, a ratio of 1.954; growth inferred from state targets, not measured: the growth tensor of this source is a local "
+  },
+  {
+   "terminal_state": "informativeness_not_established",
+   "reason": "NOT A PASS: the mechanically_informative gate was never measured (null) -- the source normalises its clock by TOTALT = 10 (TotalT=10.0); this experiment runs to a total time of 10, which is 100.0% of it (above the 25% search heuristic -- what that fraction MEANS depends on whether TOTALT is a growth normalisation, a relaxation time or a numerical parameter, which this cannot read off a name); the material is active over the run that was verified (state_change, departure_from_linearity, tangent_change); the response sits within the scales this problem supplies: peak stress 2.27e+06 against a largest material constant of 9.065e+05, a ratio of 2.504; the response sits within the scales this problem supplies: peak stress 2.27e+06 against a largest material constant of 9.065e+05, a ratio of 2.504; growth inferred from state targets, not measured: the growth tensor of this source is a local va"
+  },
+  {
+   "terminal_state": "informativeness_not_established",
+   "reason": "NOT A PASS: the mechanically_informative gate was never measured (null) -- the source normalises its clock by TOTALT = 10 (TotalT=10.0); this experiment runs to a total time of 10, which is 100.0% of it (above the 25% search heuristic -- what that fraction MEANS depends on whether TOTALT is a growth normalisation, a relaxation time or a numerical parameter, which this cannot read off a name); the material is active over the run that was verified (state_change, departure_from_linearity, tangent_change); the response sits within the scales this problem supplies: peak stress 5.707e+05 against a largest material constant of 9.065e+05, a ratio of 0.6295; the response sits within the scales this problem supplies: peak stress 5.707e+05 against a largest material constant of 9.065e+05, a ratio of 0.6295; growth inferred from state targets, not measured: the growth tensor of this source is a loca"
+  },
+  {
+   "terminal_state": "informativeness_not_established",
+   "reason": "NOT A PASS: the mechanically_informative gate was never measured (null) -- the source normalises its clock by TOTALT = 10 (TotalT=10.0); this experiment runs to a total time of 10, which is 100.0% of it (above the 25% search heuristic -- what that fraction MEANS depends on whether TOTALT is a growth normalisation, a relaxation time or a numerical parameter, which this cannot read off a name); the material is active over the run that was verified (state_change, departure_from_linearity, tangent_change); the response sits within the scales this problem supplies: peak stress 8.897e+05 against a largest material constant of 9.065e+05, a ratio of 0.9815; the response sits within the scales this problem supplies: peak stress 8.897e+05 against a largest material constant of 9.065e+05, a ratio of 0.9815; growth inferred from state targets, not measured: the growth tensor of this source is a loca"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "3MAH__simcoon publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 36 .inp file(s) in 3MAH__simcoon, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "BAMresearch__fenics-constitutive publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in BAMresearch__fenics-constitutive, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "CLD-Rostock__Christensen_FailureIndex publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in CLD-Rostock__Christensen_FailureIndex, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "Computational-Mechanics-Materials-Lab__SinglePointSimulator publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in Computational-Mechanics-Materials-Lab__SinglePointSimulator, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "CriticalSoilModels__incremental-driver publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in CriticalSoilModels__incremental-driver, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "Dr-Ning-An__Viscoelastic-RVE-Calculator publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in Dr-Ning-An__Viscoelastic-RVE-Calculator, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "GuGuaTT__STEEL-3dPointClouds publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in GuGuaTT__STEEL-3dPointClouds, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "InstituteOfMechanics__Paraqus publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 2 .inp file(s) in InstituteOfMechanics__Paraqus, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "JuliaFEM__UMAT.jl publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in JuliaFEM__UMAT.jl, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "PeriDoX__PeriDoX publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 1 .inp file(s) in PeriDoX__PeriDoX, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "PeriHub__PeriLab.jl publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 3 .inp file(s) in PeriHub__PeriLab.jl, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "PlatypusBytes__ConstitutiveModels publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 3 .inp file(s) in PlatypusBytes__ConstitutiveModels, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "RafalMichalczyk__PavementDesign publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in RafalMichalczyk__PavementDesign, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "artorg-unibe-ch__HFE publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 13 .inp file(s) in artorg-unibe-ch__HFE, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "baw-de__poroMechanicalFoam publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in baw-de__poroMechanicalFoam, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "bennifuchs__TsaiWu-Fortran publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in bennifuchs__TsaiWu-Fortran, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "bessagroup__f3dasm_simulate publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in bessagroup__f3dasm_simulate, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "calculix__ccx_fff publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 24 .inp file(s) in calculix__ccx_fff, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "cfietek__Damage-Modeling-in-Metal-Additive-Manufacturing-Process-Simulations publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in cfietek__Damage-Modeling-in-Metal-Additive-Manufacturing-Process-Simulations, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "compas-dev__compas_fea2 publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in compas-dev__compas_fea2, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "gitlab.com__vikramroy_barc__metplast_umat-generator publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 1 .inp file(s) in gitlab.com__vikramroy_barc__metplast_umat-generator, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "glu46__3D_anisotropic_viscoelastic_model publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in glu46__3D_anisotropic_viscoelastic_model, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "keisuke58__Tmcmc202601 publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 48 .inp file(s) in keisuke58__Tmcmc202601, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "longbiscuit__DuncanEB-Abaqus6.14-5-UMAT-constative-model publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in longbiscuit__DuncanEB-Abaqus6.14-5-UMAT-constative-model, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "marioruiarruda__Hashin_2D_UMAT publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in marioruiarruda__Hashin_2D_UMAT, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "marioruiarruda__Hashin_3D_UMAT publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in marioruiarruda__Hashin_3D_UMAT, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "marioruiarruda__Mazars_UMAT publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in marioruiarruda__Mazars_UMAT, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "marioruiarruda__Tsai-Wu_2D_UMAT publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in marioruiarruda__Tsai-Wu_2D_UMAT, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "materialsguy__Predict_Nanoindentation_Tip_Wear publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in materialsguy__Predict_Nanoindentation_Tip_Wear, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "matmodlab__matmodlab2 publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in matmodlab__matmodlab2, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "mholla__SOFT24 publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in mholla__SOFT24, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "needs_initial_state: the orientation file (SDVINI reads STATEV(1-3) Euler angles) is at the author's absolute path and not published (the batch had settled it at `original_job_failed`: original.sta was not written, so the analysis left no record; original.msg does not report an error count)"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in j-machacek__numgeo-hardening-soil-bricks can feed this routine. It reads PROPS(1:14) and writes STATEV(1:0). Searched: 6 .inp file(s) in j-machacek__numgeo-hardening-soil-bricks, carrying 2 *USER MATERIAL block(s) whose constant counts are 16; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: input-abaqus.inp:Hardening-Soil-MN-Bricks: the routine reads PROPS(1:14) by literal subscript and not"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in mholla__growth can feed this routine. It reads PROPS(1:2) and writes STATEV(1:0). Searched: 23 .inp file(s) in mholla__growth, carrying 20 *USER MATERIAL block(s) whose constant counts are 3, 5, 6, 8, 9, 11, 12, 17; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: circle_pressure.inp:MAT: the routine reads PROPS(1:2) by literal subscript and nothing else, so it names every constant it takes;"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in mholla__growth can feed this routine. It reads PROPS(1:2) and writes STATEV(1:1). Searched: 23 .inp file(s) in mholla__growth, carrying 20 *USER MATERIAL block(s) whose constant counts are 3, 5, 6, 8, 9, 11, 12, 17; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: circle_pressure.inp:MAT: the routine reads PROPS(1:2) by literal subscript and nothing else, so it names every constant it takes;"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in mholla__growth can feed this routine. It reads PROPS(1:4) and writes STATEV(1:3). Searched: 23 .inp file(s) in mholla__growth, carrying 20 *USER MATERIAL block(s) whose constant counts are 3, 5, 6, 8, 9, 11, 12, 17; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: circle_pressure.inp:MAT: the routine reads PROPS(1:4) by literal subscript and nothing else, so it names every constant it takes;"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in mholla__growth can feed this routine. It reads PROPS(1:5) and writes STATEV(1:5). Searched: 23 .inp file(s) in mholla__growth, carrying 20 *USER MATERIAL block(s) whose constant counts are 3, 5, 6, 8, 9, 11, 12, 17; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: the author's own block: cube_1_C3D8_stretch_xyz_Mandel.inp:VOL: the routine subscripts STATEV(5) and this block declares only *DE"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in mholla__growth can feed this routine. It reads PROPS(1:5) and writes STATEV(1:6). Searched: 23 .inp file(s) in mholla__growth, carrying 20 *USER MATERIAL block(s) whose constant counts are 3, 5, 6, 8, 9, 11, 12, 17; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: circle_pressure.inp:MAT: the routine reads PROPS(1:5) by literal subscript and nothing else, so it names every constant it takes;"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in mholla__growth can feed this routine. It reads PROPS(1:7) and writes STATEV(1:3). Searched: 23 .inp file(s) in mholla__growth, carrying 20 *USER MATERIAL block(s) whose constant counts are 3, 5, 6, 8, 9, 11, 12, 17; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: circle_pressure.inp:MAT: the routine reads PROPS(1:7) by literal subscript and nothing else, so it names every constant it takes;"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in tengzhang48__abaqus_ufl can feed this routine. It reads PROPS(1:4) and writes STATEV(1:1). Searched: 13 .inp file(s) in tengzhang48__abaqus_ufl, carrying 1 *USER MATERIAL block(s) whose constant counts are 2; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: job.inp:TEMPLATE: the routine subscripts STATEV(1) and this block declares only *DEPVAR 0. Supplying constants from anywhere else would "
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in tengzhang48__abaqus_ufl can feed this routine. It reads PROPS(1:4) and writes STATEV(1:9). Searched: 13 .inp file(s) in tengzhang48__abaqus_ufl, carrying 1 *USER MATERIAL block(s) whose constant counts are 2; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: job.inp:TEMPLATE: the routine subscripts STATEV(9) and this block declares only *DEPVAR 0. Supplying constants from anywhere else would "
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in thealanjason__umat_finite_viscoelasticity can feed this routine. It reads PROPS(1:8) and writes STATEV(1:6). Searched: 42 .inp file(s) in thealanjason__umat_finite_viscoelasticity, carrying 42 *USER MATERIAL block(s) whose constant counts are 13, 18; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: twist20.inp:VISC_OGDEN_2EL: the routine reads PROPS(1:8) by literal subscript and nothing else"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "no material published in williammora1984__UMAT_GTN can feed this routine. It reads PROPS(1:7) and writes STATEV(1:1). Searched: 4 .inp file(s) in williammora1984__UMAT_GTN, carrying 4 *USER MATERIAL block(s) whose constant counts are 13, 16; and every .md, .rst and .txt in the repository for a statement naming this source beside an input file. Every block was rejected: test_ht_vol.inp:MATTEST: the routine reads PROPS(1:7) by literal subscript and nothing else, so it names every constant it takes"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "prashanthgadwala__ferrite-fortran-integration_using_Julia publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in prashanthgadwala__ferrite-fortran-integration_using_Julia, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "sas229__geomat publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in sas229__geomat, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "seekzzh__mat-model-lab publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in seekzzh__mat-model-lab, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "shayansss__bioumat publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in shayansss__bioumat, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "shayansss__hml publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in shayansss__hml, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "simoneponcioni__HFE publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 13 .inp file(s) in simoneponcioni__HFE, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "tengzhang48__CoupFE publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in tengzhang48__CoupFE, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "the deck beside this source declares 19 constants and does not publish them: GOH_BC1.inp writes <k>, <mu>, <kappa>, <k1>, <k2>, <f0_1>, <f0_2>, <f0_3>, <xn0_1> on its *USER MATERIAL data line and defers the definitions to param.param, which is not in the repository. Searched: the deck's own *PARAMETER blocks, every *INCLUDE it names, every .md, .rst, .txt, .py, .json and .yaml file in abuganza__BayesianCalibrationSkinGrowth for a stated value of those names, and the other 22 .inp file(s) in the "
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "the deck beside this source declares 9 constants and does not publish them: Iso_BC1.inp writes <lam>, <mu>, <xn0_1>, <xn0_2>, <xn0_3>, <kk>, <tcrt>, <mm>, <nn> on its *USER MATERIAL data line and defers the definitions to param.param, which is not in the repository. Searched: the deck's own *PARAMETER blocks, every *INCLUDE it names, every .md, .rst, .txt, .py, .json and .yaml file in abuganza__BayesianCalibrationSkinGrowth for a stated value of those names, and the other 22 .inp file(s) in the "
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "the deck beside this source declares 9 constants and does not publish them: Iso_BC2.inp writes <lam>, <mu>, <xn0_1>, <xn0_2>, <xn0_3>, <kk>, <tcrt>, <mm>, <nn> on its *USER MATERIAL data line and defers the definitions to param.param, which is not in the repository. Searched: the deck's own *PARAMETER blocks, every *INCLUDE it names, every .md, .rst, .txt, .py, .json and .yaml file in abuganza__BayesianCalibrationSkinGrowth for a stated value of those names, and the other 22 .inp file(s) in the "
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "the deck beside this source publishes a material this routine cannot be run with, and the only blocks that fit belong to other directories of lucassalmon83860-bit__thesis-benchmark-cases. Beside it: notched_plate_CZM_random_mesh_shear.inp:Material-CZM3303: the routine subscripts STATEV(13) and this block declares only *DEPVAR 12; notched_plate_CZM_random_mesh_shear.inp:Material-CZM3304: the routine subscripts STATEV(13) and this block declares only *DEPVAR 12; notched_plate_CZM_random_mesh_shear"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "tmfrln__paraqus publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 2 .inp file(s) in tmfrln__paraqus, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "missing_material_data",
+   "reason": "toruinaba__manforge publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in toruinaba__manforge, and every .md, .rst and .txt in it for a table naming this source"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "a unit shares an Abaqus name but not its interface: UMAT takes 21 arguments where the interface takes 37"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "a unit shares an Abaqus name but not its interface: UMAT takes 36 arguments where the interface takes 37"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "a unit shares an Abaqus name but not its interface: UMAT takes 5 arguments where the interface takes 37"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "a unit shares an Abaqus name but not its interface: UMAT takes 7 arguments where the interface takes 37"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to."
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 497, last stress update at line 755, STRESS extraction at line 844, DDSDDE ext"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 541, last stress update at line 799, STRESS extraction at line 889, DDSDDE ext"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_seed_read_into_a_real_copy_of_a_shadowed_name. Meaning: a statement left REAL reads the seed variable itself (not its shadow) and assigns a variable that has a shadow, so that variable's dependence on the seed is lost: its shadow is filled from the REAL value with no derivative, and the tangent comes out wrong beside a correct stress"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it."
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT."
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract."
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do:"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so "
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.s"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_um"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What "
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT: the visualisation UMAT for the UEL's decoy mesh; its STATEV are copies of COMMON /custom/ uvars, which only the UEL fills, at kelem = noel - nelem; the constitutive model is the UEL (the batch had settled it at `original_job_failed`: original.sta was not written, so the analysis left no record; original.msg does not report an error count)"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT: the visualisation UMAT for the UEL's overlay mesh (material UMATELEM, E = 1e-11); its STATEV are copies of COMMON /KUSER/ USRVAR, which only the UEL fills, at NELEMAN = NOEL - 2*N_ELEM; the constitutive model is the UEL (the batch had settled it at `experiment_not_informative`: 4 of 4 chosen states judged and every entry agrees (entrywise, FD-only plateau >= 3); 4 smooth states on a material that never activates, which is the whole of it)"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 42; the SUBROUTINE UMAT at line 254 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 44; the SUBROUTINE UMAT at line 255 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 44; the SUBROUTINE UMAT at line 256 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 45; the SUBROUTINE UMAT at line 277 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 45; the SUBROUTINE UMAT at line 360 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 45; the SUBROUTINE UMAT at line 380 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 45; the SUBROUTINE UMAT at line 402 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 57; the SUBROUTINE UMAT at line 280 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 58; the SUBROUTINE UMAT at line 271 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 59; the SUBROUTINE UMAT at line 272 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 60; the SUBROUTINE UMAT at line 288 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 61; the SUBROUTINE UMAT at line 297 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 62; the SUBROUTINE UMAT at line 298 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 63; the SUBROUTINE UMAT at line 309 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 67; the SUBROUTINE UMAT at line 379 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 72; the SUBROUTINE UMAT at line 411 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 72; the SUBROUTINE UMAT at line 412 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 72; the SUBROUTINE UMAT at line 415 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 72; the SUBROUTINE UMAT at line 435 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 74; the SUBROUTINE UMAT at line 417 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 74; the SUBROUTINE UMAT at line 425 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "not_a_umat",
+   "reason": "this file's Abaqus entry point is SUBROUTINE UEL (UEL, 36 arguments) at line 75; the SUBROUTINE UMAT at line 426 is called by UEL and is that routine's own callee, not this file's entry point"
+  },
+  {
+   "terminal_state": "original_job_failed",
+   "reason": "original.dat was not written, so Abaqus never reached its input processor: the user-subroutine build failed before the analysis began (original_user.f(38): error #6410: This name has not been declared as an array or a function.   [PROPS]; original_user.f(39): error #6410: This name has not been declared as an array or a function.   [PROPS]; original_user.f(39): error #6363: The intrinsic data types of the arguments must be the same.   [MIN]); original.sta was not written, so the analysis left no"
+  },
+  {
+   "terminal_state": "original_job_failed",
+   "reason": "original.dat was not written, so Abaqus never reached its input processor: the user-subroutine build failed before the analysis began (original_user.f(44): error #6410: This name has not been declared as an array or a function.   [PROPS]; original_user.f(45): error #6410: This name has not been declared as an array or a function.   [PROPS]; original_user.f(45): error #6363: The intrinsic data types of the arguments must be the same.   [MIN]); original.sta was not written, so the analysis left no"
+  },
+  {
+   "terminal_state": "original_job_failed",
+   "reason": "original.sta does not say 'THE ANALYSIS HAS COMPLETED SUCCESSFULLY'; original.msg reports 2 analysis error messages"
+  },
+  {
+   "terminal_state": "original_job_failed",
+   "reason": "original.sta was not written, so the analysis left no record; original.msg does not report an error count"
+  },
+  {
+   "terminal_state": "original_job_failed",
+   "reason": "original.sta was not written, so the analysis left no record; original.msg was not written"
+  },
+  {
+   "terminal_state": "primal_control_not_decided",
+   "reason": "the Jacobian-matched control did not decide the primal gate (routine-level replay agreed): the Jacobian-matched job did not complete: jacobian_matched.dat was not written, so Abaqus never reached its input processor: the user-subroutine build failed before the analysis began (jacobian_matched_user.f(700): error #5509: Declaration of module 'KTRANSF' conflicts with a previous declaration; jacobian_matched_user.f(700): error #5508: Declaration of routine 'KTRANSF' conflicts with a previous declara"
+  },
+  {
+   "terminal_state": "primal_control_not_decided",
+   "reason": "the Jacobian-matched control did not decide the primal gate (routine-level replay agreed): the Jacobian-matched run and the transformed run share 176 of 208 records: the solver did not walk the same increments"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "STATEV(4) differs by 2.500e-01 of its own scale against 1e-10"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "STATEV(6) differs by 1.309e-10 of its own scale against 1e-10"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "STATEV(7) differs by 1.526e-09 of its own scale against 1e-10"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 1.14 x its per-call bound (19 stiffness ulps, bound 15.9734 ulpK + 1e-10 relative; largest difference 6.376e-07)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 1.44 x its per-call bound (25.4 stiffness ulps, bound 15.9654 ulpK + 1e-10 relative; largest difference 8.555e-07)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 1.46 x its per-call bound (28.2 stiffness ulps, bound 19.3022 ulpK + 1e-10 relative; largest difference 8.440e-15)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 1.97 x its per-call bound (31.9 stiffness ulps, bound 15.9654 ulpK + 1e-10 relative; largest difference 1.074e-06)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 2.1 x its per-call bound (33.9 stiffness ulps, bound 15.9694 ulpK + 1e-10 relative; largest difference 1.141e-06)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 2.68 x its per-call bound (32.4 stiffness ulps, bound 11.9681 ulpK + 1e-10 relative; largest difference 1.090e-06)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 4.29 x its per-call bound (76.3 stiffness ulps, bound 17.802 ulpK + 1e-10 relative; largest difference 5.188e-07)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 545 x its per-call bound (5.17e+06 stiffness ulps, bound 18.4639 ulpK + 1e-10 relative; largest difference 3.384e-02)"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "stress differs by up to 9.06e+09 x its per-call bound (1.43e+14 stiffness ulps, bound 18.1164 ulpK + 1e-10 relative; largest difference 5.800e+01); STATEV(4) differs by 1.034e+00 of its own scale against 1e-10"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "the offline replay of the ORIGINAL differs from what the solver recorded by inf: the recorded arguments do not determine the call (hidden state), so a routine-level comparison here would compare something the solver never ran"
+  },
+  {
+   "terminal_state": "primal_disagreed",
+   "reason": "transformed: 27 of 140 calls replayed (exit 0): "
+  },
+  {
+   "terminal_state": "published_stub_no_constitutive_content",
+   "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract."
+  },
+  {
+   "terminal_state": "support_build_failed",
+   "reason": "umat_oti_helpers.f90 did not compile with Abaqus's own compile line (exit 1)"
+  },
+  {
+   "terminal_state": "tangent_not_verified",
+   "reason": "0 of 4 chosen states judged (every entry resolved and every column smooth); 2 are needed. Unresolved at the chosen states, not failed"
+  },
+  {
+   "terminal_state": "tangent_not_verified",
+   "reason": "1 of 4 chosen states judged (every entry resolved and every column smooth); 2 are needed. Unresolved at the chosen states, not failed"
+  },
+  {
+   "terminal_state": "tangent_not_verified",
+   "reason": "every judged state agrees, but 1 smooth state(s) before activation, and two are needed"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "ASABQARRAY appears as ASABQARRAY(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether ASABQARRAY is an array to promote or a call into it.; DET appears as DET(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether DET is an array to promote or a call into it"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "ASABQARRAY appears as ASABQARRAY(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether ASABQARRAY is an array to promote or a call into it.; DEV appears as DEV(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether DEV is an array to promote or a call into it"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "CONVERT_ARRAY_TO_TENSOR appears as CONVERT_ARRAY_TO_TENSOR(...) on the stress path but is not declared anywhere in this source, which USEs BASE_CONFIG, PRESOLVE_MOD, TENSOR_OPT_MOD, ELASTIC_MOD, CONTAINER_MOD, PLASTIC_MOD, MATH_MOD without defining it. The transformer cannot read that module, so it cannot tell whether CONVERT_ARRAY_TO_TENSOR is an array to promote or a call into it.; CONVERT_TENSOR_TO_ARRAY appears as CONVERT_TENSOR_TO_ARRAY(...) on the stress path but is not declared anywhere i"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "CXX_UMAT_INTF appears as CXX_UMAT_INTF(...) on the stress path but is not declared anywhere in this source, which USEs ISO_C_BINDING, CPP_TO_FORTRAN_INTF_MOD, FORTRAN_UMAT_IMPL_MOD, PRESOLVE_MOD without defining it. The transformer cannot read that module, so it cannot tell whether CXX_UMAT_INTF is an array to promote or a call into it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "DET_OTI is passed to PK2VOL_OTI at position 4, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; Semantic check failed: no_oti_argument_reaches_an_untransformed_call."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "DGETRF/DGETRS use built-in unblocked OTI LU routines with primal pivot selection; callers must check INFO and only solve with nonsingular factors.; SIGMA_TRIAL_OTI is passed to the function YF, which is defined in this file but was neither lifted nor transformed: its body still takes REAL arguments. Fortran's implicit interface makes that compile and the function then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: lift YF (it is rea"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "DSPEVD uses the built-in OTI Jacobi implementation; callers must check INFO. A repeated eigenvalue cluster is returned averaged: an individual eigenvalue of a repeated pair is not differentiable, while the cluster's trace is, so symmetric functions of the principal values differentiate exactly and differences within a cluster come out zero.; KSTRAN is passed to KRESIDUAL_OTI, whose dummy argument KSTRAN the lifted body declares as the OTI type. The lifted helpers are external subprograms, so For"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; ELE_BOND_SUM_STATE_PD appears as ELE_BOND_SUM_STATE_PD(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that modu"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "GRAINDIA is a variable of module MATERIALDATA (mod_materialdata.f), and the stress path reads it as GRAINDIA(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the stre"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "HQR2 puts complex names (Z3) in EQUIVALENCE(Z3,T3(1)) at line 1274. That fixes a storage layout the complex OTI type cannot occupy. Not supported by this transform.; HQR2 declares a variable named DCMPLX, which oti_complex exports as a generic. Not supported by this transform."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "H_PSI is declared with a deferred shape (:, :, :, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.; H_PSI_A is declared with a deferred shape (:, :, :, :, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are wr"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting for CALCKERNELFUNCTION reached external or undefined callee INDEX (called at line 409). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines INDEX beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting for HYPEREL reached external or undefined callee INVARS (called at line 26). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines INVARS beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting for UMAT_MATRIX reached external or undefined callee MATINVDET3D (called at line 591). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines MATINVDET3D beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting for UMAT_OVERSTRESS reached external or undefined callee WRITEOUT (called at line 387). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines WRITEOUT beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it.; DDSDDE assignment is not covered by an old tangent replacement region (at line 405; it is reached after the stress update and"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting for USERMAT_3D reached external or undefined callee GETNFNH (called at line 264). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines GETNFNH beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_HARDREAD', 'ABUM_POLAR', 'ABUM_ROTTEN2', 'ABUM_ST_SPV', 'CG_CPP', 'CG_RGO2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_HARDREAD, ABUM_POLAR, ABUM_ROTTEN2, ABUM_ST_SPV, CG_CPP, CG_RGO2 beside the UMAT or name its directory in dependency_roots so the "
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_ROTTEN2', 'ABUM_ST_PGL']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 417.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_ROTTEN2, ABUM_ST_PGL beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['ABUM_GTNTNGT', 'ABUM_HARDGET', 'ABUM_ROTTEN2']. The completed JSON rewrites those calls, so pass-through is unsafe. (ABUM_GTNTNGT is first called at line 495.) What to do: put the file that defines ABUM_GTNTNGT, ABUM_HARDGET, ABUM_ROTTEN2 beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['CALCULATE_STRESSES']. The completed JSON rewrites those calls, so pass-through is unsafe. (CALCULATE_STRESSES is first called at line 123.) What to do: put the file that defines CALCULATE_STRESSES beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['CCCP', 'HYPO', 'MTRANSP', 'SINC', 'TAYLOR']. The completed JSON rewrites those calls, so pass-through is unsafe. (CCCP is first called at line 184.) What to do: put the file that defines CCCP, HYPO, MTRANSP, SINC, TAYLOR beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['CYCLREVERSAL', 'FCOMBINED']. The completed JSON rewrites those calls, so pass-through is unsafe. (CYCLREVERSAL is first called at line 61.) What to do: put the file that defines CYCLREVERSAL, FCOMBINED beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['DAMAGE_CALC']. The completed JSON rewrites those calls, so pass-through is unsafe. (DAMAGE_CALC is first called at line 346.) What to do: put the file that defines DAMAGE_CALC beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['FISOTROPIC', 'SHEARMOD']. The completed JSON rewrites those calls, so pass-through is unsafe. (FISOTROPIC is first called at line 57.) What to do: put the file that defines FISOTROPIC, SHEARMOD beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['FULLSTRESSVEC', 'PRINTSTRESS']. The completed JSON rewrites those calls, so pass-through is unsafe. (FULLSTRESSVEC is first called at line 385.) What to do: put the file that defines FULLSTRESSVEC, PRINTSTRESS beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['GET_ROTATION_MATRICES', 'ROTATE_INPUT', 'ROTATE_OUTPUT', 'UMAT_LOCAL_ORIENTATION']. The completed JSON rewrites those calls, so pass-through is unsafe. (GET_ROTATION_MATRICES is first called at line 86.) What to do: put the file that defines GET_ROTATION_MATRICES, ROTATE_INPUT, ROTATE_OUTPUT, UMAT_LOCAL_ORIENTATION beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['GET_STATEVS', 'SET_STATEVS']. The completed JSON rewrites those calls, so pass-through is unsafe. What to do: put the file that defines GET_STATEVS, SET_STATEVS beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['INITIALIZEPLY']. The completed JSON rewrites those calls, so pass-through is unsafe. (INITIALIZEPLY is first called at line 210.) What to do: put the file that defines INITIALIZEPLY beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', 'KMAT', 'KRHOTWININIT', 'LAPINVERSE']. The completed JSON rewrites those calls, so pass-through is unsafe. (KCURLET is first called at line 413.) What to do: put the file that defines KCURLET, KFINDNEIGHBOURHOOD, KMAT, KRHOTWININIT, LAPINVERSE beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['MATRIX_INVERSE', 'PLASTICITY']. The completed JSON rewrites those calls, so pass-through is unsafe. (MATRIX_INVERSE is first called at line 321.) What to do: put the file that defines MATRIX_INVERSE, PLASTICITY beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['MATRIX_INVERSE', 'VISCOPLASTICITY']. The completed JSON rewrites those calls, so pass-through is unsafe. (MATRIX_INVERSE is first called at line 314.) What to do: put the file that defines MATRIX_INVERSE, VISCOPLASTICITY beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['PLASTICITY']. The completed JSON rewrites those calls, so pass-through is unsafe. (PLASTICITY is first called at line 270.) What to do: put the file that defines PLASTICITY beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Helper lifting failed: Helper lifting requires source definitions for ['VISCOPLASTICITY']. The completed JSON rewrites those calls, so pass-through is unsafe. (VISCOPLASTICITY is first called at line 279.) What to do: put the file that defines VISCOPLASTICITY beside the UMAT or name its directory in dependency_roots so the definition can be lifted with the routine that calls it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "HelperLiftingError: KGTN gives TOL a value in its declaration ('double precision :: tol =1e-8') and also writes it. That value is an implied SAVE initial value, set once before the first call; a hypercomplex shadow would need it carried in at the first call only, which this lifter does not emit. Not"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "HelperLiftingError: Missing helper INCLUDE 'SMAAspUserArrays.hdr' relative to <work>/out/dependencies/UMAT_DamThermMech_1_H.f"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "HelperLiftingError: OPTIMIZE_HS_BRICKS_INTERNAL_CONSTANTS has OPTIONAL dummy arguments and is called at line 112 with 2 of its 3 arguments. That needs an explicit interface, and the lifted OPTIMIZE_HS_BRICKS_INTERNAL_CONSTANTS_OTI is an external subprogram with none (an INTERFACE block in the source"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "HelperLiftingError: Unsupported DATA statement shape: 'iVoigt /1,2,3,1,1,2/'. A lifted helper turns DATA into assignments and handles whole arrays and name/value lists, not array sections. What to do: write that DATA as assignments (or one whole-array DATA) in the source."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "IP_COUNT is a variable of module GLOBALVARIABLES (globalvariables.f), and the stress path reads it as IP_COUNT(...). This transform types and shadows only what the selected routine declares; a module variable is declared elsewhere, persists from call to call and is shared by every material point, so it gets no shadow, and where the routine or its callees also write it, it is state kept outside STATEV that neither the transform nor a verification against STATEV can see. Module variables on the st"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2STRAN is an array to promote or a call into i"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "MPAR is declared with a deferred shape (:) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.; PARAM is declared with a deferred shape (:) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bo"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "NVBS_OTI is passed to JANCAE_DEBUGMODE_OTI at position 1, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; NVBS0_OTI is passed to JANCAE_DEBUGMODE_OTI at position 2, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; NVBS_OTI is passed to"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "OPT_PROPS is passed to HYPOPLASTICITY_ISA_IGS_GIS_OTI, whose dummy argument OPTPROPS the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpreted memory with nothing to show for it.; Semantic check failed: no_real_argument_reaches_an_oti_helper_dummy."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "PLAP_OTI is passed to SETUPINITIALSTATE_OTI at position 4, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; ORIP1_OTI is passed to SETUPINITIALSTATE_OTI at position 9, a dummy the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's implicit interface makes that compile and the callee then reads part of a hypercomplex element as that type.; ORIP_OTI is passed "
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Promoted variable MAP2D is indexed in a stress region but has no confirmed shape (first indexed at line 98). What to do: declare MAP2D with its extent in this routine (a DIMENSION or typed declaration), or give it in transformation_settings.variable_shapes.; Promoted variable MAP2STRAN is indexed in a stress region but has no confirmed shape (first indexed at line 84). What to do: declare MAP2STRAN with its extent in this routine (a DIMENSION or typed declaration), or give it in transformation_s"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Promoted variable STRAININC is indexed in a stress region but has no confirmed shape (first indexed at line 96). What to do: declare STRAININC with its extent in this routine (a DIMENSION or typed declaration), or give it in transformation_settings.variable_shapes.; Promoted variable STRAININC_DEV is indexed in a stress region but has no confirmed shape (first indexed at line 96). What to do: declare STRAININC_DEV with its extent in this routine (a DIMENSION or typed declaration), or give it in "
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "RES_OTI is passed to UPDATE, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply UPDATE's source with this file (or in dependency_roots) so it can be lifted.; STATEV_OTI is passed to UPDATE, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that c"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "STATEV_OTI is passed to ELASTIC, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply ELASTIC's source with this file (or in dependency_roots) so it can be lifted.; FNEW_OTI is passed to ELASTIC, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes th"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "STATEV_OTI is passed to IMPORT_STATEVAR, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply IMPORT_STATEVAR's source with this file (or in dependency_roots) so it can be lifted.; STATEV_OTI is passed to ELASTIC, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit "
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "STRESS is declared as a scalar in UMAT at line 31, so this routine has a one-component interface (a truss or uniaxial material). The transform seeds and extracts NTENS components of STRESS, which a scalar does not have, and the emitted STRESS_OTI(I) would not compile. What to do: a one-component interface is not supported yet; declare STRESS with its NTENS extent if the routine is really a continuum UMAT.; DSTRAN is declared as a scalar in UMAT at line 31, so this routine has a one-component int"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "STRESS_OTI is passed to MOONEY, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply MOONEY's source with this file (or in dependency_roots) so it can be lifted.; DSTRAN_OTI is passed to MOONEY, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes tha"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "STRESS_OTI is passed to VOIGT_TO_NATURAL, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply VOIGT_TO_NATURAL's source with this file (or in dependency_roots) so it can be lifted.; SVEC_OTI is passed to VOIGT_TO_NATURAL, which was neither lifted, inlined, nor transformed with this file. Fortran's "
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Semantic check failed: ddsdde_extraction_after_selected_stress_regions. Meaning: DDSDDE is extracted before the end of the selected stress regions (transformed file: seed at line 57, first stress expression at line 98, last stress update at line 98, STRESS extraction at line 109, DDSDDE extraction at line 117). What to do: set transformation_anchors.ddsdde_extraction.insert_after_line after the last selected stress region."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 141, first stress expression at line 148, last stress update at line 148, STRESS extraction at line 156, DDSDDE extraction at line 164). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 239, first stress expression at line 249, last stress update at line 253, STRESS extraction at line 269, DDSDDE extraction at line 277). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 281, first stress expression at line 290, last stress update at line 290, STRESS extraction at line 310, DDSDDE extraction at line 319). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "Semantic check failed: stress_path_consumes_the_seed. Meaning: no statement on the stress path reads the seeded DSTRAN_OTI or DFGRD1_OTI, so every tangent column would be zero (transformed file: seed at line 557, first stress expression at line 563, last stress update at line 563, STRESS extraction at line 567, DDSDDE extraction at line 572). What to do: find the variable the stress update actually reads (a strain rebuilt from STRAN, a value passed through an unlifted CALL) and name it in the co"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "The source computes its own complex-step derivative (OGDENONETERM_CS_DPDF) and the differentiated code branches on an imaginary part in EIG33Z_NEAR_DIAGONAL_OTI, EIG33Z_OTI (5 condition(s), e.g. EIG33Z_OTI: 'IF (REAL(max_imag) .GT. 0.0d0) THEN'). Those branches are written for the complex step; under the complex OTI type the imaginary part of every primal value is zero, so they are never taken and DDSDDE would be the derivative of the value algorithm, which is not differentiable where the author"
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "UMAT delegates its whole body to CORE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform. What to do: transform the file that defines CORE (with this wrapper), or name its directory in dependency_roots so the closure includes it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "UMAT_ELASTIC appears as UMAT_ELASTIC(...) on the stress path but is not declared anywhere in this source, which USEs ABAQUS_DEFINITIONS, ELASTIC_MOD without defining it. The transformer cannot read that module, so it cannot tell whether UMAT_ELASTIC is an array to promote or a call into it."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "anchors not located: missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "anchors not located: unclassified_file_io -- Classify file I/O at lines [114, 115, 116, 117]. What to do: set transformation_anchors.file_io_regions in the contract."
+  },
+  {
+   "terminal_state": "transform_refused",
+   "reason": "p is passed to GETPANDQ_OTI, whose dummy argument P the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpreted memory with nothing to show for it.; q is passed to GETPANDQ_OTI, whose dummy argument Q the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit "
+  },
+  {
+   "terminal_state": "transformed_job_failed",
+   "reason": "transformed.sta does not say 'THE ANALYSIS HAS COMPLETED SUCCESSFULLY'; transformed.msg reports 1 analysis error messages; the analysis ran 1 increments where 35 were requested; the converted source compiles with Abaqus's own compile line, so what failed was the run and not the build; the solver aborted (signal 6 (Aborted), ELEMENT LOOP): gsignal < abort < __fsetlocking < __fortify_fail < __chk_fail < _IO_ungetc < _IO_default_xsputn < psiginfo < _IO_ungetc < __sprintf_chk"
+  },
+  {
+   "terminal_state": "transformed_job_failed",
+   "reason": "transformed.sta was not written, so the analysis left no record; transformed.msg does not report an error count; the converted source compiles with Abaqus's own compile line, so what failed was the run and not the build; the solver aborted (signal , ELEMENT LOOP): otim6n1_mp_onumm6n1_real < umat_.V < std_matu2_hybrid_total_ < std_matu1_hybrid_total_ < std_matgen_general_ < std_elssol_general_ < std_elssol < elssol < std_elgene_solid_ < elgene_"
+  },
+  {
+   "terminal_state": "undefined_in_original",
+   "reason": "undefined_in_original (D-12): DDSDDE(1,1), DDSDDE(1,2), DDSDDE(1,3), DDSDDE(1,4), DDSDDE(1,5), DDSDDE(1,6) differ between the original built with ifort -init=zero / -init=huge / -init=minus_huge (the compiler and flags the solver builds the original with). STRESS or DDSDDE is undefined behaviour in the ORIGINAL on this history -- a source defect; nothing here can be verified against it"
+  },
+  {
+   "terminal_state": "undefined_in_original",
+   "reason": "undefined_in_original (D-12): STRESS(1), STRESS(2), STATEV(1), STATEV(2), STATEV(3), STATEV(6) differ between the original built with ifort -init=zero / -init=huge / -init=minus_huge (the compiler and flags the solver builds the original with). STRESS or DDSDDE is undefined behaviour in the ORIGINAL on this history -- a source defect; nothing here can be verified against it"
+  },
+  {
+   "terminal_state": "undefined_in_original",
+   "reason": "undefined_in_original (D-12): STRESS(1), STRESS(2), STRESS(3), STATEV(1), DDSDDE(1,1), DDSDDE(1,2) differ between the original built with ifort -init=zero / -init=huge / -init=minus_huge (the compiler and flags the solver builds the original with). STRESS or DDSDDE is undefined behaviour in the ORIGINAL on this history -- a source defect; nothing here can be verified against it"
+  },
+  {
+   "terminal_state": "unsupported_formulation",
+   "reason": "no material constants"
+  },
+  {
+   "terminal_state": "unsupported_formulation",
+   "reason": "the author's deck declares no element of a type whose corners this harness knows how to read, so there is no position of the author's to stand at"
+  },
+  {
+   "terminal_state": "unsupported_formulation",
+   "reason": "the deck uses this material on 2 different formulations (rigid, three-dimensional continuum), so which tensor its UMAT is called with is not settled by the deck: elements C3D10, R3D3"
+  },
+  {
+   "terminal_state": "unsupported_formulation",
+   "reason": "the deck uses this material on beam elements (B31OS), which call a UMAT with an axial stress and the transverse shears of a cross-section it integrates over, which is a section response and not a material point. No element this harness emits hands those components, so there is nothing here to run it on that would be the same question"
+  },
+  {
+   "terminal_state": "unsupported_formulation",
+   "reason": "the deck uses this material on truss elements (T3D2), which call a UMAT with one axial component, NTENS=1. No element this harness emits hands those components, so there is nothing here to run it on that would be the same question"
+  }
+ ]
+}

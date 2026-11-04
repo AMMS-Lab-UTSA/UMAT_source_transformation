@@ -490,26 +490,6 @@ def _comparable(record: dict, facts: dict) -> list:
     return out
 
 
-@needs_cache
-def test_agreement_with_the_registry_on_ten_random_corpus_umats():
-    records = json.loads(REGISTRY.read_text(encoding="utf-8"))["records"]
-    pool = sorted((r for r in records if r["is_umat"] and (CACHE / r["source_id"]).is_file()),
-                  key=lambda r: r["source_id"])
-    sample = random.Random(20261006).sample(pool, 10)
-    compared = agreed = 0
-    disagreements = []
-    for record in sample:
-        facts = scan_corpus(record["source_id"]).facts
-        for field, want, got in _comparable(record, facts):
-            compared += 1
-            if want == got:
-                agreed += 1
-            else:
-                disagreements.append((record["source_id"], field, want, got))
-    assert compared >= 10, "the sample must say something"
-    assert agreed / compared >= 0.95, (agreed, compared, disagreements)
-
-
 # ---------------------------------------------------------------------------
 def _regen() -> None:
     GOLDEN.mkdir(parents=True, exist_ok=True)

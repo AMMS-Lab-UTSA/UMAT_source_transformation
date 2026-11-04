@@ -1,6 +1,6 @@
 """Structural-zero window, value-under-test term, Euler term (review B2/C).
 
-Synthetic FD ladders as in corpus_campaign/batches/B2/vera/c_atol_inject.py
+Synthetic FD ladders as in corpus_campaign/batches/B2/reviewer/c_atol_inject.py
 (truncation c h^2 + round-off at the reference's eps), judged by
 fd.judge_column; and the review's PROPS(3)=0 injection inside the real harness
 (c_orig toy: STRESS(1) += PROPS(3)*STATEV(2), PROPS(3)=0; dropping the
@@ -123,7 +123,7 @@ def injected(tmp_path_factory):
     store.mkdir()
     shutil.copy(TOYS / "c_orig.f", store / "umat.f")
     (store / "compile_order.txt").write_text("umat.f\n")
-    entry = H.CorpusEntry(key="c_orig_drop3", source_id="vera_toy/c_orig_drop3",
+    entry = H.CorpusEntry(key="c_orig_drop3", source_id="review_toy/c_orig_drop3",
                           original_source=TOYS / "c_orig.f", ntens=6, nstatv=2,
                           props=[2.0e5, 0.3, 0.0], store_dir=store)
     feats = ["stress_param_sens_local", "stress_param_sens_total"]

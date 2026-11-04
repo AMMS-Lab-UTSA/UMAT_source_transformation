@@ -1364,10 +1364,10 @@ def plan(source: Path, repository: Path, name: str = "",
 # a reviewer-designed experiment (D-19a rev 2 R2; D-21)
 # ---------------------------------------------------------------------------
 #: The pairing refusals that route to a reviewer deck.
-COUNCIL_ROUTES = ("no_deck_in_repository", "no_deck_names_this_source")
+REVIEWER_ROUTES = ("no_deck_in_repository", "no_deck_names_this_source")
 #: Amplitude ceilings when the domain is undocumented (R3).
-COUNCIL_SMALL_STRAIN_CEILING = 0.02
-COUNCIL_FINITE_CEILING = 0.2
+REVIEWER_SMALL_STRAIN_CEILING = 0.02
+REVIEWER_FINITE_CEILING = 0.2
 #: A clock that grows without bound: ``x = a + RATE*(TIME(2)+DTIME)``.
 _LINEAR_CLOCK = re.compile(
     r"=\s*[^=\n]*[+-]\s*[A-Za-z_]\w*(?:\s*\(\s*\d+\s*\))?\s*\*\s*\(?\s*TIME\s*\(\s*[12]\s*\)[^\n]*",
@@ -1412,7 +1412,7 @@ _STATED_FORMULATION = (
 
 
 @dataclass(frozen=True)
-class CouncilPlan:
+class ReviewerPlan:
     """A reviewer-designed experiment for a source with no usable author deck,
     one manifest per parameter set (D-21: >= 2 independent sets; the source
     counts only if every set passes)."""
@@ -1420,7 +1420,7 @@ class CouncilPlan:
     source: Path
     route: str = ""
     material_data_origin: str = ""
-    experiment_origin: str = "council_deck"
+    experiment_origin: str = "reviewer_deck"
     row_ref: str = ""
     sets: tuple = ()              # ((set_id, Plan), ...)
     ceiling: float = 0.0
@@ -1462,7 +1462,7 @@ class CouncilPlan:
                 "sets": [{"set_id": set_id, "plan": plan.as_dict()} for set_id, plan in self.sets]}
 
 
-def _council_sets(row: dict) -> tuple[str, list, str]:
+def _reviewer_sets(row: dict) -> tuple[str, list, str]:
     """``(material_data_origin, [(set_id, {index: (value, provenance)})], why_not)``."""
     if row.get("sets") is not None:                    # a D-21 reviewer row
         sets = []
@@ -1473,13 +1473,13 @@ def _council_sets(row: dict) -> tuple[str, list, str]:
                       for c in chosen.get("constants") or ()}
             sets.append((str(chosen.get("set_id")), values))
         if len(sets) < 2:
-            return "council_chosen", sets, ("D-21 requires at least two independent "
+            return "reviewer_chosen", sets, ("D-21 requires at least two independent "
                                             "parameter sets")
         vectors = [tuple(sorted((i, v) for i, (v, _w) in values.items())) for _s, values in sets]
         if len(set(vectors)) < len(vectors):
-            return "council_chosen", sets, ("two parameter sets are identical; D-21 requires "
+            return "reviewer_chosen", sets, ("two parameter sets are identical; D-21 requires "
                                             "independent sets")
-        return "council_chosen", sets, ""
+        return "reviewer_chosen", sets, ""
     constants = row.get("constants") or ()               # a harvest row
     uncounted = [c for c in constants if c.get("confidence") not in ("exact", "interpreted")
                  or c.get("never_count_reason")]
@@ -1501,8 +1501,8 @@ def _numeric(stated) -> Optional[float]:
         return None
 
 
-def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
-                 source_text: Optional[str] = None) -> CouncilPlan:
+def plan_reviewer(source: Path, repository: Path, row: dict, *, name: str = "",
+                 source_text: Optional[str] = None) -> ReviewerPlan:
     """The reviewer-designed experiment for one source (D-19a rev 2 R2).
 
     Only for ``no_deck_in_repository`` and ``no_deck_names_this_source``;
@@ -1524,25 +1524,25 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
     text = source_text if source_text is not None else source.read_text(errors="replace")
     executable = _executable(text)
 
-    def refused(code: str, why: str, **kw) -> CouncilPlan:
-        return CouncilPlan(source, refusal=why, refusal_code=code, **kw)
+    def refused(code: str, why: str, **kw) -> ReviewerPlan:
+        return ReviewerPlan(source, refusal=why, refusal_code=code, **kw)
 
     pairing = deck_pairing.pair(source, Path(repository), source_text=text)
     if pairing.found:
         return refused("pairing_changed", "an author deck now pairs this source; the author's "
-                       "experiment wins over a council one")
+                       "experiment wins over a reviewer one")
     route = pairing.refusal_kind
-    if route not in COUNCIL_ROUTES:
-        return refused("not_a_council_route", f"the pairing refusal is {route or 'unnamed'}, "
-                       "which does not route to a council experiment", route=route)
-    origin, sets, why_not = _council_sets(row)
+    if route not in REVIEWER_ROUTES:
+        return refused("not_a_reviewer_route", f"the pairing refusal is {route or 'unnamed'}, "
+                       "which does not route to a reviewer experiment", route=route)
+    origin, sets, why_not = _reviewer_sets(row)
     ref = f"{row.get('harvest_key') or row.get('key')}:{row.get('source_id')}"
     common = dict(route=route, material_data_origin=origin, row_ref=ref)
     if why_not:
         return refused("insufficient_material_data", why_not, **common)
-    if row.get("sets") is not None and row.get("experiment_origin") not in (None, "council_deck"):
-        return refused("not_a_council_deck", f"the row's experiment is "
-                       f"{row.get('experiment_origin')}, not a council deck", **common)
+    if row.get("sets") is not None and row.get("experiment_origin") not in (None, "reviewer_deck"):
+        return refused("not_a_reviewer_deck", f"the row's experiment is "
+                       f"{row.get('experiment_origin')}, not a reviewer deck", **common)
     # TEMP / COORDS / NOEL reads are the ROW's reviewed static scan (review
     # with the review's overrides): a name scan of the text also finds a local
     # called ``temp`` and NOEL passed through to a helper. Where the two
@@ -1592,7 +1592,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                        "a unit cube is not that geometry", **common)
     has_force, _why = applies_a_body_force(text)
     if has_force:
-        return refused("body_force", "a body force is the author's load; a council experiment "
+        return refused("body_force", "a body force is the author's load; a reviewer experiment "
                        "does not choose one", **common)
 
     found = from_source(text, str(source))
@@ -1607,12 +1607,12 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
         # D-21 amendment 2: a formulation the reviewer derived from the code,
         # with its line evidence
         element = stated_element
-        element_origin = (str(formulation.get("origin") or "council_choice"),
+        element_origin = (str(formulation.get("origin") or "reviewer_choice"),
                           f"{formulation.get('element')}: "
                           + "; ".join(str(e) for e in formulation.get("evidence") or ())[:300])
     else:
         element = next((e for pattern, e in _STATED_FORMULATION if pattern.search(statement)), "")
-        element_origin = ("author_published" if origin != "council_chosen" else "council_choice",
+        element_origin = ("author_published" if origin != "reviewer_chosen" else "reviewer_choice",
                           statement[:200])
     if not element:
         return refused("formulation_not_documented", "neither the source nor the row says which "
@@ -1625,7 +1625,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
         stated_nstatv = stated_nstatv.get("value")
     if stated_nstatv is not None:
         nstatv, nstatv_origin = int(stated_nstatv), (
-            "author_published" if origin != "council_chosen" else "council_choice",
+            "author_published" if origin != "reviewer_chosen" else "reviewer_choice",
             str(row.get("nstatv_basis") or "row nstatv"))
     elif demand.statev_exact or not re.search(r"\bSTATEV\s*\(", body, re.IGNORECASE):
         nstatv, nstatv_origin = demand.nstatv, ("source", "highest literal STATEV subscript")
@@ -1633,15 +1633,15 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
         return refused("needs_nstatv", "the routine indexes STATEV by a variable and nothing "
                        "states NSTATV", **common)
 
-    initial_statev, from_sdvini, initial_origin = _council_initial_state(
+    initial_statev, from_sdvini, initial_origin = _reviewer_initial_state(
         row, text, max(nstatv, 1), origin)
 
     domain = row.get("documented_domain") or {}
     finite = bool(_DFGRD.search(executable)) or bool(re.search(r"finite", statement, re.I))
-    stated_kind = "author_published" if origin != "council_chosen" else "council_choice"
+    stated_kind = "author_published" if origin != "reviewer_chosen" else "reviewer_choice"
     kin_origin = ("source", "DFGRD read in executable code") if _DFGRD.search(executable) else (
         (stated_kind, statement[:200]) if finite else
-        ("council_default", "small strain: no DFGRD read and nothing documents finite strain"))
+        ("reviewer_default", "small strain: no DFGRD read and nothing documents finite strain"))
     documented = _numeric(domain.get("stretch_max") if finite else domain.get("strain_max"))
     if documented is not None:
         ceiling = (documented - 1.0) if finite and documented > 1.0 else documented
@@ -1649,8 +1649,8 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                                                        else "strain_max") or {})
                                            .get("where", "")))
     else:
-        ceiling = COUNCIL_FINITE_CEILING if finite else COUNCIL_SMALL_STRAIN_CEILING
-        ceiling_origin = ("council_default", "undocumented domain: R3 default")
+        ceiling = REVIEWER_FINITE_CEILING if finite else REVIEWER_SMALL_STRAIN_CEILING
+        ceiling_origin = ("reviewer_default", "undocumented domain: R3 default")
 
     names, unexercised, dispatch = _cmname_plan(executable, row)
     if dispatch and not names:
@@ -1668,7 +1668,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                            "geometry clears the planes it has to avoid", **common)
         common["placement"] = {"box": placement["box"], "avoid": placement.get("avoid"),
                                "where": placement.get("where", ""),
-                               "origin": placement.get("origin", "council_choice"),
+                               "origin": placement.get("origin", "reviewer_choice"),
                                "driver_point": placed["driver_point"], "side": placed["side"]}
     plans = []
     for set_id, values, cmname in sets:
@@ -1677,7 +1677,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
             return refused("incomplete_set", f"set {set_id} does not give every PROPS index "
                            f"1..{nprops}", **common)
         props = tuple(values[i][0] for i in range(1, nprops + 1))
-        props_origin = "council_choice" if origin == "council_chosen" else "author_published"
+        props_origin = "reviewer_choice" if origin == "reviewer_chosen" else "author_published"
         base = VerificationManifest(
             name=cmname or ((name or source.stem[:34]) + f"_{set_id}"[:6]),
             source=source, element_type=element, element_label=1,
@@ -1687,7 +1687,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
             initial_statev_provenance=initial_origin[1] if initial_statev else "",
             initial_state_from_user_subroutine=from_sdvini,
             node_coordinates=placed["nodes"] if placed else (),
-            node_provenance=(f"council placement in the documented geometry "
+            node_provenance=(f"reviewer placement in the documented geometry "
                              f"({placement.get('where', '')}), clear of "
                              f"{placement.get('avoid')}" if placed else ""),
             material_provenance=(f"{origin}: row {ref}, set {set_id}: "
@@ -1698,8 +1698,8 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                      ("props", props_origin, f"row {ref}, set {set_id}"),
                      ("nstatv",) + nstatv_origin,
                      ("initial_statev",) + initial_origin,
-                     ("loading", "council_default", "the strain-driven search under the "
-                      f"council ceiling {ceiling:g}, or the source's own clock")))
+                     ("loading", "reviewer_default", "the strain-driven search under the "
+                      f"reviewer ceiling {ceiling:g}, or the source's own clock")))
         family = classify(text, element=element,
                           family_of_element="cohesive" if geometry_for(element).kind == "cohesive"
                           else "", props=props, reads_coordinates=False, oriented=False,
@@ -1713,7 +1713,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
             return refused(
                 "growth_needs_total_time",
                 ("a growth law driven by the clock, and nothing documents how long the clock "
-                 "runs. D-21a (a) allows a council total time only where time enters through "
+                 "runs. D-21a (a) allows a reviewer total time only where time enters through "
                  "time/tau with tau a PROPS constant AND the law is bounded for all t >= 0"
                  + (f"; this one grows without bound ({linear.group(0).strip()[:60]})"
                     if linear else "; no such law was recognised")), **common)
@@ -1727,7 +1727,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                 (name, stated_kind, f"documented total time {documented_time:g}: {where}")
                 if name == "loading" else (name, kind, why)
                 for name, kind, why in built.manifest.origins)))
-        if family.name == "growth" and tau and origin == "council_chosen" \
+        if family.name == "growth" and tau and origin == "reviewer_chosen" \
                 and built.requirement is not None and built.requirement.declared:
             # D-21a (a): exp(-time/tau) is bounded and enters only through
             # time/tau, and tau is a reviewer-chosen PROPS constant, so the
@@ -1735,11 +1735,11 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
             ratio = built.requirement.total_time / tau
             built = _reworded(built, (
                 f"this routine's driver is exp(-time/tau) with tau = {tau:g}, a "
-                f"council-chosen constant; the council total time T = {ratio:g} tau "
+                f"reviewer-chosen constant; the reviewer total time T = {ratio:g} tau "
                 f"= {built.requirement.total_time:g} develops "
                 f"{1 - math.exp(-ratio):.0%} of the excursion (D-21a (a))"))
             built = replace(built, manifest=replace(built.manifest, origins=tuple(
-                (name, "council_choice", f"council total time T/tau = {ratio:g} (D-21a (a))")
+                (name, "reviewer_choice", f"reviewer total time T/tau = {ratio:g} (D-21a (a))")
                 if name == "loading" else (name, kind, why)
                 for name, kind, why in built.manifest.origins)))
         if built.requirement is not None and not built.requirement.declared:
@@ -1763,7 +1763,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                   if (domain.get(key) or {}).get("value") is not None
                   and _numeric(domain.get(key)) is None
                   and not (key == "temperature" and isinstance(domain[key]["value"], list)))
-    return CouncilPlan(source, sets=tuple(plans), ceiling=ceiling,
+    return ReviewerPlan(source, sets=tuple(plans), ceiling=ceiling,
                        documented_domain=row.get("documented_domain") or None,
                        domain_not_enforced=prose,
                        ceiling_origin=ceiling_origin,
@@ -1829,7 +1829,7 @@ def _reworded(built: "Experiment", reason: str) -> "Experiment":
     return out
 
 
-def _council_initial_state(row: dict, text: str, nstatv: int, origin: str):
+def _reviewer_initial_state(row: dict, text: str, nstatv: int, origin: str):
     """``(initial_statev, from_sdvini, (origin, provenance))`` for a reviewer
     manifest. A numeric list the row states is used when it fills NSTATV (a
     single 0 means zeros); a source that defines SDVINI is started by it; a
@@ -1841,7 +1841,7 @@ def _council_initial_state(row: dict, text: str, nstatv: int, origin: str):
     value = stated.get("value") if isinstance(stated, dict) else stated
     why = (f"{stated.get('rule', '')}: {stated.get('where', '')}" if isinstance(stated, dict)
            else str(stated or ""))[:200]
-    kind = "author_published" if origin != "council_chosen" else "council_choice"
+    kind = "author_published" if origin != "reviewer_chosen" else "reviewer_choice"
     if defines_sdvini(text):
         return (), True, ("source", "the source defines SDVINI; Abaqus calls it to start "
                           "the state" + (f" ({why})" if why else ""))
@@ -1852,7 +1852,7 @@ def _council_initial_state(row: dict, text: str, nstatv: int, origin: str):
             numbers = ()
         if len(numbers) == nstatv and any(numbers):
             return numbers, False, (kind, why or "row initial_statev")
-    return (), False, ("council_default", "zero" + (f" ({why})" if why else "")
+    return (), False, ("reviewer_default", "zero" + (f" ({why})" if why else "")
                        + "; harmless only if the initial-state proof (R5, "
                          "harness.initial_state_proof) passes")
 

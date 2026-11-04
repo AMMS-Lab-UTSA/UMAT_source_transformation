@@ -92,14 +92,14 @@ TOYS = {
 """ + END,
     "toy_a3_fileio": HEADER + """      LOGICAL EX
       PREV=0.D0
-      INQUIRE(FILE='vera_prev.txt',EXIST=EX)
+      INQUIRE(FILE='review_prev.txt',EXIST=EX)
       IF (EX) THEN
-      OPEN(77,FILE='vera_prev.txt',STATUS='OLD')
+      OPEN(77,FILE='review_prev.txt',STATUS='OLD')
       READ(77,*) PREV
       CLOSE(77)
       END IF
 """ + LAME + BODY + """      STATEV(2)=PREV
-      OPEN(77,FILE='vera_prev.txt',STATUS='REPLACE')
+      OPEN(77,FILE='review_prev.txt',STATUS='REPLACE')
       WRITE(77,*) STRESS(1)
       CLOSE(77)
 """ + END,
@@ -133,7 +133,7 @@ def _entry(root, name):
     source.write_text(TOYS[name])
     shutil.copy(source, store / "umat.f")
     (store / "compile_order.txt").write_text("umat.f\n")
-    return CorpusEntry(key=name, source_id=f"vera_toy/{name}", original_source=source,
+    return CorpusEntry(key=name, source_id=f"review_toy/{name}", original_source=source,
                        ntens=6, nstatv=2, props=[2.0e5, 0.3], store_dir=store)
 
 
