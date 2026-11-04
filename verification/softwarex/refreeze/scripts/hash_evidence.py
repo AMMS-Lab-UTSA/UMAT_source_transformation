@@ -1,4 +1,4 @@
-"""Write SHA256SUMS for every archived file under evidence/<commit>/ (Ada, 2026-10-27).
+"""Write SHA256SUMS for every archived file under evidence/<commit>/ (builder, 2026-10-27).
 
 Usage: python refreeze/scripts/hash_evidence.py <sha7> [<sha7> ...]
 Skips caches. Paths in the sums file are relative to evidence/<sha7>/.
@@ -23,7 +23,7 @@ def main(argv: list[str]) -> int:
                 continue
             digest = hashlib.sha256(p.read_bytes()).hexdigest()
             lines.append(f"{digest}  {p.relative_to(root).as_posix()}")
-        # LF line endings, so `sha256sum -c SHA256SUMS` works (Vera O2: CRLF broke it).
+        # LF line endings, so `sha256sum -c SHA256SUMS` works (the reviewer O2: CRLF broke it).
         (root / "SHA256SUMS").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
         print(sha, len(lines), "files")
     return 0

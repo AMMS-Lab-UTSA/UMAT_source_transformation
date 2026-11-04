@@ -2,7 +2,7 @@
 
 Reads evidence/<sha7>/rounds/{psweep,internal_jacobian,tangent}/results and the
 V11 committed files at 8e12548 (read with `git show`, read-only). Writes
-refreeze/rounds_comparison.json and prints a table. Ada, 2026-10-27.
+refreeze/rounds_comparison.json and prints a table. Builder, 2026-10-27.
 Usage: python refreeze/scripts/compare_rounds.py <sha7> [...]
 """
 

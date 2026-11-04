@@ -125,7 +125,7 @@ def test_only_a_blind_selection_by_vera_is_run_and_under_five_is_falsification_o
     for n in (1, 4):
         small = ho.load_selection(selection(tmp_path / "s.json", keys=KEYS[:n]), "strain-driven")
         assert small["mode"] == ho.FALSIFICATION_ONLY
-    for over in ({"keys": []}, {"selected_by": "atlas"}, {"blind": False},
+    for over in ({"keys": []}, {"selected_by": "someone else"}, {"blind": False},
                  {"keys": KEYS[:4] + KEYS[:1]}, {"template": "growth"}):
         with pytest.raises(ho.SelectionError):
             ho.load_selection(selection(tmp_path / "s.json", **over), "strain-driven")

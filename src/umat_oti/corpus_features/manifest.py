@@ -2742,7 +2742,7 @@ def merge_feature_results(manifest: dict,
          "held_fixed": "incoming STRESS/STATEV, DSTRAN", "scope": "local",
          "build": {"kind": "store", "fingerprint": "dbe9f928191e1d43",
                    "sha256": "<sha256 of the built object>"},
-         "producer": "gauss/B2"}
+         "producer": "corpus_features/B2"}
 
     Absolute evidence paths under a known root are rewritten as
     ``<root>:<relative>``. Each record is checked by :func:`validate_cell`;

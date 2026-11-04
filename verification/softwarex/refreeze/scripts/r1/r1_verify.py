@@ -1,4 +1,4 @@
-"""R1 verification (task T4): newly generated evidence, Ada, 2026-10-27.
+"""R1 verification (task T4): newly generated evidence, builder, 2026-10-27.
 
 Verifies the UMAT-OTI transformation of the replacement model
 ``evidence/replacement-models/j2_voce_newton/umat_j2_voce.f`` (R1) at one
@@ -305,7 +305,7 @@ def main() -> int:
     work.mkdir(parents=True)
     log = work / "build.log"
     report: dict = {
-        "label": "NEWLY GENERATED EVIDENCE (Ada, 2026-10-27); builder output, not independently reviewed",
+        "label": "NEWLY GENERATED EVIDENCE (builder, 2026-10-27); builder output, not independently reviewed",
         "umat_oti_commit": subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
                                           capture_output=True, text=True).stdout.strip(),
         "r1_source": str(R1_SOURCE.relative_to(WS)),

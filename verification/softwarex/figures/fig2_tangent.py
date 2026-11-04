@@ -1,17 +1,17 @@
 """Build Figure 2 (Model A consistent tangent) from archived 2ae2ee0 data.
 
-Round-8 derivative of evidence/2ae2ee0/figures/fig3_tangent.py (Ada) made by Quill in tex/figures/
+Round-8 derivative of evidence/2ae2ee0/figures/fig3_tangent.py (builder) made by the manuscript editor in tex/figures/
 for Iris I1 (reviews/iris-figures-r7.md): the only change is the legend text of the relative
 difference, whose denominator is max(|reference|, |oti|) as in the CSV justification and
-Supplement S3. Output name and folder changed. To be archived by Ada in a new evidence folder.
+Supplement S3. Output name and folder changed. To be archived by the builder in a new evidence folder.
 
-Round 9 (Quill, 2026-10-28), LAYOUT ONLY: drawn at the article's text width (390 pt = 5.42 in) so
+Round 9 (manuscript editor, 2026-10-28), LAYOUT ONLY: drawn at the article's text width (390 pt = 5.42 in) so
 that it is included at 100 % instead of being shrunk to 86 %; panel titles on two lines; legend in
 two columns; figure height 3.05 -> 3.45 in. Data, plotted columns and every number unchanged.
 
-Builder: Ada, 2026-10-27. Run with the Anaconda interpreter in isolated mode:
+Builder, 2026-10-27. Run with the Anaconda interpreter in isolated mode:
 
-  C:/Users/vfn333/AppData/Local/anaconda3/python.exe -I fig3_tangent.py WORKSPACE_ROOT
+  C:/Users/<user>/AppData/Local/anaconda3/python.exe -I fig3_tangent.py WORKSPACE_ROOT
 
 Data: evidence/2ae2ee0/rounds/tangent/results/table2_ddsdde_illustrative.csv, written
 by UMAT-OTI tools/run_tangent_round.py at 2ae2ee07547ae86c5c4c9bb9fe123b1245c13dbc

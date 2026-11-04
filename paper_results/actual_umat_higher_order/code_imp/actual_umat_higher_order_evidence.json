@@ -1,35 +1,35 @@
 {
   "artifacts": [
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_oti.f",
+      "path": "paper_results/actual_umat_higher_order/code_imp/code_imp_oti.f",
       "sha256": "dcb8f9393b924eafe2cbba2e4911f9689a0e1d8dfb33697cf068444b9341c048"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/otim4n4.f90",
+      "path": "paper_results/actual_umat_higher_order/code_imp/otim4n4.f90",
       "sha256": "e598124363fd6b2aae47fd5b7db48e07fb569b4bf0ce256ba865614fac374d6c"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_driver.f90",
+      "path": "paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_driver.f90",
       "sha256": "371860a17692b9042611ed1845f74232d696567a8eb97ec38c38327e27a16cbd"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_reference_driver.f90",
+      "path": "paper_results/actual_umat_higher_order/code_imp/code_imp_reference_driver.f90",
       "sha256": "ee9bb86623d416e8eaa8141196550065a080c91159a776a58de94c29aaf7d08e"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/oti_hjac.dat",
+      "path": "paper_results/actual_umat_higher_order/code_imp/oti_hjac.dat",
       "sha256": "ce7a0f62958480e87ca223857c4285b287fd92a3dd960658746df38a29c79306"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_comparison.csv",
+      "path": "paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_comparison.csv",
       "sha256": "196c33f7a09059362b37a821397180cc5dab97ddf9ca836adde7d80029779ec7"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/table4_higher_order_code_imp.csv",
+      "path": "paper_results/actual_umat_higher_order/code_imp/table4_higher_order_code_imp.csv",
       "sha256": "fa6e25718825da45b376a44c86075b472d7d3ba957fe52f9b29a4c95d94374a1"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_primal.csv",
+      "path": "paper_results/actual_umat_higher_order/code_imp/code_imp_primal.csv",
       "sha256": "81db35546c57e493e8d0487686438cbdeaf3554f0ee41485695cbe120aaf3740"
     }
   ],
@@ -59,20 +59,20 @@
       "increment": 4
     }
   ],
-  "canonical_manifest": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/derivative_manifest.json",
+  "canonical_manifest": "paper_results/actual_umat_higher_order/code_imp/derivative_manifest.json",
   "comparison": {
     "absolute_tolerances_by_order": {
       "2": 0.002,
       "3": 5.0,
       "4": 40000.0
     },
-    "csv": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_comparison.csv",
+    "csv": "paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_comparison.csv",
     "failed_rows": 0,
     "max_absolute_error": 19666079.65625,
     "max_relative_error": 1.0,
     "max_relative_error_when_absolute_tolerance_exceeded": 3.4876621328268337e-06,
     "passed_rows": 96,
-    "publication_table": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/table4_higher_order_code_imp.csv",
+    "publication_table": "paper_results/actual_umat_higher_order/code_imp/table4_higher_order_code_imp.csv",
     "relative_tolerance": 2e-05,
     "rows": 96
   },
@@ -168,11 +168,11 @@
       "-ffixed-form",
       "-ffixed-line-length-none",
       "-I",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp",
+      "paper_results/actual_umat_higher_order/code_imp",
       "-c",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+      "UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
       "-o",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/original_code_imp.o"
+      "paper_results/actual_umat_higher_order/code_imp/original_code_imp.o"
     ],
     "compile_returncode": 0,
     "driver_compile_returncode": 0,
@@ -183,7 +183,7 @@
   },
   "schema": "umat-oti-actual-higher-order-evidence/1",
   "source": {
-    "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+    "path": "UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
     "sha256": "82defecdce46a577087674977be175b3b9881be8afafaa1d88545c8534563672"
   },
   "status": "verified_from_generic_transformed_source",

@@ -1,4 +1,4 @@
-! Material-point driver for the R1 verification (Ada, 2026-10-27).
+! Material-point driver for the R1 verification (builder, 2026-10-27).
 ! Written independently of UMAT-OTI's own drivers. Links against either the
 ! untransformed R1 UMAT or the UMAT-OTI tangent build (same interface).
 !

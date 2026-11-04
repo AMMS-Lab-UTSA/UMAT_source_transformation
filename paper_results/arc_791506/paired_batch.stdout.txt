@@ -1,4 +1,4 @@
-wrote batch reports in /home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/arc_791506/paired_batch
+wrote batch reports in paper_results/arc_791506/paired_batch
 UMAT_ECL_TEMP.json	transformed_and_validated	Validation passed; stress max_abs=0.0 max_rel=0.0; DDSDDE max_abs=0.0 max_rel=0.0
 UMAT_ECO.json	transformed_and_validated	Validation passed; stress max_abs=0.0 max_rel=0.0; DDSDDE max_abs=0.0 max_rel=0.0
 UMAT_HIN.json	transformed_and_validated	Validation passed; stress max_abs=0.0 max_rel=0.0; DDSDDE max_abs=0.0 max_rel=0.0

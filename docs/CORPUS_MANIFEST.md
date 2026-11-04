@@ -300,7 +300,7 @@ Each JSONL line is one cell:
  "quantity": "DDSDDE = d STRESS_{n+1}/d DSTRAN", "wrt": "DSTRAN",
  "held_fixed": "incoming STRESS/STATEV, PROPS, TIME, TEMP", "scope": "local",
  "build": {"kind": "store", "fingerprint": "<transform fingerprint>", "sha256": "<object sha256>"},
- "producer": "gauss/B2"}
+ "producer": "corpus_features/B2"}
 ```
 
 `validate_cell(feature, cell, roots=...)` checks every record.

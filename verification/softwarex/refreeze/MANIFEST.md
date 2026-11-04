@@ -1,10 +1,10 @@
 # Re-freeze manifest: manuscript ↔ source commit ↔ environment ↔ scripts ↔ archived outputs
 
-Builder: Ada, 2026-10-27. **Newly generated local evidence. Re-executed independently on the same platform by Vera
-(`reviews/vera-freeze.md`); her corrections are applied here and in `RECOMMENDATION.md`. This is not the
+Builder, 2026-10-27. **Newly generated local evidence. Re-executed independently on the same platform by the reviewer
+(the independent freeze review); her corrections are applied here and in `RECOMMENDATION.md`. This is not the
 submission freeze** (see `RECOMMENDATION.md`). Every archive directory has a `SHA256SUMS` file covering all
 of its files, including those not committed. **The sums files were regenerated with LF line endings on
-2026-10-27 after Vera's review (O2). The first versions had CRLF, so `sha256sum -c` failed on every line.**
+2026-10-27 after the reviewer's review (O2). The first versions had CRLF, so `sha256sum -c` failed on every line.**
 To check an archive, run `cd evidence/<sha7> && sha256sum -c SHA256SUMS`. That check passes for every
 archive. The hashes are of the files as the runs wrote them. A fresh checkout with `core.autocrlf=true` can
 change the line endings of committed text files, so check with `core.autocrlf=false`, or compare after stripping CR.
@@ -14,9 +14,9 @@ change the line endings of committed text files, so check with `core.autocrlf=fa
 
 ## 1. Manuscript
 - Workspace `umat-oti-softwarex-manuscript` at `b7ff395` (HEAD when this task started; `05e09ca` was added by
-  Quill during the task).
+  the manuscript editor during the task).
 - The values marked `\REFREEZE` in `tex/` are V11 values at `8e12548`. None of them is changed by this work
-  (Quill owns `tex/` and `ledger/`).
+  (the manuscript editor owns `tex/` and `ledger/`).
 
 ## 2. Source
 | Role | Commit | Where |
@@ -26,7 +26,7 @@ change the line endings of committed text files, so check with `core.autocrlf=fa
 | main HEAD (regressed) | `57eaeff56a940b26de9bd83a8b258e5359fd404e` | same |
 | Regression fix | `faeec2b` (2026-10-02) | same |
 | Last good before regression | `ce4255affe50945565591ace06a6d7ca5af5f2ea` | same |
-| Curie's local results copy | `c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca` | same |
+| Local results copy | `c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca` | same |
 | v1.0.0 = Zenodo 10.5281/zenodo.21297173 | `fe40e9f6265d56237d8eb3f4eee237a0c5951e49` | tag; Zenodo zip sha256 `4f8645956f5ddc7152b2afac5227c2990c0f17d1613e6720a6f8badf5c5e6d41` |
 
 ## 3. Environment (identical for every candidate)
@@ -59,8 +59,8 @@ change the line endings of committed text files, so check with `core.autocrlf=fa
 | `refreeze/scripts/run_rounds.sh <commit>` | the three evidence rounds of the `paper` profile without its embedded test suite: `tools/run_parameter_sensitivity_sweep.py`, `tools/run_internal_jacobian_round.py`, `tools/run_tangent_round.py` |
 | `refreeze/scripts/compare_rounds.py <sha7>…` | extracts counts and worst errors and compares them with the files committed at 8e12548 → `refreeze/rounds_comparison.json` |
 | `refreeze/scripts/hash_evidence.py <sha7>…` | writes `evidence/<sha7>/SHA256SUMS` (LF) |
-| `refreeze/scripts/checks/fingerprint_posix.py <clone> <commit>` | transform generation fingerprint as Linux computes it, from raw git blobs. Returns the recorded `c61511ea0ffe58e2` at `8090ff4` and `eaa152dde6047af2` at `2ae2ee0`, where the record is stale (Vera B1) |
-| `python -m umat_oti.validation.higher_order_convergence_study --model j2 --out evidence/2ae2ee0/rounds/higher_order_convergence/j2` (run in the 2ae2ee0 worktree) | **source of L22.** I wrongly attributed L22 to the tangent round at first (Vera I1) |
+| `refreeze/scripts/checks/fingerprint_posix.py <clone> <commit>` | transform generation fingerprint as Linux computes it, from raw git blobs. Returns the recorded `c61511ea0ffe58e2` at `8090ff4` and `eaa152dde6047af2` at `2ae2ee0`, where the record is stale (the reviewer B1) |
+| `python -m umat_oti.validation.higher_order_convergence_study --model j2 --out evidence/2ae2ee0/rounds/higher_order_convergence/j2` (run in the 2ae2ee0 worktree) | **source of L22.** I wrongly attributed L22 to the tangent round at first (the reviewer I1) |
 | `refreeze/scripts/r1/r1_driver.f90`, `r1_verify.py`, `provenance_idcmp.py` | R1 verification (T4) and its provenance identifier check |
 
 ## 5. Archived outputs
