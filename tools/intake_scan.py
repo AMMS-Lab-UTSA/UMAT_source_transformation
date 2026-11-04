@@ -60,7 +60,7 @@ DEFAULT_TEMPERATURE = 293.15
 #: Plain-language statements for the items that need the user. ``ask`` says
 #: what is needed and why in one or two sentences; ``default`` says what will
 #: be used if the user says nothing (or that nothing can be). ``{x}`` fields
-#: are filled from the item's context. Iris replaces these key by key through
+#: are filled from the item's context. The app replaces these key by key through
 #: ``umat_oti.app.intake_text.NEEDS`` (same keys, same fields).
 NEEDS: dict[str, dict[str, str]] = {
     "routine": {
@@ -114,7 +114,7 @@ NEEDS: dict[str, dict[str, str]] = {
 
 
 def _plain(key: str, texts: Optional[dict] = None) -> dict[str, str]:
-    """The text for ``key``: the caller's ``texts``, then Iris's module, then ours."""
+    """The text for ``key``: the caller's ``texts``, then the app's module, then ours."""
     if texts and key in texts:
         return {**NEEDS[key], **texts[key]}
     try:

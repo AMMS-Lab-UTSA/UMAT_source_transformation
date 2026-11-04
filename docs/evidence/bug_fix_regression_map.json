@@ -1271,7 +1271,7 @@
   },
   {
    "commit": "d38135f",
-   "reason": "New feature (Iris): plain-language refusal cards, the one-page verdict and the goal-first README; 'refusal' in its message names the cards, not a corrected behaviour."
+   "reason": "New feature: plain-language refusal cards, the one-page verdict and the goal-first README; 'refusal' in its message names the cards, not a corrected behaviour."
   },
   {
    "commit": "3a72c33",
