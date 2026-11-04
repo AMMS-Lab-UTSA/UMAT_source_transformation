@@ -142,7 +142,7 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
     # relative name resolves there and not here:
     #
     #   forrtl: severe (29): file not found, unit 301, file
-    #   /tmp/ammslab3_original_1902146/T:\Abaqus-Temp\...\Lambda10.csv
+    #   /tmp/<user>_original_1902146/T:\Abaqus-Temp\...\Lambda10.csv
     #
     # with the file present under exactly that name in the job directory.
     # Only names that were actually staged are rewritten, and only the path

@@ -392,7 +392,7 @@ def redirect(text: str, directory: Path, *, staged: Sequence[str] = (),
     increment with::
 
         forrtl: severe (29): file not found, unit 301, file
-        /tmp/ammslab3_original_1902146/T:\Abaqus-Temp\...\Lambda10.csv
+        /tmp/<user>_original_1902146/T:\Abaqus-Temp\...\Lambda10.csv
 
     with the file present, under exactly that name, in the job directory.
     Thirteen entries failed their original job this way and were reported as

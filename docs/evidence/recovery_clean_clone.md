@@ -27,7 +27,7 @@ No commits, pushes, branches or subagents. Evidence is an uncommitted follow-up.
 
 The unchanged UMAT clone forwarding script invoked the RA clone's documented
 `scripts/clean_install_gate.py`, using healthy base Python
-`/home/ammslab3/anaconda3/bin/python3.11`, the explicit existing ODB below,
+`<home>/anaconda3/bin/python3.11`, the explicit existing ODB below,
 and new `--work /tmp/imqc_clean_clone_20260918_RwJ8VT/gate`. All 20 child
 commands passed. The raw report's conservative working-tree label is retained;
 separate provenance proves these exact committed clean clones.

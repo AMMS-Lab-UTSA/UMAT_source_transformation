@@ -103,7 +103,7 @@
     ],
     "zero_normalized_threshold": 1e-09
   },
-  "dataset_path": "/home/ammslab3/softwarex_work/UMAT_source_transformation/paper_results/higher_order_convergence/code_imp/convergence_evidence.json",
+  "dataset_path": "paper_results/higher_order_convergence/code_imp/convergence_evidence.json",
   "directions": [
     [
       1,

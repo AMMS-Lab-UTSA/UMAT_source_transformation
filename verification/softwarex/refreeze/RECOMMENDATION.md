@@ -60,7 +60,7 @@ Reasons, in order of weight:
    h=1e-4, 2.2e-9 at 1e-2) and rises as h shrinks, and the OTI value is the stable limit. The authors still
    decide whether the library-routines feature ships.
 
-**What I could not establish:** whether ARC (`/home/ammslab3/softwarex_work/final-umat`) holds unpushed commits
+**What I could not establish:** whether ARC (``) holds unpushed commits
 newer than `2ae2ee0`. If it does, compare them before tagging. This is an open question. I did not check ARC.
 
 ## 2. Repository facts

@@ -66,13 +66,13 @@
     "reason": "No executable finite-strain kinematics detected on stress path"
   },
   "generated_files": [
-    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/master_parameters.f90",
-    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/real_utils.f90",
-    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/otim6n4.f90",
-    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_order.txt",
-    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_hint.sh",
-    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/higher_order_directions.csv",
-    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/j2_props_oti.f"
+    "paper_results/actual_umat_higher_order/j2/master_parameters.f90",
+    "paper_results/actual_umat_higher_order/j2/real_utils.f90",
+    "paper_results/actual_umat_higher_order/j2/otim6n4.f90",
+    "paper_results/actual_umat_higher_order/j2/compile_order.txt",
+    "paper_results/actual_umat_higher_order/j2/compile_hint.sh",
+    "paper_results/actual_umat_higher_order/j2/higher_order_directions.csv",
+    "paper_results/actual_umat_higher_order/j2/j2_props_oti.f"
   ],
   "helper_policy": {
     "default": "pass_through",
@@ -291,7 +291,7 @@
       ]
     }
   ],
-  "source_file": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/generic_ps/j2_props.f",
+  "source_file": "UMATs/UMATs/generic_ps/j2_props.f",
   "statev_accesses": {
     "read_count": 1,
     "reads": [
