@@ -162,10 +162,13 @@ def test_the_contract_request_is_transformed_extracted_and_matches_finite_differ
     slots = run["report"]["directions_required"]["slot_assignments"]
     assert slots == [{"id": "newton_slope", "seed_variable": "DEQPL", "directions": 1,
                       "slot_start": NTENS + 1, "slot_end": NTENS + 1}]
-    # The loop reseeds the iterate, the residual's derivative becomes the
+    # The loop reseeds the iterate in its own direction only (1.2.1: the
+    # other directions are kept), the residual's derivative becomes the
     # Jacobian, and the hand-coded Jacobian is switched off.
+    from umat_oti.oti.oti_directions import member_name
     text = run["transformed_source"]
-    assert f"DEQPL_OTI = REAL(DEQPL_OTI) + OTI_E{NTENS + 1}" in text
+    assert f"DEQPL_OTI%{member_name([NTENS + 1])} = 1.0D0" in text
+    assert f"DEQPL_OTI = REAL(DEQPL_OTI)" not in text
     assert f"DF_OTI = GETIM(F_OTI, {NTENS + 1})" in text
     assert f"OTIS-SKIP: {HAND_CODED_LINE}" in text
     assert "DEQPL_OTI=DEQPL_OTI-F_OTI/DF_OTI" in text

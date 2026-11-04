@@ -90,8 +90,16 @@ def build_workspace(root: Path, mp: pytest.MonkeyPatch) -> dict:
     (ws / "discovery_cache" / SOURCE_ID).write_text(SOURCE)
     data = ws / "corpus_campaign" / "material_data"
     data.mkdir(parents=True)
-    for name in ("rederive_harvest.py", "harvest_row.schema.json"):
-        shutil.copyfile(WORKSPACE_REAL / "corpus_campaign" / "material_data" / name, data / name)
+    campaign = WORKSPACE_REAL / "corpus_campaign" / "material_data"
+    needed = ("rederive_harvest.py", "harvest_row.schema.json")
+    if not all((campaign / name).is_file() for name in needed):
+        # Two campaign files the reviewer cases read are not part of this
+        # repository; a clone without the campaign workspace beside it cannot
+        # build the scratch workspace these tests need.
+        pytest.skip("the campaign's material-data files (corpus_campaign/material_data/"
+                    "rederive_harvest.py, harvest_row.schema.json) are not beside this checkout")
+    for name in needed:
+        shutil.copyfile(campaign / name, data / name)
     rows = data / "d19_harvest.jsonl"
     rows.write_text(json.dumps(harvest_row()) + "\n")
     plans = ws / "corpus_campaign" / "reviewer_plans"
