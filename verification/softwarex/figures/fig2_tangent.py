@@ -1,7 +1,7 @@
 """Build Figure 2 (Model A consistent tangent) from archived 2ae2ee0 data.
 
 Round-8 derivative of evidence/2ae2ee0/figures/fig3_tangent.py (builder) made by the manuscript editor in tex/figures/
-for Iris I1 (reviews/iris-figures-r7.md): the only change is the legend text of the relative
+for figure review finding I1 (round-7 figure review): the only change is the legend text of the relative
 difference, whose denominator is max(|reference|, |oti|) as in the CSV justification and
 Supplement S3. Output name and folder changed. To be archived by the builder in a new evidence folder.
 
