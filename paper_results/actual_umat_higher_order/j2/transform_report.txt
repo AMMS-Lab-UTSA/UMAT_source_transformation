@@ -2,7 +2,7 @@
   UMAT to OTI/HYPAD TRANSFORMATION REPORT  --  UMAT
 ============================================================================
 
-Source file       : /home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/generic_ps/j2_props.f
+Source file       : UMATs/UMATs/generic_ps/j2_props.f
 Transformation    : SUCCESS
 Anchor completion : ready_with_json_contract
 Blockers/Warnings : none

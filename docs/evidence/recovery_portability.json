@@ -3452,7 +3452,7 @@
       },
       {
         "argv": [
-          "/home/ammslab3/anaconda3/bin/python3.11",
+          "<home>/anaconda3/bin/python3.11",
           "-I",
           "-c",
           "import ctypes, ssl, venv, sys; assert sys.version_info >= (3, 10); print(sys.version)"
@@ -3472,7 +3472,7 @@
       },
       {
         "argv": [
-          "/home/ammslab3/anaconda3/bin/python3.11",
+          "<home>/anaconda3/bin/python3.11",
           "-I",
           "-m",
           "venv",
@@ -3703,9 +3703,9 @@
         ]
       },
       "sys_path": [
-        "/home/ammslab3/anaconda3/lib/python311.zip",
-        "/home/ammslab3/anaconda3/lib/python3.11",
-        "/home/ammslab3/anaconda3/lib/python3.11/lib-dynload",
+        "<home>/anaconda3/lib/python311.zip",
+        "<home>/anaconda3/lib/python3.11",
+        "<home>/anaconda3/lib/python3.11/lib-dynload",
         "/tmp/imq_portability_3W4QbqeM/installed-final/env/lib/python3.11/site-packages"
       ],
       "executable": "/tmp/imq_portability_3W4QbqeM/installed-final/env/bin/python",
@@ -3948,7 +3948,7 @@
         "H": 8.839354487082118e-09
       },
       "production_jobs_launched": 0,
-      "odb_source": "/home/ammslab3/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb",
+      "odb_source": "<home>/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb",
       "source_denied_outputs_identical": true
     },
     "gui": {

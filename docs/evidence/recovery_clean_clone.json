@@ -351,7 +351,7 @@
         },
         {
           "argv": [
-            "/home/ammslab3/anaconda3/bin/python3.11",
+            "<home>/anaconda3/bin/python3.11",
             "-I",
             "-c",
             "import ctypes, ssl, venv, sys; assert sys.version_info >= (3, 10); print(sys.version)"
@@ -371,7 +371,7 @@
         },
         {
           "argv": [
-            "/home/ammslab3/anaconda3/bin/python3.11",
+            "<home>/anaconda3/bin/python3.11",
             "-I",
             "-m",
             "venv",
@@ -602,9 +602,9 @@
           ]
         },
         "sys_path": [
-          "/home/ammslab3/anaconda3/lib/python311.zip",
-          "/home/ammslab3/anaconda3/lib/python3.11",
-          "/home/ammslab3/anaconda3/lib/python3.11/lib-dynload",
+          "<home>/anaconda3/lib/python311.zip",
+          "<home>/anaconda3/lib/python3.11",
+          "<home>/anaconda3/lib/python3.11/lib-dynload",
           "/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/lib/python3.11/site-packages"
         ],
         "executable": "/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python",
@@ -819,7 +819,7 @@
           "H": 8.839354487082118e-09
         },
         "production_jobs_launched": 0,
-        "odb_source": "/home/ammslab3/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb",
+        "odb_source": "<home>/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb",
         "source_denied_outputs_identical": true
       },
       "gui": {
@@ -918,11 +918,11 @@
   },
   "scientific_input": {
     "existing_odb": {
-      "path": "/home/ammslab3/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb",
+      "path": "<home>/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb",
       "sha256": "54745b97b515de159c3251e8a3ba0ed89ea1c65452e388ef34c8c81794e3b736"
     },
     "fresh_odb": {
-      "path": "/home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb",
+      "path": "<home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb",
       "sha256": "92460c0ec883a14e0ea4a96021e52cb471dd509f93a4c5dbf0918ea9c9a3c54e"
     },
     "public_inputs": {
@@ -6428,8 +6428,8 @@
     "requested_mode": "sync sequential",
     "tool_exception": "OTILib sync command was automatically moved to a background tool handle after output idle; build completed exit 0 before next execution; no intentional detach.",
     "raw_shell_commands": [
-      "git clone --no-hardlinks --branch integration/recovery-2026-09-18 /home/ammslab3/softwarex_work/imq-umat-recovery /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation ",
-      "git clone --no-hardlinks --branch integration/recovery-2026-09-18 /home/ammslab3/softwarex_work/imq-ra-recovery /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler ",
+      "git clone --no-hardlinks --branch integration/recovery-2026-09-18  /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation ",
+      "git clone --no-hardlinks --branch integration/recovery-2026-09-18 <home>/softwarex_work/imq-ra-recovery /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler ",
       "git -C /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation status --porcelain=v1 ",
       "git -C /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation rev-parse HEAD ",
       "git -C /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler status --porcelain=v1 ",
@@ -6437,8 +6437,8 @@
       "find UMAT_source_transformation Residual_Assembler -name AGENTS.md -o -name copilot-instructions.md ",
       "rg --files UMAT_source_transformation Residual_Assembler -g \\*otilib\\* -g \\*audit\\* -g \\*sample\\* -g \\*presentation\\* ",
       "rg -n pytest\\|setup_otilib\\|audit_examples\\|clean_install_gate\\|U-A1\\|R-A1\\|imq_abaqus/recovery\\|imqrp_ UMAT_source_transformation/docs/COMPLETION_LEDGER.md Residual_Assembler/docs/COMPLETION_LEDGER.md UMAT_source_transformation/README.md Residual_Assembler/README.md Residual_Assembler/docs/evidence/recovery_presentation.md UMAT_source_transformation/scripts Residual_Assembler/scripts -g \\*.md -g \\*.sh ",
-      "sha256sum /home/ammslab3/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb ",
-      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 /home/ammslab3/anaconda3/bin/python3.11 -I scripts/clean_install_gate.py --ra-repo /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler --python /home/ammslab3/anaconda3/bin/python3.11 --odb /home/ammslab3/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb --work /tmp/imqc_clean_clone_20260918_RwJ8VT/gate ",
+      "sha256sum <home>/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb ",
+      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 <home>/anaconda3/bin/python3.11 -I scripts/clean_install_gate.py --ra-repo /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler --python <home>/anaconda3/bin/python3.11 --odb <home>/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb --work /tmp/imqc_clean_clone_20260918_RwJ8VT/gate ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 bash scripts/setup_otilib.sh /tmp/imqc_clean_clone_20260918_RwJ8VT/otilib ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 git clone --depth 1 --branch master https://github.com/mauriaristi/otilib.git /tmp/imqc_clean_clone_20260918_RwJ8VT/otilib ",
       "git -C /tmp/imqc_clean_clone_20260918_RwJ8VT/otilib rev-parse HEAD ",
@@ -6459,8 +6459,8 @@
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1 PYTHONPATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation/src:/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build UMAT_OTI_REPO=/tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation PYOTI_PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build OTILIB_ROOT=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build RUN_OTILIB_TESTS=1 /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -m pytest -q -ra -m not\\ abaqus\\ and\\ not\\ arc\\ and\\ not\\ network\\ and\\ not\\ corpus_pass --junitxml=/tmp/imqc_clean_clone_20260918_RwJ8VT/umat_offline.xml ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1 PYOTI_PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build OTILIB_ROOT=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build RUN_OTILIB_TESTS=1 /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I /tmp/imqc_clean_clone_20260918_RwJ8VT/samples_installed.py --root /tmp/imqc_clean_clone_20260918_RwJ8VT ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1 PYOTI_PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build OTILIB_ROOT=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I /tmp/imqc_clean_clone_20260918_RwJ8VT/browser_installed.py --inputs /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/collaborator --out /tmp/imqc_clean_clone_20260918_RwJ8VT/browser ",
-      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PIP_CONFIG_FILE=/dev/null /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I -m pip wheel --no-deps --wheel-dir /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-wheels /home/ammslab3/softwarex_work/imq-ra-recovery ",
-      "/home/ammslab3/anaconda3/bin/python3.11 -I -m venv /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-env ",
+      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PIP_CONFIG_FILE=/dev/null /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I -m pip wheel --no-deps --wheel-dir /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-wheels <home>/softwarex_work/imq-ra-recovery ",
+      "<home>/anaconda3/bin/python3.11 -I -m venv /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-env ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PIP_CONFIG_FILE=/dev/null /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-env/bin/python -I -m pip install /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-wheels/residual_assembler-0.1.0-py3-none-any.whl\\[yaml\\] ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-env/bin/resasm init --template python --out /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-python ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-env/bin/resasm init --template blackbox-order2 --out /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-blackbox ",
@@ -6474,21 +6474,21 @@
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /tmp/imqc_clean_clone_20260918_RwJ8VT/followup-env/bin/python -I -c $'import json; import numpy as np; from pathlib import Path; root=Path.cwd();\\nfor name, expected in [(\"python\",{(1,0):-1/3,(0,1):1/24,(2,0):2/9,(1,1):-1/144,(0,2):-1/576}),(\"blackbox\",{(1,0):-2/3,(0,1):1/48,(2,0):5/9,(1,1):-1/144,(0,2):-1/2304})]:\\n private=root/(\"followup-\"+name)/\"resasm_output/private\"; errors=[]\\n for order in (1,2):\\n  mapping=json.loads((private/f\"direction_map_order{order}.json\").read_text()); values=np.load(private/f\"solution_sensitivities_order{order}.npz\")\\n  for column in mapping[\"columns\"]: errors.append(abs(float(values[\"U_derivatives\"][0,column[\"index\"]])-expected[tuple(column[\"exponents\"])]))\\n assert max(errors)<1e-8; print(name, \"five analytic directions\",errors)' ",
       "ls /opt/intel/oneapi/compiler/latest/env/vars.sh /opt/intel/oneapi/compiler/2023.2.0/env/vars.sh ",
       "sed -n 1\\,130p UMAT_source_transformation/examples/elastic_minimal.json ",
-      "mkdir /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT ",
-      "mkdir -p /home/ammslab3/softwarex_work/imq_abaqus/recovery ",
-      "mkdir /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT ",
-      "cp /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler/examples/presentation_request/Analysis.inp /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/Analysis.inp ",
-      "cp /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation/parameter_sensitivity/models/m3_j2/umat.for /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/umat.for ",
+      "mkdir <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT ",
+      "mkdir -p <home>/softwarex_work/imq_abaqus/recovery ",
+      "mkdir <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT ",
+      "cp /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler/examples/presentation_request/Analysis.inp <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/Analysis.inp ",
+      "cp /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation/parameter_sensitivity/models/m3_j2/umat.for <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/umat.for ",
       "ifort --version ",
       "abaqus information=release ",
-      "env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home abaqus job=imqc_j2 input=/home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/Analysis.inp user=/home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/umat.for cpus=1 interactive ",
-      "sha256sum /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/Analysis.inp /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/umat.for ",
-      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/resasm request --model Analysis.inp --odb /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb --material OTI_UMAT.obj --request sensitivity_request.json --out fresh_odb_results --abaqus abaqus ",
+      "env -u PYTHONPATH -u PYTHONHOME -u VIRTUAL_ENV HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home abaqus job=imqc_j2 input=<home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/Analysis.inp user=<home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/umat.for cpus=1 interactive ",
+      "sha256sum <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/Analysis.inp <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/umat.for ",
+      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/resasm request --model Analysis.inp --odb <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb --material OTI_UMAT.obj --request sensitivity_request.json --out fresh_odb_results --abaqus abaqus ",
       "cp -a fresh_odb_results /tmp/imqc_clean_clone_20260918_RwJ8VT/fresh_odb_first ",
       "rm -r /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/collaborator/fresh_odb_results ",
-      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/resasm request --model Analysis.inp --odb /home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb --material OTI_UMAT.obj --request sensitivity_request.json --out fresh_odb_results --abaqus abaqus ",
+      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/resasm request --model Analysis.inp --odb <home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT/imqc_j2.odb --material OTI_UMAT.obj --request sensitivity_request.json --out fresh_odb_results --abaqus abaqus ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I -c $'import json; from pathlib import Path; first=Path(\"../../fresh_odb_first\"); actual=Path(\"fresh_odb_results\");\\nfor name in (\"sensitivity_results.json\",\"sensitivity_tables.csv\",\"run_report.txt\"): assert (first/name).read_bytes()==(actual/name).read_bytes(), name\\nnew=json.loads((actual/\"sensitivity_results.json\").read_text()); old=json.loads(Path(\"results/sensitivity_results.json\").read_text()); assert new[\"results\"]==old[\"results\"]; assert len(new[\"results\"])==4; displacement,reaction,stress,state=new[\"results\"]; expected={\"E\":-300/210000**2,\"SIGY0\":-1/2000,\"H\":-50/2000**2}; errors={name:abs(displacement[\"derivatives\"][name]-value)/abs(value) for name,value in expected.items()}; assert max(errors.values())<2e-5; assert abs(displacement[\"derivatives\"][\"nu\"])<1e-8; assert abs(reaction[\"value\"]+300)<1e-3; assert abs(stress[\"value\"]-300)<1e-3; assert abs(state[\"value\"]-.025)<1e-6; print(json.dumps({\"repeat_byte_identical\":True,\"fresh_and_existing_odb_results_identical\":True,\"analytic_errors\":errors,\"results\":new[\"results\"]},indent=2))' ",
-      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1 PYTHONPATH=/home/ammslab3/softwarex_work/imq-ra-recovery /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -m pytest -q tests/integration/test_clean_install_gate.py --junitxml=/tmp/imqc_clean_clone_20260918_RwJ8VT/followup_template_tests.xml ",
+      "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1 PYTHONPATH=<home>/softwarex_work/imq-ra-recovery /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -m pytest -q tests/integration/test_clean_install_gate.py --junitxml=/tmp/imqc_clean_clone_20260918_RwJ8VT/followup_template_tests.xml ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 bash scripts/init_permissive_sources.sh ",
       "git status --porcelain=v1 ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1 PYTHONPATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler:/tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation/src:/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build UMAT_OTI_REPO=/tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation PYOTI_PATH=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build OTILIB_ROOT=/tmp/imqc_clean_clone_20260918_RwJ8VT/otilib-build RUN_OTILIB_TESTS=1 /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -m pytest -q -ra -m not\\ abaqus\\ and\\ not\\ arc\\ and\\ not\\ network --junitxml=/tmp/imqc_clean_clone_20260918_RwJ8VT/ra_offline_second.xml ",
@@ -6508,51 +6508,51 @@
       "git -C /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler status --porcelain=v1 ",
       "git -C /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation status --porcelain=v1 ",
       "uname -a ",
-      "git -C /home/ammslab3/softwarex_work/imq-ra-recovery status --porcelain=v1 ",
-      "git -C /home/ammslab3/softwarex_work/imq-umat-recovery status --porcelain=v1 ",
+      "git -C <home>/softwarex_work/imq-ra-recovery status --porcelain=v1 ",
+      "git -C  status --porcelain=v1 ",
       "sha256sum /tmp/imqc_clean_clone_20260918_RwJ8VT/otilib/LICENSE /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler/LICENSE /tmp/imqc_clean_clone_20260918_RwJ8VT/UMAT_source_transformation/LICENSE /tmp/imqc_clean_clone_20260918_RwJ8VT/Residual_Assembler/sources/permissive/ngrilli_Oxford_Crystal_Plasticity/LICENSE ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I /tmp/imqc_clean_clone_20260918_RwJ8VT/collect_evidence.py ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I /tmp/imqc_clean_clone_20260918_RwJ8VT/collect_evidence.py --write ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I -c import\\ json\\;\\ from\\ pathlib\\ import\\ Path\\;\\ data=json.loads\\(Path\\(\\\"gate/report.json\\\"\\).read_text\\(\\)\\)\\;\\ print\\(json.dumps\\(data\\[\\\"wheels\\\"\\]\\,indent=2\\)\\)\\;\\ print\\(\\\"gate\\ commands\\\"\\,len\\(data\\[\\\"commands\\\"\\]\\)\\)\\;\\ print\\(\\\"presentation\\\"\\,json.dumps\\(data\\[\\\"presentation\\\"\\]\\)\\) ",
       "env -i HOME=/tmp/imqc_clean_clone_20260918_RwJ8VT/home PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /tmp/imqc_clean_clone_20260918_RwJ8VT/gate/env/bin/python -I -c $'from pathlib import Path; import json; from collections import Counter; expected={\"U-A1\",\"U-A4\",\"R-A1\",\"R-A6\"}; payloads=[]\\nfor repo in (\"imq-ra-recovery\",\"imq-umat-recovery\"):\\n root=Path(repo); rows=[[cell.strip() for cell in line.split(\"|\")] for line in (root/\"docs/COMPLETION_LEDGER.md\").read_text().splitlines() if line.startswith(\"| \")]; rows=[row for row in rows if len(row)==9 and row[1].startswith((\"U-\",\"R-\",\"X-\",\"T-\",\"CI-\"))]; assert len(rows)==274; passed={row[1] for row in rows if row[7]==\"PASS: reproduced from a clean installation\"}; assert passed==expected,passed; data=json.loads((root/\"docs/evidence/recovery_clean_clone.json\").read_text()); assert set(data[\"ledger_promotions\"])==passed; assert data[\"full_gate_passed\"] is False; assert data[\"followup\"][\"same_commit_gate\"] is False; print(repo,len(rows),\"rows\",sorted(passed),Counter(row[7] for row in rows)); payloads.append(data)\\nassert payloads[0]==payloads[1]; print(\"identical structured evidence; only four rows promoted\")' ",
-      "git -C /home/ammslab3/softwarex_work/imq-ra-recovery diff --check ",
-      "git -C /home/ammslab3/softwarex_work/imq-umat-recovery diff --check "
+      "git -C <home>/softwarex_work/imq-ra-recovery diff --check ",
+      "git -C  diff --check "
     ],
     "command_exits": [
       {
         "label": "clone_umat",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/clone_umat.log"
       },
       {
         "label": "clone_ra",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/clone_ra.log"
       },
       {
         "label": "clone_umat_status",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/clone_umat_status.log"
       },
       {
         "label": "clone_umat_sha",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/clone_umat_sha.log"
       },
       {
         "label": "clone_ra_status",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/clone_ra_status.log"
       },
       {
         "label": "clone_ra_sha",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/clone_ra_sha.log"
       },
       {
@@ -6828,19 +6828,19 @@
       {
         "label": "compiler_version",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT",
+        "cwd": "<home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/compiler_version.log"
       },
       {
         "label": "abaqus_version",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT",
+        "cwd": "<home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/abaqus_version.log"
       },
       {
         "label": "fresh_reference_job",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT",
+        "cwd": "<home>/softwarex_work/imq_abaqus/recovery/imqc_clean_clone_RwJ8VT",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/fresh_reference_job.log"
       },
       {
@@ -6882,7 +6882,7 @@
       {
         "label": "followup_template_regression",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work/imq-ra-recovery",
+        "cwd": "<home>/softwarex_work/imq-ra-recovery",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/followup_template_regression.log"
       },
       {
@@ -7002,19 +7002,19 @@
       {
         "label": "final_original_ra_status",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/final_original_ra_status.log"
       },
       {
         "label": "final_original_umat_status",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/final_original_umat_status.log"
       },
       {
         "label": "licenses_and_dependencies",
         "returncode": 1,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/licenses_and_dependencies.log"
       },
       {
@@ -7038,19 +7038,19 @@
       {
         "label": "ledger_evidence_validation",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/ledger_evidence_validation.log"
       },
       {
         "label": "original_ra_diff_check",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/original_ra_diff_check.log"
       },
       {
         "label": "original_umat_diff_check",
         "returncode": 0,
-        "cwd": "/home/ammslab3/softwarex_work",
+        "cwd": "<home>/softwarex_work",
         "log": "/tmp/imqc_clean_clone_20260918_RwJ8VT/logs/original_umat_diff_check.log"
       }
     ],

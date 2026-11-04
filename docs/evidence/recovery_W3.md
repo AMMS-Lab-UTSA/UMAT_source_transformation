@@ -30,12 +30,12 @@ registration was attempted. Required lead registration:
 The dedicated verification terminal printed:
 
 ```text
-W3 interpreter: /home/ammslab3/softwarex_work/.venv/bin/python
-W3 import: /home/ammslab3/softwarex_work/imq-umat-recovery/src/umat_oti/__init__.py
+W3 interpreter: <home>/softwarex_work/.venv/bin/python
+W3 import: src/umat_oti/__init__.py
 ```
 
 Commands run with that interpreter and
-`PYTHONPATH=/home/ammslab3/softwarex_work/imq-umat-recovery/src`:
+`PYTHONPATH=src`:
 
 ```sh
 python -m umat_oti.provider build \

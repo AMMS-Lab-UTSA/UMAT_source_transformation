@@ -7,7 +7,7 @@ where the file was put. Measured on Growth-Alex.for, with all twelve of its
 tables present under exactly the names it asks for, in the job directory::
 
     forrtl: severe (29): file not found, unit 301, file
-    /tmp/ammslab3_original_1902146/T:\\Abaqus-Temp\\...\\Lambda10.csv
+    /tmp/<user>_original_1902146/T:\\Abaqus-Temp\\...\\Lambda10.csv
 
 The job aborts in the element loop of its first increment. Thirteen corpus
 entries failed their ORIGINAL run this way and the failure was recorded

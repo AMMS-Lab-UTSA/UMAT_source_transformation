@@ -51,11 +51,11 @@ Repository example/corpus discovery is not proven by launching the installed app
 ## Exact Joint Gate Command
 
 ```sh
-cd /home/ammslab3/softwarex_work/imq-umat-recovery
-/home/ammslab3/softwarex_work/.venv/bin/python scripts/clean_install_gate.py \
-  --ra-repo /home/ammslab3/softwarex_work/imq-ra-recovery \
-  --python /home/ammslab3/anaconda3/bin/python3.11 \
-  --odb /home/ammslab3/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb \
+cd 
+<home>/softwarex_work/.venv/bin/python scripts/clean_install_gate.py \
+  --ra-repo <home>/softwarex_work/imq-ra-recovery \
+  --python <home>/anaconda3/bin/python3.11 \
+  --odb <home>/softwarex_work/imq_abaqus/recovery_presentation/imqrp_reference/collaborator/Analysis.odb \
   --work /tmp/imqr_install_20260918_03
 ```
 
@@ -66,7 +66,7 @@ application commands run outside them using only installed packages and copied
 public inputs. Failures stay nonzero; there is no mock ODB/calculation fallback.
 
 The shared venv bootstraps the script. The selected standalone base Python was
-verified at `/home/ammslab3/anaconda3/bin/python3.11` (3.11.7). The old warning
+verified at `<home>/anaconda3/bin/python3.11` (3.11.7). The old warning
 was rechecked: `/usr/local/bin/python3.11` lacks `_ctypes`; `/usr/bin/python3`
 is 3.8.10 and too old. Neither was silently used for the new environment.
 
@@ -156,8 +156,8 @@ Post-guide checks: `tests/test_repository_standards.py` plus
 Editor diagnostics reported no errors in both gate scripts and their new tests.
 
 ```sh
-cd /home/ammslab3/softwarex_work/imq-umat-recovery
-env PYTHONPATH=/home/ammslab3/softwarex_work/imq-umat-recovery/src /home/ammslab3/softwarex_work/.venv/bin/python -m pytest -q -ra -m 'not abaqus and not arc and not network and not corpus_pass' --junitxml=.pytest_cache/recovery_install_offline.xml
+cd 
+env PYTHONPATH=src <home>/softwarex_work/.venv/bin/python -m pytest -q -ra -m 'not abaqus and not arc and not network and not corpus_pass' --junitxml=.pytest_cache/recovery_install_offline.xml
 ```
 
 Two unchanged failures:
