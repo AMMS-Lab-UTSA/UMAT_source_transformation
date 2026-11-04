@@ -215,7 +215,9 @@ MODELS: dict[str, ModelSpec] = {
         key="UMAT_PCL",
         config="examples/UMAT_PCL_actual_higher_order.json",
         source="UMATs/UMATs/ICP/UMAT_PCL.for",
-        nstatv=9,
+        # UMAT_PCL writes STATEV(10:13) (the back stress, DO K1=10,2*NTENS+5):
+        # 9 was too few, and the source wrote past the driver's array.
+        nstatv=13,
         nprops=6,
         props=(210000.0, 0.3, 240.0, 150.0, 0.8, 100.0),
         increments=(
@@ -728,8 +730,36 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def state_size_problem(spec: ModelSpec, repo_root: Path | None = None) -> str:
+    """Why ``spec.nstatv`` is too small for the source, or "" when it is large enough.
+
+    Reads the source's own STATEV indices (literal, a*NTENS+b, and DO bounds
+    that index STATEV) through
+    :func:`umat_oti.transform.dependency_resolution.infer_minimum_dimensions`.
+    A driver that allocates fewer slots lets the source write past the array;
+    the run may still finish, with numbers that are not the model's.
+    """
+    from umat_oti.transform.dependency_resolution import infer_minimum_dimensions
+
+    root = repo_root or Path(__file__).resolve().parents[3]
+    source = root / spec.source
+    if not source.is_file():
+        return ""
+    found = infer_minimum_dimensions([source])
+    terms = [tuple(int(v) for v in term.replace("*NTENS", "").split("+"))
+             for term in found["statev_terms"]]
+    needed = max([a * spec.ntens + b for a, b in terms] + [found["literal_statev_index"] or 0])
+    if spec.nstatv < needed:
+        return (f"{spec.key}: NSTATV={spec.nstatv}, but {spec.source} addresses STATEV up to "
+                f"{needed} at NTENS={spec.ntens} ({', '.join(found['statev_terms'])})")
+    return ""
+
+
 def build_model_artifacts(spec: ModelSpec, work_dir: Path) -> dict[str, Any]:
     """Transform, compile, run OTI, and compile the independent original reference."""
+    problem = state_size_problem(spec)
+    if problem:
+        raise ValueError(problem)
     work_dir = work_dir.resolve()
     work_dir.mkdir(parents=True, exist_ok=True)
 

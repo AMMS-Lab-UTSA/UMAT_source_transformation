@@ -95,7 +95,7 @@
       0.8,
       100.0
     ],
-    "nstatv": 9,
+    "nstatv": 13,
     "nprops": 6,
     "inelastic_statev_index": 9,
     "inelastic_threshold": 1e-12,
