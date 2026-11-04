@@ -151,6 +151,7 @@ def test_matrix_regenerates_identically_and_leaves_published_evidence_alone(tmp_
     # * the MIT notice was restored at the top of the three ABAQUS-US
     #   adaptations (6fc0283a, 28 comment lines), which changes their content
     #   identity and their line count and nothing else.
+    # * UMAT_PCL's NSTATV was corrected from 9 to 13 in 1.2.1.
     # Every other row must come back byte for byte, and nothing may appear
     # that the archive does not hold.
     import io
@@ -174,4 +175,9 @@ def test_matrix_regenerates_identically_and_leaves_published_evidence_alone(tmp_
             assert int(row["source_lines"]) == int(expected["source_lines"]) + 28, path
             expected["source_lines"] = row["source_lines"]
             expected["canonical_source_id"] = row["canonical_source_id"]
+        if path == "UMATs/UMATs/ICP/UMAT_PCL.for":
+            # 1.2.1 corrected UMAT_PCL's NSTATV from 9 to 13 (it writes
+            # STATEV(10:13)); the archive has the old value.
+            assert (expected["nstatv"], row["nstatv"]) == ("9", "13"), path
+            expected["nstatv"] = row["nstatv"]
         assert row == expected, path
