@@ -212,11 +212,22 @@ without the request.
   freezes an auxiliary such as a stress norm). To differentiate through such
   a carried variable, declare it in the contract as a seed of its own (a
   second iterate); the request does not infer it.
-- The loop must be a DO construct closed by END DO, so that its body can be
-  read; otherwise give its closing line as `loop.exit_line`. A loop whose body
-  holds a labelled DO, or a GOTO loop without `exit_line`, is refused with a
+- The loop must be an unnamed DO construct closed by END DO, so that its body
+  can be read; otherwise give its closing line as `loop.exit_line`. A loop
+  whose body holds a labelled DO or a named construct (`name: DO ... END DO
+  name`), a named loop, or a GOTO loop without `exit_line` is refused with a
   message, because the variables carried across its back edge cannot be
   determined.
+- With a vector seed (`seed_directions` > 1) every component gets 1 in its own
+  extra direction and 0 in the others, on every pass.
+- **Limitation.** The carried variables are found in the loop body's text:
+  every shadowed name it assigns or passes to a CALL. State changed out of
+  sight is not seen: COMMON blocks and module variables assigned inside a
+  called routine, other side effects of a CALL or function reference, and host
+  variables an internal procedure assigns. If the residual reads such state and
+  that state depends on the iterate, the extra direction is not reset in it and
+  the extracted value is not dr/d(iterate) at fixed carried state. Check such a
+  loop against a finite difference before relying on it.
 
 `helper_surfaces`
 

@@ -1565,15 +1565,15 @@ def _local_newton_blockers(
     span = (_selected_routine_span(parsed, selected_umat) if parsed is not None else None) or (1, len(lines))
     form = parsed.form if parsed is not None else "fixed"
     for contract in _parse_extra_jacobian_contracts(config):
-        if contract.get("loop_top_line") and contract.get("seed_variable") \
-                and _jint_loop_body(lines, form, contract) is None:
+        problem = (_jint_loop_problem(lines, form, contract)
+                   if contract.get("loop_top_line") and contract.get("seed_variable") else "")
+        if problem:
             blockers.append(
-                f"Local-Jacobian request {contract.get('id')!r}: the end of the loop at "
-                f"line {contract.get('loop_top_line')} cannot be determined (it is not a "
-                f"DO construct closed by END DO, or its body holds a labelled DO), so "
-                f"the variables carried from one pass to the next cannot be found and "
-                f"the extra seed direction cannot be reset in them. Give the loop's "
-                f"closing line as loop.exit_line.")
+                f"Local-Jacobian request {contract.get('id')!r}: the loop body cannot be "
+                f"read because {problem}. Without it the variables carried from one pass "
+                f"to the next cannot be found, and the extra seed direction cannot be "
+                f"reset in them. Rewrite the loop as an unnamed DO ... END DO, or give "
+                f"its closing line as loop.exit_line.")
         replaced = str(contract.get("replace_variable") or "").upper()
         if not replaced:
             continue
@@ -2710,10 +2710,20 @@ def _roles_with_extra_jacobian_promotions(config: dict[str, Any], roles: dict[st
             names.add(out)
         if replaced:
             names.add(replaced)
+        targets: set[str] = set()
         for ext in contract.get("additional_extractions") or []:
             from_var = str(ext.get("from_output_variable") or "").upper()
             if from_var:
                 names.add(from_var)
+            target = str(ext.get("target_variable") or "").upper()
+            if target and target != from_var:
+                targets.add(target)
+        # An extraction target holds REAL extracted values (like DDSDDE): the
+        # extraction writes the variable itself, so a source that also reads
+        # it must read that variable, not a shadow nothing assigns.
+        for name in targets - names:
+            updated["keep_real"].add(name)
+            updated["promote"].discard(name)
         for name in names:
             if name in INTRINSIC_TOKEN_NAMES:
                 continue
@@ -3876,7 +3886,8 @@ def _transform_source_text(
                     variable_shapes,
                     synthetic_real_variables={
                         **_synthetic_real_surface_variables(config),
-                        **_synthetic_real_jacobian_targets(config),
+                        **{name: shape for name, shape in _synthetic_real_jacobian_targets(config).items()
+                           if name not in _names_the_routine_declares(parsed, selected_umat)},
                         **parameter_shapes,
                     },
                     order=oti_order,
@@ -10934,6 +10945,27 @@ def _synthetic_real_surface_variables(config: dict[str, Any]) -> dict[str, str]:
     return result
 
 
+def _names_the_routine_declares(parsed: ParsedFortranSource | None, selected_umat: str) -> set[str]:
+    """Names the selected routine itself declares (type statements and DIMENSION), upper case."""
+    names: set[str] = set()
+    if parsed is None:
+        return names
+    routine = next((r for r in parsed.subroutines if r.upper_name == (selected_umat or "UMAT").upper()), None)
+    if routine is None:
+        return names
+    contains_line = _host_contains_line(parsed, selected_umat)
+    for declaration in routine.declarations:
+        if not _in_internal_procedure(declaration.line_numbers, contains_line):
+            names.update(entity.upper_name for entity in declaration.entities)
+    for line in routine.lines:
+        if _in_internal_procedure(line.line_numbers, contains_line):
+            continue
+        match = re.match(r"^\s*dimension\s+(.+)$", line.text, flags=re.IGNORECASE)
+        if match:
+            names.update(parse_entity(item).upper_name for item in split_top_level(match.group(1)))
+    return names
+
+
 def _synthetic_real_jacobian_targets(config: dict[str, Any]) -> dict[str, str]:
     """Real arrays that receive extracted constitutive-Jacobian values.
 
@@ -11126,6 +11158,8 @@ def _indexed_name(name: str, indices: list[int]) -> str:
 _JINT_DO_START = re.compile(r"^\s*(?:\d+\s+)?DO\b(?!\s*\d)", re.IGNORECASE)
 _JINT_LABELED_DO = re.compile(r"^\s*(?:\d+\s+)?DO\s*\d+", re.IGNORECASE)
 _JINT_END_DO = re.compile(r"^\s*(?:\d+\s+)?END\s*DO\b", re.IGNORECASE)
+_JINT_NAMED_DO = re.compile(r"^\s*(?:\d+\s+)?[A-Za-z_]\w*\s*:\s*DO\b", re.IGNORECASE)
+_JINT_NAMED_END_DO = re.compile(r"^\s*(?:\d+\s+)?END\s*DO\s+[A-Za-z_]\w*\s*$", re.IGNORECASE)
 
 
 def _jint_statement_lines(lines: list[str], form: str, first: int, last: int) -> list[tuple[int, str]]:
@@ -11152,6 +11186,39 @@ def _jint_statement_lines(lines: list[str], form: str, first: int, last: int) ->
     return out
 
 
+def _jint_loop_problem(lines: list[str], form: str, contract: dict[str, Any]) -> str:
+    """Why the loop body of a local-Jacobian request cannot be read, or "" when it can."""
+    top = int(contract.get("loop_top_line") or 0)
+    if not 0 < top <= len(lines):
+        return f"its loop top, line {top}, is not a line of the source"
+    exit_line = int(contract.get("loop_exit_line") or 0)
+    if exit_line:
+        return "" if top < exit_line <= len(lines) else (
+            f"its loop.exit_line {exit_line} does not follow the loop top {top} inside the source")
+    statements = _jint_statement_lines(lines, form, top, len(lines))
+    if statements and _JINT_NAMED_DO.match(statements[0][1]):
+        return (f"the loop at line {top} is a named DO construct (name: DO ... END DO name), "
+                f"which this reader does not follow")
+    if not statements or not _JINT_DO_START.match(statements[0][1]):
+        return (f"line {top} does not start a DO construct (a GOTO loop needs its closing "
+                f"line as loop.exit_line)")
+    depth = 0
+    for number, text in statements[1:]:
+        if _JINT_NAMED_DO.match(text) or _JINT_NAMED_END_DO.match(text):
+            return (f"its body holds a named DO construct (line {number}), whose END DO "
+                    f"this reader does not match")
+        if _JINT_LABELED_DO.match(text):
+            return (f"its body holds a labelled DO (line {number}), whose shared CONTINUE "
+                    f"makes the end of the loop ambiguous")
+        if _JINT_DO_START.match(text):
+            depth += 1
+        elif _JINT_END_DO.match(text):
+            if depth == 0:
+                return ""
+            depth -= 1
+    return f"no END DO closes the loop at line {top}"
+
+
 def _jint_loop_body(lines: list[str], form: str, contract: dict[str, Any]) -> tuple[int, int] | None:
     """The first and last line of the loop body a local-Jacobian request names, or None.
 
@@ -11167,6 +11234,8 @@ def _jint_loop_body(lines: list[str], form: str, contract: dict[str, Any]) -> tu
     exit_line = int(contract.get("loop_exit_line") or 0)
     if exit_line:
         return (top + 1, exit_line - 1) if top < exit_line <= len(lines) else None
+    if _jint_loop_problem(lines, form, contract):
+        return None
     statements = _jint_statement_lines(lines, form, top, len(lines))
     if not statements or not _JINT_DO_START.match(statements[0][1]):
         return None
@@ -11234,8 +11303,16 @@ def _extra_jacobian_reseed_lines(form: str, *, seed_var: str, slot_start: int,
             if name in allocatable:
                 statement = f"IF (ALLOCATED({name}_OTI)) {statement}"
             lines.append(_stmt(form, statement))
+    # A seed of several components: each component carries 1 in its own extra
+    # direction and 0 in the others. The other members are cleared too, or a
+    # component keeps the cross-direction value the previous pass left in it
+    # (X(1)%E5 from X(2)'s seed propagated through the update), and
+    # dR(2)/dX(1) comes out wrong.
     for member, component in zip(members, seed_components):
         target = _indexed_name(f"{seed_var}_OTI", component)
+        for other in members:
+            if other != member:
+                lines.append(_stmt(form, f"{target}%{other} = 0.0D0"))
         lines.append(_stmt(form, f"{target}%{member} = 1.0D0"))
     return lines
 
