@@ -161,7 +161,7 @@ All ten parameter columns and all six tangent columns **agree**; no entry
 disagrees. The 112 *reference unresolved* entries are small entries whose
 finite-difference reference scatters by more than `2e-6` of their size. They
 are reported, never counted as agreement, and each has its own row in
-`verification/verification_entries.csv`.
+`<package>/verification/verification_entries.csv`.
 
 **Step 3** prints (trimmed to four of the ten parameter columns):
 

@@ -522,7 +522,7 @@ Zenodo.
 - `CONTRIBUTING.md` and this changelog.
 - `tests/` suite (package import, CLI, and end-to-end transform smoke test).
 - GitHub Actions CI workflow across Python 3.10–3.12 on Linux and Windows.
-- Rewritten user manual (`docs/UMAT_Source_transformation_user_manual.docx`)
+- Rewritten user manual (docs/UMAT_Source_transformation_user_manual.docx, removed in 1.2.1)
   covering the current implementation, utilities, and tutorials.
 
 ### Changed

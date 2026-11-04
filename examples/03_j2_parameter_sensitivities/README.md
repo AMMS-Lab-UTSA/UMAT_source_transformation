@@ -165,8 +165,8 @@ The collaborator package writes into `<package>`:
 | `collaborator/REAL_UMAT.obj` | The original UMAT, for the regular Abaqus analysis |
 | `collaborator/Mapping.json` | The completed contract, unchanged. It records the SHA-256 of both objects, so the receiver can check they are a matched pair |
 | `collaborator/transform_report.txt` | Build and verification commands with exit codes, the parameter table, the check path, primal parity, per-array verdict counts and worst errors |
-| `verification/verification.json` | The verifier's full record: verdict, path, properties, criteria, per-column results |
-| `verification/verification_entries.csv` | **One row per derivative entry**, with the OTI value, the finite-difference reference, its uncertainty, the step used and the verdict |
+| `<package>/verification/verification.json` | The verifier's full record: verdict, path, properties, criteria, per-column results |
+| `<package>/verification/verification_entries.csv` | **One row per derivative entry**, with the OTI value, the finite-difference reference, its uncertainty, the step used and the verdict |
 | `package.json`, `logs/` | The machine-readable summary and the two command logs |
 
 The Fortran source is not among the four hand-off files.
@@ -313,7 +313,7 @@ Measured on 2026-09-18: step 1 6.1 s, step 2 17.1 s, step 3 0.6 s.
 | `provider build failed: output directory must be outside the original model directory` | Choose an `--out` outside `parameter_sensitivity/models/m3_j2/`. |
 | `provider build failed: --abaqus-toolchain builds the regular object; name it with --regular-object` | Add `--regular-object REAL_UMAT.obj`. |
 | `provider build failed: Abaqus executable 'abaqus' not on PATH` | `--abaqus-toolchain` needs Abaqus. Drop the option to build `REAL_UMAT.obj` with gfortran. |
-| Package exit code 1 | Built but not verified. `transform_report.txt` and `verification/verification.json` give the verifier's diagnostic. |
+| Package exit code 1 | Built but not verified. `transform_report.txt` and `<package>/verification/verification.json` give the verifier's diagnostic. |
 | `J2 check must exercise elastic, plastic, and unloading increments` | `--j2-branches` is for J2-type materials on a path that yields and unloads. Leave it out for other materials. |
 | `run.py: error: not a complete package` | Run step 2 first and pass its `--out` directory. |
 

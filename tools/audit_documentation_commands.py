@@ -50,7 +50,14 @@ EXTERNAL_MODULES = {"venv", "pip", "pytest", "build", "twine"}
 #: Development records cite paths as they stood when the evidence was gathered,
 #: including paths in other checkouts. They are not reviewer-facing instructions,
 #: and the repository audit exempts them from the same-shaped path check.
-EXEMPT_PREFIXES = ("docs/development/",)
+#: Records of runs that already happened are exempt for the same reason: the
+#: archived Abaqus batch reports, the evidence records under docs/evidence/ and
+#: the byte-for-byte verification archives cite the paths and tools of the run
+#: they record. So are the corpus-campaign method documents, whose builders
+#: are no longer shipped (they are in the history at tag v1.2.0).
+EXEMPT_PREFIXES = ("docs/development/", "docs/evidence/", "paper_results/arc_791506/",
+                   "verification/softwarex/evidence/", "docs/CORPUS_MANIFEST.md",
+                   "docs/CORPUS_VERIFICATION.md", "paper_results/corpus/CORPUS_VERIFICATION.md")
 
 HISTORICAL_PATH_INVENTORIES = {
     "docs/BRANCH_IMPLEMENTATION_AUDIT.md":

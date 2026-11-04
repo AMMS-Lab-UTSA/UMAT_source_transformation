@@ -109,10 +109,10 @@ Part B writes into `<out>`:
 | --- | --- |
 | `UMAT_VPDCO_resolved.for` | The UMAT and the 13 helper routines it calls, in one file |
 | `verification.json` | The full record: the discovered solve, every stage and its status, the converged iterate, the OTI value, the finite-difference ladder, the hand-coded value, and the audit |
-| `verification/umat_probe_observe_offset0.for` | The source with the recording probe (used to find the converged iterate) |
-| `verification/umat_probe_seeded.for` | The source with the seeding probe |
-| `verification/original_reference/` | The separately compiled original builds used for the reference |
-| `verification/oti_probe/` | The OTI-transformed probe, its driver, `Makefile` and CSV outputs |
+| `<out>/verification/umat_probe_observe_offset0.for` | The source with the recording probe (used to find the converged iterate) |
+| `<out>/verification/umat_probe_seeded.for` | The source with the seeding probe |
+| `<out>/verification/original_reference/` | The separately compiled original builds used for the reference |
+| `<out>/verification/oti_probe/` | The OTI-transformed probe, its driver, `Makefile` and CSV outputs |
 
 Part A writes the same kind of `verification.json` and folders into its
 `--out` directory.
