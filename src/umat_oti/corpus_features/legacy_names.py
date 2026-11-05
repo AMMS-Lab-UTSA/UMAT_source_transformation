@@ -17,7 +17,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-__all__ = ["upgrade", "upgrade_text", "existing_path"]
+__all__ = ["upgrade", "upgrade_text", "existing_path", "LEGACY_ROLE_LABELS"]
+
+#: Role labels of the automated assistants that wrote records before 1.2.1,
+#: plus the one user ID that appears in archived paths. They remain only in
+#: the checksummed archives (verification/softwarex/evidence/,
+#: paper_results/frozen/); tests use this list to check that nothing else
+#: carries them.
+LEGACY_ROLE_LABELS = ("vera", "curie", "scout", "noether", "ada", "atlas", "hopper", "quill",
+                      "nico", "lovelace", "iris", "council", "vfn333")
 
 #: Whole-token replacements, applied before the generic ``council`` rule.
 _EXACT = {
