@@ -2,7 +2,7 @@
 
 1.2.1 rewrote the agent role names in paper_results/corpus and
 paper_results/discovery to "reviewer" (council_*, vera_accepted_* and similar
-columns; values such as "Vera" and "Scout (B3)"), and component names for
+columns; values naming a reviewing assistant), and component names for
 the two builders' producer ids. This loads the rewritten registry the way its
 readers do, and checks that no record still needs the legacy-name reader.
 """
@@ -16,14 +16,18 @@ from pathlib import Path
 
 import pytest
 
-from umat_oti.corpus_features.legacy_names import upgrade
+from umat_oti.corpus_features.legacy_names import LEGACY_ROLE_LABELS, upgrade
 
 REPO = Path(__file__).resolve().parents[1]
 REGISTRY_JSON = REPO / "paper_results" / "corpus" / "corpus_registry.json"
 REGISTRY_CSV = REPO / "paper_results" / "corpus" / "corpus_registry.csv"
 FOLDERS = (REPO / "paper_results" / "corpus", REPO / "paper_results" / "discovery")
-AGENT = re.compile(r"(?i)(?<![A-Za-z0-9])(vera|scout|noether|council|curie|quill|hopper|nico|"
-                   r"atlas|lovelace|iris|vfn333)(?![a-z])|\bgauss/B\d|\bAda\b")
+#: Labels as whole words, case-insensitive; a short label is matched in its
+#: capitalised form only, so that it is not found inside hexadecimal digests.
+AGENT = re.compile("|".join(
+    [r"(?i:(?<![A-Za-z0-9])" + label + r"(?![a-z]))" for label in LEGACY_ROLE_LABELS if len(label) > 3]
+    + [r"\b" + label.capitalize() + r"\b" for label in LEGACY_ROLE_LABELS if len(label) <= 3]
+    + [r"\bgauss/B\d"]))
 
 pytestmark = [pytest.mark.unit, pytest.mark.regression]
 
