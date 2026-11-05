@@ -471,21 +471,21 @@
    "commit": "f53c0b5",
    "bug": "cells.fold merged the cells of different D-21 parameter sets of one source, and resolve_entry resolved a bare key of a multi-set plan to its first set and resolved refused plans (review G C6).",
    "tests": [
-    "tests/test_every_council_cell_carries_both_origins.py"
+    "tests/test_every_reviewer_cell_carries_both_origins.py"
    ]
   },
   {
    "commit": "6378078",
    "bug": "A reviewer row's kinematics and ceiling were recorded as author_published, identical parameter sets were accepted as independent, and a documented domain stated in words was dropped without a mark (review G C2, C4, C5).",
    "tests": [
-    "tests/test_a_council_experiment_reads_only_the_source_and_the_row.py"
+    "tests/test_a_reviewer_experiment_reads_only_the_source_and_the_row.py"
    ]
   },
   {
    "commit": "54171f3",
    "bug": "corpus_cases freeze wrapper rejected new FeatureTally.add keywords (kinematic_input, block_derivative, double_zero) added by G4/G10, so freezing any case raised TypeError.",
    "tests": [
-    "tests/test_corpus_cases_council.py::test_a_council_case_freezes_and_passes_its_check"
+    "tests/test_corpus_cases_reviewer.py::test_a_reviewer_case_freezes_and_passes_its_check"
    ]
   },
   {
@@ -513,7 +513,7 @@
   },
   {
    "commit": "a578c57",
-   "bug": "ddsdde_legacy_gate labelled every non-verified Abaqus tangent 'failed' (an unresolved row such as 26606e08 read as a measured disagreement), the registry did not read the D-4 gate's tangent.failed, the corpus page and plain language said 'could not pin the tangent down' / 'did not settle' over rows whose gate measured a disagreement, and a reviewer row with no council_sets could count (the review's final review before pass21).",
+   "bug": "ddsdde_legacy_gate labelled every non-verified Abaqus tangent 'failed' (an unresolved row such as 26606e08 read as a measured disagreement), the registry did not read the D-4 gate's tangent.failed, the corpus page and plain language said 'could not pin the tangent down' / 'did not settle' over rows whose gate measured a disagreement, and a reviewer row with no reviewer_sets could count (the review's final review before pass21).",
    "tests": [
     "tests/test_registry_fields_tangent_verdict.py"
    ]
@@ -546,8 +546,8 @@
    "tests": [
     "tests/test_corpus_cases_comparators.py::test_the_capture_takes_the_verdict_judge_binary32_returns_not_its_last_inner_call",
     "tests/test_corpus_cases_comparators.py::test_a_stray_staging_directory_is_never_read_as_a_case",
-    "tests/test_corpus_cases_council.py::test_a_freeze_that_cannot_hold_its_capture_leaves_the_existing_case",
-    "tests/test_corpus_cases_council.py::test_a_freeze_whose_case_fails_its_own_check_leaves_the_existing_case"
+    "tests/test_corpus_cases_reviewer.py::test_a_freeze_that_cannot_hold_its_capture_leaves_the_existing_case",
+    "tests/test_corpus_cases_reviewer.py::test_a_freeze_whose_case_fails_its_own_check_leaves_the_existing_case"
    ]
   },
   {
@@ -1223,7 +1223,7 @@
   },
   {
    "commit": "7193fd7",
-   "reason": "Feature (G3, D-19a rev 2 R2): plan_council; 'refusal'/'silent' describe the refusals it adds and the 3D default it declines, not a corrected behaviour. Tested by tests/test_a_council_experiment_reads_only_the_source_and_the_row.py."
+   "reason": "Feature (G3, D-19a rev 2 R2): plan_reviewer; 'refusal'/'silent' describe the refusals it adds and the 3D default it declines, not a corrected behaviour. Tested by tests/test_a_reviewer_experiment_reads_only_the_source_and_the_row.py."
   },
   {
    "commit": "f6b3e9d",
@@ -1231,7 +1231,7 @@
   },
   {
    "commit": "e65bced",
-   "reason": "Feature (G9, D-19a rev 2 R6.1): tools/make_council_deck.py; 'exits 1' describes the --check outcome on a changed file, not a corrected behaviour. Tested by tests/test_a_council_deck_regenerates_byte_for_byte.py."
+   "reason": "Feature (G9, D-19a rev 2 R6.1): tools/make_reviewer_deck.py; 'exits 1' describes the --check outcome on a changed file, not a corrected behaviour. Tested by tests/test_a_reviewer_deck_regenerates_byte_for_byte.py."
   },
   {
    "commit": "f0ba475",

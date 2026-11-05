@@ -184,24 +184,24 @@
         "enum": [
          "author_deck",
          "author_published_outside_deck",
-         "council_chosen",
+         "reviewer_chosen",
          ""
         ]
        },
        "experiment_origin": {
         "enum": [
          "author",
-         "council",
+         "reviewer",
          ""
         ]
        },
        "material_data_ref": {
         "type": "string"
        },
-       "council_deck_ref": {
+       "reviewer_deck_ref": {
         "type": "string"
        },
-       "council_fingerprint": {
+       "reviewer_fingerprint": {
         "type": "string"
        },
        "refusal_kind": {
@@ -233,19 +233,19 @@
         ],
         "minimum": 0
        },
-       "council_sets": {
+       "reviewer_sets": {
         "type": "array",
         "items": {
          "type": "string"
         }
        },
-       "vera_accepted_template": {
+       "review_accepted_template": {
         "type": [
          "boolean",
          "null"
         ]
        },
-       "vera_accepted_instance": {
+       "review_accepted_instance": {
         "type": [
          "boolean",
          "null"
@@ -273,8 +273,8 @@
         "enum": [
          "author_deck",
          "author_published_outside_deck+author_experiment",
-         "author_published_outside_deck+council_experiment",
-         "council_chosen",
+         "author_published_outside_deck+reviewer_experiment",
+         "reviewer_chosen",
          ""
         ]
        },
@@ -306,10 +306,10 @@
         },
         "then": {
          "properties": {
-          "vera_accepted_template": {
+          "review_accepted_template": {
            "const": true
           },
-          "vera_accepted_instance": {
+          "review_accepted_instance": {
            "const": true
           },
           "pairing_changed": {

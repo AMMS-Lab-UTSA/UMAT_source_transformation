@@ -119,7 +119,7 @@ def selection(path: Path, keys=KEYS[:5], **over) -> Path:
     return path
 
 
-def test_only_a_blind_selection_by_vera_is_run_and_under_five_is_falsification_only(tmp_path):
+def test_only_a_blind_selection_by_the_reviewer_is_run_and_under_five_is_falsification_only(tmp_path):
     full = ho.load_selection(selection(tmp_path / "s.json"), "strain-driven")
     assert full["keys"] == KEYS[:5] and full["mode"] == ho.HOLDOUT
     for n in (1, 4):
@@ -357,7 +357,7 @@ def _review_rows(**over):
             for n in range(5)]
 
 
-def test_a_reviewed_row_vera_has_not_accepted_is_never_used(env):
+def test_a_reviewed_row_the_reviewer_has_not_accepted_is_never_used(env):
     _reads_source(env)
     review = env / "reviewed.jsonl"
     rows = _review_rows()

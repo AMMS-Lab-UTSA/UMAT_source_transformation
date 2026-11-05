@@ -169,6 +169,10 @@ carries a byte-identical copy (`source/`) and the transform's output from it
 GPL-compatible; the files are distributed as part of the GPL-3.0-only whole
 with their notice kept.
 
+### 2f. Names in archived evidence
+
+The names that appear in the checksummed archives (`verification/softwarex/evidence/` and `paper_results/frozen/`) are role labels of automated assistants used during development, plus one user ID; those files are kept byte for byte so that their checksums verify.
+
 ---
 
 ## 3. Python dependencies
