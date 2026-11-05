@@ -132,7 +132,7 @@ reports, except where stated below.
 ### Re-frozen at this release
 
 - Transform fingerprint `80a2015b780b1f25`, harness fingerprint
-  `69afa2e027550f22` (package+tools). `transform_generation.json` records the
+  `56e3725136cb897e` (package+tools). `transform_generation.json` records the
   transform fingerprint and `contract_lock.json` is regenerated; Residual
   Assembler's copies must be updated in step.
 - The two CI regression cases are frozen again at these fingerprints; their
