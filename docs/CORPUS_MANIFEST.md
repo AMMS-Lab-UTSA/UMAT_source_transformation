@@ -96,12 +96,9 @@ What is reproducible:
 - From another location, the rows are identical but the header is not: it
   records the absolute `roots` and input paths of the build.
 
-One test depends on the layout:
-`tests/test_corpus_manifest_review_probes.py::test_noethers_b1_records_fold_without_rejection_and_stay_out_of_the_pipeline`
-reads the B1 records at the absolute path
-`$UMAT_OTI_WORKSPACE/corpus_campaign/...` and resolves them against
-roots taken from the checkout's parent. In a clone outside the workspace it
-fails (1 failed, 118 passed); it is skipped where the file is absent.
+Until 1.2.1 one test read the residual-assembler B1 records from the campaign
+workspace beside the checkout; it was removed with the campaign tooling, so no
+test depends on the layout.
 `test_every_evidence_locator_resolves_to_a_file` resolves against the
 absolute roots in the manifest header, so it passes only on this machine.
 

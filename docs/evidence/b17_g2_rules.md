@@ -58,7 +58,7 @@ Canary: a deliberately wrong NTENS mapping must fail (tests/test_transform_ntens
 
 ## G2c. Abaqus-supplied utilities are linked in the offline drivers, from measured semantics
 
-Written 2026-10-07 after the survey (corpus_campaign/batches/B17/hopper_g2/utilities.md)
+Written 2026-10-07 after the survey (corpus_campaign/batches/B17/builder_g2/utilities.md)
 and the measurements of the real solver, and BEFORE the all-row re-run with the stubs.
 
 Rule:

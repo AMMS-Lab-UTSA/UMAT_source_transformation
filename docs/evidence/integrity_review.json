@@ -603,11 +603,11 @@
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   },
-  "skip:tests/test_corpus_manifest_vera_probes.py:<module>:mark.skipif:52b3511f": {
+  "skip:tests/test_corpus_manifest_review_probes.py:<module>:mark.skipif:52b3511f": {
    "verdict": "justified",
    "reason": "The test reads the real B1 campaign evidence in the workspace ($UMAT_OTI_WORKSPACE)/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
   },
-  "skip:tests/test_corpus_manifest_vera_probes.py:<module>:mark.skipif:9542a127": {
+  "skip:tests/test_corpus_manifest_review_probes.py:<module>:mark.skipif:9542a127": {
    "verdict": "justified",
    "reason": "The test reads the real B1 campaign evidence in the workspace ($UMAT_OTI_WORKSPACE)/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
   },
@@ -1261,7 +1261,7 @@
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   },
-  "mock:tests/test_every_council_cell_carries_both_origins.py:workspace:monkeypatch.setattr:eeb6e20d": {
+  "mock:tests/test_every_reviewer_cell_carries_both_origins.py:workspace:monkeypatch.setattr:eeb6e20d": {
    "verdict": "justified",
    "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir, reviewer plans) at a temporary fixture tree so resolve_entry reads a reviewer plan and an author-deck record; the real resolve_entry, _record and cells.fold run and nothing numerical is replaced."
   },
@@ -1273,9 +1273,9 @@
    "verdict": "justified",
    "reason": "The assert on coverage with an unloading state was rewritten, not removed: review B7 A7 counts a smooth unloading state as activated only if the material had activated by then, so the test now passes activated=True for the state that completes coverage and adds the opposite assert (an unloading state before any activation does not complete it)."
   },
-  "skip:tests/test_a_council_experiment_reads_only_the_source_and_the_row.py:test_no_real_council_plan_cites_an_authors_deck:call:skip:a29654a2": {
+  "skip:tests/test_a_reviewer_experiment_reads_only_the_source_and_the_row.py:test_no_real_reviewer_plan_cites_an_authors_deck:call:skip:a29654a2": {
    "verdict": "justified",
-   "reason": "Needs the generated reviewer plans beside the checkout (corpus_campaign/council_plans, written by tools/make_council_deck.py); the test runs wherever they exist."
+   "reason": "Needs the generated reviewer plans beside the checkout (corpus_campaign/reviewer_plans, written by tools/make_reviewer_deck.py); the test runs wherever they exist."
   },
   "skip:tests/test_corpus_manifest_count_target.py:<module>:call:skip:e09a5718": {
    "verdict": "justified",
@@ -1609,7 +1609,7 @@
    "verdict": "justified",
    "reason": "Points the case tree at a scratch directory holding one real case and one dot-named staging directory, so the test can show which of them the listing reads; no code under test is replaced."
   },
-  "mock:tests/test_corpus_cases_council.py:test_a_swap_that_cannot_complete_puts_the_old_case_back:monkeypatch.setattr:3debf80a": {
+  "mock:tests/test_corpus_cases_reviewer.py:test_a_swap_that_cannot_complete_puts_the_old_case_back:monkeypatch.setattr:3debf80a": {
    "verdict": "justified",
    "reason": "Makes os.replace raise to show that _swap_in puts the old case back; the second half of the test undoes it and runs the real swap, asserting the new case in place and the old one kept aside."
   },
@@ -1633,15 +1633,15 @@
    "verdict": "justified",
    "reason": "Replaces the two things verify_one cannot do in a test: the Abaqus job (run_one, returning pass22's recorded output) and the finite-difference tangent (verify_tangent). Everything between them -- init builds, routine-level replay, Jacobian-matched comparison, record -- is real; the test fails with the UnboundLocalError when the shadowing is put back."
   },
-  "mock:tests/test_run_corpus_features_council_plans.py:test_the_flag_sets_the_plans_folder_the_council_key_is_resolved_from:monkeypatch.setattr:8dc36cca": {
+  "mock:tests/test_run_corpus_features_reviewer_plans.py:test_the_flag_sets_the_plans_folder_the_reviewer_key_is_resolved_from:monkeypatch.setattr:8dc36cca": {
    "verdict": "justified",
    "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which reviewer plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
   },
-  "mock:tests/test_run_corpus_features_council_plans.py:test_the_flag_sets_the_plans_folder_the_council_key_is_resolved_from:monkeypatch.setattr:a9aa9512": {
+  "mock:tests/test_run_corpus_features_reviewer_plans.py:test_the_flag_sets_the_plans_folder_the_reviewer_key_is_resolved_from:monkeypatch.setattr:a9aa9512": {
    "verdict": "justified",
    "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which reviewer plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
   },
-  "mock:tests/test_run_corpus_features_council_plans.py:test_without_the_flag_the_harness_default_is_kept:monkeypatch.setattr:6a83019d": {
+  "mock:tests/test_run_corpus_features_reviewer_plans.py:test_without_the_flag_the_harness_default_is_kept:monkeypatch.setattr:6a83019d": {
    "verdict": "justified",
    "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which reviewer plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
   },

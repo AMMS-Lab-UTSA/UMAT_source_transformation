@@ -5,7 +5,7 @@ synthetic complex-step UMAT (stress computed in DOUBLE COMPLEX through SQRT,
 EXP and LOG; the author's own DDSDDE by the complex step) and checks the
 transformed build's DDSDDE against the original's own complex-step tangent and
 against central finite differences of the original's STRESS. It needs the
-hook in source_transform/helper_lifting (corpus_campaign B2 ada_c
+hook in source_transform/helper_lifting (corpus_campaign B2 builder_c
 complex_hook.patch); the hook is part of the transform, so it always runs.
 """
 from __future__ import annotations

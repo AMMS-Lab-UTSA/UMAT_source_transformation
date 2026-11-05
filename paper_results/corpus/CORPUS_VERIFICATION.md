@@ -517,12 +517,12 @@ every verified count split by where the material data and the experiment came fr
 | --- | ---: | ---: | ---: |
 | `author_deck` | 259 (0 interpreted) | 115 (0 interpreted) | 118 (0 interpreted) |
 | `author_published_outside_deck+author_experiment` | 0 (0 interpreted) | 0 (0 interpreted) | 0 (0 interpreted) |
-| `author_published_outside_deck+council_experiment` | 23 (3 interpreted) | n/e | 0 (0 interpreted) |
-| `council_chosen` | 30 (2 interpreted) | n/e | 0 (0 interpreted) |
+| `author_published_outside_deck+reviewer_experiment` | 23 (3 interpreted) | n/e | 0 (0 interpreted) |
+| `reviewer_chosen` | 30 (2 interpreted) | n/e | 0 (0 interpreted) |
 
-n/e: not established. Council tiers: not established: the registry holds one Abaqus row per source, and a council source counts only when every parameter set passes. R6: both Vera acceptances, no pairing change, no council-plan refusal, no unenforced domain entry, no licence hold, a D-2 decision recorded, the author-deck re-run at the council harness (R6.6), and every set verified (cells.combine_council_sets).
+n/e: not established. Reviewer tiers: not established: the registry holds one Abaqus row per source, and a reviewer source counts only when every parameter set passes. R6: both reviewer acceptances, no pairing change, no reviewer-plan refusal, no unenforced domain entry, no licence hold, a D-2 decision recorded, the author-deck re-run at the reviewer harness (R6.6), and every set verified (cells.combine_reviewer_sets).
 
-Q4: the instrument is independent; the inputs are not. Both the council count and its comparison with the author-deck count share the council's choices (constants, experiment). Only the blind hold-out (R6.3) and Vera's review (R6.5) validate those choices.
+Q4: the instrument is independent; the inputs are not. Both the reviewer count and its comparison with the author-deck count share the reviewer's choices (constants, experiment). Only the blind hold-out (R6.3) and the reviewer's review (R6.5) validate those choices.
 
 ## Every source that reached the `verified` rung
 

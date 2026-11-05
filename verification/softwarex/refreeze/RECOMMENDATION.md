@@ -26,9 +26,9 @@ re-freeze (T1) at the tag.
    be re-frozen before it is cited. Otherwise
    `test_contract_fixtures.py::test_the_recorded_generation_is_this_worktrees_actual_transform` fails on
    every platform.
-2. **Tests that reach outside the repository (the reviewer I3).** `tests/test_corpus_cases_council.py (now test_corpus_cases_reviewer.py)` (10 cases:
+2. **Tests that reach outside the repository (the reviewer I3).** `tests/test_corpus_cases_reviewer.py` (10 cases:
    9 setup errors and 1 failure) copies `../corpus_campaign/material_data/...` through
-   `WORKSPACE_REAL = REPO.parent` (`:32, :91-97`). `tools/corpus_cases.py` (`REDERIVE`, `COUNCIL_ROWS`)
+   `WORKSPACE_REAL = REPO.parent` (`:32, :91-97`). `tools/corpus_cases.py` (`REDERIVE`, `REVIEWER_ROWS`)
    uses the same path. Either skip these with a named reason when that directory is absent, or vendor
    the needed inputs after checking their licences.
 3. **`CITATION.cff`.** It says `version: 1.1.0` with `date-released: "2026-08-21"`, which is older than the

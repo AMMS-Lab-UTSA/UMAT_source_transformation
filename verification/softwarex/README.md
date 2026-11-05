@@ -4,6 +4,8 @@ This folder holds the verification evidence and the scripts behind the
 SoftwareX article on UMAT-OTI. It contains code and results only; the
 manuscript itself is not in the repository.
 
+The names that appear in the checksummed archives (`verification/softwarex/evidence/` and `paper_results/frozen/`) are role labels of automated assistants used during development, plus one user ID; those files are kept byte for byte so that their checksums verify.
+
 All commands below run from this folder (`verification/softwarex/`), which
 plays the role of the workspace root the scripts were written for.
 

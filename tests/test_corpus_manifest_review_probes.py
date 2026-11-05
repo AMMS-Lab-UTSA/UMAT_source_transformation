@@ -123,7 +123,7 @@ PROBES = {
 
 
 @pytest.mark.parametrize("name", sorted(PROBES))
-def test_vera_probe_record_is_rejected_and_changes_nothing(roots, name):
+def test_reviewer_probe_record_is_rejected_and_changes_nothing(roots, name):
     m = _manifest(roots)
     before = json.dumps(m["rows"], sort_keys=True)
     rep = _merge(m, [_ok(**PROBES[name])])
@@ -131,7 +131,7 @@ def test_vera_probe_record_is_rejected_and_changes_nothing(roots, name):
     assert json.dumps(m["rows"], sort_keys=True) == before
 
 
-def test_vera_probe_primal_without_tolerance_semantics_is_rejected(roots):
+def test_reviewer_probe_primal_without_tolerance_semantics_is_rejected(roots):
     m = _manifest(roots)
     rep = _merge(m, [dict(source_id=SID, feature="primal_stress_state",
                           status="verified", reason="", evidence="x:y",
@@ -148,7 +148,7 @@ def test_the_probe_baseline_is_accepted(roots):
     assert m["rows"][0]["features"]["stress_param_sens_local"]["status"] == "verified"
 
 
-def test_vera_probe_failed_is_not_overwritten_by_a_later_verified(roots):
+def test_reviewer_probe_failed_is_not_overwritten_by_a_later_verified(roots):
     m = _manifest(roots)
     _merge(m, [_primal(), _failed()])
     _merge(m, [_ok(feature="ddsdde")])
@@ -159,7 +159,7 @@ def test_vera_probe_failed_is_not_overwritten_by_a_later_verified(roots):
 
 
 @pytest.mark.parametrize("order", list(itertools.permutations("vfv")))
-def test_vera_probe_verified_failed_verified_is_order_independent(roots, order):
+def test_reviewer_probe_verified_failed_verified_is_order_independent(roots, order):
     recs = {"v": _ok(feature="ddsdde"), "f": _failed()}
     m = _manifest(roots)
     _merge(m, [_primal()] + [recs[o] for o in order])

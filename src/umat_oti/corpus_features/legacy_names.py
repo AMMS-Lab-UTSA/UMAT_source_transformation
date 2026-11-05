@@ -29,9 +29,16 @@ _REVIEWER_NAMES = {"vera", "vera (review)", "vera's review"}
 
 
 def upgrade_text(text: str) -> str:
-    """One key or string value in the current vocabulary."""
+    """One key or string value in the current vocabulary.
+
+    ``vera_accepted`` is renamed wherever it occurs in a name
+    (``vera_accepted_template`` -> ``review_accepted_template``), as the
+    corpus registry's columns were.
+    """
     if text in _EXACT:
         return _EXACT[text]
+    for old, new in _EXACT.items():
+        text = text.replace(old, new)
     return (text.replace("COUNCIL", "REVIEWER").replace("Council", "Reviewer")
             .replace("council", "reviewer"))
 
